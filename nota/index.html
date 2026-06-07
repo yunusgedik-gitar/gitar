@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nota Okuma Egzersizi – Klasik Gitar</title>
+  <script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.2/build/cjs/vexflow.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #f5f3ee;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem;
+      color: #1a1a1a;
+    }
+
+    header { text-align: center; margin-bottom: 2rem; }
+    header h1 { font-size: 1.4rem; font-weight: 600; letter-spacing: -0.01em; }
+    header p  { font-size: 0.85rem; color: #777; margin-top: 0.3rem; }
+
+    #app { width: 100%; max-width: 500px; }
+
+    .card {
+      background: #fff;
+      border: 1px solid #e0ddd6;
+      border-radius: 16px;
+      padding: 1.25rem 1.25rem 0.5rem;
+      margin-bottom: 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      margin-bottom: 0.25rem;
+    }
+
+    .card-label { font-size: 0.78rem; color: #888; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    #listen-btn {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 0.78rem; padding: 5px 12px;
+      border-radius: 8px; border: 1px solid #ddd;
+      background: #f5f3ee; color: #555;
+      cursor: pointer; font-family: inherit;
+      transition: all 0.12s;
+    }
+    #listen-btn:hover { border-color: #aaa; color: #222; }
+    #listen-btn.playing { border-color: #5a9e30; color: #3b6d11; background: #eaf3de; }
+
+    #notation { width: 100%; display: flex; justify-content: center; overflow: hidden; }
+    #notation svg { max-width: 100%; }
+
+    #hint { font-size: 0.75rem; color: #bbb; text-align: center; margin-bottom: 1rem; }
+
+    .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 0.75rem; }
+
+    .cbtn {
+      padding: 18px 10px; font-size: 1.15rem; font-weight: 600;
+      border-radius: 12px; border: 1.5px solid #ddd;
+      background: #fff; color: #1a1a1a;
+      cursor: pointer; text-align: center; font-family: inherit;
+      transition: background 0.12s, border-color 0.12s, transform 0.08s, box-shadow 0.12s;
+    }
+    .cbtn:hover:not(:disabled) { background: #f5f3ee; border-color: #aaa; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+    .cbtn:active:not(:disabled) { transform: scale(0.97); box-shadow: none; }
+    .cbtn.correct { background: #eaf3de; border-color: #5a9e30; color: #3b6d11; }
+    .cbtn.wrong   { background: #fdf0f0; border-color: #e24b4a; color: #a32d2d; }
+    .cbtn:disabled { cursor: default; transform: none; box-shadow: none; }
+
+    #feedback { text-align: center; font-size: 0.9rem; font-weight: 600; min-height: 22px; margin-bottom: 0.6rem; }
+    #feedback.ok { color: #3b6d11; }
+    #feedback.no { color: #a32d2d; }
+
+    #progress-bar-wrap { height: 3px; background: #e0ddd6; border-radius: 2px; margin-bottom: 0.6rem; overflow: hidden; display: none; }
+    #progress-bar { height: 100%; width: 100%; background: #5a9e30; border-radius: 2px; transition: width 2s linear; }
+
+    #next-btn {
+      display: none; width: 100%; padding: 14px;
+      font-size: 0.95rem; font-weight: 500;
+      border-radius: 12px; border: 1.5px solid #ccc;
+      background: #fff; cursor: pointer;
+      font-family: inherit; color: #1a1a1a;
+      transition: background 0.12s, border-color 0.12s;
+    }
+    #next-btn:hover { background: #f5f3ee; border-color: #aaa; }
+
+    footer { margin-top: 2.5rem; font-size: 0.75rem; color: #ccc; text-align: center; }
+
+    @media (max-width: 400px) {
+      .cbtn { font-size: 1rem; padding: 14px 8px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>🎸 Nota Okuma Egzersizi</h1>
+    <p>İyi ki Yunus Hoca var! :)</p>
+  </header>
+
+  <div id="app">
+    <div class="card">
+      <div class="card-top">
+        <span class="card-label">Bu nota hangisi?</span>
+        <button id="listen-btn" onclick="replay()">🔊 Dinle</button>
+      </div>
+      <div id="notation"></div>
+    </div>
+
+    <p id="hint">🔊 Notayı duymak için "Dinle" tuşuna basın</p>
+
+    <div class="choices" id="choices"></div>
+    <div id="feedback"></div>
+    <div id="progress-bar-wrap"><div id="progress-bar"></div></div>
+    <button id="next-btn" onclick="manualNext()">Sonraki →</button>
+  </div>
+
+  <footer><p>yunusgedik.com.tr</p></footer>
+
+  <script>
+    const NOTES = [
+      { key:'e/3', freq:164.81, sol:'Mi'  },
+      { key:'f/3', freq:174.61, sol:'Fa'  },
+      { key:'g/3', freq:196.00, sol:'Sol' },
+      { key:'a/3', freq:220.00, sol:'La'  },
+      { key:'b/3', freq:246.94, sol:'Si'  },
+      { key:'c/4', freq:261.63, sol:'Do'  },
+      { key:'d/4', freq:293.66, sol:'Re'  },
+      { key:'e/4', freq:329.63, sol:'Mi'  },
+      { key:'f/4', freq:349.23, sol:'Fa'  },
+      { key:'g/4', freq:392.00, sol:'Sol' },
+      { key:'a/4', freq:440.00, sol:'La'  },
+      { key:'b/4', freq:493.88, sol:'Si'  },
+      { key:'c/5', freq:523.25, sol:'Do'  },
+      { key:'d/5', freq:587.33, sol:'Re'  },
+      { key:'e/5', freq:659.25, sol:'Mi'  },
+	  { key:'f/5', freq:698.46, sol:'Fa'  },
+      { key:'g/5', freq:783.99, sol:'Sol' },
+      { key:'a/5', freq:880.00, sol:'La'  },
+      { key:'b/5', freq:987.77, sol:'Si'  },
+    ];
+    const ALL_SOL = ['Do','Re','Mi','Fa','Sol','La','Si'];
+    
+    // Hata mesajları dizisi eklendi
+    const ERROR_MESSAGES = [
+      "Yazıklar olsun!",
+      "Kulaklarımız kanadı...",
+	  "Sende hiç utanma yok mu yaa",
+      "Instagram'dan ekle beni seni engellim",
+      "Tüm başarılar Yunus Hocadan, bunun gibi hatalar ise senden..",
+      "Yunus Hoca bunu görmemiş olsun...",
+      "Gitarı yavaşça yere bırak...",
+      "Sen daha iyi enstrümanlara layıksın",
+      "Aynen knk aynen sensin",
+      "Iyyy yine mi hata",
+	  "Ağır popçusun belli knk",
+	  "Lâ havle..",
+      "Sen en iyisi fülüt çal knk"
+    ];
+
+    let audioCtx = null, current = null, answered = false, interacted = false;
+    let autoTimer = null;
+
+    function shuffle(a){ return [...a].sort(()=>Math.random()-0.5); }
+
+    function getAudio(){
+      if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+      return audioCtx;
+    }
+
+    function playNote(freq){
+      try {
+        const ctx = getAudio();
+        if(ctx.state==='suspended') ctx.resume();
+        const master = ctx.createGain();
+        const now = ctx.currentTime;
+        master.gain.setValueAtTime(0, now);
+        master.gain.linearRampToValueAtTime(0.55, now+0.006);
+        master.gain.exponentialRampToValueAtTime(0.001, now+2.2);
+        master.connect(ctx.destination);
+        [[1,0.5],[2,0.28],[3,0.12],[4,0.06]].forEach(([m,v])=>{
+          const o=ctx.createOscillator(), g=ctx.createGain();
+          o.type='sine'; o.frequency.value=freq*m; g.gain.value=v;
+          o.connect(g); g.connect(master); o.start(now); o.stop(now+2.2);
+        });
+        const btn=document.getElementById('listen-btn');
+        btn.classList.add('playing');
+        setTimeout(()=>btn.classList.remove('playing'),600);
+      } catch(e){}
+    }
+
+    function replay(){
+      interacted=true;
+      document.getElementById('hint').style.display='none';
+      if(current) playNote(current.freq);
+    }
+
+    function drawNote(noteKey){
+      const { Renderer, Stave, StaveNote, Voice, Formatter } = Vex.Flow;
+      const container = document.getElementById('notation');
+      container.innerHTML = '';
+      const W = Math.min(container.offsetWidth || 460, 460);
+      const H = 240;
+      const renderer = new Renderer(container, Renderer.Backends.SVG);
+      renderer.resize(240, H);
+      const ctx = renderer.getContext();
+      const staveW = 200;
+      const stave = new Stave(20, 72, staveW);
+      stave.addClef('treble');
+      stave.setContext(ctx).draw();
+      const sn = new StaveNote({ keys:[noteKey], duration:'w' });
+      const voice = new Voice({ num_beats:4, beat_value:4 });
+      voice.addTickables([sn]);
+      new Formatter().joinVoices([voice]).format([voice], staveW - 55);
+      voice.draw(ctx, stave);
+    }
+
+    function clearAutoTimer(){
+      if(autoTimer){ clearTimeout(autoTimer); autoTimer=null; }
+      document.getElementById('progress-bar-wrap').style.display='none';
+    }
+
+    function startAutoAdvance(){
+      const wrap = document.getElementById('progress-bar-wrap');
+      const bar  = document.getElementById('progress-bar');
+      wrap.style.display = 'block';
+      bar.style.width = '100%';
+      bar.style.transition = 'none';
+      requestAnimationFrame(()=>{
+        requestAnimationFrame(()=>{
+          bar.style.transition = 'width 2s linear';
+          bar.style.width = '0%';
+        });
+      });
+      autoTimer = setTimeout(()=>{ clearAutoTimer(); nextCard(); }, 2000);
+    }
+
+    function manualNext(){ clearAutoTimer(); nextCard(); }
+
+    function nextCard(){
+      answered = false;
+      document.getElementById('feedback').textContent = '';
+      document.getElementById('feedback').className = '';
+      document.getElementById('next-btn').style.display = 'none';
+      clearAutoTimer();
+
+      current = NOTES[Math.floor(Math.random()*NOTES.length)];
+      const wrongs = shuffle(ALL_SOL.filter(s=>s!==current.sol)).slice(0,3);
+      const choices = shuffle([current.sol, ...wrongs]);
+
+      drawNote(current.key);
+      if(interacted) setTimeout(()=>playNote(current.freq), 280);
+
+      const box = document.getElementById('choices');
+      box.innerHTML = '';
+      choices.forEach(sol=>{
+        const btn = document.createElement('button');
+        btn.className = 'cbtn';
+        btn.textContent = sol;
+        btn.onclick = ()=>answer(sol, btn);
+        box.appendChild(btn);
+      });
+    }
+
+    function answer(sol, btn){
+      if(answered) return;
+      answered = true;
+      interacted = true;
+      document.getElementById('hint').style.display='none';
+      document.querySelectorAll('.cbtn').forEach(b=>b.disabled=true);
+      const fb = document.getElementById('feedback');
+      if(sol===current.sol){
+        btn.className='cbtn correct';
+        fb.textContent='✓ Doğru!';
+        fb.className='ok';
+        playNote(current.freq);
+        startAutoAdvance();
+      } else {
+        btn.className='cbtn wrong';
+        
+        // Rastgele mesajı seçip ekrana yazdıran kısım güncellendi
+        const randomMsg = ERROR_MESSAGES[Math.floor(Math.random() * ERROR_MESSAGES.length)];
+        fb.textContent = '✗ ' + randomMsg + ' — Doğrusu: ' + current.sol;
+        
+        fb.className='no';
+        document.querySelectorAll('.cbtn').forEach(b=>{
+          if(b.textContent===current.sol) b.className='cbtn correct';
+        });
+        document.getElementById('next-btn').style.display='block';
+      }
+    }
+
+    nextCard();
+  </script>
+</body>
+</html>
