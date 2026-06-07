@@ -150,9 +150,23 @@
       { key:'b/5', freq:987.77, sol:'Si'  },
     ];
     const ALL_SOL = ['Do','Re','Mi','Fa','Sol','La','Si'];
+    
+    // Hata mesajları dizisi eklendi
+    const ERROR_MESSAGES = [
+      "Yazıklar olsun!",
+      "Kulaklarımız kanadı...",
+      "Instagram'dan ekle beni seni engellim
+      "Tüm başarılar Yunus Hocadan, bunun gibi hatalar ise senden..",
+      "Yunus Hoca bunu görmemiş olsun...",
+      "Gitarı yavaşça yere bırak...",
+      "Sen daha iyi enstrümanlara layıksın",
+      "Aynen knk aynen sensin",
+      "Iyyy yine mi hata",
+      "Sen en iyisi fülüt çal knk"
+    ];
 
     let audioCtx = null, current = null, answered = false, interacted = false;
-    let bekletici = null;
+    let autoTimer = null;
 
     function shuffle(a){ return [...a].sort(()=>Math.random()-0.5); }
 
@@ -208,12 +222,12 @@
       voice.draw(ctx, stave);
     }
 
-    function durdurucu(){
-      if(bekletici){ clearTimeout(bekletici); bekletici=null; }
+    function clearAutoTimer(){
+      if(autoTimer){ clearTimeout(autoTimer); autoTimer=null; }
       document.getElementById('progress-bar-wrap').style.display='none';
     }
 
-    function baslatici(){
+    function startAutoAdvance(){
       const wrap = document.getElementById('progress-bar-wrap');
       const bar  = document.getElementById('progress-bar');
       wrap.style.display = 'block';
@@ -225,17 +239,17 @@
           bar.style.width = '0%';
         });
       });
-      bekletici = setTimeout(()=>{ durdurucu(); nextCard(); }, 2000);
+      autoTimer = setTimeout(()=>{ clearAutoTimer(); nextCard(); }, 2000);
     }
 
-    function manualNext(){ durdurucu(); nextCard(); }
+    function manualNext(){ clearAutoTimer(); nextCard(); }
 
     function nextCard(){
       answered = false;
       document.getElementById('feedback').textContent = '';
       document.getElementById('feedback').className = '';
       document.getElementById('next-btn').style.display = 'none';
-      durdurucu();
+      clearAutoTimer();
 
       current = NOTES[Math.floor(Math.random()*NOTES.length)];
       const wrongs = shuffle(ALL_SOL.filter(s=>s!==current.sol)).slice(0,3);
@@ -267,10 +281,14 @@
         fb.textContent='✓ Doğru!';
         fb.className='ok';
         playNote(current.freq);
-        baslatici();
+        startAutoAdvance();
       } else {
         btn.className='cbtn wrong';
-        fb.textContent='✗ Yazıklar olsun! — doğrusu: '+current.sol;
+        
+        // Rastgele mesajı seçip ekrana yazdıran kısım güncellendi
+        const randomMsg = ERROR_MESSAGES[Math.floor(Math.random() * ERROR_MESSAGES.length)];
+        fb.textContent = '✗ ' + randomMsg + ' — Doğrusu: ' + current.sol;
+        
         fb.className='no';
         document.querySelectorAll('.cbtn').forEach(b=>{
           if(b.textContent===current.sol) b.className='cbtn correct';
