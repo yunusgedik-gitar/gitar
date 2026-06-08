@@ -3,314 +3,536 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Nota Okuma Egzersizi – Klasik Gitar</title>
-  <script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.2/build/cjs/vexflow.js"></script>
+  <title>Gitar Klavyesi – Pozisyon 1 (Sınav Modu)</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Lato:wght@300;400;700&display=swap');
+    
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
+    
     body {
-      font-family: system-ui, -apple-system, sans-serif;
-      background: #f5f3ee;
+      font-family: 'Lato', sans-serif;
+      background: #faf6ed;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 2rem 1rem;
-      color: #1a1a1a;
+      padding: 1.2rem 1rem 2rem;
+      color: #5a3e2b;
     }
-
-    header { text-align: center; margin-bottom: 2rem; }
-    header h1 { font-size: 1.4rem; font-weight: 600; letter-spacing: -0.01em; }
-    header p  { font-size: 0.85rem; color: #777; margin-top: 0.3rem; }
-
-    #app { width: 100%; max-width: 500px; }
-
+    
+    header { text-align: center; margin-bottom: 0.5rem; }
+    header h1 { font-family: 'Playfair Display', serif; font-size: 1.35rem; font-weight: 600; color: #5a3e2b; }
+    
+    #app-wrap { width: 100%; max-width: 600px; }
+    
     .card {
       background: #fff;
-      border: 1px solid #e0ddd6;
-      border-radius: 16px;
-      padding: 1.25rem 1.25rem 0.5rem;
-      margin-bottom: 1rem;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      border: 1.5px solid #e8e0d5;
+      border-radius: 20px;
+      padding: 1.1rem 1.1rem 0.9rem;
+      margin-bottom: 0.85rem;
+      box-shadow: 0 4px 20px rgba(90, 62, 43, 0.04);
     }
-
-    .card-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      width: 100%;
-      margin-bottom: 0.25rem;
-    }
-
-    .card-label { font-size: 0.78rem; color: #888; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
-
+    
+    .card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
+    
     #listen-btn {
-      display: flex; align-items: center; gap: 5px;
-      font-size: 0.78rem; padding: 5px 12px;
-      border-radius: 8px; border: 1px solid #ddd;
-      background: #f5f3ee; color: #555;
-      cursor: pointer; font-family: inherit;
-      transition: all 0.12s;
+      display: flex; align-items: center; gap: 5px; font-size: 0.8rem; padding: 6px 14px;
+      border-radius: 20px; border: 1.5px solid #d4a373; background: #fff; color: #8b5a2b;
+      cursor: pointer; font-family: inherit; font-weight: 600; transition: all 0.2s;
     }
-    #listen-btn:hover { border-color: #aaa; color: #222; }
-    #listen-btn.playing { border-color: #5a9e30; color: #3b6d11; background: #eaf3de; }
+    #listen-btn:hover { background: #f5e6d3; }
+    #listen-btn.playing { background: #eaf3de; border-color: #6b8c42; color: #3b6d11; }
 
-    #notation { width: 100%; display: flex; justify-content: center; overflow: hidden; }
-    #notation svg { max-width: 100%; }
-
-    #hint { font-size: 0.75rem; color: #bbb; text-align: center; margin-bottom: 1rem; }
-
-    .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 0.75rem; }
-
-    .cbtn {
-      padding: 18px 10px; font-size: 1.15rem; font-weight: 600;
-      border-radius: 12px; border: 1.5px solid #ddd;
-      background: #fff; color: #1a1a1a;
-      cursor: pointer; text-align: center; font-family: inherit;
-      transition: background 0.12s, border-color 0.12s, transform 0.08s, box-shadow 0.12s;
+    .timer-badge {
+      font-size: 0.85rem; font-weight: 700; color: #8b5a2b; background: #f5e6d3;
+      padding: 5px 12px; border-radius: 12px; border: 1px solid #e8d5c0;
     }
-    .cbtn:hover:not(:disabled) { background: #f5f3ee; border-color: #aaa; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
-    .cbtn:active:not(:disabled) { transform: scale(0.97); box-shadow: none; }
-    .cbtn.correct { background: #eaf3de; border-color: #5a9e30; color: #3b6d11; }
-    .cbtn.wrong   { background: #fdf0f0; border-color: #e24b4a; color: #a32d2d; }
-    .cbtn:disabled { cursor: default; transform: none; box-shadow: none; }
-
-    #feedback { text-align: center; font-size: 0.9rem; font-weight: 600; min-height: 22px; margin-bottom: 0.6rem; }
-    #feedback.ok { color: #3b6d11; }
-    #feedback.no { color: #a32d2d; }
-
-    #progress-bar-wrap { height: 3px; background: #e0ddd6; border-radius: 2px; margin-bottom: 0.6rem; overflow: hidden; display: none; }
-    #progress-bar { height: 100%; width: 100%; background: #5a9e30; border-radius: 2px; transition: width 2s linear; }
-
-    #next-btn {
-      display: none; width: 100%; padding: 14px;
-      font-size: 0.95rem; font-weight: 500;
-      border-radius: 12px; border: 1.5px solid #ccc;
-      background: #fff; cursor: pointer;
-      font-family: inherit; color: #1a1a1a;
-      transition: background 0.12s, border-color 0.12s;
+    
+    .q-title { text-align: center; font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; color: #5a3e2b; }
+    
+    .hint-box {
+      text-align: center; font-size: 1.15rem; font-weight: 700; color: #5a3e2b; margin-bottom: 1rem;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      background: #fdfaf4; padding: 8px 12px; border-radius: 12px; border: 1px dashed #d4c4b0;
     }
-    #next-btn:hover { background: #f5f3ee; border-color: #aaa; }
+    .hint-string-badge {
+      display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px;
+      background: #8b5a2b; color: #fff; border-radius: 50%; font-size: 0.95rem; font-weight: 700;
+    }
+    .hint-fret-text { color: #b37d4e; background: #f5e6d3; padding: 2px 10px; border-radius: 6px; }
+    
+    .guitar-wrap { 
+      width: 100%; 
+      display: flex; 
+      justify-content: center; 
+      align-items: center; 
+      margin: 0 auto 0.5rem;
+    }
+    .guitar-wrap svg { 
+      display: block; 
+      width: 100%; 
+      max-width: 440px; 
+      height: auto; 
+    }
+    
+    .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1rem; }
+    
+    .choice-card {
+      background: #fff; border: 2px solid #e8e0d5; border-radius: 16px; padding: 14px 10px 12px;
+      cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center;
+      position: relative; box-shadow: 0 2px 8px rgba(90, 62, 43, 0.03); overflow: visible;
+    }
+    .choice-card:hover:not(.disabled):not(.correct):not(.wrong) {
+      border-color: #d4a373; transform: translateY(-3px); box-shadow: 0 8px 20px rgba(90, 62, 43, 0.1);
+    }
+    .choice-card:active:not(.disabled) { transform: scale(0.98); }
+    
+    .choice-staff { width: 110px; height: 150px; margin: 4px 0 0px; overflow: visible; }
+    .choice-staff svg { max-width: 100%; height: auto; overflow: visible; }
+    
+    .choice-name { font-size: 1.2rem; font-weight: 700; color: #5a3e2b; margin-top: 10px; }
+    .choice-card.correct { background: #eaf3de; border-color: #6b8c42; }
+    .choice-card.correct .choice-name { color: #3b6d11; }
+    .choice-card.wrong { background: #fdf0f0; border-color: #c75b39; }
+    .choice-card.wrong .choice-name { color: #a32d2d; }
+    .choice-card.disabled { cursor: default; opacity: 0.92; }
+    
+    .message { text-align: center; font-size: 0.9rem; font-weight: 700; color: #8b6b4e; margin-bottom: 0.65rem; min-height: 22px; }
+    
+    #auto-bar-wrap { height: 3px; background: #e0ddd6; border-radius: 2px; margin-bottom: 0.65rem; overflow: hidden; display: none; }
+    #auto-bar { height: 100%; width: 100%; background: #6b8c42; border-radius: 2px; transition: width 2s linear; }
+    
+    .progress-area { display: flex; align-items: center; margin-bottom: 1.2rem; }
+    .progress-track { flex: 1; height: 10px; background: #ede6d8; border-radius: 5px; overflow: hidden; border: 1px solid #e0d8c8; }
+    .progress-fill { height: 100%; width: 0%; background: #8cb85f; border-radius: 5px; transition: width 0.4s ease; }
+    
+    .controls { display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 8px; }
+    .ctrl-btn {
+      padding: 11px; font-size: 0.85rem; font-weight: 700; border-radius: 12px; border: 1.5px solid #d4c4b0;
+      background: #fff; color: #5a3e2b; cursor: pointer; font-family: inherit; transition: all 0.15s;
+      display: flex; align-items: center; justify-content: center; gap: 5px;
+    }
+    .ctrl-btn:hover { background: #f5e6d3; border-color: #c4a88a; }
+    .ctrl-btn.primary { background: #f5e6d3; border-color: #d4a373; }
+    .ctrl-btn.primary:hover { background: #ebd3b8; }
+    .ctrl-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    
+    .result-screen { display: none; text-align: center; padding: 1.5rem 1rem; }
+    .result-title { font-family: 'Playfair Display', serif; font-size: 1.8rem; color: #6b8c42; margin-bottom: 1rem; }
+    .result-stats { background: #fdfaf4; border: 1.5px dashed #d4c4b0; border-radius: 16px; padding: 1.2rem; margin-bottom: 1.5rem; text-align: left; }
+    .stat-row { display: flex; justify-content: space-between; font-size: 1.1rem; padding: 8px 0; border-bottom: 1px dashed #e8e0d5; color: #5a3e2b; }
+    .stat-row:last-child { border-bottom: none; }
+    .stat-val { font-weight: 700; color: #8b5a2b; }
+    .stat-val.correct-val { color: #6b8c42; }
+    .stat-val.wrong-val { color: #c75b39; }
 
-    footer { margin-top: 2.5rem; font-size: 0.75rem; color: #ccc; text-align: center; }
+    footer { margin-top: 1.5rem; font-size: 0.75rem; color: #c4b5a0; text-align: center; }
 
-    @media (max-width: 400px) {
-      .cbtn { font-size: 1rem; padding: 14px 8px; }
+    @media (max-width: 420px) {
+      .choices { gap: 8px; }
+      .choice-card { padding: 10px 6px; }
+      .choice-staff { width: 90px; height: 130px; }
+      .choice-name { font-size: 1rem; margin-top: 6px; }
+      .controls { grid-template-columns: 1fr; }
+      .ctrl-btn.primary { order: -1; }
     }
   </style>
 </head>
 <body>
 
-  <header>
-    <h1>🎸 Nota Okuma Egzersizi</h1>
-    <p>İyi ki Yunus Hoca var! :)</p>
-  </header>
+<header>
+  <h1>🎸 Gitar Klavyesi – I. Pozisyon</h1>
+</header>
 
-  <div id="app">
+<div id="app-wrap">
+  <div id="quiz-zone">
     <div class="card">
       <div class="card-top">
-        <span class="card-label">Bu Hangi Nota?</span>
         <button id="listen-btn" onclick="replay()">🔊 Dinle</button>
+        <div class="timer-badge" id="timer-display">Süre: 00:00</div>
       </div>
-      <div id="notation"></div>
+      <div class="q-title">Bu işaretli yer hangi notadır?</div>
+      
+      <div class="hint-box" id="hint-text">
+        💡 <span class="hint-string-badge">1</span> . Tel – <span class="hint-fret-text">I. Perde</span>
+      </div>
+
+      <div class="guitar-wrap">
+        <svg id="guitar-svg" viewBox="60 0 400 210" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+          <defs>
+            <linearGradient id="fbGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#2a1a0e"/>
+              <stop offset="100%" stop-color="#1a0f06"/>
+            </linearGradient>
+            <linearGradient id="nutGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#f0e0b0"/>
+              <stop offset="100%" stop-color="#c8a050"/>
+            </linearGradient>
+            <filter id="dotGlow" x="-80%" y="-80%" width="260%" height="260%">
+              <feGaussianBlur stdDeviation="3.5" result="blur"/>
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+
+          <rect x="62" y="32" width="392" height="148" rx="5" fill="url(#fbGrad)" stroke="#3a2010" stroke-width="1.5"/>
+          <rect x="62" y="32" width="392" height="3" rx="1" fill="#c8a050" opacity="0.5"/>
+          <rect x="62" y="177" width="392" height="3" rx="1" fill="#c8a050" opacity="0.5"/>
+
+          <rect x="112" y="30" width="8" height="152" rx="2" fill="url(#nutGrad)" stroke="#c0a040" stroke-width="0.8"/>
+
+          <rect x="198" y="32" width="4" height="148" rx="1" fill="#b0b8b0" opacity="0.85"/>
+          <rect x="285" y="32" width="4" height="148" rx="1" fill="#b0b8b0" opacity="0.85"/>
+          <rect x="370" y="32" width="4" height="148" rx="1" fill="#b0b8b0" opacity="0.85"/>
+          <rect x="450" y="32" width="4" height="148" rx="1" fill="#b0b8b0" opacity="0.85"/>
+
+          <text x="155" y="24" text-anchor="middle" fill="#8b6b4e" font-size="12" font-weight="700" font-family="Lato,sans-serif">1</text>
+          <text x="243" y="24" text-anchor="middle" fill="#8b6b4e" font-size="12" font-weight="700" font-family="Lato,sans-serif">2</text>
+          <text x="328" y="24" text-anchor="middle" fill="#8b6b4e" font-size="12" font-weight="700" font-family="Lato,sans-serif">3</text>
+          <text x="412" y="24" text-anchor="middle" fill="#8b6b4e" font-size="12" font-weight="700" font-family="Lato,sans-serif">4</text>
+
+          <line x1="70" y1="50"  x2="454" y2="50"  stroke="#e8d09a" stroke-width="0.9" opacity="0.95"/>
+          <line x1="70" y1="74"  x2="454" y2="74"  stroke="#e0c880" stroke-width="1.2" opacity="0.95"/>
+          <line x1="70" y1="98"  x2="454" y2="98"  stroke="#d8bc6a" stroke-width="1.5" opacity="0.95"/>
+          <line x1="70" y1="122" x2="454" y2="122" stroke="#c8a84a" stroke-width="1.9" opacity="0.95"/>
+          <line x1="70" y1="146" x2="454" y2="146" stroke="#b89030" stroke-width="2.3" opacity="0.95"/>
+          <line x1="70" y1="170" x2="454" y2="170" stroke="#a87820" stroke-width="2.8" opacity="0.95"/>
+
+          <circle cx="93" cy="50"  r="10" fill="#fff8ef" stroke="#d4a373" stroke-width="1.2"/>
+          <text   x="93" y="54"  text-anchor="middle" fill="#5a3e2b" font-size="10" font-weight="700" font-family="Lato,sans-serif">1</text>
+          <circle cx="93" cy="74"  r="10" fill="#fff8ef" stroke="#d4a373" stroke-width="1.2"/>
+          <text   x="93" y="78"  text-anchor="middle" fill="#5a3e2b" font-size="10" font-weight="700" font-family="Lato,sans-serif">2</text>
+          <circle cx="93" cy="98"  r="10" fill="#fff8ef" stroke="#d4a373" stroke-width="1.2"/>
+          <text   x="93" y="102" text-anchor="middle" fill="#5a3e2b" font-size="10" font-weight="700" font-family="Lato,sans-serif">3</text>
+          <circle cx="93" cy="122" r="10" fill="#fff8ef" stroke="#d4a373" stroke-width="1.2"/>
+          <text   x="93" y="126" text-anchor="middle" fill="#5a3e2b" font-size="10" font-weight="700" font-family="Lato,sans-serif">4</text>
+          <circle cx="93" cy="146" r="10" fill="#fff8ef" stroke="#d4a373" stroke-width="1.2"/>
+          <text   x="93" y="150" text-anchor="middle" fill="#5a3e2b" font-size="10" font-weight="700" font-family="Lato,sans-serif">5</text>
+          <circle cx="93" cy="170" r="10" fill="#fff8ef" stroke="#d4a373" stroke-width="1.2"/>
+          <text   x="93" y="174" text-anchor="middle" fill="#5a3e2b" font-size="10" font-weight="700" font-family="Lato,sans-serif">6</text>
+
+          <circle id="fret-highlight" cx="0" cy="0" r="14" fill="#f4d03f" stroke="#d4ac0d" stroke-width="2.5" filter="url(#dotGlow)" opacity="0.95" style="display:none;pointer-events:none;"/>
+          <text id="fret-highlight-q" x="0" y="0" text-anchor="middle" dominant-baseline="central" fill="#5a3000" font-size="11" font-weight="700" font-family="Lato,sans-serif" style="display:none;pointer-events:none;">?</text>
+        </svg>
+      </div>
     </div>
 
-    <p id="hint">🔊 Notayı duymak için "Dinle" tuşuna basın</p>
-
     <div class="choices" id="choices"></div>
-    <div id="feedback"></div>
-    <div id="progress-bar-wrap"><div id="progress-bar"></div></div>
-    <button id="next-btn" onclick="manualNext()">Sonraki →</button>
+    <div class="message" id="message">🎵 Doğru cevabı seç ve öğrenmeye devam et!</div>
+    <div id="auto-bar-wrap"><div id="auto-bar"></div></div>
+
+    <div class="progress-area">
+      <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+    </div>
   </div>
 
-  <div class="controls" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; max-width: 500px; margin: 0 auto;">
-    <button class="cbtn" style="padding: 12px; font-size: 0.95rem;" onclick="resetQuiz()">↻ Tekrar</button>
-    <button class="cbtn" style="padding: 12px; font-size: 0.95rem;" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Başa Dön</button>
+  <div id="result-zone" class="result-screen">
+    <h2 class="result-title">🎉 Test Tamamlandı!</h2>
+    <div class="result-stats">
+      <div class="stat-row"><span>Toplam Süre:</span><span class="stat-val" id="res-time">00:00</span></div>
+      <div class="stat-row"><span>Doğru Cevap:</span><span class="stat-val correct-val" id="res-correct">0</span></div>
+      <div class="stat-row"><span>Yanlış Cevap:</span><span class="stat-val wrong-val" id="res-wrong">0</span></div>
+    </div>
+    <p style="color:#8b6b4e; font-weight:700; margin-bottom:1.5rem;">Bravo! Dereceyi ekran görüntüsü olarak grupta paylaşıp arkadaşlarını kıskandırmaya ne dersin? :D</p>
   </div>
+
+  <div class="controls">
+    <button class="ctrl-btn" onclick="resetQuiz()">↻ Tekrar</button>
+    <button class="ctrl-btn primary" id="next-btn" onclick="manualNext()" disabled>Sonraki Soru →</button>
+<button class="ctrl-btn" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Başa Dön</button>
+  </div>
+</div>
 
 <footer><p>❤️ yunusgedik.com.tr</p></footer>
 
-  <script>
-    const NOTES = [
-      { key:'e/3', freq:164.81, nota:'Mi'  },
-      { key:'f/3', freq:174.61, nota:'Fa'  },
-      { key:'g/3', freq:196.00, nota:'Sol' },
-      { key:'a/3', freq:220.00, nota:'La'  },
-      { key:'b/3', freq:246.94, nota:'Si'  },
-      { key:'c/4', freq:261.63, nota:'Do'  },
-      { key:'d/4', freq:293.66, nota:'Re'  },
-      { key:'e/4', freq:329.63, nota:'Mi'  },
-      { key:'f/4', freq:349.23, nota:'Fa'  },
-      { key:'g/4', freq:392.00, nota:'Sol' },
-      { key:'a/4', freq:440.00, nota:'La'  },
-      { key:'b/4', freq:493.88, nota:'Si'  },
-      { key:'c/5', freq:523.25, nota:'Do'  },
-      { key:'d/5', freq:587.33, nota:'Re'  },
-      { key:'e/5', freq:659.25, nota:'Mi'  },
-      { key:'f/5', freq:698.46, nota:'Fa'  },
-      { key:'g/5', freq:783.99, nota:'Sol' },
-      { key:'a/5', freq:880.00, nota:'La'  },
-      { key:'b/5', freq:987.77, nota:'Si'  },
-    ];
+<script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.2/build/cjs/vexflow.js"></script>
+<script>
+const NOTES = [
+  { string:1, fret:0, name:'Mi',  freq:329.63, key: 'e/5', line: 4.0 }, 
+  { string:1, fret:1, name:'Fa',  freq:349.23, key: 'f/5', line: 4.5 }, 
+  { string:1, fret:3, name:'Sol', freq:392.00, key: 'g/5', line: 5.0 }, 
+  { string:2, fret:0, name:'Si',  freq:246.94, key: 'b/4', line: 2.0 }, 
+  { string:2, fret:1, name:'Do',  freq:261.63, key: 'c/5', line: 2.5 }, 
+  { string:2, fret:3, name:'Re',  freq:293.66, key: 'd/5', line: 3.0 }, 
+  { string:3, fret:0, name:'Sol', freq:196.00, key: 'g/4', line: 1.0 }, 
+  { string:3, fret:2, name:'La',  freq:220.00, key: 'a/4', line: 1.5 }, 
+  { string:4, fret:0, name:'Re',  freq:146.83, key: 'd/4', line: -0.5 },
+  { string:4, fret:2, name:'Mi',  freq:164.81, key: 'e/4', line: 0.0 }, 
+  { string:4, fret:3, name:'Fa',  freq:174.61, key: 'f/4', line: 0.5 }, 
+  { string:5, fret:0, name:'La',  freq:110.00, key: 'a/3', line: -1.5 },
+  { string:5, fret:2, name:'Si',  freq:123.47, key: 'b/3', line: -1.0 },
+  { string:5, fret:3, name:'Do',  freq:130.81, key: 'c/4', line: -0.5 },
+  { string:6, fret:0, name:'Mi',  freq:82.41,  key: 'e/3', line: -3.0 },
+  { string:6, fret:1, name:'Fa',  freq:87.31,  key: 'f/3', line: -2.5 },
+  { string:6, fret:3, name:'Sol', freq:98.00,  key: 'g/3', line: -2.0 } 
+];
+
+const ROMAN_FRETS = { 0: 'Boş Tel', 1: 'I. Perde', 2: 'II. Perde', 3: 'III. Perde', 4: 'IV. Perde' };
+const ERR = [
+  "Yazıklar olsun!","Kulaklarımız kanadı...","Sende hiç utanma yok mu yaa",
+  "Instagram'dan ekle beni seni engellim","Tüm başarılar Yunus Hocadan, bunun gibi hatalar ise senden..",
+  "Yunus Hoca bunu görmemiş olsun...","Gitarı yavaşça yere bırak...","Sen daha iyi enstrümanlara layıksın",
+  "Aynen knk aynen sensin","Iyyy yine mi hata","Ağır popçusun belli knk","Lâ havle..","Sen en iyisi flüt çal knk"
+];
+
+const FRET_CX = { 0:116, 1:155, 2:243, 3:328, 4:412 };
+const STRING_CY = { 1:50, 2:74, 3:98, 4:122, 5:146, 6:170 };
+
+const TOTAL_QUESTIONS_COUNT = 20;
+
+let audioCtx=null, questions=[], currentIndex=0, current=null, answered=false, interacted=false, autoTimer=null;
+let correctCount=0, wrongCount=0, startTime=null, timerInterval=null;
+
+function shuffle(a){ return [...a].sort(()=>Math.random()-0.5); }
+
+function generateRandomQuizSet(pool, targetCount) {
+  let list = [];
+  for(let i=0; i<targetCount; i++) {
+    const randomIndex = Math.floor(Math.random() * pool.length);
+    list.push(pool[randomIndex]);
+  }
+  return list;
+}
+
+function getAudio(){
+  if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function playGuitar(freq){
+  try{
+    const ctx=getAudio();
+    if(ctx.state==='suspended') ctx.resume();
+    const now=ctx.currentTime;
+    const master=ctx.createGain();
+    master.connect(ctx.destination);
     
-    const ALL_NOTES = ['Do', 'Re', 'Mi', 'Fa', 'Sol', 'La', 'Si'];
+    const filter=ctx.createBiquadFilter();
+    filter.type='lowpass'; filter.frequency.value=freq*2.8; filter.Q.value=0.7;
+    filter.connect(master);
     
-    const ERROR_MESSAGES = [
-      "Yazıklar olsun!",
-      "Kulaklarımız kanadı...",
-      "Sende hiç utanma yok mu yaa",
-      "Instagram'dan ekle beni seni engellim",
-      "Tüm başarılar Yunus Hocadan, bunun gibi hatalar ise senden..",
-      "Yunus Hoca bunu görmemiş olsun...",
-      "Gitarı yavaşça yere bırak...",
-      "Sen daha iyi enstrümanlara layıksın",
-      "Aynen knk aynen sensin",
-      "Iyyy yine mi hata",
-      "Ağır popçusun belli knk",
-      "Lâ havle..",
-      "Sen en iyisi flüt çal knk"
-    ];
+    const osc=ctx.createOscillator(); osc.type='triangle'; osc.frequency.value=freq;
+    const og=ctx.createGain();
+    og.gain.setValueAtTime(0,now); og.gain.linearRampToValueAtTime(0.45,now+0.006); og.gain.exponentialRampToValueAtTime(0.001,now+2.2);
+    osc.connect(og); og.connect(filter); osc.start(now); osc.stop(now+2.2);
+    
+    const sine=ctx.createOscillator(); sine.type='sine'; sine.frequency.value=freq;
+    const sg=ctx.createGain();
+    sg.gain.setValueAtTime(0,now); sg.gain.linearRampToValueAtTime(0.25,now+0.006); sg.gain.exponentialRampToValueAtTime(0.001,now+1.8);
+    sine.connect(sg); sg.connect(filter); sine.start(now); sine.stop(now+1.8);
+    
+    [2,3,4].forEach(h=>{
+      const o=ctx.createOscillator(); o.type='sine'; o.frequency.value=freq*h;
+      const g=ctx.createGain(); g.gain.setValueAtTime(0,now); g.gain.linearRampToValueAtTime(0.1/h,now+0.005); g.gain.exponentialRampToValueAtTime(0.001,now+1.2);
+      o.connect(g); g.connect(filter); o.start(now); o.stop(now+1.2);
+    });
+    
+    const bufSize=ctx.sampleRate*0.04;
+    const buf=ctx.createBuffer(1,bufSize,ctx.sampleRate);
+    const d=buf.getChannelData(0);
+    for(let i=0;i<bufSize;i++) d[i]=(Math.random()*2-1)*(1-i/bufSize);
+    const noise=ctx.createBufferSource(); noise.buffer=buf;
+    const nf=ctx.createBiquadFilter(); nf.type='bandpass'; nf.frequency.value=freq; nf.Q.value=0.8;
+    const ng=ctx.createGain(); ng.gain.setValueAtTime(0.2,now); ng.gain.exponentialRampToValueAtTime(0.001,now+0.08);
+    noise.connect(nf); nf.connect(master); noise.start(now);
+    
+    master.gain.setValueAtTime(0.75,now); master.gain.exponentialRampToValueAtTime(0.001,now+2.5);
+    const btn=document.getElementById('listen-btn');
+    btn.classList.add('playing'); setTimeout(()=>btn.classList.remove('playing'),700);
+  }catch(e){}
+}
 
-    let audioCtx = null, current = null, answered = false, interacted = false;
-    let autoTimer = null;
+function replay(){ interacted=true; if(current) playGuitar(current.freq); }
 
-    function shuffle(a){ return [...a].sort(()=>Math.random()-0.5); }
+function moveHighlight(stringN, fretN){
+  const cx=FRET_CX[fretN], cy=STRING_CY[stringN];
+  const dot=document.getElementById('fret-highlight');
+  const qtxt=document.getElementById('fret-highlight-q');
+  dot.setAttribute('cx',cx); dot.setAttribute('cy',cy);
+  qtxt.setAttribute('x',cx); qtxt.setAttribute('y',cy);
+  dot.style.display=''; qtxt.style.display='';
+}
 
-    function getAudio(){
-      if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
-      return audioCtx;
+function drawMiniStaff(div, noteObj){
+  div.innerHTML='';
+  try {
+    const {Renderer, Stave, StaveNote, Voice, Formatter} = Vex.Flow;
+    const renderer = new Renderer(div, Renderer.Backends.SVG);
+    
+    renderer.resize(110, 150);
+    const ctx = renderer.getContext();
+    
+    const stave = new Stave(0, 30, 110);
+    stave.addClef('treble').setContext(ctx).draw();
+    
+    const note = new StaveNote({ keys: [noteObj.key], duration: 'w' });
+    if(note.keyProps && note.keyProps[0]) {
+      note.keyProps[0].line = noteObj.line;
+      note.keyProps[0].clef = 'treble';
     }
+    
+    const voice = new Voice({ num_beats: 4, beat_value: 4 });
+    voice.addTickables([note]);
+    new Formatter().joinVoices([voice]).format([voice], 85);
+    voice.draw(ctx, stave);
+    
+    const s = div.querySelector('svg'); 
+    if(s) { s.style.width = '100%'; s.style.height = 'auto'; }
+  } catch(e) { console.log(e); }
+}
 
-    function playNote(freq){
-      try {
-        const ctx = getAudio();
-        if(ctx.state==='suspended') ctx.resume();
-        const master = ctx.createGain();
-        const now = ctx.currentTime;
-        master.gain.setValueAtTime(0, now);
-        master.gain.linearRampToValueAtTime(0.55, now+0.006);
-        master.gain.exponentialRampToValueAtTime(0.001, now+2.2);
-        master.connect(ctx.destination);
-        [[1,0.5],[2,0.28],[3,0.12],[4,0.06]].forEach(([m,v])=>{
-          const o=ctx.createOscillator(), g=ctx.createGain();
-          o.type='sine'; o.frequency.value=freq*m; g.gain.value=v;
-          o.connect(g); g.connect(master); o.start(now); o.stop(now+2.2);
-        });
-        const btn=document.getElementById('listen-btn');
-        btn.classList.add('playing');
-        setTimeout(()=>btn.classList.remove('playing'),600);
-      } catch(e){}
-    }
+function startTimer() {
+  startTime = Date.now();
+  if(timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(updateTimerDisplay, 1000);
+}
 
-    function replay(){
-      interacted=true;
-      document.getElementById('hint').style.display='none';
-      if(current) playNote(current.freq);
-    }
+function formatTime(ms) {
+  const totalSecs = Math.floor(ms / 1000);
+  const mins = Math.floor(totalSecs / 60);
+  const secs = totalSecs % 60;
+  return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+}
 
-    function drawNote(noteKey){
-      const { Renderer, Stave, StaveNote, Voice, Formatter } = Vex.Flow;
-      const container = document.getElementById('notation');
-      container.innerHTML = '';
-      const renderer = new Renderer(container, Renderer.Backends.SVG);
-      renderer.resize(240, 240);
-      const ctx = renderer.getContext();
-      const staveW = 200;
-      const stave = new Stave(20, 72, staveW);
-      stave.addClef('treble');
-      stave.setContext(ctx).draw();
-      const sn = new StaveNote({ keys:[noteKey], duration:'w' });
-      const voice = new Voice({ num_beats:4, beat_value:4 });
-      voice.addTickables([sn]);
-      new Formatter().joinVoices([voice]).format([voice], staveW - 55);
-      voice.draw(ctx, stave);
-    }
+function formatFinalTimeText(ms) {
+  const totalSecs = Math.floor(ms / 1000);
+  const mins = Math.floor(totalSecs / 60);
+  const secs = totalSecs % 60;
+  if(mins > 0) {
+    return `${mins} dk ${secs} saniye`;
+  }
+  return `${secs} saniye`;
+}
 
-    function clearAutoTimer(){
-      if(autoTimer){ clearTimeout(autoTimer); autoTimer=null; }
-      document.getElementById('progress-bar-wrap').style.display='none';
-    }
+function updateTimerDisplay() {
+  const elapsed = Date.now() - startTime;
+  document.getElementById('timer-display').textContent = 'Süre: ' + formatTime(elapsed);
+}
 
-    function startAutoAdvance(){
-      const wrap = document.getElementById('progress-bar-wrap');
-      const bar  = document.getElementById('progress-bar');
-      wrap.style.display = 'block';
-      bar.style.width = '100%';
-      bar.style.transition = 'none';
-      requestAnimationFrame(()=>{
-        requestAnimationFrame(()=>{
-          bar.style.transition = 'width 2s linear';
-          bar.style.width = '0%';
-        });
-      });
-      autoTimer = setTimeout(()=>{ clearAutoTimer(); nextCard(); }, 2000);
-    }
+function clearAutoTimer(){
+  if(autoTimer){clearTimeout(autoTimer);autoTimer=null;}
+  document.getElementById('auto-bar-wrap').style.display='none';
+}
 
-    function manualNext(){ clearAutoTimer(); nextCard(); }
+function startAutoAdvance(){
+  const wrap=document.getElementById('auto-bar-wrap'), bar=document.getElementById('auto-bar');
+  wrap.style.display='block'; bar.style.width='100%'; bar.style.transition='none';
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    bar.style.transition='width 2s linear'; bar.style.width='0%';
+  }));
+  autoTimer=setTimeout(()=>{clearAutoTimer();nextQuestion();},2000);
+}
 
-    function nextCard(){
-      answered = false;
-      document.getElementById('feedback').textContent = '';
-      document.getElementById('feedback').className = '';
-      document.getElementById('next-btn').style.display = 'none';
-      clearAutoTimer();
+function manualNext(){ clearAutoTimer(); nextQuestion(); }
 
-      current = NOTES[Math.floor(Math.random()*NOTES.length)];
-      
-      const wrongs = shuffle(ALL_NOTES.filter(n => n !== current.nota)).slice(0, 3);
-      const choices = shuffle([current.nota, ...wrongs]);
+function updateProgress(){
+  const pct=(currentIndex / TOTAL_QUESTIONS_COUNT) * 100;
+  document.getElementById('progress-fill').style.width=pct+'%';
+}
 
-      drawNote(current.key);
-      if(interacted) setTimeout(()=>playNote(current.freq), 280);
+function showFinalResults() {
+  clearInterval(timerInterval);
+  const elapsed = Date.now() - startTime;
+  
+  document.getElementById('quiz-zone').style.display = 'none';
+  document.getElementById('result-zone').style.display = 'block';
+  
+  document.getElementById('res-time').textContent = formatFinalTimeText(elapsed);
+  document.getElementById('res-correct').textContent = correctCount;
+  document.getElementById('res-wrong').textContent = wrongCount;
+}
 
-      const box = document.getElementById('choices');
-      box.innerHTML = '';
-      choices.forEach(notaAdi=>{
-        const btn = document.createElement('button');
-        btn.className = 'cbtn';
-        btn.textContent = notaAdi;
-        btn.onclick = ()=>answer(notaAdi, btn);
-        box.appendChild(btn);
-      });
-    }
+function nextQuestion(){
+  clearAutoTimer(); answered=false;
+  document.getElementById('message').textContent='🎵 Doğru cevabı seç ve öğrenmeye devam et!';
+  document.getElementById('message').style.color='#8b6b4e';
+  document.getElementById('next-btn').disabled=true;
 
-    function answer(notaAdi, btn){
-      if(answered) return;
-      answered = true;
-      interacted = true;
-      document.getElementById('hint').style.display='none';
-      document.querySelectorAll('.cbtn').forEach(b=>b.disabled=true);
-      const fb = document.getElementById('feedback');
-      
-      if(notaAdi===current.nota){
-        btn.className='cbtn correct';
-        fb.textContent='✓ Doğru!';
-        fb.className='ok';
-        playNote(current.freq);
-        startAutoAdvance();
-      } else {
-        btn.className='cbtn wrong';
-        
-        const randomMsg = ERROR_MESSAGES[Math.floor(Math.random() * ERROR_MESSAGES.length)];
-        fb.textContent = '✗ ' + randomMsg + ' — Doğrusu: ' + current.nota;
-        
-        fb.className='no';
-        document.querySelectorAll('.cbtn').forEach(b=>{
-          if(b.textContent===current.nota) b.className='cbtn correct';
-        });
-        document.getElementById('next-btn').style.display='block';
-      }
-    }
+  if(currentIndex >= TOTAL_QUESTIONS_COUNT){
+    showFinalResults();
+    return;
+  }
 
-    function resetQuiz(){
-      clearAutoTimer();
-      interacted = true;
-      nextCard();
-    }
+  current=questions[currentIndex];
+  moveHighlight(current.string, current.fret);
 
-    nextCard();
-  </script>
+  const fretText = ROMAN_FRETS[current.fret];
+  document.getElementById('hint-text').innerHTML = `💡 <span class="hint-string-badge">${current.string}</span> . Tel – <span class="hint-fret-text">${fretText}</span>`;
+
+  let pool = NOTES.filter(n => n.name !== current.name);
+  let wrongs = shuffle(pool).slice(0, 3);
+  let choices = shuffle([current, ...wrongs]);
+  
+  const box=document.getElementById('choices');
+  box.innerHTML='';
+
+  choices.forEach((noteObj)=>{
+    const card=document.createElement('div');
+    card.className='choice-card'; card.dataset.choice=noteObj.name;
+    card.onclick=()=>selectChoice(card, noteObj.name);
+
+    const staffDiv=document.createElement('div'); staffDiv.className='choice-staff';
+    const nameDiv=document.createElement('div'); nameDiv.className='choice-name'; nameDiv.textContent=noteObj.name;
+
+    card.appendChild(staffDiv); card.appendChild(nameDiv);
+    box.appendChild(card);
+
+    drawMiniStaff(staffDiv, noteObj);
+  });
+
+  updateProgress();
+  if(interacted) setTimeout(()=>playGuitar(current.freq),300);
+}
+
+function selectChoice(card, name){
+  if(answered) return;
+  answered=true; interacted=true;
+  document.querySelectorAll('.choice-card').forEach(c=>{c.classList.add('disabled');c.onclick=null;});
+  const msg=document.getElementById('message');
+  
+  if(name===current.name){
+    card.classList.add('correct');
+    msg.textContent='✓ Doğru! İyi iş çıkardın, devam et!'; msg.style.color='#6b8c42';
+    playGuitar(current.freq);
+    correctCount++;
+    document.getElementById('next-btn').disabled=false;
+    startAutoAdvance();
+  } else {
+    card.classList.add('wrong');
+    const randomMsg=ERR[Math.floor(Math.random()*ERR.length)];
+    msg.textContent='✗ '+randomMsg+' — Doğrusu: '+current.name; msg.style.color='#c75b39';
+    wrongCount++;
+    document.querySelectorAll('.choice-card').forEach(c=>{
+      if(c.dataset.choice===current.name) c.classList.add('correct');
+    });
+    document.getElementById('next-btn').disabled=false;
+  }
+  currentIndex++;
+}
+
+function resetQuiz(){
+  clearAutoTimer();
+  if(timerInterval) clearInterval(timerInterval);
+  
+  document.getElementById('quiz-zone').style.display = 'block';
+  document.getElementById('result-zone').style.display = 'none';
+  
+  correctCount = 0;
+  wrongCount = 0;
+  currentIndex = 0;
+  answered = false;
+  interacted = false;
+  
+  questions = generateRandomQuizSet(NOTES, TOTAL_QUESTIONS_COUNT);
+  
+  document.getElementById('hint-text').innerHTML='💡 Soruyu incele ve doğru notayı seç';
+  document.getElementById('timer-display').textContent = 'Süre: 00:00';
+  
+  startTimer();
+  nextQuestion();
+}
+
+resetQuiz();
+</script>
 </body>
 </html>
