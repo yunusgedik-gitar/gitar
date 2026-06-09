@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vals – Ole Halen</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght=0,600;1,400&family=Lato:wght@300;400;700&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Lato', sans-serif;
+      background: #faf6ed;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1.4rem 1rem 2.5rem;
+      color: #5a3e2b;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 1.1rem;
+    }
+    header h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.45rem;
+      font-weight: 600;
+      color: #5a3e2b;
+      letter-spacing: 0.01em;
+    }
+    header p {
+      font-size: 0.8rem;
+      color: #b09070;
+      margin-top: 3px;
+      font-style: italic;
+    }
+
+    #app-wrap {
+      width: 100%;
+      max-width: 700px;
+    }
+
+    /* ── SCORE CARD ── */
+    .score-card {
+      background: #fff;
+      border: 1.5px solid #e8e0d5;
+      border-radius: 20px;
+      padding: 1.5rem 1rem; /* Üst ve alttan iç boşluğu artırdık */
+      margin-bottom: 0.85rem;
+      box-shadow: 0 4px 20px rgba(90,62,43,0.05);
+      overflow: hidden;
+    }
+
+    .score-rows {
+      display: flex;
+      flex-direction: column;
+      gap: 1.8rem; /* Portelerin (resimlerin) kendi arasındaki boşluğu artırdık */
+    }
+
+    /* Each row = one score image + playhead overlay */
+    .score-row {
+      position: relative;
+      display: block;
+      line-height: 0;
+    }
+
+    .score-row img {
+      width: 100%;
+      display: block;
+      border-radius: 4px;
+      transition: opacity 0.3s;
+    }
+
+    /* Çalınmayan satırların soluk görünmesi */
+    .score-row.inactive img {
+      opacity: 0.45;
+    }
+
+    /* Green playhead line */
+    .playhead {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 2.5px;
+      background: #52a050;
+      box-shadow: 0 0 8px 2px rgba(82,160,80,0.45);
+      display: none;
+      pointer-events: none;
+      z-index: 10;
+      border-radius: 2px;
+    }
+
+    /* YEŞİL KUTU (active-row::after) BURADAN KALDIRILDI */
+
+    /* ── CONTROLS CARD ── */
+    .controls-card {
+      background: #fff;
+      border: 1.5px solid #e8e0d5;
+      border-radius: 20px;
+      padding: 1rem 1.2rem;
+      box-shadow: 0 4px 20px rgba(90,62,43,0.04);
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    /* Progress bar */
+    .progress-wrap {
+      position: relative;
+      height: 6px;
+      background: #ede6d8;
+      border-radius: 3px;
+      cursor: pointer;
+      overflow: hidden;
+      border: 1px solid #e0d8c8;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #8cb85f, #52a050);
+      border-radius: 3px;
+      transition: width 0.1s linear;
+      pointer-events: none;
+    }
+
+    /* Time display */
+    .time-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .time-badge {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #8b5a2b;
+      background: #f5e6d3;
+      padding: 4px 11px;
+      border-radius: 10px;
+      border: 1px solid #e8d5c0;
+      letter-spacing: 0.04em;
+      font-variant-numeric: tabular-nums;
+    }
+    .measure-counter {
+      font-size: 0.78rem;
+      color: #b09070;
+      text-align: center;
+      letter-spacing: 0.02em;
+    }
+    .bpm-badge {
+      font-size: 0.75rem;
+      color: #b09070;
+      background: #faf3ea;
+      padding: 4px 10px;
+      border-radius: 10px;
+      border: 1px solid #ede0cc;
+    }
+
+    /* Buttons row */
+    .btn-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .ctrl-btn {
+      padding: 10px 18px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      border-radius: 14px;
+      border: 1.5px solid #d4c4b0;
+      background: #fff;
+      color: #5a3e2b;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .ctrl-btn:hover { background: #f5e6d3; border-color: #c4a88a; }
+    .ctrl-btn:active { transform: scale(0.97); }
+
+    #play-btn {
+      padding: 12px 32px;
+      font-size: 1rem;
+      border-radius: 16px;
+      background: #f5e6d3;
+      border-color: #d4a373;
+      min-width: 130px;
+      justify-content: center;
+    }
+    #play-btn:hover { background: #ebd3b8; }
+    #play-btn.is-playing {
+      background: #eaf3de;
+      border-color: #6b8c42;
+      color: #3b6d11;
+    }
+
+    footer {
+      margin-top: 1.8rem;
+      font-size: 0.72rem;
+      color: #c4b5a0;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🎸 Vals – Ole Halen</h1>
+  <p>Klasik Gitar · Moderato · 100 BPM</p>
+</header>
+
+<div id="app-wrap">
+
+  <div class="score-card">
+    <div class="score-rows" id="score-rows">
+
+      <div class="score-row" id="row-0">
+        <img src="Vals_-_Ole_Halen_0002.png" alt="Ölçü 1-4" draggable="false" />
+        <div class="playhead" id="ph-0"></div>
+      </div>
+
+      <div class="score-row inactive" id="row-1">
+        <img src="Vals_-_Ole_Halen_0001.png" alt="Ölçü 5-8" draggable="false" />
+        <div class="playhead" id="ph-1"></div>
+      </div>
+
+      <div class="score-row inactive" id="row-2">
+        <img src="Vals_-_Ole_Halen_0003.png" alt="Ölçü 9-12" draggable="false" />
+        <div class="playhead" id="ph-2"></div>
+      </div>
+
+      <div class="score-row inactive" id="row-3">
+        <img src="Vals_-_Ole_Halen_0001__2_.png" alt="Ölçü 13-16" draggable="false" />
+        <div class="playhead" id="ph-3"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="controls-card">
+
+    <div class="progress-wrap" id="progress-wrap">
+      <div class="progress-fill" id="progress-fill"></div>
+    </div>
+
+    <div class="time-row">
+      <div class="time-badge" id="time-current">0:00</div>
+      <div class="measure-counter" id="measure-counter">Ölçü — / 16</div>
+      <div class="time-badge" id="time-total">0:00</div>
+    </div>
+
+    <div class="btn-row">
+      <button class="ctrl-btn" id="rewind-btn" title="Başa al">⏮ Başa</button>
+      <button class="ctrl-btn" id="play-btn">▶ Çal</button>
+      <button class="ctrl-btn" id="speed-btn" title="Hız değiştir">🐢 Yavaş</button>
+    </div>
+
+    <div class="bpm-badge" id="bpm-display" style="text-align:center">100 BPM · 3/4</div>
+
+  </div>
+
+</div>
+
+<footer>Vals – Ole Halen &nbsp;·&nbsp; Notaları inceleyip çal &nbsp;·&nbsp; Gitar Eğitim Platformu</footer>
+
+<audio id="audio" preload="auto">
+  <source src="Vals_-_Ole_Halen__100bpm_.mp3" type="audio/mpeg" />
+</audio>
+
+<script>
+// ─────────────────────────────────────────────
+//  SENKRONİZASYON VERİLERİ
+// ─────────────────────────────────────────────
+const BPM_BASE       = 100;
+const BEATS          = 3;          
+const TOTAL_MEASURES = 16;
+const AUDIO_OFFSET   = 1.80; 
+
+const ROWS = [
+  {
+    startMeasure: 0,
+    measureStarts: [0.08, 0.315, 0.555, 0.82],
+    endX: 0.99
+  },
+  {
+    startMeasure: 4,
+    measureStarts: [0.05, 0.305, 0.56, 0.815],
+    endX: 0.99
+  },
+  {
+    startMeasure: 8,
+    measureStarts: [0.05, 0.325, 0.525, 0.805],
+    endX: 0.99
+  },
+  {
+    startMeasure: 12,
+    measureStarts: [0.05, 0.30, 0.55, 0.805],
+    endX: 0.99
+  }
+];
+
+// ─────────────────────────────────────────────
+//  DOM Elemanları
+// ─────────────────────────────────────────────
+const audio        = document.getElementById('audio');
+const playBtn      = document.getElementById('play-btn');
+const rewindBtn    = document.getElementById('rewind-btn');
+const speedBtn     = document.getElementById('speed-btn');
+const progressWrap = document.getElementById('progress-wrap');
+const progressFill = document.getElementById('progress-fill');
+const timeCurrent  = document.getElementById('time-current');
+const timeTotal    = document.getElementById('time-total');
+const measureCounter = document.getElementById('measure-counter');
+const bpmDisplay   = document.getElementById('bpm-display');
+
+const rows     = document.querySelectorAll('.score-row');
+const playheads = [
+  document.getElementById('ph-0'),
+  document.getElementById('ph-1'),
+  document.getElementById('ph-2'),
+  document.getElementById('ph-3'),
+];
+
+let isPlaying   = false;
+let playbackRate = 1.0;  
+let rafId       = null;
+
+function measureDuration() {
+  return (BEATS / BPM_BASE) * 60;
+}
+
+function getPlayheadPosition(currentTime) {
+  if (currentTime <= 0) {
+    return { rowIdx: 0, xPct: ROWS[0].measureStarts[0] * 100 };
+  }
+
+  const measDur = measureDuration();
+  const measureIndex = Math.floor(currentTime / measDur);   
+  if (measureIndex >= TOTAL_MEASURES) return null;
+
+  const progress = (currentTime % measDur) / measDur;       
+
+  let rowIdx = -1;
+  for (let i = 0; i < ROWS.length; i++) {
+    if (measureIndex >= ROWS[i].startMeasure &&
+        measureIndex <  ROWS[i].startMeasure + 4) {
+      rowIdx = i; break;
+    }
+  }
+  if (rowIdx === -1) return null;
+
+  const row   = ROWS[rowIdx];
+  const local = measureIndex - row.startMeasure;            
+
+  const x1 = row.measureStarts[local];
+  const x2 = (local < 3) ? row.measureStarts[local + 1] : row.endX;
+
+  return {
+    rowIdx,
+    xPct: (x1 + (x2 - x1) * progress) * 100   
+  };
+}
+
+function tick() {
+  if (!isPlaying) return;
+
+  const rawTime = audio.currentTime;
+  const ct = rawTime - AUDIO_OFFSET; 
+  const dur = audio.duration || (TOTAL_MEASURES * measureDuration() + AUDIO_OFFSET);
+
+  const pct = Math.min(rawTime / dur, 1) * 100;
+  progressFill.style.width = pct + '%';
+
+  timeCurrent.textContent = fmtTime(rawTime);
+
+  const pos = getPlayheadPosition(ct);
+
+  let currentMeasure = Math.floor(ct / measureDuration()) + 1;
+  if (currentMeasure < 1) currentMeasure = 1;
+  measureCounter.textContent = `Ölçü ${Math.min(currentMeasure, TOTAL_MEASURES)} / ${TOTAL_MEASURES}`;
+
+  rows.forEach((row, i) => {
+    const ph = playheads[i];
+    if (pos && i === pos.rowIdx) {
+      row.classList.add('active-row');
+      row.classList.remove('inactive');
+      ph.style.display = 'block';
+      ph.style.left = pos.xPct.toFixed(2) + '%';
+    } else {
+      row.classList.remove('active-row');
+      if (pos && i < pos.rowIdx) {
+        row.classList.remove('inactive');
+      } else {
+        row.classList.add('inactive');
+      }
+      ph.style.display = 'none';
+    }
+  });
+
+  rafId = requestAnimationFrame(tick);
+}
+
+function togglePlay() {
+  if (isPlaying) {
+    audio.pause();
+    isPlaying = false;
+    playBtn.textContent = '▶ Çal';
+    playBtn.classList.remove('is-playing');
+    if (rafId) cancelAnimationFrame(rafId);
+  } else {
+    audio.play().catch(() => {
+      alert('Ses dosyası yüklenemedi. Lütfen MP3 ve HTML dosyasının aynı klasörde olduğunu kontrol edin.');
+    });
+    isPlaying = true;
+    playBtn.innerHTML = '⏸ Dur';
+    playBtn.classList.add('is-playing');
+    rafId = requestAnimationFrame(tick);
+  }
+}
+
+function rewind() {
+  audio.currentTime = 0;
+  progressFill.style.width = '0%';
+  timeCurrent.textContent = '0:00';
+  measureCounter.textContent = `Ölçü 1 / ${TOTAL_MEASURES}`;
+
+  rows.forEach((row, i) => {
+    row.classList.remove('active-row');
+    playheads[i].style.display = 'none';
+    if (i === 0) {
+      row.classList.remove('inactive');
+    } else {
+      row.classList.add('inactive');
+    }
+  });
+}
+
+function toggleSpeed() {
+  if (playbackRate === 1.0) {
+    playbackRate = 0.75;
+    audio.playbackRate = 0.75;
+    speedBtn.innerHTML = '🐢 Yavaş';
+    bpmDisplay.textContent = '75 BPM · 3/4  (yavaş mod)';
+  } else {
+    playbackRate = 1.0;
+    audio.playbackRate = 1.0;
+    speedBtn.innerHTML = '🐇 Normal';
+    bpmDisplay.textContent = '100 BPM · 3/4';
+  }
+}
+
+progressWrap.addEventListener('click', (e) => {
+  const rect = progressWrap.getBoundingClientRect();
+  const pct = (e.clientX - rect.left) / rect.width;
+  const dur = audio.duration || (TOTAL_MEASURES * measureDuration() + AUDIO_OFFSET);
+  audio.currentTime = pct * dur;
+  if (!isPlaying) {
+    progressFill.style.width = (pct * 100) + '%';
+    timeCurrent.textContent = fmtTime(audio.currentTime);
+  }
+});
+
+audio.addEventListener('loadedmetadata', () => {
+  timeTotal.textContent = fmtTime(audio.duration);
+});
+
+audio.addEventListener('ended', () => {
+  isPlaying = false;
+  playBtn.textContent = '▶ Çal';
+  playBtn.classList.remove('is-playing');
+  if (rafId) cancelAnimationFrame(rafId);
+  progressFill.style.width = '100%';
+  rows.forEach(row => row.classList.remove('inactive', 'active-row'));
+  playheads.forEach(ph => { ph.style.display = 'none'; });
+  measureCounter.textContent = `Ölçü ${TOTAL_MEASURES} / ${TOTAL_MEASURES} ✓`;
+});
+
+playBtn.addEventListener('click', togglePlay);
+rewindBtn.addEventListener('click', rewind);
+speedBtn.addEventListener('click', toggleSpeed);
+
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'BUTTON') return;
+  if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
+  if (e.code === 'ArrowLeft')  { audio.currentTime = Math.max(0, audio.currentTime - 2); }
+  if (e.code === 'ArrowRight') { audio.currentTime = Math.min(audio.duration || 99, audio.currentTime + 2); }
+});
+
+function fmtTime(sec) {
+  if (isNaN(sec)) return '0:00';
+  const m = Math.floor(sec / 60);
+  const s = Math.floor(sec % 60);
+  return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
+timeTotal.textContent = fmtTime(TOTAL_MEASURES * measureDuration() + AUDIO_OFFSET);
+</script>
+</body>
+</html>
