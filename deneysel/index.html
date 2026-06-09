@@ -48,7 +48,7 @@
       background: #fff;
       border: 1.5px solid #e8e0d5;
       border-radius: 20px;
-      padding: 1.5rem 1rem; /* Üst ve alttan iç boşluğu artırdık */
+      padding: 1.5rem 1rem;
       margin-bottom: 0.85rem;
       box-shadow: 0 4px 20px rgba(90,62,43,0.05);
       overflow: hidden;
@@ -57,10 +57,9 @@
     .score-rows {
       display: flex;
       flex-direction: column;
-      gap: 1.8rem; /* Portelerin (resimlerin) kendi arasındaki boşluğu artırdık */
+      gap: 1.8rem;
     }
 
-    /* Each row = one score image + playhead overlay */
     .score-row {
       position: relative;
       display: block;
@@ -74,12 +73,10 @@
       transition: opacity 0.3s;
     }
 
-    /* Çalınmayan satırların soluk görünmesi */
     .score-row.inactive img {
       opacity: 0.45;
     }
 
-    /* Green playhead line */
     .playhead {
       position: absolute;
       top: 0;
@@ -93,8 +90,6 @@
       border-radius: 2px;
     }
 
-    /* YEŞİL KUTU (active-row::after) BURADAN KALDIRILDI */
-
     /* ── CONTROLS CARD ── */
     .controls-card {
       background: #fff;
@@ -107,7 +102,6 @@
       gap: 0.75rem;
     }
 
-    /* Progress bar */
     .progress-wrap {
       position: relative;
       height: 6px;
@@ -126,7 +120,6 @@
       pointer-events: none;
     }
 
-    /* Time display */
     .time-row {
       display: flex;
       justify-content: space-between;
@@ -158,7 +151,6 @@
       border: 1px solid #ede0cc;
     }
 
-    /* Buttons row */
     .btn-row {
       display: flex;
       align-items: center;
@@ -221,22 +213,22 @@
     <div class="score-rows" id="score-rows">
 
       <div class="score-row" id="row-0">
-        <img src="Vals_-_Ole_Halen_0002.png" alt="Ölçü 1-4" draggable="false" />
+        <img src="./Vals_-_Ole_Halen_0002.png" alt="Ölçü 1-4" draggable="false" />
         <div class="playhead" id="ph-0"></div>
       </div>
 
       <div class="score-row inactive" id="row-1">
-        <img src="Vals_-_Ole_Halen_0001.png" alt="Ölçü 5-8" draggable="false" />
+        <img src="./Vals_-_Ole_Halen_0001.png" alt="Ölçü 5-8" draggable="false" />
         <div class="playhead" id="ph-1"></div>
       </div>
 
       <div class="score-row inactive" id="row-2">
-        <img src="Vals_-_Ole_Halen_0003.png" alt="Ölçü 9-12" draggable="false" />
+        <img src="./Vals_-_Ole_Halen_0003.png" alt="Ölçü 9-12" draggable="false" />
         <div class="playhead" id="ph-2"></div>
       </div>
 
       <div class="score-row inactive" id="row-3">
-        <img src="Vals_-_Ole_Halen_0001__2_.png" alt="Ölçü 13-16" draggable="false" />
+        <img src="./Vals_-_Ole_Halen_0001__2_.png" alt="Ölçü 13-16" draggable="false" />
         <div class="playhead" id="ph-3"></div>
       </div>
 
@@ -270,13 +262,10 @@
 <footer>Vals – Ole Halen &nbsp;·&nbsp; Notaları inceleyip çal &nbsp;·&nbsp; Gitar Eğitim Platformu</footer>
 
 <audio id="audio" preload="auto">
-  <source src="Vals_-_Ole_Halen__100bpm_.mp3" type="audio/mpeg" />
+  <source src="./Vals_-_Ole_Halen__100bpm_.mp3" type="audio/mpeg" />
 </audio>
 
 <script>
-// ─────────────────────────────────────────────
-//  SENKRONİZASYON VERİLERİ
-// ─────────────────────────────────────────────
 const BPM_BASE       = 100;
 const BEATS          = 3;          
 const TOTAL_MEASURES = 16;
@@ -305,9 +294,6 @@ const ROWS = [
   }
 ];
 
-// ─────────────────────────────────────────────
-//  DOM Elemanları
-// ─────────────────────────────────────────────
 const audio        = document.getElementById('audio');
 const playBtn      = document.getElementById('play-btn');
 const rewindBtn    = document.getElementById('rewind-btn');
