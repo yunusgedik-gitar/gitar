@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Vals – Ole Halen</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght=0,600;1,400&family=Lato:wght@300;400;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght=0,600;1,400&family=Lato:wght=300;400;700&display=swap');
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -38,26 +38,35 @@
       font-style: italic;
     }
 
-    #app-wrap {
-      width: 100%;
-      max-width: 700px;
-    }
+	#app-wrap {
+  	width: 100%;
+  	max-width: 100%; /* Sınırı tamamen kaldırır, ekrana sıfıra sıfır yayılır */
+  	padding: 0 10px; /* Kenarlardan çok az bir estetik boşluk bırakır */
+	}
 
-    /* ── SCORE CARD ── */
+    /* ── SCORE CARD (Yatay Kaydırma Eklenen Alan) ── */
     .score-card {
       background: #fff;
       border: 1.5px solid #e8e0d5;
       border-radius: 20px;
-      padding: 1.5rem 1rem;
+      padding: 1.5rem 0; /* Kenarlardan taşma hissi için sağ-sol padding sıfırlandı */
       margin-bottom: 0.85rem;
       box-shadow: 0 4px 20px rgba(90,62,43,0.05);
-      overflow: hidden;
+      
+      /* Mobilde daralmayı önleyen ve yatay kaydırma sağlayan kurallar */
+      overflow-x: auto; 
+      -webkit-overflow-scrolling: touch; /* iOS cihazlarda akıcı kaydırma */
     }
 
     .score-rows {
       display: flex;
       flex-direction: column;
       gap: 1.8rem;
+      
+      /* Notaların dikey ekranda büzüşüp küçülmesini engellemek için minimum genişlik. 
+         Böylece notalar orijinal netliğini koruyarak sağa doğru uzayacak. */
+      min-width: 750px; 
+      padding: 0 1rem; /* İçerideki görseller sıfıra sıfır yapışmasın diye */
     }
 
     .score-row {
@@ -71,6 +80,7 @@
       display: block;
       border-radius: 4px;
       transition: opacity 0.3s;
+      pointer-events: none; /* Mobilde kaydırırken resmin yanlışlıkla seçilmesini engeller */
     }
 
     .score-row.inactive img {
@@ -197,6 +207,61 @@
       font-size: 0.72rem;
       color: #c4b5a0;
       text-align: center;
+    }
+
+    /* ── TELEFON YATAY ÇEVRİLDİĞİNDE OTOMATİK TAM EKRAN MODU ── */
+    @media screen and (orientation: landscape) and (max-height: 500px) {
+      body {
+        padding: 0.2rem;
+        background: #fff; /* Tam odaklanma için arka planı sadeleştiriyoruz */
+      }
+      
+      /* Yatay modda kalabalık yapan metinleri gizleyerek notalara maksimum ekran alanı bırakıyoruz */
+      header, footer, .bpm-badge, .time-badge, .measure-counter {
+        display: none !important;
+      }
+      
+      #app-wrap {
+        max-width: 100% !important;
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+      }
+      
+      .score-card {
+        border: none;
+        box-shadow: none;
+        padding: 0;
+        margin-bottom: 0;
+        overflow-x: visible; /* Yatayda ekran zaten geniş olduğu için scroll'u serbest bırakıyoruz */
+      }
+      
+      .score-rows {
+        min-width: 100%; /* Görseller ekranın yatay genişliğine tam otursun */
+        gap: 0.8rem;
+        padding: 0;
+      }
+      
+      /* Kontrol panelini ekranın en altına ince bir şerit halinde sabitliyoruz */
+      .controls-card {
+        padding: 0.4rem 1rem;
+        border-radius: 10px;
+        gap: 0.4rem;
+      }
+      
+      .btn-row {
+        gap: 5px;
+      }
+      
+      .ctrl-btn {
+        padding: 6px 14px;
+        font-size: 0.8rem;
+      }
+      
+      #play-btn {
+        padding: 8px 24px;
+        font-size: 0.9rem;
+      }
     }
   </style>
 </head>
