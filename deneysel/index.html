@@ -18,6 +18,8 @@
       align-items: center;
       padding: 1.4rem 1rem 2.5rem;
       color: #5a3e2b;
+      /* Mobilde tüm sayfanın sağa sola sallanmasını önlemek için */
+      overflow-x: hidden; 
     }
 
     header {
@@ -38,24 +40,26 @@
       font-style: italic;
     }
 
-	#app-wrap {
-  	width: 100%;
-  	max-width: 100%; /* Sınırı tamamen kaldırır, ekrana sıfıra sıfır yayılır */
-  	padding: 0 10px; /* Kenarlardan çok az bir estetik boşluk bırakır */
-	}
+    /* ── APP WRAPPER (Beyaz çerçeveyi genişlettiğimiz yer) ── */
+    #app-wrap {
+      width: 100%;
+      max-width: 950px; /* İstediğin gibi beyaz çerçeveyi sağa-sola genişlettik */
+    }
 
-    /* ── SCORE CARD (Yatay Kaydırma Eklenen Alan) ── */
+    /* ── SCORE CARD (Dikeyde Yana Doğru Kayma Alanı) ── */
     .score-card {
       background: #fff;
       border: 1.5px solid #e8e0d5;
       border-radius: 20px;
-      padding: 1.5rem 0; /* Kenarlardan taşma hissi için sağ-sol padding sıfırlandı */
+      padding: 1.5rem 0; 
       margin-bottom: 0.85rem;
       box-shadow: 0 4px 20px rgba(90,62,43,0.05);
       
-      /* Mobilde daralmayı önleyen ve yatay kaydırma sağlayan kurallar */
-      overflow-x: auto; 
-      -webkit-overflow-scrolling: touch; /* iOS cihazlarda akıcı kaydırma */
+      /* DIKEYDE YANA KAYMA SİHİRLİ SATIRLARI */
+      width: 100%;
+      overflow-x: auto; /* İçerik büyük gelirse sağa doğru kaydırılabilir yap */
+      display: block;
+      -webkit-overflow-scrolling: touch; /* Telefonlarda pürüzsüz kaydırma */
     }
 
     .score-rows {
@@ -63,10 +67,10 @@
       flex-direction: column;
       gap: 1.8rem;
       
-      /* Notaların dikey ekranda büzüşüp küçülmesini engellemek için minimum genişlik. 
-         Böylece notalar orijinal netliğini koruyarak sağa doğru uzayacak. */
-      min-width: 750px; 
-      padding: 0 1rem; /* İçerideki görseller sıfıra sıfır yapışmasın diye */
+      /* Telefon dikeyken notaların büzüşüp küçülmesini engeller.
+         Resimleri orijinal netliğinde tutar ve yana doğru taşırarak kaydırmayı tetikler. */
+      min-width: 850px; 
+      padding: 0 1rem;
     }
 
     .score-row {
@@ -80,7 +84,7 @@
       display: block;
       border-radius: 4px;
       transition: opacity 0.3s;
-      pointer-events: none; /* Mobilde kaydırırken resmin yanlışlıkla seçilmesini engeller */
+      pointer-events: none; 
     }
 
     .score-row.inactive img {
@@ -209,14 +213,14 @@
       text-align: center;
     }
 
-    /* ── TELEFON YATAY ÇEVRİLDİĞİNDE OTOMATİK TAM EKRAN MODU ── */
+    /* ── TELEFON YATAY ÇEVRİLDİĞİNDE TAM EKRAN MODU ── */
     @media screen and (orientation: landscape) and (max-height: 500px) {
       body {
         padding: 0.2rem;
-        background: #fff; /* Tam odaklanma için arka planı sadeleştiriyoruz */
+        background: #fff;
+        overflow-x: hidden;
       }
       
-      /* Yatay modda kalabalık yapan metinleri gizleyerek notalara maksimum ekran alanı bırakıyoruz */
       header, footer, .bpm-badge, .time-badge, .measure-counter {
         display: none !important;
       }
@@ -233,35 +237,24 @@
         box-shadow: none;
         padding: 0;
         margin-bottom: 0;
-        overflow-x: visible; /* Yatayda ekran zaten geniş olduğu için scroll'u serbest bırakıyoruz */
+        overflow-x: auto;
       }
       
       .score-rows {
-        min-width: 100%; /* Görseller ekranın yatay genişliğine tam otursun */
+        min-width: 100%;
         gap: 0.8rem;
         padding: 0;
       }
       
-      /* Kontrol panelini ekranın en altına ince bir şerit halinde sabitliyoruz */
       .controls-card {
         padding: 0.4rem 1rem;
         border-radius: 10px;
         gap: 0.4rem;
       }
       
-      .btn-row {
-        gap: 5px;
-      }
-      
-      .ctrl-btn {
-        padding: 6px 14px;
-        font-size: 0.8rem;
-      }
-      
-      #play-btn {
-        padding: 8px 24px;
-        font-size: 0.9rem;
-      }
+      .btn-row { gap: 5px; }
+      .ctrl-btn { padding: 6px 14px; font-size: 0.8rem; }
+      #play-btn { padding: 8px 24px; font-size: 0.9rem; }
     }
   </style>
 </head>
@@ -331,6 +324,7 @@
 </audio>
 
 <script>
+// 1. Satırın ince ayarı senin için buraya entegre edildi
 const BPM_BASE       = 100;
 const BEATS          = 3;          
 const TOTAL_MEASURES = 16;
@@ -339,12 +333,12 @@ const AUDIO_OFFSET   = 1.80;
 const ROWS = [
   {
     startMeasure: 0,
-    measureStarts: [0.07, 0.350, 0.580, 0.84],
+    measureStarts: [0.05, 0.29, 0.53, 0.79], 
     endX: 0.99
   },
   {
     startMeasure: 4,
-    measureStarts: [0.05, 0.310, 0.58, 0.815],
+    measureStarts: [0.05, 0.305, 0.56, 0.815],
     endX: 0.99
   },
   {
@@ -418,7 +412,6 @@ function getPlayheadPosition(currentTime) {
   };
 }
 
-// ── GÜNCELLENEN TICK FONKSİYONU (Otomatik Kaydırma Eklenmiş Hali) ──
 function tick() {
   if (!isPlaying) return;
 
@@ -440,11 +433,9 @@ function tick() {
   rows.forEach((row, i) => {
     const ph = playheads[i];
     if (pos && i === pos.rowIdx) {
-      // Eğer bu satır yeni aktif olduysa ve ekranda tam görünmüyorsa otomatik odaklan
+      // Dikey ve dikey otomatik aşağı kaydırma
       if (!row.classList.contains('active-row')) {
         row.classList.add('active-row');
-        
-        // SİHİRLİ SATIR: Çalan porteyi ekranın ortasına pürüzsüzce kaydırır
         row.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
       row.classList.remove('inactive');
