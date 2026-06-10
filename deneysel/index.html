@@ -339,12 +339,12 @@ const AUDIO_OFFSET   = 1.80;
 const ROWS = [
   {
     startMeasure: 0,
-    measureStarts: [0.08, 0.315, 0.555, 0.82],
+    measureStarts: [0.07, 0.350, 0.580, 0.84],
     endX: 0.99
   },
   {
     startMeasure: 4,
-    measureStarts: [0.05, 0.305, 0.56, 0.815],
+    measureStarts: [0.05, 0.310, 0.58, 0.815],
     endX: 0.99
   },
   {
@@ -418,6 +418,7 @@ function getPlayheadPosition(currentTime) {
   };
 }
 
+// ── GÜNCELLENEN TICK FONKSİYONU (Otomatik Kaydırma Eklenmiş Hali) ──
 function tick() {
   if (!isPlaying) return;
 
@@ -439,7 +440,13 @@ function tick() {
   rows.forEach((row, i) => {
     const ph = playheads[i];
     if (pos && i === pos.rowIdx) {
-      row.classList.add('active-row');
+      // Eğer bu satır yeni aktif olduysa ve ekranda tam görünmüyorsa otomatik odaklan
+      if (!row.classList.contains('active-row')) {
+        row.classList.add('active-row');
+        
+        // SİHİRLİ SATIR: Çalan porteyi ekranın ortasına pürüzsüzce kaydırır
+        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
       row.classList.remove('inactive');
       ph.style.display = 'block';
       ph.style.left = pos.xPct.toFixed(2) + '%';
