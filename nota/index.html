@@ -5,11 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Nota Okuma Egzersizi – Klasik Gitar</title>
   <script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.2/build/cjs/vexflow.js"></script>
-  <div style="text-align: center; margin-bottom: 15px;">
-  <span id="_gs_active_count" style="font-size: 0.8rem; font-weight: 600; background: #eaf3de; color: #3b6d11; padding: 5px 14px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(59,109,17,0.08);">
-    🟢 Canlı Oda Yükleniyor...
-  </span>
-</div>
+  <script src="/score-save.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght=0,600;1,400&family=Lato:wght=300;400;700&display=swap');
 
@@ -81,7 +77,6 @@
       border-radius: 20px;
       font-size: 0.9rem;
     }
-    /* Aktif/Seçili tel butonu stili */
     .string-btn.active {
       background: #5a3e2b;
       border-color: #5a3e2b;
@@ -190,7 +185,6 @@
     }
     #next-btn:hover { background: #ebd3b8; }
 
-    /* Egzersiz Alanı Başta Gizli */
     #exercise-area { display: none; }
 
     footer { margin-top: 2.5rem; font-size: 0.75rem; color: #c4b5a0; text-align: center; }
@@ -245,7 +239,6 @@
   <footer><p>❤️ yunusgedik.com.tr</p></footer>
 
   <script>
-    // NOTLAR havuzuna 'string' mülkü eklenerek her notanın hangi tele ait olduğu tanımlandı.
     const NOTES = [
       { key:'e/3', freq:164.81, nota:'Mi', string:6 },
       { key:'f/3', freq:174.61, nota:'Fa', string:6 },
@@ -291,26 +284,21 @@
       "Sen en iyisi flüt çal knk"
     ];
 
-    // Seçili telleri takip eden set (Başlangıçta hepsi seçili)
     let selectedStrings = new Set([1, 2, 3, 4, 5, 6]);
     let filteredNotes = [];
 
     let audioCtx = null, current = null, answered = false, interacted = false;
     let autoTimer = null;
-
-    // ── 🎛️ PANEL KONTROL FONKSİYONLARI ──
     
     function toggleAllStrings() {
       const allBtn = document.getElementById('btn-all');
       const numBtns = document.querySelectorAll('.string-num-btn');
       
       if (selectedStrings.size === 6) {
-        // Hepsi seçiliyken tıklandıysa her şeyi temizle
         selectedStrings.clear();
         allBtn.classList.remove('active');
         numBtns.forEach(b => b.classList.remove('active'));
       } else {
-        // Eksik varsa tamamını seç
         selectedStrings = new Set([1, 2, 3, 4, 5, 6]);
         allBtn.classList.add('active');
         numBtns.forEach(b => b.classList.add('active'));
@@ -330,7 +318,6 @@
         btn.classList.add('active');
       }
       
-      // Hepsi butonunun durumunu güncelle
       if (selectedStrings.size === 6) {
         allBtn.classList.add('active');
       } else {
@@ -345,22 +332,12 @@
     }
 
     function startExercise() {
-      // Seçilen tellere ait notaları filtrele
       filteredNotes = NOTES.filter(n => selectedStrings.has(n.string));
-      
       if (filteredNotes.length === 0) return;
-
-      // Egzersiz alanını görünür yap
       document.getElementById('exercise-area').style.display = 'block';
-      
-      // İlk kartı çağır
       nextCard();
-      
-      // Egzersiz alanına pürüzsüzce odaklan
       document.getElementById('exercise-area').scrollIntoView({ behavior: 'smooth' });
     }
-
-    // ── 🧠 EGZERSİZ MOTORU ──
 
     function shuffle(a){ return [...a].sort(()=>Math.random()-0.5); }
 
@@ -408,13 +385,12 @@
       renderer.resize(containerWidth, H);
       
       const ctx = renderer.getContext();
-      
       ctx.scale(1.45, 1.45);
+      
       const scaledWidth = containerWidth / 1.45;
       const staveW = Math.min(180, scaledWidth - 40);
       const staveX = (scaledWidth - staveW) / 2;
       
-      // İstediğin o dengeli dikey konum (32) korundu
       const stave = new Stave(staveX, -10, staveW);
       stave.addClef('treble');
       stave.setContext(ctx).draw();
@@ -458,10 +434,7 @@
       document.getElementById('next-btn').style.display = 'none';
       clearAutoTimer();
 
-      // Havuzdan sadece filtrelenmiş (seçili) notalardan rastgele getiriyoruz
       current = filteredNotes[Math.floor(Math.random() * filteredNotes.length)];
-      
-      // Sol üstteki etiketi o anki tel numarasına göre dinamik güncelliyoruz
       document.getElementById('current-string-label').textContent = `Bu Nota Hangi Telde? (${current.string}. Tel Egzersizi)`;
 
       const wrongs = shuffle(ALL_NOTES.filter(n => n !== current.nota)).slice(0, 3);
@@ -481,7 +454,7 @@
       });
     }
 
-function answer(notaAdi, btn){
+    function answer(notaAdi, btn){
       if(answered) return;
       answered = true;
       interacted = true;
@@ -509,31 +482,15 @@ function answer(notaAdi, btn){
       }
     }
 
-    // ── GÜVENLİK VE OTOMATİK GİRİŞ KONTROLÜ (BURAYA EKLENDİ) ──
+    // ── GÜVENLİK VE OTOMATİK GİRİŞ KONTROLÜ (DÜZELTİLDİ) ──
     (function init() {
       const sid = localStorage.getItem('gitar_session');
-      
-      // Şifre girip oturum açmamışsa saniyesinde ana sayfaya postalar
       if (!sid) {
         window.location.href = 'https://gitar.yunusgedik.com.tr/';
         return;
       }
-
-      // Oturum varsa öğrencilerden adını doğrular
-      const found = STUDENTS.find(s => s.id === sid);
-      if (found) {
-        me = found;
-        if (typeof openDashboard === "function") {
-          openDashboard();
-        }
-      } else {
-        // Geçersiz veya eski bir oturumsa temizler ve ana sayfaya fırlatır
-        localStorage.removeItem('gitar_session');
-        localStorage.removeItem('gitar_student_name');
-        window.location.href = 'https://gitar.yunusgedik.com.tr/';
-        return;
-      }
     })();
-<script src="/live-bar.js"></script>
+  </script>
+  <script src="/live-bar.js"></script>
 </body>
 </html>
