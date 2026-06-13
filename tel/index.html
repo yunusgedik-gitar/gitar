@@ -6,11 +6,6 @@
   <title>Tel Okuma Egzersizi – Klasik Gitar</title>
   <script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.2/build/cjs/vexflow.js"></script>
   <script src="/score-save.js"></script>
-  <div style="text-align: center; margin-bottom: 15px;">
-  <span id="_gs_active_count" style="font-size: 0.8rem; font-weight: 600; background: #eaf3de; color: #3b6d11; padding: 5px 14px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(59,109,17,0.08);">
-    🟢 Canlı Oda Yükleniyor...
-  </span>
-</div>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght=0,600;1,400&family=Lato:wght=300;400;700&display=swap');
 
@@ -405,6 +400,9 @@
     let gameTimer = null;
     let timeLeft = 40;
     let correctCount = 0;
+    let STUDENTS = [
+      { id: 's01', name: 'Dr. Yunus GEDİK' }
+    ];
 
     function toggleAllStrings() {
       const allBtn = document.getElementById('btn-all');
@@ -577,18 +575,13 @@
       if(current) playNote(current.freq);
     }
 
-    /* ── 🎯 OTOMATİK HİZALAMALI DİNAMİK PORTE ÇİZİMİ ── */
     function drawNote(noteKey){
       const { Renderer, Stave, StaveNote, Voice, Formatter } = Vex.Flow;
       const container = document.getElementById('notation');
       container.innerHTML = '';
       
       const containerWidth = container.offsetWidth || 460;
-      
-      // 1. Ölçeklendirmeyi nota sayfasıyla birebir aynı yapıyoruz (Sabit 1.45)
       const scaleFactor = 1.45;
-      
-      // 2. Yükseklik alanını dengeli yapıyoruz (H = 150)
       const H = 150; 
       
       const renderer = new Renderer(container, Renderer.Backends.SVG);
@@ -598,12 +591,9 @@
       ctx.scale(scaleFactor, scaleFactor);
       
       const scaledWidth = containerWidth / scaleFactor;
-      
-      // 3. Genişlik ve X ekseni hesaplamaları (Nota ile birebir aynı)
       const staveW = Math.min(180, scaledWidth - 40);
       const staveX = (scaledWidth - staveW) / 2;
       
-      // 4. İşte sihirli dokunuş: y parametresini nota sayfasındaki gibi -10 yapıyoruz
       const stave = new Stave(staveX, -18, staveW);
       stave.addClef('treble');
       stave.setContext(ctx).draw();
@@ -612,7 +602,6 @@
       const voice = new Voice({ num_beats:4, beat_value:4 });
       voice.addTickables([sn]);
       
-      // Notayı portenin tam ortasına dengeli bir biçimde ortalıyoruz
       new Formatter().joinVoices([voice]).format([voice], staveW - 50);
       voice.draw(ctx, stave);
     }
@@ -708,31 +697,14 @@
       }
     }
 
-    // ── GÜVENLİK VE OTOMATİK GİRİŞ KONTROLÜ (BURAYA EKLENDİ) ──
     (function init() {
       const sid = localStorage.getItem('gitar_session');
-      
-      // Eğer giriş oturumu yoksa saniyesinde ana şifre sayfasına postalar
       if (!sid) {
         window.location.href = 'https://gitar.yunusgedik.com.tr/';
         return;
       }
-
-      // Oturum varsa öğrencilerden adını doğrular
-      const found = STUDENTS.find(s => s.id === sid);
-      if (found) {
-        me = found;
-        if (typeof openDashboard === "function") {
-          openDashboard();
-        }
-      } else {
-        // Geçersiz veya sahte bir oturumsa temizler ve ana sayfaya fırlatır
-        localStorage.removeItem('gitar_session');
-        localStorage.removeItem('gitar_student_name');
-        window.location.href = 'https://gitar.yunusgedik.com.tr/';
-        return;
-      }
     })();
-<script src="/live-bar.js"></script>
+  </script>
+  <script src="/live-bar.js"></script>
 </body>
 </html>
