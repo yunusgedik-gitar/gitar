@@ -4,11 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Gitar Klavyesi – Pozisyon 1 (Sınav Modu)</title>
-  <div style="text-align: center; margin-bottom: 15px;">
-  <span id="_gs_active_count" style="font-size: 0.8rem; font-weight: 600; background: #eaf3de; color: #3b6d11; padding: 5px 14px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(59,109,17,0.08);">
-    🟢 Canlı Oda Yükleniyor...
-  </span>
-</div>
+  <script src="/score-save.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Lato:wght@300;400;700&display=swap');
     
@@ -34,522 +30,531 @@
       background: #fff;
       border: 1.5px solid #e8e0d5;
       border-radius: 20px;
-      padding: 1.1rem 1.1rem 0.9rem;
-      margin-bottom: 0.85rem;
-      box-shadow: 0 4px 20px rgba(90, 62, 43, 0.04);
+      padding: 1rem 1rem 0.6rem;
+      margin-bottom: 0.8rem;
+      box-shadow: 0 4px 20px rgba(90,62,43,0.04);
+      position: relative;
     }
     
-    .card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.6rem;
+    }
+    .card-label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #b09070;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
     
     #listen-btn {
-      display: flex; align-items: center; gap: 5px; font-size: 0.8rem; padding: 6px 14px;
-      border-radius: 20px; border: 1.5px solid #d4a373; background: #fff; color: #8b5a2b;
-      cursor: pointer; font-family: inherit; font-weight: 600; transition: all 0.2s;
+      display: flex; align-items: center; gap: 4px;
+      font-size: 0.78rem; padding: 5px 12px;
+      border-radius: 10px; border: 1.5px solid #d4c4b0;
+      background: #fff; color: #5a3e2b; font-weight: 700;
+      cursor: pointer; font-family: inherit; transition: all 0.12s;
     }
-    #listen-btn:hover { background: #f5e6d3; }
-    #listen-btn.playing { background: #eaf3de; border-color: #6b8c42; color: #3b6d11; }
-
-    .timer-badge {
-      font-size: 0.85rem; font-weight: 700; color: #8b5a2b; background: #f5e6d3;
-      padding: 5px 12px; border-radius: 12px; border: 1px solid #e8d5c0;
+    #listen-btn:hover { background: #f5e6d3; border-color: #c4a88a; }
+    #listen-btn.playing { border-color: #6b8c42; color: #3b6d11; background: #eaf3de; }
+    
+    /* Klavye Görsel Şeması */
+    .fretboard-view {
+      width: 100%;
+      background: #fdfaf2;
+      border: 1.5px solid #e0d5c1;
+      border-radius: 12px;
+      padding: 16px 8px;
+      margin: 0.4rem 0 0.8rem;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      position: relative;
+    }
+    .string-line {
+      height: 2px;
+      background: #bca88f;
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .string-line::before {
+      content: attr(data-string-num);
+      position: absolute;
+      left: -14px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #b09070;
     }
     
-    .q-title { text-align: center; font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; color: #5a3e2b; }
-    
-    .hint-box {
-      text-align: center; font-size: 1.15rem; font-weight: 700; color: #5a3e2b; margin-bottom: 1rem;
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      background: #fdfaf4; padding: 8px 12px; border-radius: 12px; border: 1px dashed #d4c4b0;
+    /* Perdeleri ayıran dik çizgiler */
+    .fret-divider {
+      position: absolute;
+      top: 0; bottom: 0;
+      width: 1.5px;
+      background: #d0c2ad;
     }
-    .hint-string-badge {
-      display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px;
-      background: #8b5a2b; color: #fff; border-radius: 50%; font-size: 0.95rem; font-weight: 700;
-    }
-    .hint-fret-text { color: #b37d4e; background: #f5e6d3; padding: 2px 10px; border-radius: 6px; }
+    .fd-0 { left: 15%; height: 100%; background: #8a7355; width: 3.5px; } 
+    .fd-1 { left: 36%; }
+    .fd-2 { left: 57%; }
+    .fd-3 { left: 78%; }
+    .fd-4 { left: 99%; }
     
-    .guitar-wrap { 
-      width: 100%; 
-      display: flex; 
-      justify-content: center; 
-      align-items: center; 
-      margin: 0 auto 0.5rem;
+    /* Perde Numaraları Altta */
+    .fret-labels {
+      display: flex;
+      position: relative;
+      margin-top: 4px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #c4a88a;
+      height: 14px;
     }
-    .guitar-wrap svg { 
-      display: block; 
-      width: 100%; 
-      max-width: 440px; 
-      height: auto; 
+    .flabel { position: absolute; transform: translateX(-50%); }
+    .fl-0 { left: 7.5%; }
+    .fl-1 { left: 25.5%; }
+    .fl-2 { left: 46.5%; }
+    .fl-3 { left: 67.5%; }
+    .fl-4 { left: 88.5%; }
+    
+    /* Notaları Gösteren Canlı Nokta */
+    .note-dot {
+      position: absolute;
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      background: #e24b4a;
+      border: 1.5px solid #fff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+      transform: translate(-50%, -50%);
+      z-index: 10;
+      display: none;
+      animation: pulseDot 1.2s infinite ease-in-out;
+    }
+    @keyframes pulseDot {
+      0% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 2px 6px rgba(226,75,74,0.4); }
+      50% { transform: translate(-50%, -50%) scale(1.12); box-shadow: 0 2px 12px rgba(226,75,74,0.7); }
+      100% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 2px 6px rgba(226,75,74,0.4); }
     }
     
-    .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1rem; }
+    #hint-text { font-size: 0.78rem; color: #b09070; text-align: center; margin-bottom: 0.8rem; font-style: italic; }
     
+    /* Seçenek Butonları */
+    .choices-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 0.8rem;
+    }
     .choice-card {
-      background: #fff; border: 2px solid #e8e0d5; border-radius: 16px; padding: 14px 10px 12px;
-      cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center;
-      position: relative; box-shadow: 0 2px 8px rgba(90, 62, 43, 0.03); overflow: visible;
+      background: #fff;
+      border: 1.5px solid #d4c4b0;
+      border-radius: 12px;
+      padding: 12px 4px;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #5a3e2b;
+      cursor: pointer;
+      text-align: center;
+      font-family: inherit;
+      transition: all 0.12s;
     }
-    .choice-card:hover:not(.disabled):not(.correct):not(.wrong) {
-      border-color: #d4a373; transform: translateY(-3px); box-shadow: 0 8px 20px rgba(90, 62, 43, 0.1);
+    .choice-card:hover:not(.disabled) { background: #f5e6d3; border-color: #c4a88a; transform: translateY(-1.5px); }
+    .choice-card:active:not(.disabled) { transform: scale(0.97); }
+    .choice-card.correct { background: #eaf3de !important; border-color: #6b8c42 !important; color: #3b6d11 !important; }
+    .choice-card.wrong   { background: #fdf0f0 !important; border-color: #e24b4a !important; color: #a32d2d !important; }
+    .choice-card.disabled { cursor: default; }
+    
+    #message { text-align: center; font-size: 0.88rem; font-weight: 700; min-height: 20px; margin-bottom: 0.6rem; }
+    
+    #progress-bar-wrap { height: 5px; background: #ede6d8; border-radius: 3px; margin-bottom: 0.8rem; overflow: hidden; display: none; border: 1px solid #e0d8c8; }
+    #progress-bar { height: 100%; width: 100%; background: linear-gradient(90deg, #8cb85f, #52a050); border-radius: 3px; transition: width 1s linear; }
+    
+    .bottom-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
     }
-    .choice-card:active:not(.disabled) { transform: scale(0.98); }
     
-    .choice-staff { width: 110px; height: 150px; margin: 4px 0 0px; overflow: visible; }
-    .choice-staff svg { max-width: 100%; height: auto; overflow: visible; }
-    
-    .choice-name { font-size: 1.2rem; font-weight: 700; color: #5a3e2b; margin-top: 10px; }
-    .choice-card.correct { background: #eaf3de; border-color: #6b8c42; }
-    .choice-card.correct .choice-name { color: #3b6d11; }
-    .choice-card.wrong { background: #fdf0f0; border-color: #c75b39; }
-    .choice-card.wrong .choice-name { color: #a32d2d; }
-    .choice-card.disabled { cursor: default; opacity: 0.92; }
-    
-    .message { text-align: center; font-size: 0.9rem; font-weight: 700; color: #8b6b4e; margin-bottom: 0.65rem; min-height: 22px; }
-    
-    #auto-bar-wrap { height: 3px; background: #e0ddd6; border-radius: 2px; margin-bottom: 0.65rem; overflow: hidden; display: none; }
-    #auto-bar { height: 100%; width: 100%; background: #6b8c42; border-radius: 2px; transition: width 2s linear; }
-    
-    .progress-area { display: flex; align-items: center; margin-bottom: 1.2rem; }
-    .progress-track { flex: 1; height: 10px; background: #ede6d8; border-radius: 5px; overflow: hidden; border: 1px solid #e0d8c8; }
-    .progress-fill { height: 100%; width: 0%; background: #8cb85f; border-radius: 5px; transition: width 0.4s ease; }
-    
-    .controls { display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 8px; }
-    .ctrl-btn {
-      padding: 11px; font-size: 0.85rem; font-weight: 700; border-radius: 12px; border: 1.5px solid #d4c4b0;
-      background: #fff; color: #5a3e2b; cursor: pointer; font-family: inherit; transition: all 0.15s;
-      display: flex; align-items: center; justify-content: center; gap: 5px;
+    .info-badge {
+      font-size: 0.82rem; font-weight: 700; color: #7a6a5a;
+      background: #eedec433; border: 1.5px solid #e8e0d5;
+      padding: 8px 14px; border-radius: 10px;
     }
-    .ctrl-btn:hover { background: #f5e6d3; border-color: #c4a88a; }
-    .ctrl-btn.primary { background: #f5e6d3; border-color: #d4a373; }
-    .ctrl-btn.primary:hover { background: #ebd3b8; }
-    .ctrl-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    #timer-display { color: #a32d2d; background: #fdf0f0; border-color: #f9d5d5; }
     
-    .result-screen { display: none; text-align: center; padding: 1.5rem 1rem; }
-    .result-title { font-family: 'Playfair Display', serif; font-size: 1.8rem; color: #6b8c42; margin-bottom: 1rem; }
-    .result-stats { background: #fdfaf4; border: 1.5px dashed #d4c4b0; border-radius: 16px; padding: 1.2rem; margin-bottom: 1.5rem; text-align: left; }
-    .stat-row { display: flex; justify-content: space-between; font-size: 1.1rem; padding: 8px 0; border-bottom: 1px dashed #e8e0d5; color: #5a3e2b; }
-    .stat-row:last-child { border-bottom: none; }
-    .stat-val { font-weight: 700; color: #8b5a2b; }
-    .stat-val.correct-val { color: #6b8c42; }
-    .stat-val.wrong-val { color: #c75b39; }
-
-    footer { margin-top: 1.5rem; font-size: 0.75rem; color: #c4b5a0; text-align: center; }
-
-    @media (max-width: 420px) {
-      .choices { gap: 8px; }
-      .choice-card { padding: 10px 6px; }
-      .choice-staff { width: 90px; height: 130px; }
-      .choice-name { font-size: 1rem; margin-top: 6px; }
-      .controls { grid-template-columns: 1fr; }
-      .ctrl-btn.primary { order: -1; }
+    #next-btn {
+      padding: 10px 20px; font-size: 0.88rem; font-weight: 700;
+      border-radius: 10px; border: 1.5px solid #d4a373;
+      background: #f5e6d3; color: #5a3e2b; cursor: pointer;
+      font-family: inherit; transition: all 0.12s;
+    }
+    #next-btn:hover:not(:disabled) { background: #ebd3b8; }
+    #next-btn:disabled { background: #f5f5f5; border-color: #e0e0e0; color: #b0b0b0; cursor: not-allowed; }
+    
+    /* Sonuç Kartı */
+    #result-zone { display: none; text-align: center; padding: 1.5rem 1rem; }
+    .res-title { font-family: 'Playfair Display', serif; font-size: 1.5rem; margin-bottom: 0.4rem; }
+    .res-score { font-size: 3rem; font-weight: 700; color: #6b8c42; margin: 0.5rem 0; }
+    .res-comment { font-size: 0.9rem; font-style: italic; color: #5a3e2b; line-height: 1.3rem; margin-bottom: 1.2rem; }
+    .restart-btn {
+      padding: 11px 24px; font-size: 0.9rem; font-weight: 700;
+      border-radius: 10px; border: 1.5px solid #d4a373;
+      background: #f5e6d3; color: #5a3e2b; cursor: pointer; font-family: inherit;
+    }
+    .restart-btn:hover { background: #ebd3b8; }
+    
+    footer { margin-top: 2rem; font-size: 0.72rem; color: #c4b5a0; text-align: center; }
+    
+    @media (max-width: 480px) {
+      .choices-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+      .choice-card { font-size: 1.1rem; padding: 10px 4px; }
     }
   </style>
 </head>
 <body>
 
-<header>
-  <h1>🎸 Gitar Klavyesi – I. Pozisyon</h1>
-</header>
+  <header>
+    <h1>🎸 Klavye Yerleşimi Egzersizi</h1>
+    <p>Pozisyon 1 — Sınav Modu (20 Soru)</p>
+  </header>
 
-<div id="app-wrap">
-  <div id="quiz-zone">
-    <div class="card">
+  <div id="app-wrap">
+    
+    <div id="quiz-zone" class="card">
       <div class="card-top">
+        <span id="question-index-label" class="card-label">Soru: 1 / 20</span>
         <button id="listen-btn" onclick="replay()">🔊 Dinle</button>
-        <div class="timer-badge" id="timer-display">Süre: 00:00</div>
       </div>
-      <div class="q-title">Bu işaretli yer hangi notadır?</div>
       
-      <div class="hint-box" id="hint-text">
-        💡 <span class="hint-string-badge">1</span> . Tel – <span class="hint-fret-text">I. Perde</span>
+      <div class="fretboard-view" id="fretboard-container">
+        <div class="fret-divider fd-0"></div>
+        <div class="fret-divider fd-1"></div>
+        <div class="fret-divider fd-2"></div>
+        <div class="fret-divider fd-3"></div>
+        <div class="fret-divider fd-4"></div>
+        
+        <div id="target-dot" class="note-dot"></div>
+        
+        <div class="string-line" data-string-num="①" id="str-1"></div>
+        <div class="string-line" data-string-num="②" id="str-2"></div>
+        <div class="string-line" data-string-num="③" id="str-3"></div>
+        <div class="string-line" data-string-num="④" id="str-4"></div>
+        <div class="string-line" data-string-num="⑤" id="str-5"></div>
+        <div class="string-line" data-string-num="⑥" id="str-6"></div>
+        
+        <div class="fret-labels">
+          <span class="flabel fl-0">Boş</span>
+          <span class="flabel fl-1">1. Perde</span>
+          <span class="flabel fl-2">2. Perde</span>
+          <span class="flabel fl-3">3. Perde</span>
+          <span class="flabel fl-4">4. Perde</span>
+        </div>
       </div>
-
-      <div class="guitar-wrap">
-        <svg id="guitar-svg" viewBox="60 0 400 210" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
-          <defs>
-            <linearGradient id="fbGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#2a1a0e"/>
-              <stop offset="100%" stop-color="#1a0f06"/>
-            </linearGradient>
-            <linearGradient id="nutGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#f0e0b0"/>
-              <stop offset="100%" stop-color="#c8a050"/>
-            </linearGradient>
-            <filter id="dotGlow" x="-80%" y="-80%" width="260%" height="260%">
-              <feGaussianBlur stdDeviation="3.5" result="blur"/>
-              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-            </filter>
-          </defs>
-
-          <rect x="62" y="32" width="392" height="148" rx="5" fill="url(#fbGrad)" stroke="#3a2010" stroke-width="1.5"/>
-          <rect x="62" y="32" width="392" height="3" rx="1" fill="#c8a050" opacity="0.5"/>
-          <rect x="62" y="177" width="392" height="3" rx="1" fill="#c8a050" opacity="0.5"/>
-
-          <rect x="112" y="30" width="8" height="152" rx="2" fill="url(#nutGrad)" stroke="#c0a040" stroke-width="0.8"/>
-
-          <rect x="198" y="32" width="4" height="148" rx="1" fill="#b0b8b0" opacity="0.85"/>
-          <rect x="285" y="32" width="4" height="148" rx="1" fill="#b0b8b0" opacity="0.85"/>
-          <rect x="370" y="32" width="4" height="148" rx="1" fill="#b0b8b0" opacity="0.85"/>
-          <rect x="450" y="32" width="4" height="148" rx="1" fill="#b0b8b0" opacity="0.85"/>
-
-          <text x="155" y="24" text-anchor="middle" fill="#8b6b4e" font-size="12" font-weight="700" font-family="Lato,sans-serif">I</text>
-          <text x="243" y="24" text-anchor="middle" fill="#8b6b4e" font-size="12" font-weight="700" font-family="Lato,sans-serif">II</text>
-          <text x="328" y="24" text-anchor="middle" fill="#8b6b4e" font-size="12" font-weight="700" font-family="Lato,sans-serif">III</text>
-          <text x="412" y="24" text-anchor="middle" fill="#8b6b4e" font-size="12" font-weight="700" font-family="Lato,sans-serif">IV</text>
-
-          <line x1="70" y1="50"  x2="454" y2="50"  stroke="#e8d09a" stroke-width="0.9" opacity="0.95"/>
-          <line x1="70" y1="74"  x2="454" y2="74"  stroke="#e0c880" stroke-width="1.2" opacity="0.95"/>
-          <line x1="70" y1="98"  x2="454" y2="98"  stroke="#d8bc6a" stroke-width="1.5" opacity="0.95"/>
-          <line x1="70" y1="122" x2="454" y2="122" stroke="#c8a84a" stroke-width="1.9" opacity="0.95"/>
-          <line x1="70" y1="146" x2="454" y2="146" stroke="#b89030" stroke-width="2.3" opacity="0.95"/>
-          <line x1="70" y1="170" x2="454" y2="170" stroke="#a87820" stroke-width="2.8" opacity="0.95"/>
-
-          <circle cx="93" cy="50"  r="10" fill="#fff8ef" stroke="#d4a373" stroke-width="1.2"/>
-          <text   x="93" y="54"  text-anchor="middle" fill="#5a3e2b" font-size="10" font-weight="700" font-family="Lato,sans-serif">1</text>
-          <circle cx="93" cy="74"  r="10" fill="#fff8ef" stroke="#d4a373" stroke-width="1.2"/>
-          <text   x="93" y="78"  text-anchor="middle" fill="#5a3e2b" font-size="10" font-weight="700" font-family="Lato,sans-serif">2</text>
-          <circle cx="93" cy="98"  r="10" fill="#fff8ef" stroke="#d4a373" stroke-width="1.2"/>
-          <text   x="93" y="102" text-anchor="middle" fill="#5a3e2b" font-size="10" font-weight="700" font-family="Lato,sans-serif">3</text>
-          <circle cx="93" cy="122" r="10" fill="#fff8ef" stroke="#d4a373" stroke-width="1.2"/>
-          <text   x="93" y="126" text-anchor="middle" fill="#5a3e2b" font-size="10" font-weight="700" font-family="Lato,sans-serif">4</text>
-          <circle cx="93" cy="146" r="10" fill="#fff8ef" stroke="#d4a373" stroke-width="1.2"/>
-          <text   x="93" y="150" text-anchor="middle" fill="#5a3e2b" font-size="10" font-weight="700" font-family="Lato,sans-serif">5</text>
-          <circle cx="93" cy="170" r="10" fill="#fff8ef" stroke="#d4a373" stroke-width="1.2"/>
-          <text   x="93" y="174" text-anchor="middle" fill="#5a3e2b" font-size="10" font-weight="700" font-family="Lato,sans-serif">6</text>
-
-          <circle id="fret-highlight" cx="0" cy="0" r="14" fill="#f4d03f" stroke="#d4ac0d" stroke-width="2.5" filter="url(#dotGlow)" opacity="0.95" style="display:none;pointer-events:none;"/>
-          <text id="fret-highlight-q" x="0" y="0" text-anchor="middle" dominant-baseline="central" fill="#5a3000" font-size="11" font-weight="700" font-family="Lato,sans-serif" style="display:none;pointer-events:none;">?</text>
-        </svg>
+      
+      <p id="hint-text">💡 Soruyu incele ve doğru notayı seç</p>
+      
+      <div class="choices-grid" id="choices-box"></div>
+      
+      <div id="message"></div>
+      <div id="progress-bar-wrap"><div id="progress-bar"></div></div>
+      
+      <div class="bottom-bar">
+        <div class="info-badge" id="timer-display">Süre: 00:00</div>
+        <button id="next-btn" onclick="manualNext()" disabled>Sonraki Soru →</button>
       </div>
     </div>
-
-    <div class="choices" id="choices"></div>
-    <div class="message" id="message">🎵 Doğru cevabı seç ve öğrenmeye devam et!</div>
-    <div id="auto-bar-wrap"><div id="auto-bar"></div></div>
-
-    <div class="progress-area">
-      <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+    
+    <div id="result-zone" class="card">
+      <h2 class="res-title">Sınav Tamamlandı! 🏁</h2>
+      <div class="res-score" id="final-score-text">0 / 0</div>
+      <p class="res-comment" id="final-comment-text">Yükleniyor...</p>
+      <div style="display:flex; gap:10px; justify-content:center;">
+        <button class="restart-btn" onclick="resetQuiz()">🔄 Yeniden Başlat</button>
+        <button class="restart-btn" style="background:#fff; border-color:#d4c4b0;" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Başa Dön</button>
+      </div>
     </div>
+    
   </div>
 
-  <div id="result-zone" class="result-screen">
-    <h2 class="result-title">🎉 Test Tamamlandı!</h2>
-    <div class="result-stats">
-      <div class="stat-row"><span>Toplam Süre:</span><span class="stat-val" id="res-time">00:00</span></div>
-      <div class="stat-row"><span>Doğru Cevap:</span><span class="stat-val correct-val" id="res-correct">0</span></div>
-      <div class="stat-row"><span>Yanlış Cevap:</span><span class="stat-val wrong-val" id="res-wrong">0</span></div>
-    </div>
-    <p style="color:#8b6b4e; font-weight:700; margin-bottom:1.5rem;">Bravo! Dereceyi ekran görüntüsü olarak grupta paylaşıp arkadaşlarını kıskandırmaya ne dersin? :D</p>
-  </div>
+  <footer><p>❤️ yunusgedik.com.tr</p></footer>
 
-  <div class="controls">
-    <button class="ctrl-btn" onclick="resetQuiz()">↻ Tekrar</button>
-    <button class="ctrl-btn primary" id="next-btn" onclick="manualNext()" disabled>Sonraki Soru →</button>
-<button class="ctrl-btn" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Başa Dön</button>
-  </div>
-</div>
-
-<footer><p>❤️ yunusgedik.com.tr</p></footer>
-
-<script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.2/build/cjs/vexflow.js"></script>
-<script>
-const NOTES = [
-  { string:1, fret:0, name:'Mi',  freq:329.63, key: 'e/5', line: 4.0 }, 
-  { string:1, fret:1, name:'Fa',  freq:349.23, key: 'f/5', line: 4.5 }, 
-  { string:1, fret:3, name:'Sol', freq:392.00, key: 'g/5', line: 5.0 }, 
-  { string:2, fret:0, name:'Si',  freq:246.94, key: 'b/4', line: 2.0 }, 
-  { string:2, fret:1, name:'Do',  freq:261.63, key: 'c/5', line: 2.5 }, 
-  { string:2, fret:3, name:'Re',  freq:293.66, key: 'd/5', line: 3.0 }, 
-  { string:3, fret:0, name:'Sol', freq:196.00, key: 'g/4', line: 1.0 }, 
-  { string:3, fret:2, name:'La',  freq:220.00, key: 'a/4', line: 1.5 }, 
-  { string:4, fret:0, name:'Re',  freq:146.83, key: 'd/4', line: -0.5 },
-  { string:4, fret:2, name:'Mi',  freq:164.81, key: 'e/4', line: 0.0 }, 
-  { string:4, fret:3, name:'Fa',  freq:174.61, key: 'f/4', line: 0.5 }, 
-  { string:5, fret:0, name:'La',  freq:110.00, key: 'a/3', line: -1.5 },
-  { string:5, fret:2, name:'Si',  freq:123.47, key: 'b/3', line: -1.0 },
-  { string:5, fret:3, name:'Do',  freq:130.81, key: 'c/4', line: -0.5 },
-  { string:6, fret:0, name:'Mi',  freq:82.41,  key: 'e/3', line: -3.0 },
-  { string:6, fret:1, name:'Fa',  freq:87.31,  key: 'f/3', line: -2.5 },
-  { string:6, fret:3, name:'Sol', freq:98.00,  key: 'g/3', line: -2.0 } 
-];
-
-const ROMAN_FRETS = { 0: 'Boş Tel', 1: 'I. Perde', 2: 'II. Perde', 3: 'III. Perde', 4: 'IV. Perde' };
-const ERR = [
-  "Yazıklar olsun!","Kulaklarımız kanadı...","Sende hiç utanma yok mu yaa",
-  "Instagram'dan ekle beni seni engellim","Tüm başarılar Yunus Hocadan, bunun gibi hatalar ise senden..",
-  "Yunus Hoca bunu görmemiş olsun...","Gitarı yavaşça yere bırak...","Sen daha iyi enstrümanlara layıksın",
-  "Aynen knk aynen sensin","Iyyy yine mi hata","Ağır popçusun belli knk","Lâ havle..","Sen en iyisi flüt çal knk"
-];
-
-const FRET_CX = { 0:116, 1:155, 2:243, 3:328, 4:412 };
-const STRING_CY = { 1:50, 2:74, 3:98, 4:122, 5:146, 6:170 };
-
-const TOTAL_QUESTIONS_COUNT = 12;
-
-let audioCtx=null, questions=[], currentIndex=0, current=null, answered=false, interacted=false, autoTimer=null;
-let correctCount=0, wrongCount=0, startTime=null, timerInterval=null;
-
-function shuffle(a){ return [...a].sort(()=>Math.random()-0.5); }
-
-function generateRandomQuizSet(pool, targetCount) {
-  let list = [];
-  for(let i=0; i<targetCount; i++) {
-    const randomIndex = Math.floor(Math.random() * pool.length);
-    list.push(pool[randomIndex]);
-  }
-  return list;
-}
-
-function getAudio(){
-  if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)();
-  return audioCtx;
-}
-
-function playGuitar(freq){
-  try{
-    const ctx=getAudio();
-    if(ctx.state==='suspended') ctx.resume();
-    const now=ctx.currentTime;
-    const master=ctx.createGain();
-    master.connect(ctx.destination);
+  <script>
+    // 1. Pozisyon Tüm Temel Doğal Notalar Havuzu (Boş teller dahil maksimum 4. perdeye kadar)
+    const NOTES = [
+      { name:'Mi',  string:6, fret:0, freq:164.81, pctX:7.5,  strId:'str-6' },
+      { name:'Fa',  string:6, fret:1, freq:174.61, pctX:25.5, strId:'str-6' },
+      { name:'Sol', string:6, fret:3, freq:196.00, pctX:67.5, strId:'str-6' },
+      
+      { name:'La',  string:5, fret:0, freq:220.00, pctX:7.5,  strId:'str-5' },
+      { name:'Si',  string:5, fret:2, freq:246.94, pctX:46.5, strId:'str-5' },
+      { name:'Do',  string:5, fret:3, freq:261.63, pctX:67.5, strId:'str-5' },
+      
+      { name:'Re',  string:4, fret:0, freq:293.66, pctX:7.5,  strId:'str-4' },
+      { name:'Mi',  string:4, fret:2, freq:329.63, pctX:46.5, strId:'str-4' },
+      { name:'Fa',  string:4, fret:3, freq:349.23, pctX:67.5, strId:'str-4' },
+      
+      { name:'Sol', string:3, fret:0, freq:392.00, pctX:7.5,  strId:'str-3' },
+      { name:'La',  string:3, fret:2, freq:440.00, pctX:46.5, strId:'str-3' },
+      
+      { name:'Si',  string:2, fret:0, freq:493.88, pctX:7.5,  strId:'str-2' },
+      { name:'Do',  string:2, fret:1, freq:523.25, pctX:25.5, strId:'str-2' },
+      { name:'Re',  string:2, fret:3, freq:587.33, pctX:67.5, strId:'str-2' },
+      
+      { name:'Mi',  string:1, fret:0, freq:659.25, pctX:7.5,  strId:'str-1' },
+      { name:'Fa',  string:1, fret:1, freq:698.46, pctX:25.5, strId:'str-1' },
+      { name:'Sol', string:1, fret:3, freq:783.99, pctX:67.5, strId:'str-1' }
+    ];
     
-    const filter=ctx.createBiquadFilter();
-    filter.type='lowpass'; filter.frequency.value=freq*2.8; filter.Q.value=0.7;
-    filter.connect(master);
+    const OPTIONS_POOL = ['Do', 'Re', 'Mi', 'Fa', 'Sol', 'La', 'Si'];
+    const TOTAL_QUESTIONS_COUNT = 20;
     
-    const osc=ctx.createOscillator(); osc.type='triangle'; osc.frequency.value=freq;
-    const og=ctx.createGain();
-    og.gain.setValueAtTime(0,now); og.gain.linearRampToValueAtTime(0.45,now+0.006); og.gain.exponentialRampToValueAtTime(0.001,now+2.2);
-    osc.connect(og); og.connect(filter); osc.start(now); osc.stop(now+2.2);
+    const ERR = [
+      "Yazıklar olsun!", "Kulaklarımız kanadı...", "Sende hiç utanma yok mu yaa",
+      "Instagram'dan ekle beni seni engellim", "Tüm başarılar Yunus Hocadan, bu hata senden..",
+      "Yunus Hoca bunu görmemiş olsun...", "Gitarı yavaşça yere bırak...",
+      "Sen daha iyi enstrümanlara layıksın", "Aynen knk aynen sensin", "Iyyy yine mi hata",
+      "Ağır popçusun belli knk", "Lâ havle..", "Sen en iyisi flüt çal knk"
+    ];
     
-    const sine=ctx.createOscillator(); sine.type='sine'; sine.frequency.value=freq;
-    const sg=ctx.createGain();
-    sg.gain.setValueAtTime(0,now); sg.gain.linearRampToValueAtTime(0.25,now+0.006); sg.gain.exponentialRampToValueAtTime(0.001,now+1.8);
-    sine.connect(sg); sg.connect(filter); sine.start(now); sine.stop(now+1.8);
+    let questions = [];
+    let currentIndex = 0;
+    let correctCount = 0;
+    let wrongCount = 0;
+    let answered = false;
+    let interacted = false;
     
-    [2,3,4].forEach(h=>{
-      const o=ctx.createOscillator(); o.type='sine'; o.frequency.value=freq*h;
-      const g=ctx.createGain(); g.gain.setValueAtTime(0,now); g.gain.linearRampToValueAtTime(0.1/h,now+0.005); g.gain.exponentialRampToValueAtTime(0.001,now+1.2);
-      o.connect(g); g.connect(filter); o.start(now); o.stop(now+1.2);
-    });
+    let audioCtx = null;
+    let startTime = null;
+    let timerInterval = null;
+    let autoTimer = null;
+    let current = null;
     
-    const bufSize=ctx.sampleRate*0.04;
-    const buf=ctx.createBuffer(1,bufSize,ctx.sampleRate);
-    const d=buf.getChannelData(0);
-    for(let i=0;i<bufSize;i++) d[i]=(Math.random()*2-1)*(1-i/bufSize);
-    const noise=ctx.createBufferSource(); noise.buffer=buf;
-    const nf=ctx.createBiquadFilter(); nf.type='bandpass'; nf.frequency.value=freq; nf.Q.value=0.8;
-    const ng=ctx.createGain(); ng.gain.setValueAtTime(0.2,now); ng.gain.exponentialRampToValueAtTime(0.001,now+0.08);
-    noise.connect(nf); nf.connect(master); noise.start(now);
-    
-    master.gain.setValueAtTime(0.75,now); master.gain.exponentialRampToValueAtTime(0.001,now+2.5);
-    const btn=document.getElementById('listen-btn');
-    btn.classList.add('playing'); setTimeout(()=>btn.classList.remove('playing'),700);
-  }catch(e){}
-}
-
-function replay(){ interacted=true; if(current) playGuitar(current.freq); }
-
-function moveHighlight(stringN, fretN){
-  const cx=FRET_CX[fretN], cy=STRING_CY[stringN];
-  const dot=document.getElementById('fret-highlight');
-  const qtxt=document.getElementById('fret-highlight-q');
-  dot.setAttribute('cx',cx); dot.setAttribute('cy',cy);
-  qtxt.setAttribute('x',cx); qtxt.setAttribute('y',cy);
-  dot.style.display=''; qtxt.style.display='';
-}
-
-function drawMiniStaff(div, noteObj){
-  div.innerHTML='';
-  try {
-    const {Renderer, Stave, StaveNote, Voice, Formatter} = Vex.Flow;
-    const renderer = new Renderer(div, Renderer.Backends.SVG);
-    
-    renderer.resize(110, 150);
-    const ctx = renderer.getContext();
-    
-    const stave = new Stave(0, 30, 110);
-    stave.addClef('treble').setContext(ctx).draw();
-    
-    const note = new StaveNote({ keys: [noteObj.key], duration: 'w' });
-    if(note.keyProps && note.keyProps[0]) {
-      note.keyProps[0].line = noteObj.line;
-      note.keyProps[0].clef = 'treble';
+    function generateRandomQuizSet(sourceArray, count) {
+      let pool = [];
+      while(pool.length < count) {
+        let shuffled = [...sourceArray].sort(() => Math.random() - 0.5);
+        pool.push(...shuffled);
+      }
+      return pool.slice(0, count);
     }
     
-    const voice = new Voice({ num_beats: 4, beat_value: 4 });
-    voice.addTickables([note]);
-    new Formatter().joinVoices([voice]).format([voice], 85);
-    voice.draw(ctx, stave);
+    function startTimer() {
+      startTime = Date.now();
+      timerInterval = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        const totalSecs = Math.floor(elapsed / 1000);
+        const mins = String(Math.floor(totalSecs / 60)).padStart(2, '0');
+        const secs = String(totalSecs % 60).padStart(2, '0');
+        document.getElementById('timer-display').textContent = `Süre: ${mins}:${secs}`;
+      }, 1000);
+    }
     
-    const s = div.querySelector('svg'); 
-    if(s) { s.style.width = '100%'; s.style.height = 'auto'; }
-  } catch(e) { console.log(e); }
-}
+    function getAudio() {
+      if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      return audioCtx;
+    }
+    
+    function playGuitar(freq) {
+      try {
+        const ctx = getAudio();
+        if(ctx.state === 'suspended') ctx.resume();
+        const master = ctx.createGain();
+        const now = ctx.currentTime;
+        master.gain.setValueAtTime(0, now);
+        master.gain.linearRampToValueAtTime(0.5, now + 0.005);
+        master.gain.exponentialRampToValueAtTime(0.001, now + 2.0);
+        master.connect(ctx.destination);
+        
+        [[1,0.5],[2,0.25],[3,0.12],[4,0.05]].forEach(([m, v]) => {
+          const o = ctx.createOscillator(), g = ctx.createGain();
+          o.type = 'sine'; o.frequency.value = freq * m; g.gain.value = v;
+          o.connect(g); g.connect(master); o.start(now); o.stop(now + 2.0);
+        });
+        
+        const btn = document.getElementById('listen-btn');
+        btn.classList.add('playing');
+        setTimeout(() => btn.classList.remove('playing'), 500);
+      } catch(e){}
+    }
+    
+    function replay() {
+      interacted = true;
+      document.getElementById('hint-text').style.display = 'none';
+      if(current) playGuitar(current.freq);
+    }
+    
+    function clearAutoTimer() {
+      if(autoTimer) { clearTimeout(autoTimer); autoTimer = null; }
+      document.getElementById('progress-bar-wrap').style.display = 'none';
+    }
+    
+    function startAutoAdvance() {
+      const wrap = document.getElementById('progress-bar-wrap');
+      const bar  = document.getElementById('progress-bar');
+      wrap.style.display = 'block';
+      bar.style.width = '100%';
+      bar.style.transition = 'none';
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          bar.style.transition = 'width 1s linear';
+          bar.style.width = '0%';
+        });
+      });
+      autoTimer = setTimeout(() => { clearAutoTimer(); nextQuestion(); }, 1000);
+    }
+    
+    function manualNext() { clearAutoTimer(); nextQuestion(); }
+    
+    function nextQuestion() {
+      if(currentIndex >= TOTAL_QUESTIONS_COUNT) {
+        endQuiz();
+        return;
+      }
+      
+      answered = false;
+      document.getElementById('message').textContent = '';
+      document.getElementById('next-btn').disabled = true;
+      clearAutoTimer();
+      
+      document.getElementById('question-index-label').textContent = `Soru: ${currentIndex + 1} / ${TOTAL_QUESTIONS_COUNT}`;
+      
+      current = questions[currentIndex];
+      
+      // Kırmızı hedef noktasını tele yerleştir
+      const dot = document.getElementById('target-dot');
+      const parentLine = document.getElementById(current.strId);
+      if(parentLine) {
+        dot.style.display = 'block';
+        dot.style.left = current.pctX + '%';
+        // Çizginin dikey ortasına sabitle
+        parentLine.appendChild(dot);
+      }
+      
+      if(interacted) {
+        setTimeout(() => { playGuitar(current.freq); }, 250);
+      }
+      
+      // Seçenekleri oluştur (1 Doğru + 3 Yanlış)
+      let wrongs = OPTIONS_POOL.filter(o => o !== current.name).sort(() => Math.random() - 0.5).slice(0, 3);
+      let choices = [current.name, ...wrongs].sort(() => Math.random() - 0.5);
+      
+      const box = document.getElementById('choices-box');
+      box.innerHTML = '';
+      
+      choices.forEach(name => {
+        const btn = document.createElement('button');
+        btn.className = 'choice-card';
+        btn.textContent = name;
+        btn.dataset.choice = name;
+        btn.onclick = () => checkAnswer(name, btn);
+        box.appendChild(btn);
+      });
+    }
+    
+    function checkAnswer(name, card) {
+      if(answered) return;
+      answered = true;
+      interacted = true;
+      document.getElementById('hint-text').style.display = 'none';
+      
+      document.querySelectorAll('.choice-card').forEach(c => { c.classList.add('disabled'); c.onclick = null; });
+      const msg = document.getElementById('message');
+      
+      if(name === current.name) {
+        card.classList.add('correct');
+        msg.textContent = '✓ Doğru! İyi iş çıkardın, devam et!'; msg.style.color = '#6b8c42';
+        playGuitar(current.freq);
+        correctCount++;
+        document.getElementById('next-btn').disabled = false;
+        startAutoAdvance();
+      } else {
+        card.classList.add('wrong');
+        const randomMsg = ERR[Math.floor(Math.random() * ERR.length)];
+        msg.textContent = '✗ ' + randomMsg + ' — Doğrusu: ' + current.name; msg.style.color = '#c75b39';
+        wrongCount++;
+        document.querySelectorAll('.choice-card').forEach(c => {
+          if(c.dataset.choice === current.name) c.classList.add('correct');
+        });
+        document.getElementById('next-btn').disabled = false;
+      }
+      currentIndex++;
+    }
+    
+    function resetQuiz() {
+      clearAutoTimer();
+      if(timerInterval) clearInterval(timerInterval);
+      
+      document.getElementById('quiz-zone').style.display = 'block';
+      document.getElementById('result-zone').style.display = 'none';
+      
+      correctCount = 0;
+      wrongCount = 0;
+      currentIndex = 0;
+      answered = false;
+      interacted = false;
+      
+      questions = generateRandomQuizSet(NOTES, TOTAL_QUESTIONS_COUNT);
+      
+      document.getElementById('hint-text').style.display = 'block';
+      document.getElementById('hint-text').innerHTML = '💡 Soruyu incele ve doğru notayı seç';
+      document.getElementById('timer-display').textContent = 'Süre: 00:00';
+      
+      startTimer();
+      nextQuestion();
+    }
+    
+    function endQuiz() {
+      if(timerInterval) clearInterval(timerInterval);
+      clearAutoTimer();
+      
+      document.getElementById('quiz-zone').style.display = 'none';
+      document.getElementById('result-zone').style.display = 'block';
+      
+      document.getElementById('final-score-text').textContent = `${correctCount} / ${TOTAL_QUESTIONS_COUNT}`;
+      
+      const elapsed = Date.now() - startTime;
+      
+      let comment = "";
+      if(correctCount === 20) {
+        comment = "Muhteşem! Kusursuz bir sınav! Gitar klavyesinin 1. pozisyonu senin oyun alanın olmuş kanka. Yunus Hoca gurur duyuyor! 🏆";
+      } else if(correctCount >= 15) {
+        comment = "Harika! Çok ufak tefek kaçırmalar dışında klavyeye tamamen hakimsin. Sahne seni bekler kanka! 🔥";
+      } else if(correctCount >= 10) {
+        comment = "Fena değil, yolu yarılamışsın. Ama akor basarken bas tellerinde kaybolmamak için biraz daha klavye pratiği yapmalısın. ⚡";
+      } else if(correctCount >= 5) {
+        comment = "Dostum sahilde pop çalarken bare basamayan o çocuk gibisin şu an... Telleri ve perdeleri iyice ezberleyip tekrar gel kanka. 🎸";
+      } else {
+        comment = "Gitarı sakince kılıfına koy ve fermuarını sıkıca kapat... Klavye bilgisi yerlerde sürüyor, Yunus Hocanın videolarına acil geri dön! 🐢";
+      }
+      
+      document.getElementById('final-comment-text').textContent = comment;
+      
+      // Sunucuya Skoru Kaydet
+      if(window.GitarScores && typeof window.GitarScores.save === 'function') {
+        window.GitarScores.save('klavye_pozisyon_1', {
+          correct: correctCount,
+          wrong: wrongCount,
+          total: TOTAL_QUESTIONS_COUNT,
+          time_ms: elapsed
+        }).then(success => {
+          console.log('[GitarScores] Klavye sınav skoru kaydedildi mi:', success);
+        });
+      }
+    }
 
-function startTimer() {
-  startTime = Date.now();
-  if(timerInterval) clearInterval(timerInterval);
-  timerInterval = setInterval(updateTimerDisplay, 1000);
-}
-
-function formatTime(ms) {
-  const totalSecs = Math.floor(ms / 1000);
-  const mins = Math.floor(totalSecs / 60);
-  const secs = totalSecs % 60;
-  return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-}
-
-function formatFinalTimeText(ms) {
-  const totalSecs = Math.floor(ms / 1000);
-  const mins = Math.floor(totalSecs / 60);
-  const secs = totalSecs % 60;
-  if(mins > 0) {
-    return `${mins} dk ${secs} saniye`;
-  }
-  return `${secs} saniye`;
-}
-
-function updateTimerDisplay() {
-  const elapsed = Date.now() - startTime;
-  document.getElementById('timer-display').textContent = 'Süre: ' + formatTime(elapsed);
-}
-
-function clearAutoTimer(){
-  if(autoTimer){clearTimeout(autoTimer);autoTimer=null;}
-  document.getElementById('auto-bar-wrap').style.display='none';
-}
-
-function startAutoAdvance(){
-  const wrap=document.getElementById('auto-bar-wrap'), bar=document.getElementById('auto-bar');
-  wrap.style.display='block'; bar.style.width='100%'; bar.style.transition='none';
-  requestAnimationFrame(()=>requestAnimationFrame(()=>{
-    bar.style.transition='width 1s linear'; bar.style.width='0%';
-  }));
-  autoTimer=setTimeout(()=>{clearAutoTimer();nextQuestion();},1000);
-}
-
-function manualNext(){ clearAutoTimer(); nextQuestion(); }
-
-function updateProgress(){
-  const pct=(currentIndex / TOTAL_QUESTIONS_COUNT) * 100;
-  document.getElementById('progress-fill').style.width=pct+'%';
-}
-
-function showFinalResults() {
-  clearInterval(timerInterval);
-  const elapsed = Date.now() - startTime;
-  
-  document.getElementById('quiz-zone').style.display = 'none';
-  document.getElementById('result-zone').style.display = 'block';
-  
-  document.getElementById('res-time').textContent = formatFinalTimeText(elapsed);
-  document.getElementById('res-correct').textContent = correctCount;
-  document.getElementById('res-wrong').textContent = wrongCount;
-}
-
-function nextQuestion(){
-  clearAutoTimer(); answered=false;
-  document.getElementById('message').textContent='🎵 Doğru cevabı seç ve öğrenmeye devam et!';
-  document.getElementById('message').style.color='#8b6b4e';
-  document.getElementById('next-btn').disabled=true;
-
-  if(currentIndex >= TOTAL_QUESTIONS_COUNT){
-    showFinalResults();
-    return;
-  }
-
-  current=questions[currentIndex];
-  moveHighlight(current.string, current.fret);
-
-  const fretText = ROMAN_FRETS[current.fret];
-  document.getElementById('hint-text').innerHTML = `💡 <span class="hint-string-badge">${current.string}</span> . Tel – <span class="hint-fret-text">${fretText}</span>`;
-
-  let pool = NOTES.filter(n => n.name !== current.name);
-  let wrongs = shuffle(pool).slice(0, 3);
-  let choices = shuffle([current, ...wrongs]);
-  
-  const box=document.getElementById('choices');
-  box.innerHTML='';
-
-  choices.forEach((noteObj)=>{
-    const card=document.createElement('div');
-    card.className='choice-card'; card.dataset.choice=noteObj.name;
-    card.onclick=()=>selectChoice(card, noteObj.name);
-
-    const staffDiv=document.createElement('div'); staffDiv.className='choice-staff';
-    const nameDiv=document.createElement('div'); nameDiv.className='choice-name'; nameDiv.textContent=noteObj.name;
-
-    card.appendChild(staffDiv); card.appendChild(nameDiv);
-    box.appendChild(card);
-
-    drawMiniStaff(staffDiv, noteObj);
-  });
-
-  updateProgress();
-  if(interacted) setTimeout(()=>playGuitar(current.freq),300);
-}
-
-function selectChoice(card, name){
-  if(answered) return;
-  answered=true; interacted=true;
-  document.querySelectorAll('.choice-card').forEach(c=>{c.classList.add('disabled');c.onclick=null;});
-  const msg=document.getElementById('message');
-  
-  if(name===current.name){
-    card.classList.add('correct');
-    msg.textContent='✓ Doğru! İyi iş çıkardın, devam et!'; msg.style.color='#6b8c42';
-    playGuitar(current.freq);
-    correctCount++;
-    document.getElementById('next-btn').disabled=false;
-    startAutoAdvance();
-  } else {
-    card.classList.add('wrong');
-    const randomMsg=ERR[Math.floor(Math.random()*ERR.length)];
-    msg.textContent='✗ '+randomMsg+' — Doğrusu: '+current.name; msg.style.color='#c75b39';
-    wrongCount++;
-    document.querySelectorAll('.choice-card').forEach(c=>{
-      if(c.dataset.choice===current.name) c.classList.add('correct');
-    });
-    document.getElementById('next-btn').disabled=false;
-  }
-  currentIndex++;
-}
-
-function resetQuiz(){
-  clearAutoTimer();
-  if(timerInterval) clearInterval(timerInterval);
-  
-  document.getElementById('quiz-zone').style.display = 'block';
-  document.getElementById('result-zone').style.display = 'none';
-  
-  correctCount = 0;
-  wrongCount = 0;
-  currentIndex = 0;
-  answered = false;
-  interacted = false;
-  
-  questions = generateRandomQuizSet(NOTES, TOTAL_QUESTIONS_COUNT);
-  
-  document.getElementById('hint-text').innerHTML='💡 Soruyu incele ve doğru notayı seç';
-  document.getElementById('timer-display').textContent = 'Süre: 00:00';
-  
-  startTimer();
-  nextQuestion();
-}
-
-// ── GÜVENLİK VE OTOMATİK GİRİŞ KONTROLÜ (BURAYA EKLENDİ) ──
-(function checkSecurity() {
-  const sid = localStorage.getItem('gitar_session');
-  
-  // Şifre girip oturum açmamışsa quiz'i başlatmaz ve anında ana şifre sayfasına fırlatır
-  if (!sid) {
-    window.location.href = 'https://gitar.yunusgedik.com.tr/';
-    return;
-  }
-  
-  // Oturum geçerliyse quizi başlat
-  resetQuiz();
-})();
-<script src="/live-bar.js"></script>
+    // ── GÜVENLİK VE GİRİŞ KONTROLÜ (TAMAMEN TAMİR EDİLDİ) ──
+    (function checkSecurity() {
+      const sid = localStorage.getItem('gitar_session');
+      if (!sid) {
+        window.location.href = 'https://gitar.yunusgedik.com.tr/';
+        return;
+      }
+      resetQuiz();
+    })();
+  </script>
+  <script src="/live-bar.js"></script>
 </body>
 </html>
