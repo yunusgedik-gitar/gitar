@@ -298,7 +298,7 @@
     <div id="setup-area" class="filter-card">
       <div class="filter-title">Çalışılacak Telleri Seçin</div>
       <div class="string-buttons">
-        <button id="btn-all" class="string-btn all-btn active" onclick="toggleAllStrings()">ALL / HEPSİ</button>
+        <button id="btn-all" class="string-btn all-btn active" onclick="toggleAllStrings()">HEPSİ</button>
         <button class="string-btn active string-num-btn" data-string="1" onclick="toggleString(1)">①</button>
         <button class="string-btn active string-num-btn" data-string="2" onclick="toggleString(2)">②</button>
         <button class="string-btn active string-num-btn" data-string="3" onclick="toggleString(3)">③</button>
@@ -580,13 +580,11 @@
       
       const containerWidth = container.offsetWidth || 460;
       
-      // Mobil cihazlar için taşmayı önleyen dinamik ölçeklendirme
-      let scaleFactor = 1.45;
-      if (containerWidth < 400) {
-        scaleFactor = 1.25; 
-      }
+      // 1. Ölçeklendirmeyi nota sayfasıyla birebir aynı yapıyoruz (Sabit 1.45)
+      const scaleFactor = 1.45;
       
-      const H = 140; // Kompakt yükseklik alanı
+      // 2. Yükseklik alanını dengeli yapıyoruz (H = 150)
+      const H = 150; 
       
       const renderer = new Renderer(container, Renderer.Backends.SVG);
       renderer.resize(containerWidth, H);
@@ -595,14 +593,13 @@
       ctx.scale(scaleFactor, scaleFactor);
       
       const scaledWidth = containerWidth / scaleFactor;
-      const scaledHeight = H / scaleFactor;
       
-      // Kenarlardan 20'şer px dengeli boşluk bırakan akıllı genişlik
-      const staveW = scaledWidth - 40; 
-      const staveX = 20; 
-      const staveY = (scaledHeight - 60) / 2; 
+      // 3. Genişlik ve X ekseni hesaplamaları (Nota ile birebir aynı)
+      const staveW = Math.min(180, scaledWidth - 40);
+      const staveX = (scaledWidth - staveW) / 2;
       
-      const stave = new Stave(staveX, staveY, staveW);
+      // 4. İşte sihirli dokunuş: y parametresini nota sayfasındaki gibi -10 yapıyoruz
+      const stave = new Stave(staveX, -18, staveW);
       stave.addClef('treble');
       stave.setContext(ctx).draw();
       
