@@ -418,9 +418,9 @@ function startAutoAdvance(){
   const wrap=document.getElementById('auto-bar-wrap'), bar=document.getElementById('auto-bar');
   wrap.style.display='block'; bar.style.width='100%'; bar.style.transition='none';
   requestAnimationFrame(()=>requestAnimationFrame(()=>{
-    bar.style.transition='width 2s linear'; bar.style.width='0%';
+    bar.style.transition='width 1s linear'; bar.style.width='0%';
   }));
-  autoTimer=setTimeout(()=>{clearAutoTimer();nextQuestion();},2000);
+  autoTimer=setTimeout(()=>{clearAutoTimer();nextQuestion();},1000);
 }
 
 function manualNext(){ clearAutoTimer(); nextQuestion(); }

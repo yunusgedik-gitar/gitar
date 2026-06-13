@@ -411,7 +411,7 @@
       const staveX = (scaledWidth - staveW) / 2;
       
       // İstediğin o dengeli dikey konum (32) korundu
-      const stave = new Stave(staveX, 32, staveW);
+      const stave = new Stave(staveX, -10, staveW);
       stave.addClef('treble');
       stave.setContext(ctx).draw();
       
@@ -438,11 +438,11 @@
       bar.style.transition = 'none';
       requestAnimationFrame(()=>{
         requestAnimationFrame(()=>{
-          bar.style.transition = 'width 2s linear';
+          bar.style.transition = 'width 1s linear';
           bar.style.width = '0%';
         });
       });
-      autoTimer = setTimeout(()=>{ clearAutoTimer(); nextCard(); }, 2000);
+      autoTimer = setTimeout(()=>{ clearAutoTimer(); nextCard(); }, 1000);
     }
 
     function manualNext(){ clearAutoTimer(); nextCard(); }
