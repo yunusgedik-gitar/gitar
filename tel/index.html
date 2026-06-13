@@ -3,508 +3,700 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🎸 Dr. Yunus GEDİK – Gitar Akademisi</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <title>Tel Okuma Egzersizi – Klasik Gitar</title>
+  <script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.2/build/cjs/vexflow.js"></script>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght=0,600;1,400&family=Lato:wght=300;400;700&display=swap');
+
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    :root {
-      --cream: #f7f4ef;
-      --brown: #2c1f14;
-      --gold:  #b8892a;
-      --muted: #7a6a5a;
-      --border: #e2d9cc;
-      --green: #3b6d11;
-      --green-bg: #eaf3de;
-      --red: #a32d2d;
-      --red-bg: #fdf0f0;
-    }
-
     body {
-      font-family: 'DM Sans', sans-serif;
-      background: var(--cream);
-      color: var(--brown);
+      font-family: 'Lato', sans-serif;
+      background: #faf6ed;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
+      padding: 1.4rem 1rem 2.5rem;
+      color: #5a3e2b;
+      overflow-x: hidden; 
     }
 
-    /* ── LOGIN ─────────────────────────────────── */
-    #screen-login {
-      width: 100%; max-width: 420px;
-      padding: 3rem 1.5rem 4rem;
-      animation: fadeUp .5s ease both;
+    header { text-align: center; margin-bottom: 1.2rem; }
+    header h1 { font-family: 'Playfair Display', serif; font-size: 1.45rem; font-weight: 600; color: #5a3e2b; }
+    header p  { font-size: 0.8rem; color: #b09070; margin-top: 0.3rem; font-style: italic; }
+
+    #app { width: 100%; max-width: 520px; }
+
+    /* ── 🎛️ PANEL (TEL SEÇİMİ) STİLLERİ ── */
+    .filter-card {
+      background: #fff;
+      border: 1.5px solid #e8e0d5;
+      border-radius: 20px;
+      padding: 1.2rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 4px 20px rgba(90,62,43,0.04);
+      text-align: center;
+    }
+    .filter-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #b09070;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.85rem;
+    }
+    .string-buttons {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 0.95rem;
+    }
+    .string-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 1.5px solid #d4c4b0;
+      background: #fff;
+      color: #5a3e2b;
+      font-size: 1.2rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+    }
+    .string-btn.all-btn {
+      width: auto;
+      height: 44px;
+      padding: 0 16px;
+      border-radius: 22px;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+    }
+    .string-btn.active {
+      background: #5a3e2b;
+      border-color: #5a3e2b;
+      color: #fff;
+      box-shadow: 0 4px 10px rgba(90,62,43,0.15);
+    }
+    
+    .action-buttons-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
 
-    .site-header { text-align: center; margin-bottom: 2.5rem; }
-    .site-header h1 {
-      font-family: 'Playfair Display', serif;
-      font-size: clamp(1.8rem, 5vw, 2.6rem);
-      font-weight: 700; line-height: 1.1;
+    .start-exercise-btn {
+      width: 100%;
+      padding: 12px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      border-radius: 12px;
+      border: 1.5px solid #d4a373;
+      background: #f5e6d3;
+      color: #5a3e2b;
+      cursor: pointer;
+      transition: all 0.12s;
     }
-    .site-header p { color: var(--muted); font-size: .85rem; margin-top: .4rem; text-transform: uppercase; letter-spacing: .06em; }
-    .gold-bar { width: 48px; height: 2px; background: var(--gold); margin: 1.1rem auto 0; border-radius: 2px; }
-
-    .pin-card {
-      background: #fff; border: 1px solid var(--border);
-      border-radius: 24px; padding: 2.25rem 1.75rem;
-      box-shadow: 0 8px 32px rgba(44,31,20,.07);
+    .start-exercise-btn:hover:not(:disabled) { background: #ebd3b8; }
+    
+    .start-race-btn {
+      border: 1.5px solid #e24b4a;
+      background: #fdf0f0;
+      color: #a32d2d;
     }
-    .pin-label { text-align: center; font-size: .8rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 1.75rem; }
+    .start-race-btn:hover:not(:disabled) { background: #f9d5d5; }
 
-    #pin-display { display: flex; justify-content: center; gap: 14px; margin-bottom: 2rem; }
-    .pin-dot { width: 20px; height: 20px; border-radius: 50%; background: var(--border); transition: background .2s, transform .15s; }
-    .pin-dot.filled { background: var(--gold); transform: scale(1.1); }
-
-    .numpad { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
-    .num-btn {
-      height: 60px; border-radius: 16px; border: 1.5px solid var(--border);
-      background: var(--cream); font-size: 1.4rem; font-weight: 600; color: var(--brown);
-      cursor: pointer; font-family: inherit; transition: all .15s;
-      display: flex; align-items: center; justify-content: center;
+    .start-exercise-btn:disabled {
+      background: #f5f5f5;
+      border-color: #e0e0e0;
+      color: #b0b0b0;
+      cursor: not-allowed;
     }
-    .num-btn:hover  { background: #ede5d8; border-color: #c8b8a8; }
-    .num-btn:active { transform: scale(.93); }
-    .num-btn.del    { font-size: 1.2rem; color: var(--muted); }
-    .num-btn.go     { background: var(--gold); color: #fff; border-color: var(--gold); font-size: .9rem; font-weight: 700; }
-    .num-btn.go:hover { background: #a07824; }
 
-    #pin-error { text-align: center; margin-top: 1.1rem; color: var(--red); font-size: .85rem; font-weight: 600; min-height: 22px; }
-
-    @keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-7px)} 40%,80%{transform:translateX(7px)} }
-    .shake { animation: shake .35s ease; }
-
-    /* ── DASHBOARD ─────────────────────────────── */
-    #screen-dash { display: none; width: 100%; }
-    .dash-inner { width: 100%; max-width: 920px; margin: 0 auto; padding: 1.5rem 1.25rem 4rem; }
-
-    .welcome-bar {
-      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
-      background: #fff; border: 1px solid var(--border); border-radius: 18px;
-      padding: 1rem 1.4rem; margin-bottom: 1.4rem;
-      box-shadow: 0 2px 14px rgba(44,31,20,.05);
+    /* ── ⏱️ GERİ SAYIM SAYACI VE MENÜ ÜST ALANI ── */
+    .top-bar-exercise {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      margin-bottom: 0.85rem;
+      min-height: 38px;
     }
-    .welcome-left { display: flex; align-items: center; gap: 10px; }
-    .avatar {
-      width: 40px; height: 40px; border-radius: 50%;
-      background: linear-gradient(135deg,var(--gold),#8b5a10);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1rem; color: #fff; font-weight: 700;
-      font-family: 'Playfair Display', serif; flex-shrink: 0;
+
+    .back-to-menu-btn {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #b09070;
+      background: #fff;
+      border: 1.5px solid #e8e0d5;
+      padding: 6px 14px;
+      border-radius: 30px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.12s;
+      box-shadow: 0 2px 8px rgba(90,62,43,0.02);
     }
-    .welcome-name { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700; }
-    .online-pill { font-size: .7rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; background: var(--green-bg); color: var(--green); padding: 3px 10px; border-radius: 20px; }
-    .logout-btn { font-size: .78rem; color: var(--muted); background: none; border: 1px solid var(--border); padding: 6px 14px; border-radius: 20px; cursor: pointer; font-family: inherit; transition: all .15s; }
-    .logout-btn:hover { background: var(--red-bg); color: var(--red); border-color: #e8b8b8; }
+    .back-to-menu-btn:hover {
+      background: #f5e6d3;
+      border-color: #d4c4b0;
+      color: #5a3e2b;
+    }
 
-    .tabs { display: flex; gap: 8px; margin-bottom: 1.5rem; flex-wrap: wrap; }
-    .tab-btn { padding: 8px 20px; border-radius: 20px; border: 1.5px solid var(--border); background: #fff; color: var(--muted); font-size: .85rem; font-weight: 500; cursor: pointer; font-family: inherit; transition: all .15s; }
-    .tab-btn.active { background: var(--brown); color: #fff; border-color: var(--brown); }
-    .tab-btn:hover:not(.active) { background: #ede5d8; border-color: #c8b8a8; }
+    #timer-display {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #e24b4a;
+      background: #fdf0f0;
+      border: 1.5px solid #f9d5d5;
+      padding: 6px 16px;
+      border-radius: 30px;
+      display: none; 
+      box-shadow: 0 2px 8px rgba(226,75,74,0.05);
+    }
 
-    /* Game cards */
-    .game-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(260px,1fr)); gap: 1.2rem; }
+    /* ── 🎯 EGZERSİZ ALANI STİLLERİ ── */
+    #exercise-area { display: none; text-align: center; } 
+
     .card {
-      background: #fff; border: 1px solid var(--border); border-radius: 20px;
-      padding: 2rem 1.75rem; cursor: pointer; text-decoration: none; color: inherit;
-      display: flex; flex-direction: column; gap: 1rem;
-      position: relative; overflow: hidden;
-      transition: transform .2s, box-shadow .2s, border-color .2s;
+      background: #fff;
+      border: 1.5px solid #e8e0d5;
+      border-radius: 20px;
+      padding: 1.25rem 1.25rem 0rem; 
+      margin-bottom: 0.85rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 210px; 
+      justify-content: space-between; 
+      box-shadow: 0 4px 20px rgba(90,62,43,0.04);
     }
-    .card::before { content:''; position:absolute; top:0;left:0;right:0; height:3px; background:var(--gold); opacity:0; transition:opacity .2s; }
-    .card:hover { transform:translateY(-4px); box-shadow:0 16px 40px rgba(44,31,20,.1); border-color:#c8b8a8; }
-    .card:hover::before { opacity:1; }
-    .card-icon { font-size: 2.2rem; }
-    .card-title { font-family:'Playfair Display',serif; font-size:1.35rem; font-weight:700; margin-bottom:.35rem; }
-    .card-desc  { font-size:.84rem; color:var(--muted); line-height:1.65; }
-    .card-footer { display:flex; align-items:center; justify-content:space-between; padding-top:.9rem; border-top:1px solid var(--border); }
-    .badge { font-size:.7rem; font-weight:600; padding:3px 10px; border-radius:20px; text-transform:uppercase; letter-spacing:.03em; }
-    .badge-active { background:var(--green-bg); color:var(--green); }
-    .badge-new { background:linear-gradient(135deg,#ff9f43,#ff5252); color:#fff; font-weight:700; box-shadow:0 2px 8px rgba(255,82,82,.35); animation:pulseGlow 2s infinite; }
-    .arrow { font-size:1.1rem; color:var(--gold); transition:transform .2s; }
-    .card:hover .arrow { transform:translateX(4px); }
 
-    /* Stats */
-    .stats-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:10px; margin-bottom:1.75rem; }
-    .stat-mini { background:#fff; border:1px solid var(--border); border-radius:14px; padding:1rem; text-align:center; }
-    .stat-mini-val { font-size:1.8rem; font-weight:700; color:var(--gold); font-family:'Playfair Display',serif; line-height:1; }
-    .stat-mini-lbl { font-size:.7rem; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; margin-top:.35rem; }
-
-    .section-title { font-family:'Playfair Display',serif; font-size:1.05rem; font-weight:700; margin-bottom:.9rem; }
-
-    /* Table */
-    .score-table-wrap { background:#fff; border:1px solid var(--border); border-radius:16px; overflow:hidden; margin-bottom:1.5rem; }
-    table { width:100%; border-collapse:collapse; }
-    thead tr { background:var(--cream); }
-    th { padding:10px 16px; text-align:left; font-size:.7rem; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); font-weight:600; }
-    td { padding:12px 16px; font-size:.86rem; border-top:1px solid var(--border); }
-    td.c-ok  { color:var(--green); font-weight:700; }
-    td.c-err { color:var(--red);   font-weight:700; }
-    td.c-acc { font-weight:700; }
-
-    /* Leaderboard */
-    .leaderboard { background:#fff; border:1px solid var(--border); border-radius:20px; overflow:hidden; }
-    .lb-header { display:grid; grid-template-columns:44px 1fr auto; gap:10px; padding:10px 20px; background:var(--cream); font-size:.7rem; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); font-weight:600; }
-    .lb-row { display:grid; grid-template-columns:44px 1fr auto; gap:10px; padding:14px 20px; border-top:1px solid var(--border); align-items:center; }
-    .lb-row.is-me { background:#fdfaf4; }
-    .lb-rank { text-align:center; font-size:1.2rem; }
-    .lb-name { font-weight:500; }
-    .lb-name small { display:block; color:var(--muted); font-size:.72rem; margin-top:2px; }
-    .me-tag { font-size:.65rem; background:var(--green-bg); color:var(--green); padding:2px 7px; border-radius:10px; margin-left:5px; }
-    .lb-score { text-align:right; }
-    .lb-score strong { font-size:1.05rem; color:var(--gold); }
-    .lb-score small { display:block; color:var(--muted); font-size:.72rem; }
-    .lb-note { text-align:center; font-size:.72rem; color:var(--muted); margin-top:.9rem; }
-
-    /* Loading spinner */
-    .loading {
-      display:flex; flex-direction:column; align-items:center; justify-content:center;
-      padding:3rem 1rem; color:var(--muted); gap:1rem;
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      margin-bottom: 0.25rem;
     }
-    .spinner {
-      width:32px; height:32px; border:3px solid var(--border);
-      border-top-color:var(--gold); border-radius:50%;
-      animation:spin .7s linear infinite;
+
+    .card-label { font-size: 0.8rem; color: #b09070; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    #listen-btn {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 0.8rem; padding: 6px 14px;
+      border-radius: 10px; border: 1.5px solid #d4c4b0;
+      background: #fff; color: #5a3e2b; font-weight: 700;
+      cursor: pointer; font-family: inherit;
+      transition: all 0.12s;
     }
-    @keyframes spin { to { transform:rotate(360deg); } }
+    #listen-btn:hover { background: #f5e6d3; border-color: #c4a88a; }
+    #listen-btn.playing { border-color: #6b8c42; color: #3b6d11; background: #eaf3de; }
 
-    /* Empty */
-    .empty { text-align:center; padding:3rem 1rem; color:var(--muted); }
-    .empty .e-icon { font-size:2.8rem; margin-bottom:.6rem; }
+    #notation { width: 100%; display: flex; justify-content: center; overflow: hidden; }
+    #notation svg { max-width: 100%; }
 
-    .site-footer { text-align:center; font-size:.75rem; color:#bbb0a0; margin-top:2.5rem; }
+    #hint { font-size: 0.78rem; color: #b09070; text-align: center; margin-bottom: 1rem; font-style: italic; }
 
-    @keyframes fadeUp   { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
-    @keyframes pulseGlow{ 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
+    .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 0.75rem; }
 
-    @media(max-width:480px){
-      #screen-login { padding:2rem 1rem 3rem; }
-      .dash-inner { padding:1rem 1rem 3rem; }
-      .game-grid { grid-template-columns:1fr; }
-      .card { padding:1.75rem 1.5rem; }
+    .cbtn {
+      padding: 14px 10px; 
+      font-size: 1.6rem;   
+      font-weight: 700;    
+      border-radius: 14px; 
+      border: 1.5px solid #d4c4b0;
+      background: #fff; 
+      color: #5a3e2b;
+      cursor: pointer; 
+      text-align: center; 
+      font-family: inherit;
+      transition: background 0.12s, border-color 0.12s, transform 0.08s, box-shadow 0.12s;
+    }
+    .cbtn:hover:not(:disabled) { background: #f5e6d3; border-color: #c4a88a; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(90,62,43,0.08); }
+    .cbtn:active:not(:disabled) { transform: scale(0.97); box-shadow: none; }
+    .cbtn.correct { background: #eaf3de; border-color: #6b8c42; color: #3b6d11; }
+    .cbtn.wrong   { background: #fdf0f0; border-color: #e24b4a; color: #a32d2d; }
+    .cbtn:disabled { cursor: default; transform: none; box-shadow: none; }
+
+    #feedback { text-align: center; font-size: 0.92rem; font-weight: 700; min-height: 22px; margin-bottom: 0.6rem; padding: 0 5px; }
+    #feedback.ok { color: #3b6d11; }
+    #feedback.no { color: #a32d2d; }
+
+    #progress-bar-wrap { height: 5px; background: #ede6d8; border-radius: 3px; margin-bottom: 0.8rem; overflow: hidden; display: none; border: 1px solid #e0d8c8; }
+    #progress-bar { height: 100%; width: 100%; background: linear-gradient(90deg, #8cb85f, #52a050); border-radius: 3px; transition: width 2s linear; }
+
+    /* ── 🎛完整控制中心 ── */
+    .controls {
+      display: flex;
+      gap: 10px;
+      margin-top: 0.85rem;
+      width: 100%;
+    }
+    .ctrl-btn {
+      flex: 1;
+      padding: 12px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      border-radius: 12px;
+      border: 1.5px solid #d4c4b0;
+      background: #fff;
+      color: #5a3e2b;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.12s;
+    }
+    .ctrl-btn:hover:not(:disabled) { background: #f5e6d3; }
+    .ctrl-btn.primary {
+      background: #f5e6d3;
+      border-color: #d4a373;
+    }
+    .ctrl-btn.primary:hover:not(:disabled) { background: #ebd3b8; }
+    .ctrl-btn:disabled {
+      background: #f5f5f5;
+      border-color: #e0e0e0;
+      color: #b0b0b0;
+      cursor: not-allowed;
+    }
+
+    /* ── 🏆 SKOR EKRANI STİLİ ── */
+    .result-card {
+      background: #fff;
+      border: 2px solid #d4a373;
+      border-radius: 20px;
+      padding: 2.2rem 1.5rem;
+      text-align: center;
+      box-shadow: 0 8px 30px rgba(90,62,43,0.1);
+    }
+    .result-card h2 { font-family: 'Playfair Display', serif; font-size: 1.6rem; color: #5a3e2b; margin-bottom: 0.5rem; }
+    .result-rank { font-size: 1.25rem; font-weight: 700; color: #d4a373; background: #faf6ed; display: inline-block; padding: 6px 18px; border-radius: 30px; margin-top: 0.5rem; border: 1px dashed #d4c4b0; }
+    .result-score { font-size: 3.5rem; font-weight: 700; color: #6b8c42; margin: 0.8rem 0; }
+    .result-text { font-size: 0.95rem; color: #5a3e2b; margin-bottom: 1.5rem; font-style: italic; line-height: 1.4rem; padding: 0 10px; }
+
+    footer { margin-top: 2.5rem; font-size: 0.75rem; color: #c4b5a0; text-align: center; }
+
+    @media (max-width: 400px) {
+      .cbtn { font-size: 1.4rem; padding: 12px 6px; }
+      .controls { flex-direction: column; gap: 8px; }
     }
   </style>
 </head>
 <body>
 
-<!-- ═══ LOGIN ═══════════════════════════════════════════════ -->
-<div id="screen-login">
-  <div class="site-header">
-    <h1>🎸 Dr. Yunus GEDİK</h1>
-    <p>Klasik Gitar Oyuncakları</p>
-    <div class="gold-bar"></div>
-  </div>
+  <header>
+    <h1>🎸 Tel Egzersizi</h1>
+    <p>İyi ki Yunus Hoca var! :)</p>
+  </header>
 
-  <div class="pin-card">
-    <div class="pin-label">📍 PIN kodunu girerek giriş yap</div>
-    <div id="pin-display">
-      <div class="pin-dot" id="pd0"></div>
-      <div class="pin-dot" id="pd1"></div>
-      <div class="pin-dot" id="pd2"></div>
-      <div class="pin-dot" id="pd3"></div>
-    </div>
-    <div class="numpad">
-      <button class="num-btn" onclick="numPress('1')">1</button>
-      <button class="num-btn" onclick="numPress('2')">2</button>
-      <button class="num-btn" onclick="numPress('3')">3</button>
-      <button class="num-btn" onclick="numPress('4')">4</button>
-      <button class="num-btn" onclick="numPress('5')">5</button>
-      <button class="num-btn" onclick="numPress('6')">6</button>
-      <button class="num-btn" onclick="numPress('7')">7</button>
-      <button class="num-btn" onclick="numPress('8')">8</button>
-      <button class="num-btn" onclick="numPress('9')">9</button>
-      <button class="num-btn del" onclick="numDel()">⌫</button>
-      <button class="num-btn" onclick="numPress('0')">0</button>
-      <button class="num-btn go" onclick="numEnter()">Giriş ✓</button>
-    </div>
-    <div id="pin-error">&nbsp;</div>
-  </div>
-  <footer class="site-footer" style="margin-top:2rem">❤️ yunusgedik.com.tr</footer>
-</div>
-
-
-<!-- ═══ DASHBOARD ═══════════════════════════════════════════ -->
-<div id="screen-dash">
-  <div class="dash-inner">
-
-    <div class="welcome-bar">
-      <div class="welcome-left">
-        <div class="avatar" id="avatar-init">YG</div>
-        <span class="welcome-name" id="welcome-name">Yunus Gedik</span>
-        <span class="online-pill">🟢 Online</span>
+  <div id="app">
+    
+    <div id="setup-area" class="filter-card">
+      <div class="filter-title">Çalışılacak Telleri Seçin</div>
+      <div class="string-buttons">
+        <button id="btn-all" class="string-btn all-btn active" onclick="toggleAllStrings()">ALL / HEPSİ</button>
+        <button class="string-btn active string-num-btn" data-string="1" onclick="toggleString(1)">①</button>
+        <button class="string-btn active string-num-btn" data-string="2" onclick="toggleString(2)">②</button>
+        <button class="string-btn active string-num-btn" data-string="3" onclick="toggleString(3)">③</button>
+        <button class="string-btn active string-num-btn" data-string="4" onclick="toggleString(4)">④</button>
+        <button class="string-btn active string-num-btn" data-string="5" onclick="toggleString(5)">⑤</button>
+        <button class="string-btn active string-num-btn" data-string="6" onclick="toggleString(6)">⑥</button>
       </div>
-      <button class="logout-btn" onclick="doLogout()">Çıkış Yap</button>
-    </div>
-
-    <div class="tabs">
-      <button class="tab-btn active" id="tbtn-games" onclick="showTab('games')">🎮 Oyunlar</button>
-      <button class="tab-btn"        id="tbtn-mine"  onclick="showTab('mine')">📊 Puanlarım</button>
-      <button class="tab-btn"        id="tbtn-board" onclick="showTab('board')">🏆 Liderlik</button>
-    </div>
-
-    <!-- GAMES -->
-    <div id="tab-games">
-      <div class="game-grid">
-        <a class="card" href="/klavye/">
-          <div class="card-icon">🎛️</div>
-          <div>
-            <div class="card-title">Klavye Alıştırması</div>
-            <div class="card-desc">I. Pozisyondaki tüm perdeleri, telleri ve notaların dizekteki tam karşılıklarını interaktif olarak deneyimleyin.</div>
-          </div>
-          <div class="card-footer"><span class="badge badge-new">YENİ</span><span class="arrow">→</span></div>
-        </a>
-        <a class="card" href="/nota/">
-          <div class="card-icon">🎵</div>
-          <div>
-            <div class="card-title">Nota Okuma</div>
-            <div class="card-desc">Portenin üzerindeki notayı tanı. Sol anahtarı, E3–E5 arası tüm notalar.</div>
-          </div>
-          <div class="card-footer"><span class="badge badge-active">Aktif</span><span class="arrow">→</span></div>
-        </a>
-        <a class="card" href="/tel/">
-          <div class="card-icon">🎸</div>
-          <div>
-            <div class="card-title">Tel Egzersizi</div>
-            <div class="card-desc">Gitarın tellerini ve perdelerini tanımak için alıştırmalar.</div>
-          </div>
-          <div class="card-footer"><span class="badge badge-active">Aktif</span><span class="arrow">→</span></div>
-        </a>
-        <a class="card" href="/deneysel/">
-          <div class="card-icon">🧪</div>
-          <div>
-            <div class="card-title">Deneysel</div>
-            <div class="card-desc">Yeni eklenen deneysel alıştırma ve içerikler burada yer alır.</div>
-          </div>
-          <div class="card-footer"><span class="badge badge-active">Aktif</span><span class="arrow">→</span></div>
-        </a>
+      <div class="action-buttons-wrap">
+        <button id="start-btn" class="start-exercise-btn" onclick="startExercise('practice')">Egzersize Başla (Zamansız) 🎯</button>
+        <button id="race-btn" class="start-exercise-btn start-race-btn" onclick="startExercise('race')">Yarışmaya Başla (40 Saniye) 🏆</button>
       </div>
     </div>
 
-    <!-- MY SCORES -->
-    <div id="tab-mine" style="display:none">
-      <div id="mine-content"></div>
+    <div id="exercise-area">
+      
+      <div class="top-bar-exercise">
+        <button class="back-to-menu-btn" onclick="goBackToMenu()">← Menüye Dön</button>
+        <div id="timer-display">Kalan Süre: 40</div>
+      </div>
+
+      <div class="card">
+        <div class="card-top">
+          <span id="card-question-title" class="card-label">Bu Nota Hangi Telde?</span>
+          <button id="listen-btn" onclick="replay()">🔊 Dinle</button>
+        </div>
+        <div id="notation"></div>
+      </div>
+
+      <p id="hint">🔊 Notayı duymak için "Dinle" tuşuna basın</p>
+
+      <div class="choices" id="choices"></div>
+      <div id="feedback"></div>
+      <div id="progress-bar-wrap"><div id="progress-bar"></div></div>
+      
+      <div class="controls">
+        <button class="ctrl-btn" onclick="resetQuiz()">↻ Tekrar</button>
+        <button class="ctrl-btn primary" id="next-btn" onclick="manualNext()" disabled>Sonraki Soru →</button>
+        <button class="ctrl-btn" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Başa Dön</button>
+      </div>
     </div>
 
-    <!-- LEADERBOARD -->
-    <div id="tab-board" style="display:none">
-      <div id="board-content"></div>
-    </div>
-
-    <footer class="site-footer">❤️ yunusgedik.com.tr</footer>
   </div>
-</div>
 
+  <footer><p>❤️ yunusgedik.com.tr</p></footer>
 
-<script>
-// ═══════════════════════════════════════════════════════════
-//  ÖĞRENCİ LİSTESİ  —  isim ve PIN buradan düzenlenir
-// ═══════════════════════════════════════════════════════════
-const STUDENTS = [
-  { id:'s01', name:'Yunus Gedik',  pin:'0507' },
-  { id:'s02', name:'Öğrenci 2',    pin:'1111' },
-  { id:'s03', name:'Öğrenci 3',    pin:'2222' },
-  { id:'s04', name:'Öğrenci 4',    pin:'3333' },
-  { id:'s05', name:'Öğrenci 5',    pin:'4444' },
-  { id:'s06', name:'Öğrenci 6',    pin:'5555' },
-  { id:'s07', name:'Öğrenci 7',    pin:'6666' },
-  { id:'s08', name:'Öğrenci 8',    pin:'7777' },
-  { id:'s09', name:'Öğrenci 9',    pin:'8888' },
-  { id:'s10', name:'Öğrenci 10',   pin:'9999' },
-];
+  <script>
+    const NOTES = [
+      { key:'e/3', freq:164.81, sol:'⑥', stringVal:6, name:'Mi' },
+      { key:'f/3', freq:174.61, sol:'⑥', stringVal:6, name:'Fa' },
+      { key:'g/3', freq:196.00, sol:'⑥', stringVal:6, name:'Sol' },
+      
+      { key:'a/3', freq:220.00, sol:'⑤', stringVal:5, name:'La' },
+      { key:'b/3', freq:246.94, sol:'⑤', stringVal:5, name:'Si' },
+      { key:'c/4', freq:261.63, sol:'⑤', stringVal:5, name:'Do' },
+      
+      { key:'d/4', freq:293.66, sol:'④', stringVal:4, name:'Re' },
+      { key:'e/4', freq:329.63, sol:'④', stringVal:4, name:'Mi' },
+      { key:'f/4', freq:349.23, sol:'④', stringVal:4, name:'Fa' },
+      
+      { key:'g/4', freq:392.00, sol:'③', stringVal:3, name:'Sol' },
+      { key:'a/4', freq:440.00, sol:'③', stringVal:3, name:'La' },
+      
+      { key:'b/4', freq:493.88, sol:'②', stringVal:2, name:'Si' },
+      { key:'c/5', freq:523.25, sol:'②', stringVal:2, name:'Do' },
+      { key:'d/5', freq:587.33, sol:'②', stringVal:2, name:'Re' },
+      
+      { key:'e/5', freq:659.25, sol:'①', stringVal:1, name:'Mi' },
+      { key:'f/5', freq:698.46, sol:'①', stringVal:1, name:'Fa' },
+      { key:'g/5', freq:783.99, sol:'①', stringVal:1, name:'Sol' },
+      { key:'a/5', freq:880.00, sol:'①', stringVal:1, name:'La' },
+      { key:'b/5', freq:987.77, sol:'①', stringVal:1, name:'Si' },
+    ];
+    
+    const ALL_SOL = ['①','②','③','④','⑤','⑥'];
+    
+    const ERROR_MESSAGES = [
+      "Yazıklar olsun!",
+      "Kulaklarımız kanadı...",
+      "Sende hiç utanma yok mu yaa",
+      "Instagram'dan ekle beni seni engellim",
+      "Tüm başarılar Yunus Hocadan, bunun gibi hatalar ise senden..",
+      "Yunus Hoca bunu görmemiş olsun...",
+      "Gitarı yavaşça yere bırak...",
+      "Sen daha iyi enstrümanlara layıksın",
+      "Aynen knk aynen sensin",
+      "Iyyy yine mi hata",
+      "Ağır popçusun belli knk",
+      "Lâ havle..",
+      "Sen en iyisi flüt çal knk"
+    ];
 
-const GAME_LABELS = { klavye:'🎛️ Klavye', nota:'🎵 Nota Okuma', tel:'🎸 Tel', deneysel:'🧪 Deneysel' };
+    let selectedStrings = new Set([1, 2, 3, 4, 5, 6]);
+    let filteredNotes = [];
 
-// ═══════════════════════════════════════════════════════════
-//  JSONBin  —  tüm skorlar bulutta saklanır
-// ═══════════════════════════════════════════════════════════
-const BIN_ID  = '6a2d76d3da38895dfeba83f0';
-const API_KEY = '$2a$10$ens/FDNc9OKl6AEj54jBxuhSsFD/s3CwWmLcuBF394V0CMdBPc2ue';
-const API_URL = 'https://api.jsonbin.io/v3/b/' + BIN_ID;
+    let audioCtx = null, current = null, answered = false, interacted = false;
+    let autoTimer = null;
+    
+    let currentMode = 'practice'; 
+    let gameTimer = null;
+    let timeLeft = 40;
+    let correctCount = 0;
 
-async function jbGet() {
-  const res  = await fetch(API_URL, { headers:{ 'X-Master-Key': API_KEY } });
-  const json = await res.json();
-  return (json.record && json.record.scores) ? json.record.scores : {};
-}
+    function toggleAllStrings() {
+      const allBtn = document.getElementById('btn-all');
+      const numBtns = document.querySelectorAll('.string-num-btn');
+      
+      if (selectedStrings.size === 6) {
+        selectedStrings.clear();
+        allBtn.classList.remove('active');
+        numBtns.forEach(b => b.classList.remove('active'));
+      } else {
+        selectedStrings = new Set([1, 2, 3, 4, 5, 6]);
+        allBtn.classList.add('active');
+        numBtns.forEach(b => b.classList.add('active'));
+      }
+      checkStartButton();
+    }
 
-async function jbPut(scores) {
-  return fetch(API_URL, {
-    method:'PUT',
-    headers:{ 'Content-Type':'application/json', 'X-Master-Key': API_KEY, 'X-Bin-Versioning':'false' },
-    body: JSON.stringify({ scores })
-  });
-}
+    function toggleString(num) {
+      const btn = document.querySelector(`.string-num-btn[data-string="${num}"]`);
+      const allBtn = document.getElementById('btn-all');
+      
+      if (selectedStrings.has(num)) {
+        selectedStrings.delete(num);
+        btn.classList.remove('active');
+      } else {
+        selectedStrings.add(num);
+        btn.classList.add('active');
+      }
+      
+      if (selectedStrings.size === 6) {
+        allBtn.classList.add('active');
+      } else {
+        allBtn.classList.remove('active');
+      }
+      checkStartButton();
+    }
 
-// ── State ───────────────────────────────────────────────────
-let pinBuf = '';
-let me = null;
+    function checkStartButton() {
+      const startBtn = document.getElementById('start-btn');
+      const raceBtn = document.getElementById('race-btn');
+      const isZero = selectedStrings.size === 0;
+      startBtn.disabled = isZero;
+      raceBtn.disabled = isZero;
+    }
 
-// ── PIN pad ─────────────────────────────────────────────────
-function numPress(d) {
-  if (pinBuf.length >= 4) return;
-  pinBuf += d;
-  syncDots();
-  if (pinBuf.length === 4) setTimeout(numEnter, 280);
-}
-function numDel() { pinBuf = pinBuf.slice(0,-1); syncDots(); }
-function syncDots() {
-  for (let i=0;i<4;i++)
-    document.getElementById('pd'+i).classList.toggle('filled', i<pinBuf.length);
-}
+    function startExercise(mode) {
+      filteredNotes = NOTES.filter(n => selectedStrings.has(n.stringVal));
+      if (filteredNotes.length === 0) return;
 
-function numEnter() {
-  const found = STUDENTS.find(s => s.pin === pinBuf);
-  if (found) {
-    me = found;
-    localStorage.setItem('gitar_session',      me.id);
-    localStorage.setItem('gitar_student_name', me.name);
-    openDashboard();
-  } else {
-    const card = document.querySelector('.pin-card');
-    card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake');
-    const err = document.getElementById('pin-error');
-    err.textContent = '❌ Yanlış PIN, tekrar dene';
-    pinBuf = ''; syncDots();
-    setTimeout(() => { err.innerHTML = '&nbsp;'; }, 2200);
-  }
-}
+      currentMode = mode;
+      document.getElementById('setup-area').style.display = 'none';
+      document.getElementById('exercise-area').style.display = 'block';
+      
+      if (currentMode === 'race') {
+        timeLeft = 40;
+        correctCount = 0;
+        document.getElementById('timer-display').style.display = 'inline-block';
+        document.getElementById('timer-display').textContent = 'Kalan Süre: ' + timeLeft;
+        startGameTimer();
+      } else {
+        document.getElementById('timer-display').style.display = 'none';
+      }
+      
+      nextCard();
+      document.getElementById('exercise-area').scrollIntoView({ behavior: 'smooth' });
+    }
 
-// ── Dashboard ────────────────────────────────────────────────
-function openDashboard() {
-  document.getElementById('screen-login').style.display = 'none';
-  document.getElementById('screen-dash').style.display  = 'block';
-  const init = me.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-  document.getElementById('avatar-init').textContent = init;
-  document.getElementById('welcome-name').textContent  = me.name;
-  showTab('games');
-}
+    function goBackToMenu() {
+      if (gameTimer) {
+        clearInterval(gameTimer);
+        gameTimer = null;
+      }
+      clearAutoTimer();
+      
+      document.getElementById('exercise-area').style.display = 'none';
+      document.getElementById('setup-area').style.display = 'block';
+      document.getElementById('setup-area').scrollIntoView({ behavior: 'smooth' });
+    }
 
-function doLogout() {
-  me = null; pinBuf = ''; syncDots();
-  localStorage.removeItem('gitar_session');
-  localStorage.removeItem('gitar_student_name');
-  document.getElementById('screen-dash').style.display  = 'none';
-  document.getElementById('screen-login').style.display = 'block';
-}
+    function resetQuiz() {
+      if (gameTimer) {
+        clearInterval(gameTimer);
+        gameTimer = null;
+      }
+      clearAutoTimer();
+      startExercise(currentMode);
+    }
 
-function showTab(name) {
-  ['games','mine','board'].forEach(t => {
-    document.getElementById('tab-'+t).style.display     = t===name ? 'block' : 'none';
-    document.getElementById('tbtn-'+t).classList.toggle('active', t===name);
-  });
-  if (name==='mine')  renderMine();
-  if (name==='board') renderBoard();
-}
+    function startGameTimer() {
+      if (gameTimer) clearInterval(gameTimer);
+      
+      gameTimer = setInterval(() => {
+        timeLeft--;
+        if (timeLeft <= 0) {
+          document.getElementById('timer-display').textContent = 'Süre Bitti!';
+          clearInterval(gameTimer);
+          endGame();
+        } else {
+          document.getElementById('timer-display').textContent = 'Kalan Süre: ' + timeLeft;
+        }
+      }, 1000);
+    }
 
-// ── Loading helper ───────────────────────────────────────────
-function loadingHTML() {
-  return `<div class="loading"><div class="spinner"></div><span>Yükleniyor…</span></div>`;
-}
+    // ── 🏆 AKILLI VE KOMİK DERECE MOTORU kanka ──
+    function endGame() {
+      clearAutoTimer();
+      const appContainer = document.getElementById('app');
+      
+      let rankName = "";
+      let comment = "";
 
-// ── Öğrenci istatistikleri (cloud veriden) ───────────────────
-function calcStats(raw) {
-  raw = raw || {};
-  let totC=0, totW=0, totS=0;
-  const byGame={};
-  Object.entries(raw).forEach(([game,sessions])=>{
-    const c=sessions.reduce((s,r)=>s+(r.c||0),0);
-    const w=sessions.reduce((s,r)=>s+(r.w||0),0);
-    totC+=c; totW+=w; totS+=sessions.length;
-    byGame[game]={ sessions:sessions.length, correct:c, wrong:w };
-  });
-  const acc=(totC+totW)>0 ? Math.round(totC/(totC+totW)*100) : 0;
-  const score=totC*10+totS*5;
-  return { totC, totW, totS, acc, score, byGame };
-}
+      // Derecelendirme Koşul Mantığı (30+ özel durum, diğerleri %20 barajı)
+if (correctCount >= 20) {
+        rankName = "🏆 Master Gitarist 1 Numara!";
+        comment = "İnanılmaz! Parmaklar ve kulak uçuyor! Yunus Hoca gözyaşları içinde seni ayakta alkışlıyor! 🎸";
+      } else if (correctCount >= 15) {
+        rankName = "🔥 Sahne Sanatçısı";
+        comment = "Teller tıkır tıkır çözülüyor, parmaklar ısındı! Artık kulis kartını hak ettin kanka.";
+      } else if (correctCount >= 10) {
+        rankName = "⚡ Ritim Gitarist";
+        comment = "Solo atamıyorsun ama arkada fena akor basmıyorsun hani. Bir tık daha hızlansan solist seni fark edecek.";
+      } else if (correctCount >= 5) {
+        rankName = "🎸 Akustikçi Popçu";
+        comment = "Sahilde 'Akdeniz Akşamları' çalmaktan öteye geçemedin ama bir umut var. Teller seni çağırıyor kanka!";
+      } else {
+        rankName = "🐢 Kaplumbağa Gitarist";
+        comment = "Gitarı yavaşça yere bırak ve tellere bir daha dokunma kanka... Hızın evlere şenlik!";
+      }
 
-// ── Puanlarım tab ────────────────────────────────────────────
-async function renderMine() {
-  if (!me) return;
-  const el = document.getElementById('mine-content');
-  el.innerHTML = loadingHTML();
+      appContainer.innerHTML = `
+        <div class="result-card">
+          <h2>Yarışma Tamamlandı! 🏁</h2>
+          <div class="result-rank">${rankName}</div>
+          <div class="result-score">${correctCount} Doğru</div>
+          <p class="result-text">"${comment}"</p>
+          <button class="start-exercise-btn" onclick="window.location.reload()">Yeniden Dene 🔄</button>
+        </div>
+      `;
+    }
 
-  let all;
-  try { all = await jbGet(); } catch { all = {}; }
+    function shuffle(a){ return [...a].sort(()=>Math.random()-0.5); }
 
-  const raw = all[me.id] || {};
-  const st  = calcStats(raw);
+    function getAudio(){
+      if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+      return audioCtx;
+    }
 
-  if (st.totS === 0) {
-    el.innerHTML=`<div class="empty"><div class="e-icon">🎸</div><p>Henüz hiç oturum oynamadın.<br>Oyunlara girerek skor topla!</p></div>`;
-    return;
-  }
+    function playNote(freq){
+      try {
+        const ctx = getAudio();
+        if(ctx.state==='suspended') ctx.resume();
+        const master = ctx.createGain();
+        const now = ctx.currentTime;
+        master.gain.setValueAtTime(0, now);
+        master.gain.linearRampToValueAtTime(0.55, now+0.006);
+        master.gain.exponentialRampToValueAtTime(0.001, now+2.2);
+        master.connect(ctx.destination);
+        [[1,0.5],[2,0.28],[3,0.12],[4,0.06]].forEach(([m,v])=>{
+          const o=ctx.createOscillator(), g=ctx.createGain();
+          o.type='sine'; o.frequency.value=freq*m; g.gain.value=v;
+          o.connect(g); g.connect(master); o.start(now); o.stop(now+2.2);
+        });
+        const btn=document.getElementById('listen-btn');
+        btn.classList.add('playing');
+        setTimeout(()=>btn.classList.remove('playing'),600);
+      } catch(e){}
+    }
 
-  const rows = Object.entries(st.byGame).map(([g,d]) => {
-    const a=(d.correct+d.wrong)>0 ? Math.round(d.correct/(d.correct+d.wrong)*100) : 0;
-    return `<tr><td>${GAME_LABELS[g]||g}</td><td>${d.sessions} oturum</td>
-      <td class="c-ok">${d.correct}</td><td class="c-err">${d.wrong}</td>
-      <td class="c-acc">${a}%</td></tr>`;
-  }).join('');
+    function replay(){
+      interacted=true;
+      document.getElementById('hint').style.display='none';
+      if(current) playNote(current.freq);
+    }
 
-  el.innerHTML=`
-    <div class="stats-row">
-      <div class="stat-mini"><div class="stat-mini-val">${st.score}</div><div class="stat-mini-lbl">Toplam Puan</div></div>
-      <div class="stat-mini"><div class="stat-mini-val">${st.totC}</div><div class="stat-mini-lbl">Toplam Doğru</div></div>
-      <div class="stat-mini"><div class="stat-mini-val">${st.totS}</div><div class="stat-mini-lbl">Oturum</div></div>
-      <div class="stat-mini"><div class="stat-mini-val">%${st.acc}</div><div class="stat-mini-lbl">Doğruluk</div></div>
-    </div>
-    <div class="section-title">Oyun Bazlı Detay</div>
-    <div class="score-table-wrap">
-      <table>
-        <thead><tr><th>Oyun</th><th>Oturum</th><th>Doğru</th><th>Yanlış</th><th>Doğruluk</th></tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>`;
-}
+    function drawNote(noteKey){
+      const { Renderer, Stave, StaveNote, Voice, Formatter } = Vex.Flow;
+      const container = document.getElementById('notation');
+      container.innerHTML = '';
+      
+      const containerWidth = container.offsetWidth || 460;
+      const H = 180; 
+      
+      const renderer = new Renderer(container, Renderer.Backends.SVG);
+      renderer.resize(containerWidth, H);
+      
+      const ctx = renderer.getContext();
+      ctx.scale(1.45, 1.45);
+      
+      const scaledWidth = containerWidth / 1.45;
+      const scaledHeight = H / 0.8;
+      
+      const staveW = scaledWidth - 200; 
+      const staveX = (scaledWidth - staveW) / 2;
+      
+      const staveY = (scaledHeight - 40) / 2 - 100; 
+      
+      const stave = new Stave(staveX, staveY, staveW);
+      stave.addClef('treble');
+      stave.setContext(ctx).draw();
+      
+      const sn = new StaveNote({ keys:[noteKey], duration:'w' });
+      const voice = new Voice({ num_beats:4, beat_value:4 });
+      voice.addTickables([sn]);
+      
+      new Formatter().joinVoices([voice]).format([voice], staveW - 60);
+      voice.draw(ctx, stave);
+    }
 
-// ── Liderlik tablosu ─────────────────────────────────────────
-async function renderBoard() {
-  const el = document.getElementById('board-content');
-  el.innerHTML = loadingHTML();
+    function clearAutoTimer(){
+      if(autoTimer){ clearTimeout(autoTimer); autoTimer=null; }
+      document.getElementById('progress-bar-wrap').style.display='none';
+    }
 
-  let all;
-  try { all = await jbGet(); } catch { all = {}; }
+    function startAutoAdvance(){
+      const wrap = document.getElementById('progress-bar-wrap');
+      const bar  = document.getElementById('progress-bar');
+      wrap.style.display = 'block';
+      bar.style.width = '100%';
+      bar.style.transition = 'none';
+      requestAnimationFrame(()=>{
+        requestAnimationFrame(()=>{
+          bar.style.transition = 'width 0.5s linear';
+          bar.style.width = '0%';
+        });
+      });
+      autoTimer = setTimeout(()=>{ clearAutoTimer(); nextCard(); }, 500);
+    }
 
-  const ranked = STUDENTS
-    .map(s => ({ ...s, st: calcStats(all[s.id]) }))
-    .sort((a,b) => b.st.score - a.st.score);
+    function manualNext() { 
+      if(currentMode === 'race' && timeLeft <= 0) return;
+      clearAutoTimer(); 
+      nextCard(); 
+    }
 
-  const medals = ['🥇','🥈','🥉'];
+    function nextCard(){
+      if (currentMode === 'race' && timeLeft <= 0) return;
+      
+      answered = false;
+      document.getElementById('feedback').textContent = '';
+      document.getElementById('feedback').className = '';
+      
+      document.getElementById('next-btn').disabled = true; 
+      clearAutoTimer();
 
-  const rows = ranked.map((r,i) => {
-    const isMe  = me && r.id === me.id;
-    const medal = i<3 ? medals[i] : `<span style="color:var(--muted);font-size:.9rem">${i+1}</span>`;
-    const sub   = r.st.totS>0 ? `${r.st.totS} oturum · %${r.st.acc} doğruluk` : 'Henüz oynamadı';
-    const sHtml = r.st.score>0
-      ? `<strong>${r.st.score}</strong><small>${r.st.totC} doğru</small>`
-      : `<span style="color:var(--border);font-size:1rem">—</span>`;
-    return `<div class="lb-row${isMe?' is-me':''}">
-      <div class="lb-rank">${medal}</div>
-      <div class="lb-name">${r.name}${isMe?'<span class="me-tag">Sen</span>':''}<small>${sub}</small></div>
-      <div class="lb-score">${sHtml}</div>
-    </div>`;
-  }).join('');
+      current = filteredNotes[Math.floor(Math.random() * filteredNotes.length)];
+      
+      document.getElementById('card-question-title').textContent = `"${current.name}" Notası Hangi Telde?`;
 
-  el.innerHTML=`
-    <div class="section-title">🏆 Liderlik Tablosu</div>
-    <div class="leaderboard">
-      <div class="lb-header"><div>Sıra</div><div>Öğrenci</div><div style="text-align:right">Puan</div></div>
-      ${rows}
-    </div>
-    <p class="lb-note">Puan = Doğru × 10 + Oturum × 5</p>`;
-}
+      const wrongs = shuffle(ALL_SOL.filter(s=>s!==current.sol)).slice(0,3);
+      const choices = shuffle([current.sol, ...wrongs]);
 
-// ── Otomatik giriş (sayfa yenilenirse) ──────────────────────
-(function init() {
-  const sid = localStorage.getItem('gitar_session');
-  if (sid) {
-    const found = STUDENTS.find(s=>s.id===sid);
-    if (found) { me=found; openDashboard(); return; }
-  }
-  document.getElementById('screen-login').style.display='block';
-})();
-</script>
+      drawNote(current.key);
+      if(interacted) setTimeout(()=>playNote(current.freq), 280);
+
+      const box = document.getElementById('choices');
+      box.innerHTML = '';
+      choices.forEach(sol=>{
+        const btn = document.createElement('button');
+        btn.className = 'cbtn';
+        btn.textContent = sol;
+        btn.onclick = ()=>answer(sol, btn);
+        box.appendChild(btn);
+      });
+    }
+
+    function answer(sol, btn){
+      if(answered) return;
+      if(currentMode === 'race' && timeLeft <= 0) return;
+      
+      answered = true;
+      interacted = true;
+      document.getElementById('hint').style.display='none';
+      document.querySelectorAll('.cbtn').forEach(b=>b.disabled=true);
+      const fb = document.getElementById('feedback');
+      
+      document.getElementById('next-btn').disabled = false; 
+      
+      if(sol===current.sol){
+        if(currentMode === 'race') {
+          correctCount++; 
+        }
+        btn.className='cbtn correct';
+        fb.textContent='✓ Doğru!';
+        fb.className='ok';
+        playNote(current.freq);
+        startAutoAdvance();
+      } else {
+        btn.className='cbtn wrong';
+        
+        const randomMsg = ERROR_MESSAGES[Math.floor(Math.random() * ERROR_MESSAGES.length)];
+        fb.textContent = '✗ ' + randomMsg + ' — Doğrusu: ' + current.sol;
+        
+        fb.className='no';
+        document.querySelectorAll('.cbtn').forEach(b=>{
+          if(b.textContent===current.sol) b.className='cbtn correct';
+        });
+      }
+    }
+  </script>
 </body>
 </html>
