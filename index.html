@@ -120,9 +120,7 @@
     @keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-8px)} 40%,80%{transform:translateX(8px)} }
     .shake { animation: shake .35s ease; }
 
-    /* ═══════════════════════════════════════════
-       DASHBOARD
-    ═══════════════════════════════════════════ */
+    /* ── 📋 DASHBOARD ── */
     #screen-dash { width: 100%; }
     .dash-inner { width: 100%; max-width: 920px; margin: 0 auto; padding: 1.5rem 1.25rem 4rem; }
 
@@ -336,7 +334,7 @@ const STUDENTS = [
   { id: 's67', name: 'Dr. Birsen Altaylı ÖZEMİR', pin: '5853' },
   { id: 's68', name: 'Doç. Dr. Cihangir ÖZEMİR', pin: '7063' },
   { id: 's69', name: 'Oktay Alp KARAATA', pin: '5202' },
-  { id: 's70', name: 'Pars ODİN', pin: '6790' },
+  { id: 's70', name: 'Pars ODİN', pin: '6790' }
 ];
 
 let me = null;
@@ -383,11 +381,9 @@ function openDashboard() {
   document.getElementById('avatar-init').textContent  = init;
   document.getElementById('welcome-name').textContent = me.name;
 
-  // Giriş başarılı olunca Canlı İsim Listesi döngüsünü başlatıyoruz
   initLiveBar();
 }
 
-// ── ÇIKIŞ YAPINCA İSMİ LİSTEDEN ANINDA SİLME ──
 async function doLogout() {
   const sid = localStorage.getItem('gitar_session');
   if (sid) {
@@ -410,7 +406,6 @@ async function doLogout() {
   window.location.reload();
 }
 
-// ── ANA SAYFADA CANLI İSİMLERİ TAKİP ETME VE GÜNCELLEME MOTORU ──
 async function initLiveBar() {
   const sid = localStorage.getItem('gitar_session');
   const name = localStorage.getItem('gitar_student_name');
@@ -423,13 +418,11 @@ async function initLiveBar() {
       const record = json.record || {};
       if (!record.online_users) record.online_users = {};
 
-      // Kendimizi odaya "Aktif" olarak yaz/güncelle
       record.online_users[sid] = {
         name: name,
         last_seen: Date.now()
       };
 
-      // 30 saniye boyunca sekmeyi kapatmış veya sinyal vermemiş kişileri temizle
       const now = Date.now();
       for (const id in record.online_users) {
         if (now - record.online_users[id].last_seen > 30000) {
@@ -437,14 +430,12 @@ async function initLiveBar() {
         }
       }
 
-      // JSONBin'e odanın son halini gönder
       await fetch(API_URL, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY, 'X-Bin-Versioning': 'false' },
         body: JSON.stringify(record)
       });
 
-      // Ana sayfadaki üst barda isimleri virgülle yan yana yazdır
       const names = Object.values(record.online_users).map(u => u.name);
       const countEl = document.getElementById('_gs_active_count');
       if (countEl) {
@@ -453,12 +444,10 @@ async function initLiveBar() {
     } catch (e) { console.error(e); }
   }
 
-  // İlk girişte anında çalıştır, sonra her 10 saniyede bir arkada sessizce listeyi tazele
   updateBar();
   setInterval(updateBar, 10000);
 }
 
-// ── Otomatik Giriş Kontrolü ──
 (function init() {
   const sid = localStorage.getItem('gitar_session');
   if (sid) {
