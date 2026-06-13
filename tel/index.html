@@ -205,23 +205,45 @@
       if(current) playNote(current.freq);
     }
 
-    function drawNote(noteKey){
+function drawNote(noteKey){
       const { Renderer, Stave, StaveNote, Voice, Formatter } = Vex.Flow;
       const container = document.getElementById('notation');
       container.innerHTML = '';
-      const W = Math.min(container.offsetWidth || 460, 460);
-      const H = 240;
+      
+      // Beyaz kartın o anki gerçek genişliğini alıyoruz (Mobil/Tablet/Masaüstü uyumlu)
+      const containerWidth = container.offsetWidth || 460;
+      
+      // Yüksekliği nota saplarının taşmaması için ideal bir seviyeye getirdik
+      const H = 180; 
+      
       const renderer = new Renderer(container, Renderer.Backends.SVG);
-      renderer.resize(240, H);
+      // Kutuyu kartın tam genişliğine yayıyoruz
+      renderer.resize(containerWidth, H);
+      
       const ctx = renderer.getContext();
-      const staveW = 200;
-      const stave = new Stave(20, 72, staveW);
+      
+      // Tüm nota ve porte çizimini cihaz ekranına göre %45 oranında büyüterek netleştiriyoruz
+      ctx.scale(1.45, 1.45);
+      
+      // Ölçeklendiği için yeni genişlik hesaplamasını yapıyoruz
+      const scaledWidth = containerWidth / 1.45;
+      
+      // Porteyi kutunun tam ortasına hizalamak için sol boşluğu hesaplıyoruz
+      const staveW = Math.min(300, scaledWidth - 40);
+      const staveX = (scaledWidth - staveW) / 2;
+      
+      // Porteyi (Nota çizgilerini) çizdiriyoruz
+      const stave = new Stave(staveX, 30, staveW);
       stave.addClef('treble');
       stave.setContext(ctx).draw();
+      
+      // Notayı oluşturup porte üzerine yerleştiriyoruz
       const sn = new StaveNote({ keys:[noteKey], duration:'w' });
       const voice = new Voice({ num_beats:4, beat_value:4 });
       voice.addTickables([sn]);
-      new Formatter().joinVoices([voice]).format([voice], staveW - 55);
+      
+      // Notayı çizginin tam ortasına kusursuzca ortalıyoruz
+      new Formatter().joinVoices([voice]).format([voice], staveW - 60);
       voice.draw(ctx, stave);
     }
 
