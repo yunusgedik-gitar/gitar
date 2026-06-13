@@ -37,7 +37,6 @@
       margin-bottom: 1rem;
       box-shadow: 0 4px 20px rgba(90,62,43,0.04);
       text-align: center;
-	  
     }
     .filter-title {
       font-size: 0.85rem;
@@ -46,7 +45,6 @@
       text-transform: uppercase;
       letter-spacing: 0.05em;
       margin-bottom: 0.85rem;
-
     }
     .string-buttons {
       display: flex;
@@ -55,8 +53,6 @@
       gap: 8px;
       flex-wrap: wrap;
       margin-bottom: 0.95rem;
-	 
-
     }
     .string-btn {
       width: 44px;
@@ -87,6 +83,13 @@
       color: #fff;
       box-shadow: 0 4px 10px rgba(90,62,43,0.15);
     }
+    
+    .action-buttons-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
     .start-exercise-btn {
       width: 100%;
       padding: 12px;
@@ -98,9 +101,16 @@
       color: #5a3e2b;
       cursor: pointer;
       transition: all 0.12s;
-	  
     }
     .start-exercise-btn:hover:not(:disabled) { background: #ebd3b8; }
+    
+    .start-race-btn {
+      border: 1.5px solid #e24b4a;
+      background: #fdf0f0;
+      color: #a32d2d;
+    }
+    .start-race-btn:hover:not(:disabled) { background: #f9d5d5; }
+
     .start-exercise-btn:disabled {
       background: #f5f5f5;
       border-color: #e0e0e0;
@@ -108,10 +118,50 @@
       cursor: not-allowed;
     }
 
-    /* ── 🎯 EGZERSİZ ALANI STİLLERİ ── */
-    #exercise-area { display: none; } 
+    /* ── ⏱️ GERİ SAYIM SAYACI VE MENÜ ÜST ALANI ── */
+    .top-bar-exercise {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      margin-bottom: 0.85rem;
+      min-height: 38px;
+    }
 
-    /* Dikey ortalama ve kaymaları engellemek için güncellenen card sınıfı */
+    .back-to-menu-btn {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #b09070;
+      background: #fff;
+      border: 1.5px solid #e8e0d5;
+      padding: 6px 14px;
+      border-radius: 30px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.12s;
+      box-shadow: 0 2px 8px rgba(90,62,43,0.02);
+    }
+    .back-to-menu-btn:hover {
+      background: #f5e6d3;
+      border-color: #d4c4b0;
+      color: #5a3e2b;
+    }
+
+    #timer-display {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #e24b4a;
+      background: #fdf0f0;
+      border: 1.5px solid #f9d5d5;
+      padding: 6px 16px;
+      border-radius: 30px;
+      display: none; 
+      box-shadow: 0 2px 8px rgba(226,75,74,0.05);
+    }
+
+    /* ── 🎯 EGZERSİZ ALANI STİLLERİ ── */
+    #exercise-area { display: none; text-align: center; } 
+
     .card {
       background: #fff;
       border: 1.5px solid #e8e0d5;
@@ -121,13 +171,9 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center; 
+      min-height: 210px; 
+      justify-content: space-between; 
       box-shadow: 0 4px 20px rgba(90,62,43,0.04);
-	  
-	  min-height: 210px; /* BOYUNU (YÜKSEKLİĞİNİ) AYARLAYAN SATIR BURASI */
-
-  justify-content: space-between; 
-  box-shadow: 0 4px 20px rgba(90,62,43,0.04);
     }
 
     .card-top {
@@ -184,20 +230,58 @@
     #progress-bar-wrap { height: 5px; background: #ede6d8; border-radius: 3px; margin-bottom: 0.8rem; overflow: hidden; display: none; border: 1px solid #e0d8c8; }
     #progress-bar { height: 100%; width: 100%; background: linear-gradient(90deg, #8cb85f, #52a050); border-radius: 3px; transition: width 2s linear; }
 
-    #next-btn {
-      display: none; width: 100%; padding: 14px;
-      font-size: 1rem; font-weight: 700;
-      border-radius: 14px; border: 1.5px solid #d4a373;
-      background: #f5e6d3; cursor: pointer;
-      font-family: inherit; color: #5a3e2b;
+    /* ── 🎛完整控制中心 ── */
+    .controls {
+      display: flex;
+      gap: 10px;
+      margin-top: 0.85rem;
+      width: 100%;
+    }
+    .ctrl-btn {
+      flex: 1;
+      padding: 12px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      border-radius: 12px;
+      border: 1.5px solid #d4c4b0;
+      background: #fff;
+      color: #5a3e2b;
+      cursor: pointer;
+      font-family: inherit;
       transition: all 0.12s;
     }
-    #next-btn:hover { background: #ebd3b8; }
+    .ctrl-btn:hover:not(:disabled) { background: #f5e6d3; }
+    .ctrl-btn.primary {
+      background: #f5e6d3;
+      border-color: #d4a373;
+    }
+    .ctrl-btn.primary:hover:not(:disabled) { background: #ebd3b8; }
+    .ctrl-btn:disabled {
+      background: #f5f5f5;
+      border-color: #e0e0e0;
+      color: #b0b0b0;
+      cursor: not-allowed;
+    }
+
+    /* ── 🏆 SKOR EKRANI STİLİ ── */
+    .result-card {
+      background: #fff;
+      border: 2px solid #d4a373;
+      border-radius: 20px;
+      padding: 2.2rem 1.5rem;
+      text-align: center;
+      box-shadow: 0 8px 30px rgba(90,62,43,0.1);
+    }
+    .result-card h2 { font-family: 'Playfair Display', serif; font-size: 1.6rem; color: #5a3e2b; margin-bottom: 0.5rem; }
+    .result-rank { font-size: 1.25rem; font-weight: 700; color: #d4a373; background: #faf6ed; display: inline-block; padding: 6px 18px; border-radius: 30px; margin-top: 0.5rem; border: 1px dashed #d4c4b0; }
+    .result-score { font-size: 3.5rem; font-weight: 700; color: #6b8c42; margin: 0.8rem 0; }
+    .result-text { font-size: 0.95rem; color: #5a3e2b; margin-bottom: 1.5rem; font-style: italic; line-height: 1.4rem; padding: 0 10px; }
 
     footer { margin-top: 2.5rem; font-size: 0.75rem; color: #c4b5a0; text-align: center; }
 
     @media (max-width: 400px) {
       .cbtn { font-size: 1.4rem; padding: 12px 6px; }
+      .controls { flex-direction: column; gap: 8px; }
     }
   </style>
 </head>
@@ -210,7 +294,7 @@
 
   <div id="app">
     
-    <div class="filter-card">
+    <div id="setup-area" class="filter-card">
       <div class="filter-title">Çalışılacak Telleri Seçin</div>
       <div class="string-buttons">
         <button id="btn-all" class="string-btn all-btn active" onclick="toggleAllStrings()">ALL / HEPSİ</button>
@@ -221,10 +305,19 @@
         <button class="string-btn active string-num-btn" data-string="5" onclick="toggleString(5)">⑤</button>
         <button class="string-btn active string-num-btn" data-string="6" onclick="toggleString(6)">⑥</button>
       </div>
-      <button id="start-btn" class="start-exercise-btn" onclick="startExercise()">Egzersize Başla 🎯</button>
+      <div class="action-buttons-wrap">
+        <button id="start-btn" class="start-exercise-btn" onclick="startExercise('practice')">Egzersize Başla (Zamansız) 🎯</button>
+        <button id="race-btn" class="start-exercise-btn start-race-btn" onclick="startExercise('race')">Yarışmaya Başla (40 Saniye) 🏆</button>
+      </div>
     </div>
 
     <div id="exercise-area">
+      
+      <div class="top-bar-exercise">
+        <button class="back-to-menu-btn" onclick="goBackToMenu()">← Menüye Dön</button>
+        <div id="timer-display">Kalan Süre: 40</div>
+      </div>
+
       <div class="card">
         <div class="card-top">
           <span id="card-question-title" class="card-label">Bu Nota Hangi Telde?</span>
@@ -238,7 +331,12 @@
       <div class="choices" id="choices"></div>
       <div id="feedback"></div>
       <div id="progress-bar-wrap"><div id="progress-bar"></div></div>
-      <button id="next-btn" onclick="manualNext()">Sonraki →</button>
+      
+      <div class="controls">
+        <button class="ctrl-btn" onclick="resetQuiz()">↻ Tekrar</button>
+        <button class="ctrl-btn primary" id="next-btn" onclick="manualNext()" disabled>Sonraki Soru →</button>
+        <button class="ctrl-btn" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Başa Dön</button>
+      </div>
     </div>
 
   </div>
@@ -246,33 +344,26 @@
   <footer><p>❤️ yunusgedik.com.tr</p></footer>
 
   <script>
-    // Klasik gitar standart nota-tel eşleşmeleri havuzu
     const NOTES = [
-      // ⑥. TEL NOTALARI
       { key:'e/3', freq:164.81, sol:'⑥', stringVal:6, name:'Mi' },
       { key:'f/3', freq:174.61, sol:'⑥', stringVal:6, name:'Fa' },
       { key:'g/3', freq:196.00, sol:'⑥', stringVal:6, name:'Sol' },
       
-      // ⑤. TEL NOTALARI
       { key:'a/3', freq:220.00, sol:'⑤', stringVal:5, name:'La' },
       { key:'b/3', freq:246.94, sol:'⑤', stringVal:5, name:'Si' },
       { key:'c/4', freq:261.63, sol:'⑤', stringVal:5, name:'Do' },
       
-      // ④. TEL NOTALARI
       { key:'d/4', freq:293.66, sol:'④', stringVal:4, name:'Re' },
       { key:'e/4', freq:329.63, sol:'④', stringVal:4, name:'Mi' },
       { key:'f/4', freq:349.23, sol:'④', stringVal:4, name:'Fa' },
       
-      // ③. TEL NOTALARI
       { key:'g/4', freq:392.00, sol:'③', stringVal:3, name:'Sol' },
       { key:'a/4', freq:440.00, sol:'③', stringVal:3, name:'La' },
       
-      // ②. TEL NOTALARI
       { key:'b/4', freq:493.88, sol:'②', stringVal:2, name:'Si' },
       { key:'c/5', freq:523.25, sol:'②', stringVal:2, name:'Do' },
       { key:'d/5', freq:587.33, sol:'②', stringVal:2, name:'Re' },
       
-      // ①. TEL NOTALARI
       { key:'e/5', freq:659.25, sol:'①', stringVal:1, name:'Mi' },
       { key:'f/5', freq:698.46, sol:'①', stringVal:1, name:'Fa' },
       { key:'g/5', freq:783.99, sol:'①', stringVal:1, name:'Sol' },
@@ -303,8 +394,11 @@
 
     let audioCtx = null, current = null, answered = false, interacted = false;
     let autoTimer = null;
-
-    // ── 🎛️ PANEL FILTRE FONKSİYONLARI ──
+    
+    let currentMode = 'practice'; 
+    let gameTimer = null;
+    let timeLeft = 40;
+    let correctCount = 0;
 
     function toggleAllStrings() {
       const allBtn = document.getElementById('btn-all');
@@ -344,19 +438,106 @@
 
     function checkStartButton() {
       const startBtn = document.getElementById('start-btn');
-      startBtn.disabled = selectedStrings.size === 0;
+      const raceBtn = document.getElementById('race-btn');
+      const isZero = selectedStrings.size === 0;
+      startBtn.disabled = isZero;
+      raceBtn.disabled = isZero;
     }
 
-    function startExercise() {
+    function startExercise(mode) {
       filteredNotes = NOTES.filter(n => selectedStrings.has(n.stringVal));
       if (filteredNotes.length === 0) return;
 
+      currentMode = mode;
+      document.getElementById('setup-area').style.display = 'none';
       document.getElementById('exercise-area').style.display = 'block';
+      
+      if (currentMode === 'race') {
+        timeLeft = 40;
+        correctCount = 0;
+        document.getElementById('timer-display').style.display = 'inline-block';
+        document.getElementById('timer-display').textContent = 'Kalan Süre: ' + timeLeft;
+        startGameTimer();
+      } else {
+        document.getElementById('timer-display').style.display = 'none';
+      }
+      
       nextCard();
       document.getElementById('exercise-area').scrollIntoView({ behavior: 'smooth' });
     }
 
-    // ── 🧠 EGZERSİZ MOTORU ──
+    function goBackToMenu() {
+      if (gameTimer) {
+        clearInterval(gameTimer);
+        gameTimer = null;
+      }
+      clearAutoTimer();
+      
+      document.getElementById('exercise-area').style.display = 'none';
+      document.getElementById('setup-area').style.display = 'block';
+      document.getElementById('setup-area').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function resetQuiz() {
+      if (gameTimer) {
+        clearInterval(gameTimer);
+        gameTimer = null;
+      }
+      clearAutoTimer();
+      startExercise(currentMode);
+    }
+
+    function startGameTimer() {
+      if (gameTimer) clearInterval(gameTimer);
+      
+      gameTimer = setInterval(() => {
+        timeLeft--;
+        if (timeLeft <= 0) {
+          document.getElementById('timer-display').textContent = 'Süre Bitti!';
+          clearInterval(gameTimer);
+          endGame();
+        } else {
+          document.getElementById('timer-display').textContent = 'Kalan Süre: ' + timeLeft;
+        }
+      }, 1000);
+    }
+
+    // ── 🏆 AKILLI VE KOMİK DERECE MOTORU kanka ──
+    function endGame() {
+      clearAutoTimer();
+      const appContainer = document.getElementById('app');
+      
+      let rankName = "";
+      let comment = "";
+
+      // Derecelendirme Koşul Mantığı (30+ özel durum, diğerleri %20 barajı)
+if (correctCount >= 20) {
+        rankName = "🏆 Master Gitarist 1 Numara!";
+        comment = "İnanılmaz! Parmaklar ve kulak uçuyor! Yunus Hoca gözyaşları içinde seni ayakta alkışlıyor! 🎸";
+      } else if (correctCount >= 15) {
+        rankName = "🔥 Sahne Sanatçısı";
+        comment = "Teller tıkır tıkır çözülüyor, parmaklar ısındı! Artık kulis kartını hak ettin kanka.";
+      } else if (correctCount >= 10) {
+        rankName = "⚡ Ritim Gitarist";
+        comment = "Solo atamıyorsun ama arkada fena akor basmıyorsun hani. Bir tık daha hızlansan solist seni fark edecek.";
+      } else if (correctCount >= 5) {
+        rankName = "🎸 Akustikçi Popçu";
+        comment = "Sahilde 'Akdeniz Akşamları' çalmaktan öteye geçemedin ama bir umut var. Teller seni çağırıyor kanka!";
+      } else {
+        rankName = "🐢 Kaplumbağa Gitarist";
+        comment = "Gitarı yavaşça yere bırak ve tellere bir daha dokunma kanka... Hızın evlere şenlik!";
+      }
+
+      appContainer.innerHTML = `
+        <div class="result-card">
+          <h2>Yarışma Tamamlandı! 🏁</h2>
+          <div class="result-rank">${rankName}</div>
+          <div class="result-score">${correctCount} Doğru</div>
+          <p class="result-text">"${comment}"</p>
+          <button class="start-exercise-btn" onclick="window.location.reload()">Yeniden Dene 🔄</button>
+        </div>
+      `;
+    }
 
     function shuffle(a){ return [...a].sort(()=>Math.random()-0.5); }
 
@@ -392,16 +573,12 @@
       if(current) playNote(current.freq);
     }
 
-    // ── 🎯 NOKTA ATIŞI ELLE ORTALANMIŞ DRAWNOTE ──
-function drawNote(noteKey){
+    function drawNote(noteKey){
       const { Renderer, Stave, StaveNote, Voice, Formatter } = Vex.Flow;
       const container = document.getElementById('notation');
       container.innerHTML = '';
       
       const containerWidth = container.offsetWidth || 460;
-      
-      // ── 🎯 ÇÖZÜM: VEXFLOW'UN GÖRÜNMEZ TAVANINI YÜKSELTTİK ──
-      // Yüksekliği 100'den 180'e çıkardık ki yukarı kaydırdığında porte kesilip kaybolmasın.
       const H = 180; 
       
       const renderer = new Renderer(container, Renderer.Backends.SVG);
@@ -413,13 +590,9 @@ function drawNote(noteKey){
       const scaledWidth = containerWidth / 1.45;
       const scaledHeight = H / 0.8;
       
-      // Beyaz kutu genişledikçe portenin de sağa sola tam yayılması için sınırı kaldırdık
       const staveW = scaledWidth - 200; 
       const staveX = (scaledWidth - staveW) / 2;
       
-      // ── 🎯 YUKARI/AŞAĞI OYNATMA AYARI ──
-      // Tavanı 180 yaptığımız için artık -35 değeri porteyi kesilmeden çok şık bir şekilde yukarı taşır.
-      // Eğer kendi ekranında porteyi bir tık daha yukarıda istersen bu -35 değerini -45, -55 yapabilirsin; artık kaybolmaz.
       const staveY = (scaledHeight - 40) / 2 - 100; 
       
       const stave = new Stave(staveX, staveY, staveW);
@@ -447,20 +620,27 @@ function drawNote(noteKey){
       bar.style.transition = 'none';
       requestAnimationFrame(()=>{
         requestAnimationFrame(()=>{
-          bar.style.transition = 'width 2s linear';
+          bar.style.transition = 'width 0.5s linear';
           bar.style.width = '0%';
         });
       });
-      autoTimer = setTimeout(()=>{ clearAutoTimer(); nextCard(); }, 2000);
+      autoTimer = setTimeout(()=>{ clearAutoTimer(); nextCard(); }, 500);
     }
 
-    function manualNext(){ clearAutoTimer(); nextCard(); }
+    function manualNext() { 
+      if(currentMode === 'race' && timeLeft <= 0) return;
+      clearAutoTimer(); 
+      nextCard(); 
+    }
 
     function nextCard(){
+      if (currentMode === 'race' && timeLeft <= 0) return;
+      
       answered = false;
       document.getElementById('feedback').textContent = '';
       document.getElementById('feedback').className = '';
-      document.getElementById('next-btn').style.display = 'none';
+      
+      document.getElementById('next-btn').disabled = true; 
       clearAutoTimer();
 
       current = filteredNotes[Math.floor(Math.random() * filteredNotes.length)];
@@ -486,13 +666,20 @@ function drawNote(noteKey){
 
     function answer(sol, btn){
       if(answered) return;
+      if(currentMode === 'race' && timeLeft <= 0) return;
+      
       answered = true;
       interacted = true;
       document.getElementById('hint').style.display='none';
       document.querySelectorAll('.cbtn').forEach(b=>b.disabled=true);
       const fb = document.getElementById('feedback');
       
+      document.getElementById('next-btn').disabled = false; 
+      
       if(sol===current.sol){
+        if(currentMode === 'race') {
+          correctCount++; 
+        }
         btn.className='cbtn correct';
         fb.textContent='✓ Doğru!';
         fb.className='ok';
@@ -508,7 +695,6 @@ function drawNote(noteKey){
         document.querySelectorAll('.cbtn').forEach(b=>{
           if(b.textContent===current.sol) b.className='cbtn correct';
         });
-        document.getElementById('next-btn').style.display='block';
       }
     }
   </script>
