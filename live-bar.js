@@ -3,17 +3,25 @@ const API_KEY = '$2a$10$ens/FDNc9OKl6AEj54jBxuhSsFD/s3CwWmLcuBF394V0CMdBPc2ue';
 const API_URL = 'https://api.jsonbin.io/v3/b/' + BIN_ID;
 
 async function initLiveBar() {
-  console.log("LiveBar module initialized.");
-  
   const sid = localStorage.getItem('gitar_session');
   const name = localStorage.getItem('gitar_student_name');
   
-  if (!sid || !name) {
-    console.warn("No active session found in localStorage. LiveBar stopped.");
-    return;
-  }
+  if (!sid || !name) return;
 
-  console.log(`Active user: ${name} (ID: ${sid})`);
+  // Alt sayfalarda (nota, tel vb.) eğer hazır element yoksa otomatik bar oluşturur
+  let countEl = document.getElementById('_gs_active_count');
+  if (!countEl) {
+    const header = document.querySelector('header') || document.body;
+    const bar = document.createElement('div');
+    bar.style.cssText = 'text-align:center; font-size:.82rem; font-weight:600; color:#2c1f14; background:#eaf3de; border: 1px solid #b0c999; border-radius:20px; padding:6px 16px; margin:.5rem auto 1rem; display:inline-block; box-shadow: 0 2px 8px rgba(0,0,0,0.04);';
+    bar.innerHTML = `<span id="_gs_active_count">🟢 <b>Aktif:</b> Yükleniyor...</span>`;
+    
+    const h1 = header.querySelector('h1');
+    if (h1) h1.insertAdjacentElement('afterend', bar);
+    else header.prepend(bar);
+    
+    countEl = document.getElementById('_gs_active_count');
+  }
 
   async function updateBar() {
     try {
@@ -45,12 +53,8 @@ async function initLiveBar() {
       });
 
       const names = Object.values(record.online_users).map(u => u.name);
-      const countEl = document.getElementById('_gs_active_count');
       if (countEl) {
         countEl.innerHTML = `🟢 <b>Aktif:</b> ${names.join(', ')}`;
-        console.log("LiveBar updated successfully:", names);
-      } else {
-        console.error("HTML element with ID '_gs_active_count' not found!");
       }
     } catch (e) { 
       console.error("Error updating LiveBar:", e); 
