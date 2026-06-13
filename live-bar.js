@@ -48,8 +48,8 @@ async function initLiveBar() {
     const names = Object.values(users).map(u => u.name);
     if (countEl) {
       countEl.innerHTML = names.length > 0
-        ? `🟢 ${names.join(', ')}`
-        : `🟢 —`;
+		? `🟢 ${names.join(', ')}`
+		: `⚪ —`;
     }
   });
 }
