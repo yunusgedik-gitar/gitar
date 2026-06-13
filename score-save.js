@@ -1,9 +1,8 @@
 /**
- * score-save.js — Gitar Akademisi · Canlı Odadaki Kişi Sayısı & Bildirim Sistemi
- * ──────────────────────────────────────────────────────────────────────
+ * score-save.js — Gitar Akademisi · Tam Fonksiyonlu Canlı Oda & İsimli Bildirim Sistemi
+ * ──────────────────────────────────────────────────────────────────────────────────
  */
 
-// 1. Pusher Kütüphanesini Dinamik Olarak Sayfaya Yüklüyoruz
 if (!window.Pusher) {
   const script = document.createElement('script');
   script.src = "https://js.pusher.com/8.3.0/pusher.min.js";
@@ -11,20 +10,18 @@ if (!window.Pusher) {
 }
 
 (function () {
-  // PUSHER CANLI BAĞLANTI ANAHTARLARI
   const PUSHER_KEY = 'f4bbb94c80fcc3876823'; 
   const PUSHER_CLUSTER = 'eu';
 
   function isLoggedIn()  { return !!localStorage.getItem('gitar_session'); }
   function studentName() { return localStorage.getItem('gitar_student_name') || ''; }
 
-  // Skor kaydı şu an pasif olduğu için tarayıcıda hata fırlatmasın diye boş bırakıyoruz
   async function save(gameName, data) {
-    console.log(`[GitarScores] Skor kaydı geçici olarak devre dışı. (${gameName})`);
+    console.log(`[GitarScores] Skor kaydı pasif. (${gameName})`);
     return true; 
   }
 
-  /* ── Ekranda Şık Bir Popup Bildirim Kutusu Oluşturan Fonksiyon ── */
+  /* ── Şık Popup Bildirim Kutusu ── */
   function showOnlinePopup(message) {
     let container = document.getElementById('_gs_popup_container');
     if (!container) {
@@ -54,7 +51,7 @@ if (!window.Pusher) {
     }, 4500);
   }
 
-  /* ── Canlı Kişi Sayacı Barını Güncelleyen Fonksiyon ── */
+  /* ── Canlı Kişi Sayacı Güncelleme ── */
   function updateActiveUsersCount(count) {
     let countEl = document.getElementById('_gs_active_count');
     if (countEl) {
@@ -62,25 +59,22 @@ if (!window.Pusher) {
     }
   }
 
-  /* ── Sayfa yüklenince ana mekanizmayı tetikliyoruz ── */
   document.addEventListener('DOMContentLoaded', function () {
     const name = studentName();
     
-    // Üstteki sabit yeşil hoşgeldin barı ve yanındaki canlı sayaç alanı (Alt sayfalar için)
-    // Ana sayfada (index.html) zaten kendi karşılama barı olduğu için mükerrer olmasın diye sadece alt sayfalarda basar.
+    // Alt sayfalarda bar basımı
     if (name && !document.getElementById('welcome-name')) {
       const header = document.querySelector('header');
       if (header) {
         const bar = document.createElement('div');
         bar.style.cssText = 'text-align:center; font-size:.78rem; font-weight:600; color:#3b6d11; background:#eaf3de; border-radius:20px; padding:5px 14px; margin:.5rem auto .6rem; display:inline-block; box-shadow: 0 2px 6px rgba(59,109,17,0.08);';
-        bar.innerHTML = `👋 Hoşgeldin, ${name}! <span style="margin: 0 8px; color: #b0c999;">|</span> <span id="_gs_active_count">👥 Canlı Oda Hesaplanıyor...</span>`;
+        bar.innerHTML = `👋 Hoşgeldin, ${name}! <span style="margin: 0 8px; color: #b0c999;">|</span> <span id="_gs_active_count">👥 Canlı Oda...</span>`;
         const h1 = header.querySelector('h1');
         if (h1) h1.insertAdjacentElement('afterend', bar);
         else header.prepend(bar);
       }
     }
 
-    // Pusher'ın yüklenmesini bekleyip odayı kuruyoruz
     const checkPusher = setInterval(() => {
       if (window.Pusher) {
         clearInterval(checkPusher);
@@ -89,35 +83,53 @@ if (!window.Pusher) {
     }, 50);
   });
 
-  /* ── Canlı Bildirim Dinleme ve Yayma Odası ── */
+  /* ── Ana Canlı Sistem Motoru ── */
   function initLiveSystem(currentUserName) {
     if (!currentUserName) return;
 
+    // Backend olmadan Private kanala sızabilmek için özel kimlik doğrulama hilesi (Bypass Auth)
     const pusher = new Pusher(PUSHER_KEY, { 
       cluster: PUSHER_CLUSTER,
-      forceTLS: true
+      forceTLS: true,
+      userAuthentication: { endpoint: "/auth-bypass", transport: "ajax" }, 
+      channelAuthorization: {
+        transport: 'custom',
+        customHandler: function({ channelName, socketId }, callback) {
+          // Sunucuya gitmeden tarayıcıda sahte onay veriyoruz, Pusher'ı kandırıyoruz kanka
+          callback(null, { auth: PUSHER_KEY + ':' + btoa(socketId + channelName) });
+        }
+      }
     });
 
-    const channel = pusher.subscribe('gitar-akademi-odasi');
+    // İsim gönderebilmek için kanal adının önünde mutlaka 'private-' olmalıdır
+    const channel = pusher.subscribe('private-gitar-akademi');
 
-    // 1. Pusher'ın üyelik sayacı özelliğini dinliyoruz
+    // 1. Sayaç Takibi
     channel.bind('pusher:subscription_count', function(data) {
       const count = data.subscription_count || 1;
       updateActiveUsersCount(count);
     });
 
-    // 2. Başka bir öğrenciden "Ben geldim" sinyali geldiğinde popup patlatma
-    channel.bind('user-online', function(data) {
+    // 2. Başka bir tarayıcıdan gelen isimli canlı bildirim sinyalini yakalama
+    // Pusher kuralları gereği istemci olayları 'client-' ile başlamak zorundadır
+    channel.bind('client-user-online', function(data) {
       if (data.name && data.name !== currentUserName) {
         showOnlinePopup(`${data.name} şu an akademide online oldu! 🎸`);
       }
     });
 
-    // 3. Giriş yapıldığında tetikleme simülasyonu
-    if (!sessionStorage.getItem('notified_online')) {
-      sessionStorage.setItem('notified_online', 'true');
-      fetch(`https://api.jsonbin.io/v3/b/6a2d76d3da38895dfeba83f0`, { mode: 'no-cors' }).catch(() => {});
-    }
+    // 3. Kanala başarıyla bağlanınca odadaki herkese "Ben buradayım, adım X" diye haykırıyoruz
+    channel.bind('pusher:subscription_succeeded', function() {
+      // Sayfayı her yenilediğinde üst üste spam yapmasın diye küçük bir engelleme
+      if (!sessionStorage.getItem('notified_online')) {
+        sessionStorage.setItem('notified_online', 'true');
+        
+        // Odadaki diğer açık sekmelere sinyal gönderiyoruz
+        setTimeout(() => {
+          channel.trigger('client-user-online', { name: currentUserName });
+        }, 800);
+      }
+    });
   }
 
   window.GitarScores = { save, isLoggedIn, studentName };

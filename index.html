@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>🎸 Dr. Yunus GEDİK – Gitar Akademisi</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght=500;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -142,7 +142,6 @@
     }
     .welcome-name { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700; }
     
-    /* Yeni Canlı Sayaç Tasarımı */
     .online-pill { font-size: .75rem; font-weight: 600; background: var(--green-bg); color: var(--green); padding: 5px 14px; border-radius: 20px; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(59,109,17,0.08); }
     
     .logout-btn { font-size: .78rem; color: var(--muted); background: none; border: 1px solid var(--border); padding: 6px 14px; border-radius: 20px; cursor: pointer; font-family: inherit; transition: all .15s; }
@@ -267,9 +266,6 @@
 
 
 <script>
-// ═══════════════════════════════════════════════════════════
-//  ÖĞRENCİ LİSTESİ
-// ═══════════════════════════════════════════════════════════
 const STUDENTS = [
   { id:'s01', name:'Yunus GEDİK',  pin:'0427' },
   { id:'s02', name:'Ceren KAYRAK', pin:'5979' },
@@ -283,10 +279,7 @@ const STUDENTS = [
   { id:'s10', name:'Öğrenci 10',   pin:'9999' },
 ];
 
-// ── State ────────────────────────────────────────────────────
 let me = null;
-
-// ── Şifre girişi ─────────────────────────────────────────────
 const pinInput = document.getElementById('pin-input');
 const pinError = document.getElementById('pin-error');
 
@@ -305,38 +298,26 @@ function checkPin(pin) {
     me = found;
     localStorage.setItem('gitar_session',      me.id);
     localStorage.setItem('gitar_student_name', me.name);
+    sessionStorage.removeItem('notified_online'); // Sinyal hakkını sıfırla
     
-    // Giriş yapıldığı an diğer arkadaşlarına anlık Pusher sinyali fırlatır
-    fetch(`https://api.jsonbin.io/v3/b/6a2d76d3da38895dfeba83f0`, { mode: 'no-cors' }).catch(() => {});
-    
-    openDashboard();
+    // İsmin diğer odalarda anında tetiklenmesi için sayfayı pürüzsüzce tazeleyip Pusher odasına sokuyoruz
+    window.location.reload();
   } else {
     const card = document.querySelector('.login-card');
-    card.classList.remove('shake');
-    void card.offsetWidth;
-    card.classList.add('shake');
+    card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake');
     pinError.textContent = '❌ Yanlış şifre, tekrar dene';
     pinInput.value = '';
     setTimeout(() => { pinError.innerHTML = '&nbsp;'; }, 2200);
   }
 }
 
-// ── Dashboard ────────────────────────────────────────────────
 function openDashboard() {
   const overlay = document.getElementById('login-overlay');
-  if (overlay) {
-    overlay.classList.add('hiding');
-    overlay.addEventListener('animationend', () => overlay.remove(), { once: true });
-  }
+  if (overlay) overlay.remove();
 
   const init = me.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
   document.getElementById('avatar-init').textContent  = init;
   document.getElementById('welcome-name').textContent = me.name;
-  
-  // Eğer sayfa ilk açıldığında script yüklenmişse bağlantıyı tazelemek için tetikle
-  if (window.location.reload && !sessionStorage.getItem('notified_online')) {
-    window.location.reload();
-  }
 }
 
 function doLogout() {
@@ -344,68 +325,17 @@ function doLogout() {
   localStorage.removeItem('gitar_session');
   localStorage.removeItem('gitar_student_name');
   sessionStorage.removeItem('notified_online');
-
-  const overlay = document.createElement('div');
-  overlay.id = 'login-overlay';
-  overlay.innerHTML = `
-    <div class="login-card">
-      <div class="login-logo">🎸</div>
-      <div class="login-title">Dr. Yunus GEDİK</div>
-      <div class="login-sub">Klasik Gitar Akademisi</div>
-      <div class="gold-line"></div>
-      <div class="pin-label">Şifrenizi girin</div>
-      <input type="password" id="pin-input" maxlength="4" inputmode="numeric"
-             pattern="[0-9]*" placeholder="••••" autocomplete="off" autofocus />
-      <div id="pin-error">&nbsp;</div>
-      <div class="login-hint">4 haneli PIN · Enter ile giriş</div>
-    </div>`;
-  document.body.appendChild(overlay);
-  rebindInput();
+  window.location.reload(); // Tam temizlik için sayfayı yenile
 }
 
-function rebindInput() {
-  const inp = document.getElementById('pin-input');
-  const err = document.getElementById('pin-error');
-  inp.addEventListener('input', () => { if (inp.value.length === 4) tryLogin(inp, err); });
-  inp.addEventListener('keydown', e => { if (e.key === 'Enter' && inp.value.length > 0) tryLogin(inp, err); });
-  inp.focus();
-}
-
-function tryLogin(inp, err) {
-  const found = STUDENTS.find(s => s.pin === inp.value);
-  if (found) {
-    me = found;
-    localStorage.setItem('gitar_session',      me.id);
-    localStorage.setItem('gitar_student_name', me.name);
-    fetch(`https://api.jsonbin.io/v3/b/6a2d76d3da38895dfeba83f0`, { mode: 'no-cors' }).catch(() => {});
-    
-    const overlay = document.getElementById('login-overlay');
-    overlay.classList.add('hiding');
-    overlay.addEventListener('animationend', () => overlay.remove(), { once: true });
-    const init = me.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-    document.getElementById('avatar-init').textContent  = init;
-    document.getElementById('welcome-name').textContent = me.name;
-  } else {
-    const card = document.querySelector('.login-card');
-    card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake');
-    err.textContent = '❌ Yanlış şifre, tekrar dene';
-    inp.value = '';
-    setTimeout(() => { err.innerHTML = '&nbsp;'; }, 2200);
-  }
-}
-
-// ── Otomatik giriş kontrolü ───────────────────────────────────
+// ── Otomatik Giriş Kontrolü ──
 (function init() {
   const sid = localStorage.getItem('gitar_session');
   if (sid) {
     const found = STUDENTS.find(s => s.id === sid);
     if (found) {
       me = found;
-      const overlay = document.getElementById('login-overlay');
-      if (overlay) overlay.remove();
-      const init = me.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-      document.getElementById('avatar-init').textContent  = init;
-      document.getElementById('welcome-name').textContent = me.name;
+      openDashboard();
     }
   }
   if (!me && pinInput) {
