@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Vals – Ole Halen</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght=0,600;1,400&family=Lato:wght@300;400;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght=0,600;1,400&family=Lato:wght=300;400;700&display=swap');
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -18,6 +18,8 @@
       align-items: center;
       padding: 1.4rem 1rem 2.5rem;
       color: #5a3e2b;
+      /* Mobilde tüm sayfanın sağa sola sallanmasını önlemek için */
+      overflow-x: hidden; 
     }
 
     header {
@@ -38,26 +40,37 @@
       font-style: italic;
     }
 
+    /* ── APP WRAPPER (Beyaz çerçeveyi genişlettiğimiz yer) ── */
     #app-wrap {
       width: 100%;
-      max-width: 700px;
+      max-width: 950px; /* İstediğin gibi beyaz çerçeveyi sağa-sola genişlettik */
     }
 
-    /* ── SCORE CARD ── */
+    /* ── SCORE CARD (Dikeyde Yana Doğru Kayma Alanı) ── */
     .score-card {
       background: #fff;
       border: 1.5px solid #e8e0d5;
       border-radius: 20px;
-      padding: 1.5rem 1rem;
+      padding: 1.5rem 0; 
       margin-bottom: 0.85rem;
       box-shadow: 0 4px 20px rgba(90,62,43,0.05);
-      overflow: hidden;
+      
+      /* DIKEYDE YANA KAYMA SİHİRLİ SATIRLARI */
+      width: 100%;
+      overflow-x: auto; /* İçerik büyük gelirse sağa doğru kaydırılabilir yap */
+      display: block;
+      -webkit-overflow-scrolling: touch; /* Telefonlarda pürüzsüz kaydırma */
     }
 
     .score-rows {
       display: flex;
       flex-direction: column;
       gap: 1.8rem;
+      
+      /* Telefon dikeyken notaların büzüşüp küçülmesini engeller.
+         Resimleri orijinal netliğinde tutar ve yana doğru taşırarak kaydırmayı tetikler. */
+      min-width: 850px; 
+      padding: 0 1rem;
     }
 
     .score-row {
@@ -71,6 +84,7 @@
       display: block;
       border-radius: 4px;
       transition: opacity 0.3s;
+      pointer-events: none; 
     }
 
     .score-row.inactive img {
@@ -198,6 +212,50 @@
       color: #c4b5a0;
       text-align: center;
     }
+
+    /* ── TELEFON YATAY ÇEVRİLDİĞİNDE TAM EKRAN MODU ── */
+    @media screen and (orientation: landscape) and (max-height: 500px) {
+      body {
+        padding: 0.2rem;
+        background: #fff;
+        overflow-x: hidden;
+      }
+      
+      header, footer, .bpm-badge, .time-badge, .measure-counter {
+        display: none !important;
+      }
+      
+      #app-wrap {
+        max-width: 100% !important;
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+      }
+      
+      .score-card {
+        border: none;
+        box-shadow: none;
+        padding: 0;
+        margin-bottom: 0;
+        overflow-x: auto;
+      }
+      
+      .score-rows {
+        min-width: 100%;
+        gap: 0.8rem;
+        padding: 0;
+      }
+      
+      .controls-card {
+        padding: 0.4rem 1rem;
+        border-radius: 10px;
+        gap: 0.4rem;
+      }
+      
+      .btn-row { gap: 5px; }
+      .ctrl-btn { padding: 6px 14px; font-size: 0.8rem; }
+      #play-btn { padding: 8px 24px; font-size: 0.9rem; }
+    }
   </style>
 </head>
 <body>
@@ -266,6 +324,7 @@
 </audio>
 
 <script>
+// 1. Satırın ince ayarı senin için buraya entegre edildi
 const BPM_BASE       = 100;
 const BEATS          = 3;          
 const TOTAL_MEASURES = 16;
@@ -274,7 +333,7 @@ const AUDIO_OFFSET   = 1.80;
 const ROWS = [
   {
     startMeasure: 0,
-    measureStarts: [0.08, 0.315, 0.555, 0.82],
+    measureStarts: [0.05, 0.29, 0.53, 0.79], 
     endX: 0.99
   },
   {
@@ -374,7 +433,11 @@ function tick() {
   rows.forEach((row, i) => {
     const ph = playheads[i];
     if (pos && i === pos.rowIdx) {
-      row.classList.add('active-row');
+      // Dikey ve dikey otomatik aşağı kaydırma
+      if (!row.classList.contains('active-row')) {
+        row.classList.add('active-row');
+        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
       row.classList.remove('inactive');
       ph.style.display = 'block';
       ph.style.left = pos.xPct.toFixed(2) + '%';

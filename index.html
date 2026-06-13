@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dr. Yunus GEDİK</title>
+  <title>🎸 Dr. Yunus GEDİK – Gitar Akademisi</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght=500;700&family=DM+Sans:wght=400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -14,7 +14,11 @@
       --brown: #2c1f14;
       --gold:  #b8892a;
       --muted: #7a6a5a;
-      --card-border: #e2d9cc;
+      --border: #e2d9cc;
+      --green: #3b6d11;
+      --green-bg: #eaf3de;
+      --red: #a32d2d;
+      --red-bg: #fdf0f0;
     }
 
     body {
@@ -25,224 +29,544 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 3rem 1.25rem 4rem;
     }
 
-    header {
-      text-align: center;
-      margin-bottom: 3.5rem;
-      animation: fadeUp 0.6s ease both;
-    }
-
-    .logo-line {
+    /* ═══════════════════════════════════════════
+       BUZLU CAM GİRİŞ OVERLAY
+    ═══════════════════════════════════════════ */
+    #login-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 999;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 12px;
-      margin-bottom: 0.6rem;
+      padding: 1.5rem;
+      /* Buzlu cam efekti */
+      background: rgba(247, 244, 239, 0.40);
+      backdrop-filter: blur(14px) saturate(1.2);
+      -webkit-backdrop-filter: blur(14px) saturate(1.2);
+      animation: fadeIn .3s ease both;
     }
 
-    h1 {
-      font-family: 'Playfair Display', serif;
-      font-size: clamp(2rem, 5vw, 3rem);
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      color: var(--brown);
-      line-height: 1.1;
+    @keyframes fadeIn  { from{opacity:0} to{opacity:1} }
+    @keyframes fadeOut { from{opacity:1} to{opacity:0} }
+    #login-overlay.hiding {
+      animation: fadeOut .25s ease forwards;
+      pointer-events: none;
     }
 
-    .subtitle {
-      font-size: 0.95rem;
-      color: var(--muted);
-      margin-top: 0.5rem;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-    }
-
-    .divider {
-      width: 48px;
-      height: 2px;
-      background: var(--gold);
-      margin: 1.25rem auto 0;
-      border-radius: 2px;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1.25rem;
+    .login-card {
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid rgba(226, 217, 204, 0.9);
+      border-radius: 28px;
+      padding: 2.75rem 2.25rem 2.25rem;
+      box-shadow: 0 24px 64px rgba(44, 31, 20, 0.18);
       width: 100%;
-      max-width: 900px;
+      max-width: 340px;
+      text-align: center;
+      animation: popIn .35s cubic-bezier(.34,1.56,.64,1) both;
     }
 
-    .card {
-      background: #fff;
-      border: 1px solid var(--card-border);
-      border-radius: 20px;
-      padding: 2.25rem 2rem;
-      cursor: pointer;
-      text-decoration: none;
-      color: inherit;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      position: relative;
-      overflow: hidden;
-      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-      animation: fadeUp 0.6s ease both;
+    @keyframes popIn {
+      from { opacity:0; transform:scale(.88) translateY(12px); }
+      to   { opacity:1; transform:scale(1)   translateY(0);    }
     }
 
-    .card:nth-child(1) { animation-delay: 0.1s; }
-    .card:nth-child(2) { animation-delay: 0.2s; }
-    .card:nth-child(3) { animation-delay: 0.3s; }
-
-    .card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 3px;
-      background: var(--gold);
-      opacity: 0;
-      transition: opacity 0.2s ease;
-    }
-
-    .card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 16px 40px rgba(44, 31, 20, 0.1);
-      border-color: #c8b8a8;
-    }
-
-    .card:hover::before { opacity: 1; }
-
-    .card-icon { font-size: 2.4rem; line-height: 1; }
-
-    .card-body { flex: 1; }
-
-    .card-title {
+    .login-logo { font-size: 2.6rem; line-height: 1; margin-bottom: .6rem; }
+    .login-title {
       font-family: 'Playfair Display', serif;
-      font-size: 1.45rem;
+      font-size: 1.45rem; font-weight: 700;
+      color: var(--brown); margin-bottom: .25rem;
+    }
+    .login-sub { font-size: .78rem; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 2rem; }
+    .gold-line { width: 40px; height: 2px; background: var(--gold); margin: .8rem auto 2rem; border-radius: 2px; }
+
+    .pin-label { font-size: .78rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: .9rem; }
+
+    #pin-input {
+      width: 100%;
+      height: 56px;
+      border: 2px solid var(--border);
+      border-radius: 16px;
+      background: var(--cream);
+      font-size: 1.8rem;
       font-weight: 700;
-      margin-bottom: 0.4rem;
+      letter-spacing: .4em;
+      text-align: center;
       color: var(--brown);
+      font-family: inherit;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+      padding: 0 1rem;
+      /* Şifre noktaları daha büyük görünsün */
+      -webkit-text-security: disc;
+    }
+    #pin-input:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(184,137,42,.15);
+    }
+    #pin-input::placeholder { color: var(--border); letter-spacing: .3em; font-size: 1.5rem; }
+
+    #pin-error {
+      margin-top: .9rem;
+      font-size: .82rem;
+      font-weight: 600;
+      color: var(--red);
+      min-height: 20px;
+      transition: opacity .2s;
     }
 
-    .card-desc {
-      font-size: 0.88rem;
-      color: var(--muted);
-      line-height: 1.6;
-    }
+    .login-hint { font-size: .72rem; color: var(--muted); margin-top: 1.25rem; }
 
-    .card-footer {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding-top: 1rem;
-      border-top: 1px solid var(--card-border);
-    }
+    @keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-8px)} 40%,80%{transform:translateX(8px)} }
+    .shake { animation: shake .35s ease; }
 
-    .badge {
-      font-size: 0.72rem;
-      font-weight: 500;
-      padding: 3px 10px;
-      border-radius: 20px;
-      letter-spacing: 0.03em;
-      text-transform: uppercase;
-    }
+    /* ═══════════════════════════════════════════
+       DASHBOARD (her zaman arkada render edilir)
+    ═══════════════════════════════════════════ */
+    #screen-dash { width: 100%; }
+    .dash-inner { width: 100%; max-width: 920px; margin: 0 auto; padding: 1.5rem 1.25rem 4rem; }
 
-    .badge-active { background: #eaf3de; color: #3b6d11; }
-    
-    /* Parlak ve Canlı YENİ Rozeti */
-    .badge-new {
-      background: linear-gradient(135deg, #ff9f43, #ff5252);
-      color: #fff;
-      font-weight: 700;
-      box-shadow: 0 2px 8px rgba(255, 82, 82, 0.4);
-      animation: pulseGlow 2s infinite ease-in-out;
+    .welcome-bar {
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+      background: #fff; border: 1px solid var(--border); border-radius: 18px;
+      padding: 1rem 1.4rem; margin-bottom: 1.4rem;
+      box-shadow: 0 2px 14px rgba(44,31,20,.05);
     }
+    .welcome-left { display: flex; align-items: center; gap: 10px; }
+    .avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold), #8b5a10);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; color: #fff; font-weight: 700;
+      font-family: 'Playfair Display', serif; flex-shrink: 0;
+    }
+    .welcome-name { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700; }
+    .online-pill { font-size: .7rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; background: var(--green-bg); color: var(--green); padding: 3px 10px; border-radius: 20px; }
+    .logout-btn { font-size: .78rem; color: var(--muted); background: none; border: 1px solid var(--border); padding: 6px 14px; border-radius: 20px; cursor: pointer; font-family: inherit; transition: all .15s; }
+    .logout-btn:hover { background: var(--red-bg); color: var(--red); border-color: #e8b8b8; }
 
-    .arrow {
-      font-size: 1.1rem;
-      color: var(--gold);
-      transition: transform 0.2s ease;
+    .tabs { display: flex; gap: 8px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .tab-btn { padding: 8px 20px; border-radius: 20px; border: 1.5px solid var(--border); background: #fff; color: var(--muted); font-size: .85rem; font-weight: 500; cursor: pointer; font-family: inherit; transition: all .15s; }
+    .tab-btn.active { background: var(--brown); color: #fff; border-color: var(--brown); }
+    .tab-btn:hover:not(.active) { background: #ede5d8; border-color: #c8b8a8; }
+
+    .game-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.2rem; }
+    .card {
+      background: #fff; border: 1px solid var(--border); border-radius: 20px;
+      padding: 2rem 1.75rem; cursor: pointer; text-decoration: none; color: inherit;
+      display: flex; flex-direction: column; gap: 1rem;
+      position: relative; overflow: hidden;
+      transition: transform .2s, box-shadow .2s, border-color .2s;
     }
+    .card::before { content:''; position:absolute; top:0;left:0;right:0; height:3px; background:var(--gold); opacity:0; transition:opacity .2s; }
+    .card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(44,31,20,.1); border-color: #c8b8a8; }
+    .card:hover::before { opacity: 1; }
+    .card-icon { font-size: 2.2rem; }
+    .card-title { font-family: 'Playfair Display', serif; font-size: 1.35rem; font-weight: 700; margin-bottom: .35rem; }
+    .card-desc  { font-size: .84rem; color: var(--muted); line-height: 1.65; }
+    .card-footer { display: flex; align-items: center; justify-content: space-between; padding-top: .9rem; border-top: 1px solid var(--border); }
+    .badge { font-size: .7rem; font-weight: 600; padding: 3px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: .03em; }
+    .badge-active { background: var(--green-bg); color: var(--green); }
+    .badge-new { background: linear-gradient(135deg, #ff9f43, #ff5252); color: #fff; font-weight: 700; box-shadow: 0 2px 8px rgba(255,82,82,.35); animation: pulseGlow 2s infinite; }
+    .arrow { font-size: 1.1rem; color: var(--gold); transition: transform .2s; }
     .card:hover .arrow { transform: translateX(4px); }
 
-    footer {
-      margin-top: 4rem;
-      font-size: 0.78rem;
-      color: #bbb0a0;
-      text-align: center;
-      animation: fadeUp 0.6s 0.4s ease both;
-    }
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px,1fr)); gap: 10px; margin-bottom: 1.75rem; }
+    .stat-mini { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 1rem; text-align: center; }
+    .stat-mini-val { font-size: 1.8rem; font-weight: 700; color: var(--gold); font-family: 'Playfair Display', serif; line-height: 1; }
+    .stat-mini-lbl { font-size: .7rem; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin-top: .35rem; }
 
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(18px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
+    .section-title { font-family: 'Playfair Display', serif; font-size: 1.05rem; font-weight: 700; margin-bottom: .9rem; }
 
-    @keyframes pulseGlow {
-      0%, 100% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.05); opacity: 0.95; }
-    }
+    .score-table-wrap { background: #fff; border: 1px solid var(--border); border-radius: 16px; overflow: hidden; margin-bottom: 1.5rem; }
+    table { width: 100%; border-collapse: collapse; }
+    thead tr { background: var(--cream); }
+    th { padding: 10px 16px; text-align: left; font-size: .7rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 600; }
+    td { padding: 12px 16px; font-size: .86rem; border-top: 1px solid var(--border); }
+    td.c-ok  { color: var(--green); font-weight: 700; }
+    td.c-err { color: var(--red);   font-weight: 700; }
+    td.c-acc { font-weight: 700; }
 
-    @media (max-width: 480px) {
-      body { padding: 2rem 1rem 3rem; }
-      .grid { grid-template-columns: 1fr; }
+    .leaderboard { background: #fff; border: 1px solid var(--border); border-radius: 20px; overflow: hidden; }
+    .lb-header { display: grid; grid-template-columns: 44px 1fr auto; gap: 10px; padding: 10px 20px; background: var(--cream); font-size: .7rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 600; }
+    .lb-row { display: grid; grid-template-columns: 44px 1fr auto; gap: 10px; padding: 14px 20px; border-top: 1px solid var(--border); align-items: center; }
+    .lb-row.is-me { background: #fdfaf4; }
+    .lb-rank { text-align: center; font-size: 1.2rem; }
+    .lb-name { font-weight: 500; }
+    .lb-name small { display: block; color: var(--muted); font-size: .72rem; margin-top: 2px; }
+    .me-tag { font-size: .65rem; background: var(--green-bg); color: var(--green); padding: 2px 7px; border-radius: 10px; margin-left: 5px; }
+    .lb-score { text-align: right; }
+    .lb-score strong { font-size: 1.05rem; color: var(--gold); }
+    .lb-score small { display: block; color: var(--muted); font-size: .72rem; }
+    .lb-note { text-align: center; font-size: .72rem; color: var(--muted); margin-top: .9rem; }
+
+    .loading { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3rem 1rem; color: var(--muted); gap: 1rem; }
+    .spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--gold); border-radius: 50%; animation: spin .7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .empty { text-align: center; padding: 3rem 1rem; color: var(--muted); }
+    .empty .e-icon { font-size: 2.8rem; margin-bottom: .6rem; }
+
+    .site-footer { text-align: center; font-size: .75rem; color: #bbb0a0; margin-top: 2.5rem; }
+
+    @keyframes pulseGlow { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
+
+    @media(max-width:480px){
+      .dash-inner { padding: 1rem 1rem 3rem; }
+      .game-grid { grid-template-columns: 1fr; }
       .card { padding: 1.75rem 1.5rem; }
+      .login-card { padding: 2.25rem 1.75rem 2rem; }
     }
   </style>
 </head>
 <body>
 
-  <header>
-    <div class="logo-line">
-      <h1>🎸 Dr. Yunus GEDİK</h1>
-    </div>
-    <p class="subtitle">Klasik Gitar Oyuncakları :)</p>
-    <div class="divider"></div>
-  </header>
+<!-- ═══ BUZLU CAM GİRİŞ OVERLAY ══════════════════════════════ -->
+<div id="login-overlay">
+  <div class="login-card">
+    <div class="login-logo">🎸</div>
+    <div class="login-title">Dr. Yunus GEDİK</div>
+    <div class="login-sub">Klasik Gitar Akademisi</div>
+    <div class="gold-line"></div>
 
-  <div class="grid">
-
-    <a class="card" href="/klavye/">
-      <div class="card-icon">🎛️</div>
-      <div class="card-body">
-        <div class="card-title">Klavye Alıştırması</div>
-        <div class="card-desc">I. Pozisyondaki tüm perdeleri, telleri ve notaların dizekteki tam karşılıklarını interaktif olarak deneyimleyin.</div>
-      </div>
-      <div class="card-footer">
-        <span class="badge badge-new">YENİ</span>
-        <span class="arrow">→</span>
-      </div>
-    </a>
-
-    <a class="card" href="/nota/">
-      <div class="card-icon">🎵</div>
-      <div class="card-body">
-        <div class="card-title">Nota Okuma</div>
-        <div class="card-desc">Portenin üzerindeki notayı tanı. Sol anahtarı, E3–E5 arası tüm notalar.</div>
-      </div>
-      <div class="card-footer">
-        <span class="badge badge-active">Aktif</span>
-        <span class="arrow">→</span>
-      </div>
-    </a>
-
-    <a class="card" href="/tel/">
-      <div class="card-icon">🎸</div>
-      <div class="card-body">
-        <div class="card-title">Tel Egzersizi</div>
-        <div class="card-desc">Gitarın tellerini ve perdelerini tanımak için alıştırmalar.</div>
-      </div>
-      <div class="card-footer">
-        <span class="badge badge-active">Aktif</span>
-        <span class="arrow">→</span>
-      </div>
-    </a>
-
+    <div class="pin-label">Şifrenizi girin</div>
+    <input
+      type="password"
+      id="pin-input"
+      maxlength="4"
+      inputmode="numeric"
+      pattern="[0-9]*"
+      placeholder="••••"
+      autocomplete="off"
+      autofocus
+    />
+    <div id="pin-error">&nbsp;</div>
+    <div class="login-hint">4 haneli PIN · Enter ile giriş</div>
   </div>
+</div>
 
-<footer><p>❤️ yunusgedik.com.tr</p></footer>
 
+<!-- ═══ DASHBOARD (arka planda her zaman görünür) ════════════ -->
+<div id="screen-dash">
+  <div class="dash-inner">
+
+    <div class="welcome-bar">
+      <div class="welcome-left">
+        <div class="avatar" id="avatar-init">🎸</div>
+        <span class="welcome-name" id="welcome-name">Gitar Akademisi</span>
+        <span class="online-pill">🟢 Online</span>
+      </div>
+      <button class="logout-btn" onclick="doLogout()">Çıkış Yap</button>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" id="tbtn-games" onclick="showTab('games')">🎮 Oyunlar</button>
+      <button class="tab-btn"        id="tbtn-mine"  onclick="showTab('mine')">📊 Puanlarım</button>
+      <button class="tab-btn"        id="tbtn-board" onclick="showTab('board')">🏆 Liderlik</button>
+    </div>
+
+    <!-- GAMES -->
+    <div id="tab-games">
+      <div class="game-grid">
+        <a class="card" href="/klavye/">
+          <div class="card-icon">🎛️</div>
+          <div>
+            <div class="card-title">Klavye Alıştırması</div>
+            <div class="card-desc">I. Pozisyondaki tüm perdeleri, telleri ve notaların dizekteki tam karşılıklarını interaktif olarak deneyimleyin.</div>
+          </div>
+          <div class="card-footer"><span class="badge badge-new">YENİ</span><span class="arrow">→</span></div>
+        </a>
+        <a class="card" href="/nota/">
+          <div class="card-icon">🎵</div>
+          <div>
+            <div class="card-title">Nota Okuma</div>
+            <div class="card-desc">Portenin üzerindeki notayı tanı. Sol anahtarı, E3–E5 arası tüm notalar.</div>
+          </div>
+          <div class="card-footer"><span class="badge badge-active">Aktif</span><span class="arrow">→</span></div>
+        </a>
+        <a class="card" href="/tel/">
+          <div class="card-icon">🎸</div>
+          <div>
+            <div class="card-title">Tel Egzersizi</div>
+            <div class="card-desc">Gitarın tellerini ve perdelerini tanımak için alıştırmalar.</div>
+          </div>
+          <div class="card-footer"><span class="badge badge-active">Aktif</span><span class="arrow">→</span></div>
+        </a>
+        <a class="card" href="/deneysel/">
+          <div class="card-icon">🧪</div>
+          <div>
+            <div class="card-title">Deneysel</div>
+            <div class="card-desc">Yeni eklenen deneysel alıştırma ve içerikler burada yer alır.</div>
+          </div>
+          <div class="card-footer"><span class="badge badge-active">Aktif</span><span class="arrow">→</span></div>
+        </a>
+      </div>
+    </div>
+
+    <!-- MY SCORES -->
+    <div id="tab-mine" style="display:none">
+      <div id="mine-content"></div>
+    </div>
+
+    <!-- LEADERBOARD -->
+    <div id="tab-board" style="display:none">
+      <div id="board-content"></div>
+    </div>
+
+    <footer class="site-footer">❤️ yunusgedik.com.tr</footer>
+  </div>
+</div>
+
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  ÖĞRENCİ LİSTESİ  —  isim ve PIN buradan düzenlenir
+// ═══════════════════════════════════════════════════════════
+const STUDENTS = [
+  { id:'s01', name:'Yunus GEDİK',  pin:'0427' },
+  { id:'s02', name:'Ceren KAYRAK',    pin:'5979' },
+  { id:'s03', name:'Öğrenci 3',    pin:'2222' },
+  { id:'s04', name:'Öğrenci 4',    pin:'3333' },
+  { id:'s05', name:'Öğrenci 5',    pin:'4444' },
+  { id:'s06', name:'Öğrenci 6',    pin:'5555' },
+  { id:'s07', name:'Öğrenci 7',    pin:'6666' },
+  { id:'s08', name:'Öğrenci 8',    pin:'7777' },
+  { id:'s09', name:'Öğrenci 9',    pin:'8888' },
+  { id:'s10', name:'Öğrenci 10',   pin:'9999' },
+];
+
+const GAME_LABELS = { klavye:'🎛️ Klavye', nota:'🎵 Nota Okuma', tel:'🎸 Tel', deneysel:'🧪 Deneysel' };
+
+// ═══════════════════════════════════════════════════════════
+//  JSONBin
+// ═══════════════════════════════════════════════════════════
+const BIN_ID  = '6a2d76d3da38895dfeba83f0';
+const API_KEY = '$2a$10$ens/FDNc9OKl6AEj54jBxuhSsFD/s3CwWmLcuBF394V0CMdBPc2ue';
+const API_URL = 'https://api.jsonbin.io/v3/b/' + BIN_ID;
+
+async function jbGet() {
+  const res  = await fetch(API_URL, { headers: { 'X-Master-Key': API_KEY } });
+  const json = await res.json();
+  return (json.record && json.record.scores) ? json.record.scores : {};
+}
+async function jbPut(scores) {
+  return fetch(API_URL, {
+    method: 'PUT',
+    headers: { 'Content-Type':'application/json', 'X-Master-Key': API_KEY, 'X-Bin-Versioning':'false' },
+    body: JSON.stringify({ scores })
+  });
+}
+
+// ── State ────────────────────────────────────────────────────
+let me = null;
+
+// ── Şifre girişi ─────────────────────────────────────────────
+const pinInput = document.getElementById('pin-input');
+const pinError = document.getElementById('pin-error');
+
+// 4 karakter girilince otomatik kontrol
+pinInput.addEventListener('input', () => {
+  if (pinInput.value.length === 4) checkPin(pinInput.value);
+});
+
+// Enter'a basınca da kontrol
+pinInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && pinInput.value.length > 0) checkPin(pinInput.value);
+});
+
+function checkPin(pin) {
+  const found = STUDENTS.find(s => s.pin === pin);
+  if (found) {
+    me = found;
+    localStorage.setItem('gitar_session',      me.id);
+    localStorage.setItem('gitar_student_name', me.name);
+    openDashboard();
+  } else {
+    const card = document.querySelector('.login-card');
+    card.classList.remove('shake');
+    void card.offsetWidth;
+    card.classList.add('shake');
+    pinError.textContent = '❌ Yanlış şifre, tekrar dene';
+    pinInput.value = '';
+    setTimeout(() => { pinError.innerHTML = '&nbsp;'; }, 2200);
+  }
+}
+
+// ── Dashboard ────────────────────────────────────────────────
+function openDashboard() {
+  // Overlay animasyonla kapanır
+  const overlay = document.getElementById('login-overlay');
+  overlay.classList.add('hiding');
+  overlay.addEventListener('animationend', () => overlay.remove(), { once: true });
+
+  // Welcome bar güncelle
+  const init = me.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  document.getElementById('avatar-init').textContent  = init;
+  document.getElementById('welcome-name').textContent = me.name;
+
+  showTab('games');
+}
+
+function doLogout() {
+  me = null;
+  localStorage.removeItem('gitar_session');
+  localStorage.removeItem('gitar_student_name');
+
+  // Overlay'i yeniden oluştur
+  const overlay = document.createElement('div');
+  overlay.id = 'login-overlay';
+  overlay.innerHTML = `
+    <div class="login-card">
+      <div class="login-logo">🎸</div>
+      <div class="login-title">Dr. Yunus GEDİK</div>
+      <div class="login-sub">Klasik Gitar Akademisi</div>
+      <div class="gold-line"></div>
+      <div class="pin-label">Şifrenizi girin</div>
+      <input type="password" id="pin-input" maxlength="4" inputmode="numeric"
+             pattern="[0-9]*" placeholder="••••" autocomplete="off" autofocus />
+      <div id="pin-error">&nbsp;</div>
+      <div class="login-hint">4 haneli PIN · Enter ile giriş</div>
+    </div>`;
+  document.body.appendChild(overlay);
+  rebindInput();
+}
+
+function rebindInput() {
+  const inp = document.getElementById('pin-input');
+  const err = document.getElementById('pin-error');
+  inp.addEventListener('input', () => { if (inp.value.length === 4) tryLogin(inp, err); });
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter' && inp.value.length > 0) tryLogin(inp, err); });
+  inp.focus();
+}
+
+function tryLogin(inp, err) {
+  const found = STUDENTS.find(s => s.pin === inp.value);
+  if (found) {
+    me = found;
+    localStorage.setItem('gitar_session',      me.id);
+    localStorage.setItem('gitar_student_name', me.name);
+    const overlay = document.getElementById('login-overlay');
+    overlay.classList.add('hiding');
+    overlay.addEventListener('animationend', () => overlay.remove(), { once: true });
+    const init = me.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    document.getElementById('avatar-init').textContent  = init;
+    document.getElementById('welcome-name').textContent = me.name;
+    showTab('games');
+  } else {
+    const card = document.querySelector('.login-card');
+    card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake');
+    err.textContent = '❌ Yanlış şifre, tekrar dene';
+    inp.value = '';
+    setTimeout(() => { err.innerHTML = '&nbsp;'; }, 2200);
+  }
+}
+
+function showTab(name) {
+  ['games','mine','board'].forEach(t => {
+    document.getElementById('tab-'+t).style.display     = t===name ? 'block' : 'none';
+    document.getElementById('tbtn-'+t).classList.toggle('active', t===name);
+  });
+  if (name === 'mine')  renderMine();
+  if (name === 'board') renderBoard();
+}
+
+// ── Loading ──────────────────────────────────────────────────
+function loadingHTML() {
+  return `<div class="loading"><div class="spinner"></div><span>Yükleniyor…</span></div>`;
+}
+
+function calcStats(raw) {
+  raw = raw || {};
+  let totC=0, totW=0, totS=0;
+  const byGame = {};
+  Object.entries(raw).forEach(([game, sessions]) => {
+    const c = sessions.reduce((s,r) => s+(r.c||0), 0);
+    const w = sessions.reduce((s,r) => s+(r.w||0), 0);
+    totC+=c; totW+=w; totS+=sessions.length;
+    byGame[game] = { sessions:sessions.length, correct:c, wrong:w };
+  });
+  const acc   = (totC+totW)>0 ? Math.round(totC/(totC+totW)*100) : 0;
+  const score = totC*10 + totS*5;
+  return { totC, totW, totS, acc, score, byGame };
+}
+
+async function renderMine() {
+  if (!me) return;
+  const el = document.getElementById('mine-content');
+  el.innerHTML = loadingHTML();
+  let all; try { all = await jbGet(); } catch { all={}; }
+  const st = calcStats(all[me.id]);
+  if (st.totS === 0) {
+    el.innerHTML=`<div class="empty"><div class="e-icon">🎸</div><p>Henüz hiç oturum oynamadın.<br>Oyunlara girerek skor topla!</p></div>`;
+    return;
+  }
+  const rows = Object.entries(st.byGame).map(([g,d]) => {
+    const a=(d.correct+d.wrong)>0 ? Math.round(d.correct/(d.correct+d.wrong)*100) : 0;
+    return `<tr><td>${GAME_LABELS[g]||g}</td><td>${d.sessions} oturum</td><td class="c-ok">${d.correct}</td><td class="c-err">${d.wrong}</td><td class="c-acc">${a}%</td></tr>`;
+  }).join('');
+  el.innerHTML=`
+    <div class="stats-row">
+      <div class="stat-mini"><div class="stat-mini-val">${st.score}</div><div class="stat-mini-lbl">Toplam Puan</div></div>
+      <div class="stat-mini"><div class="stat-mini-val">${st.totC}</div><div class="stat-mini-lbl">Toplam Doğru</div></div>
+      <div class="stat-mini"><div class="stat-mini-val">${st.totS}</div><div class="stat-mini-lbl">Oturum</div></div>
+      <div class="stat-mini"><div class="stat-mini-val">%${st.acc}</div><div class="stat-mini-lbl">Doğruluk</div></div>
+    </div>
+    <div class="section-title">Oyun Bazlı Detay</div>
+    <div class="score-table-wrap"><table>
+      <thead><tr><th>Oyun</th><th>Oturum</th><th>Doğru</th><th>Yanlış</th><th>Doğruluk</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>`;
+}
+
+async function renderBoard() {
+  const el = document.getElementById('board-content');
+  el.innerHTML = loadingHTML();
+  let all; try { all = await jbGet(); } catch { all={}; }
+  const ranked = STUDENTS.map(s => ({ ...s, st: calcStats(all[s.id]) })).sort((a,b) => b.st.score - a.st.score);
+  const medals = ['🥇','🥈','🥉'];
+  const rows = ranked.map((r,i) => {
+    const isMe  = me && r.id === me.id;
+    const medal = i<3 ? medals[i] : `<span style="color:var(--muted);font-size:.9rem">${i+1}</span>`;
+    const sub   = r.st.totS>0 ? `${r.st.totS} oturum · %${r.st.acc} doğruluk` : 'Henüz oynamadı';
+    const sHtml = r.st.score>0 ? `<strong>${r.st.score}</strong><small>${r.st.totC} doğru</small>` : `<span style="color:var(--border)">—</span>`;
+    return `<div class="lb-row${isMe?' is-me':''}">
+      <div class="lb-rank">${medal}</div>
+      <div class="lb-name">${r.name}${isMe?'<span class="me-tag">Sen</span>':''}<small>${sub}</small></div>
+      <div class="lb-score">${sHtml}</div>
+    </div>`;
+  }).join('');
+  el.innerHTML=`
+    <div class="section-title">🏆 Liderlik Tablosu</div>
+    <div class="leaderboard">
+      <div class="lb-header"><div>Sıra</div><div>Öğrenci</div><div style="text-align:right">Puan</div></div>
+      ${rows}
+    </div>
+    <p class="lb-note">Puan = Doğru × 10 + Oturum × 5</p>`;
+}
+
+// ── Otomatik giriş ───────────────────────────────────────────
+(function init() {
+  const sid = localStorage.getItem('gitar_session');
+  if (sid) {
+    const found = STUDENTS.find(s => s.id === sid);
+    if (found) {
+      me = found;
+      // Overlay'i kaldır, dashboard'u göster
+      const overlay = document.getElementById('login-overlay');
+      if (overlay) overlay.remove();
+      const init = me.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+      document.getElementById('avatar-init').textContent  = init;
+      document.getElementById('welcome-name').textContent = me.name;
+      showTab('games');
+    }
+  }
+  // Giriş yapılmamışsa overlay zaten HTML'de var, input'u bağla
+  if (!me) {
+    pinInput.focus();
+  }
+})();
+</script>
 </body>
 </html>

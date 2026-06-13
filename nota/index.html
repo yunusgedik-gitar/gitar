@@ -6,34 +6,114 @@
   <title>Nota Okuma Egzersizi – Klasik Gitar</title>
   <script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.2/build/cjs/vexflow.js"></script>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght=0,600;1,400&family=Lato:wght=300;400;700&display=swap');
+
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: system-ui, -apple-system, sans-serif;
-      background: #f5f3ee;
+      font-family: 'Lato', sans-serif;
+      background: #faf6ed;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 2rem 1rem;
-      color: #1a1a1a;
+      padding: 1.4rem 1rem 2.5rem;
+      color: #5a3e2b;
+      overflow-x: hidden; 
     }
 
-    header { text-align: center; margin-bottom: 2rem; }
-    header h1 { font-size: 1.4rem; font-weight: 600; letter-spacing: -0.01em; }
-    header p  { font-size: 0.85rem; color: #777; margin-top: 0.3rem; }
+    header { text-align: center; margin-bottom: 1.2rem; }
+    header h1 { font-family: 'Playfair Display', serif; font-size: 1.45rem; font-weight: 600; color: #5a3e2b; }
+    header p  { font-size: 0.8rem; color: #b09070; margin-top: 0.3rem; font-style: italic; }
 
-    #app { width: 100%; max-width: 500px; }
+    #app { width: 100%; max-width: 550px; }
 
+    /* ── 🎸 TEL SEÇİM PANELİ STİLLERİ ── */
+    .filter-card {
+      background: #fff;
+      border: 1.5px solid #e8e0d5;
+      border-radius: 20px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 4px 20px rgba(90,62,43,0.04);
+      text-align: center;
+    }
+    .filter-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #b09070;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.75rem;
+    }
+    .string-buttons {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 0.85rem;
+    }
+    .string-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: 1.5px solid #d4c4b0;
+      background: #fff;
+      color: #5a3e2b;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+    }
+    .string-btn.all-btn {
+      width: auto;
+      height: 42px;
+      padding: 0 16px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+    }
+    /* Aktif/Seçili tel butonu stili */
+    .string-btn.active {
+      background: #5a3e2b;
+      border-color: #5a3e2b;
+      color: #fff;
+      box-shadow: 0 4px 10px rgba(90,62,43,0.2);
+    }
+    .start-exercise-btn {
+      width: 100%;
+      padding: 10px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      border-radius: 12px;
+      border: 1.5px solid #d4a373;
+      background: #f5e6d3;
+      color: #5a3e2b;
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+    .start-exercise-btn:hover { background: #ebd3b8; }
+    .start-exercise-btn:disabled {
+      background: #f5f5f5;
+      border-color: #ddd;
+      color: #aaa;
+      cursor: not-allowed;
+    }
+
+    /* Egzersiz Alanı Kutusu */
     .card {
       background: #fff;
-      border: 1px solid #e0ddd6;
-      border-radius: 16px;
+      border: 1.5px solid #e8e0d5;
+      border-radius: 20px;
       padding: 1.25rem 1.25rem 0.5rem;
-      margin-bottom: 1rem;
+      margin-bottom: 0.85rem;
       display: flex;
       flex-direction: column;
       align-items: center;
+      box-shadow: 0 4px 20px rgba(90,62,43,0.04);
     }
 
     .card-top {
@@ -44,60 +124,74 @@
       margin-bottom: 0.25rem;
     }
 
-    .card-label { font-size: 0.78rem; color: #888; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+    .card-label { font-size: 0.8rem; color: #b09070; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
 
     #listen-btn {
       display: flex; align-items: center; gap: 5px;
-      font-size: 0.78rem; padding: 5px 12px;
-      border-radius: 8px; border: 1px solid #ddd;
-      background: #f5f3ee; color: #555;
+      font-size: 0.8rem; padding: 6px 14px;
+      border-radius: 10px; border: 1.5px solid #d4c4b0;
+      background: #fff; color: #5a3e2b; font-weight: 700;
       cursor: pointer; font-family: inherit;
       transition: all 0.12s;
     }
-    #listen-btn:hover { border-color: #aaa; color: #222; }
-    #listen-btn.playing { border-color: #5a9e30; color: #3b6d11; background: #eaf3de; }
+    #listen-btn:hover { background: #f5e6d3; border-color: #c4a88a; }
+    #listen-btn.playing { border-color: #6b8c42; color: #3b6d11; background: #eaf3de; }
 
-    #notation { width: 100%; display: flex; justify-content: center; overflow: hidden; }
+    #notation { 
+      width: 100%; 
+      display: flex; 
+      justify-content: center; 
+      overflow: hidden; 
+    }
     #notation svg { max-width: 100%; }
 
-    #hint { font-size: 0.75rem; color: #bbb; text-align: center; margin-bottom: 1rem; }
+    #hint { font-size: 0.78rem; color: #b09070; text-align: center; margin-bottom: 1rem; font-style: italic; }
 
-    .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 0.75rem; }
+    .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 0.75rem; }
 
     .cbtn {
-      padding: 18px 10px; font-size: 1.15rem; font-weight: 600;
-      border-radius: 12px; border: 1.5px solid #ddd;
-      background: #fff; color: #1a1a1a;
-      cursor: pointer; text-align: center; font-family: inherit;
+      padding: 14px 10px; 
+      font-size: 1.8rem;   
+      font-weight: 700;    
+      border-radius: 14px; 
+      border: 1.5px solid #d4c4b0;
+      background: #fff; 
+      color: #5a3e2b;
+      cursor: pointer; 
+      text-align: center; 
+      font-family: inherit;
       transition: background 0.12s, border-color 0.12s, transform 0.08s, box-shadow 0.12s;
     }
-    .cbtn:hover:not(:disabled) { background: #f5f3ee; border-color: #aaa; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+    .cbtn:hover:not(:disabled) { background: #f5e6d3; border-color: #c4a88a; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(90,62,43,0.08); }
     .cbtn:active:not(:disabled) { transform: scale(0.97); box-shadow: none; }
-    .cbtn.correct { background: #eaf3de; border-color: #5a9e30; color: #3b6d11; }
+    .cbtn.correct { background: #eaf3de; border-color: #6b8c42; color: #3b6d11; }
     .cbtn.wrong   { background: #fdf0f0; border-color: #e24b4a; color: #a32d2d; }
     .cbtn:disabled { cursor: default; transform: none; box-shadow: none; }
 
-    #feedback { text-align: center; font-size: 0.9rem; font-weight: 600; min-height: 22px; margin-bottom: 0.6rem; }
+    #feedback { text-align: center; font-size: 0.92rem; font-weight: 700; min-height: 22px; margin-bottom: 0.6rem; padding: 0 5px; }
     #feedback.ok { color: #3b6d11; }
     #feedback.no { color: #a32d2d; }
 
-    #progress-bar-wrap { height: 3px; background: #e0ddd6; border-radius: 2px; margin-bottom: 0.6rem; overflow: hidden; display: none; }
-    #progress-bar { height: 100%; width: 100%; background: #5a9e30; border-radius: 2px; transition: width 2s linear; }
+    #progress-bar-wrap { height: 5px; background: #ede6d8; border-radius: 3px; margin-bottom: 0.8rem; overflow: hidden; display: none; border: 1px solid #e0d8c8; }
+    #progress-bar { height: 100%; width: 100%; background: linear-gradient(90deg, #8cb85f, #52a050); border-radius: 3px; transition: width 2s linear; }
 
     #next-btn {
-      display: none; width: 100%; padding: 14px;
-      font-size: 0.95rem; font-weight: 500;
-      border-radius: 12px; border: 1.5px solid #ccc;
-      background: #fff; cursor: pointer;
-      font-family: inherit; color: #1a1a1a;
-      transition: background 0.12s, border-color 0.12s;
+      width: 100%; padding: 14px;
+      font-size: 1rem; font-weight: 700;
+      border-radius: 14px; border: 1.5px solid #d4a373;
+      background: #f5e6d3; cursor: pointer;
+      font-family: inherit; color: #5a3e2b;
+      transition: all 0.12s; display: none;
     }
-    #next-btn:hover { background: #f5f3ee; border-color: #aaa; }
+    #next-btn:hover { background: #ebd3b8; }
 
-    footer { margin-top: 2.5rem; font-size: 0.75rem; color: #ccc; text-align: center; }
+    /* Egzersiz Alanı Başta Gizli */
+    #exercise-area { display: none; }
+
+    footer { margin-top: 2.5rem; font-size: 0.75rem; color: #c4b5a0; text-align: center; }
 
     @media (max-width: 400px) {
-      .cbtn { font-size: 1rem; padding: 14px 8px; }
+      .cbtn { font-size: 1.6rem; padding: 12px 6px; } 
     }
   </style>
 </head>
@@ -109,49 +203,71 @@
   </header>
 
   <div id="app">
-    <div class="card">
-      <div class="card-top">
-        <span class="card-label">Bu Hangi Nota?</span>
-        <button id="listen-btn" onclick="replay()">🔊 Dinle</button>
+    
+    <div class="filter-card">
+      <div class="filter-title">Çalışılacak Telleri Seçin</div>
+      <div class="string-buttons">
+        <button id="btn-all" class="string-btn all-btn active" onclick="toggleAllStrings()">ALL / Hepsi</button>
+        <button class="string-btn active string-num-btn" data-string="1" onclick="toggleString(1)">①</button>
+        <button class="string-btn active string-num-btn" data-string="2" onclick="toggleString(2)">②</button>
+        <button class="string-btn active string-num-btn" data-string="3" onclick="toggleString(3)">③</button>
+        <button class="string-btn active string-num-btn" data-string="4" onclick="toggleString(4)">④</button>
+        <button class="string-btn active string-num-btn" data-string="5" onclick="toggleString(5)">⑤</button>
+        <button class="string-btn active string-num-btn" data-string="6" onclick="toggleString(6)">⑥</button>
       </div>
-      <div id="notation"></div>
+      <button id="start-btn" class="start-exercise-btn" onclick="startExercise()">Egzersize Başla 🎯</button>
     </div>
 
-    <p id="hint">🔊 Notayı duymak için "Dinle" tuşuna basın</p>
+    <div id="exercise-area">
+      <div class="card">
+        <div class="card-top">
+          <span id="current-string-label" class="card-label">Bu Hangi Nota?</span>
+          <button id="listen-btn" onclick="replay()">🔊 Dinle</button>
+        </div>
+        <div id="notation"></div>
+      </div>
 
-    <div class="choices" id="choices"></div>
-    <div id="feedback"></div>
-    <div id="progress-bar-wrap"><div id="progress-bar"></div></div>
-    <button id="next-btn" onclick="manualNext()">Sonraki →</button>
+      <p id="hint">🔊 Notayı duymak için "Dinle" tuşuna basın</p>
+
+      <div class="choices" id="choices"></div>
+      <div id="feedback"></div>
+      <div id="progress-bar-wrap"><div id="progress-bar"></div></div>
+      <button id="next-btn" onclick="manualNext()">Sonraki →</button>
+    </div>
+
   </div>
 
-<footer><p>❤️ yunusgedik.com.tr</p></footer>
+  <footer><p>❤️ yunusgedik.com.tr</p></footer>
 
   <script>
-    // NOTLAR havuzundaki 'sol' (tel) mantığı tamamen 'nota' adı mantığına dönüştürüldü.
+    // NOTLAR havuzuna 'string' mülkü eklenerek her notanın hangi tele ait olduğu tanımlandı.
     const NOTES = [
-      { key:'e/3', freq:164.81, nota:'Mi'  },
-      { key:'f/3', freq:174.61, nota:'Fa'  },
-      { key:'g/3', freq:196.00, nota:'Sol' },
-      { key:'a/3', freq:220.00, nota:'La'  },
-      { key:'b/3', freq:246.94, nota:'Si'  },
-      { key:'c/4', freq:261.63, nota:'Do'  },
-      { key:'d/4', freq:293.66, nota:'Re'  },
-      { key:'e/4', freq:329.63, nota:'Mi'  },
-      { key:'f/4', freq:349.23, nota:'Fa'  },
-      { key:'g/4', freq:392.00, nota:'Sol' },
-      { key:'a/4', freq:440.00, nota:'La'  },
-      { key:'b/4', freq:493.88, nota:'Si'  },
-      { key:'c/5', freq:523.25, nota:'Do'  },
-      { key:'d/5', freq:587.33, nota:'Re'  },
-      { key:'e/5', freq:659.25, nota:'Mi'  },
-      { key:'f/5', freq:698.46, nota:'Fa'  },
-      { key:'g/5', freq:783.99, nota:'Sol' },
-      { key:'a/5', freq:880.00, nota:'La'  },
-      { key:'b/5', freq:987.77, nota:'Si'  },
+      { key:'e/3', freq:164.81, nota:'Mi', string:6 },
+      { key:'f/3', freq:174.61, nota:'Fa', string:6 },
+      { key:'g/3', freq:196.00, nota:'Sol', string:6 },
+      
+      { key:'a/3', freq:220.00, nota:'La', string:5 },
+      { key:'b/3', freq:246.94, nota:'Si', string:5 },
+      { key:'c/4', freq:261.63, nota:'Do', string:5 },
+      
+      { key:'d/4', freq:293.66, nota:'Re', string:4 },
+      { key:'e/4', freq:329.63, nota:'Mi', string:4 },
+      { key:'f/4', freq:349.23, nota:'Fa', string:4 },
+      
+      { key:'g/4', freq:392.00, nota:'Sol', string:3 },
+      { key:'a/4', freq:440.00, nota:'La', string:3 },
+      
+      { key:'b/4', freq:493.88, nota:'Si', string:2 },
+      { key:'c/5', freq:523.25, nota:'Do', string:2 },
+      { key:'d/5', freq:587.33, nota:'Re', string:2 },
+      
+      { key:'e/5', freq:659.25, nota:'Mi', string:1 },
+      { key:'f/5', freq:698.46, nota:'Fa', string:1 },
+      { key:'g/5', freq:783.99, nota:'Sol', string:1 },
+      { key:'a/5', freq:880.00, nota:'La', string:1 },
+      { key:'b/5', freq:987.77, nota:'Si', string:1 },
     ];
     
-    // Şıkların türetileceği tüm ana nota isimleri listesi
     const ALL_NOTES = ['Do', 'Re', 'Mi', 'Fa', 'Sol', 'La', 'Si'];
     
     const ERROR_MESSAGES = [
@@ -170,8 +286,76 @@
       "Sen en iyisi flüt çal knk"
     ];
 
+    // Seçili telleri takip eden set (Başlangıçta hepsi seçili)
+    let selectedStrings = new Set([1, 2, 3, 4, 5, 6]);
+    let filteredNotes = [];
+
     let audioCtx = null, current = null, answered = false, interacted = false;
     let autoTimer = null;
+
+    // ── 🎛️ PANEL KONTROL FONKSİYONLARI ──
+    
+    function toggleAllStrings() {
+      const allBtn = document.getElementById('btn-all');
+      const numBtns = document.querySelectorAll('.string-num-btn');
+      
+      if (selectedStrings.size === 6) {
+        // Hepsi seçiliyken tıklandıysa her şeyi temizle
+        selectedStrings.clear();
+        allBtn.classList.remove('active');
+        numBtns.forEach(b => b.classList.remove('active'));
+      } else {
+        // Eksik varsa tamamını seç
+        selectedStrings = new Set([1, 2, 3, 4, 5, 6]);
+        allBtn.classList.add('active');
+        numBtns.forEach(b => b.classList.add('active'));
+      }
+      checkStartButton();
+    }
+
+    function toggleString(num) {
+      const btn = document.querySelector(`.string-num-btn[data-string="${num}"]`);
+      const allBtn = document.getElementById('btn-all');
+      
+      if (selectedStrings.has(num)) {
+        selectedStrings.delete(num);
+        btn.classList.remove('active');
+      } else {
+        selectedStrings.add(num);
+        btn.classList.add('active');
+      }
+      
+      // Hepsi butonunun durumunu güncelle
+      if (selectedStrings.size === 6) {
+        allBtn.classList.add('active');
+      } else {
+        allBtn.classList.remove('active');
+      }
+      checkStartButton();
+    }
+
+    function checkStartButton() {
+      const startBtn = document.getElementById('start-btn');
+      startBtn.disabled = selectedStrings.size === 0;
+    }
+
+    function startExercise() {
+      // Seçilen tellere ait notaları filtrele
+      filteredNotes = NOTES.filter(n => selectedStrings.has(n.string));
+      
+      if (filteredNotes.length === 0) return;
+
+      // Egzersiz alanını görünür yap
+      document.getElementById('exercise-area').style.display = 'block';
+      
+      // İlk kartı çağır
+      nextCard();
+      
+      // Egzersiz alanına pürüzsüzce odaklan
+      document.getElementById('exercise-area').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // ── 🧠 EGZERSİZ MOTORU ──
 
     function shuffle(a){ return [...a].sort(()=>Math.random()-0.5); }
 
@@ -211,17 +395,33 @@
       const { Renderer, Stave, StaveNote, Voice, Formatter } = Vex.Flow;
       const container = document.getElementById('notation');
       container.innerHTML = '';
+      
+      const containerWidth = container.offsetWidth || 500;
+      const H = 160; 
+      
       const renderer = new Renderer(container, Renderer.Backends.SVG);
-      renderer.resize(240, 240);
+      renderer.resize(containerWidth, H);
+      
       const ctx = renderer.getContext();
-      const staveW = 200;
-      const stave = new Stave(20, 72, staveW);
+      
+      ctx.scale(1.45, 1.45);
+      const scaledWidth = containerWidth / 1.45;
+      
+      const staveW = Math.min(180, scaledWidth - 40);
+      const staveX = (scaledWidth - staveW) / 2;
+      
+      // İstediğin o dengeli dikey konum (32) korundu
+      const stave = new Stave(staveX, 32, staveW);
       stave.addClef('treble');
       stave.setContext(ctx).draw();
+      
       const sn = new StaveNote({ keys:[noteKey], duration:'w' });
+      sn.setXShift(30); 
+      
       const voice = new Voice({ num_beats:4, beat_value:4 });
       voice.addTickables([sn]);
-      new Formatter().joinVoices([voice]).format([voice], staveW - 55);
+      
+      new Formatter().joinVoices([voice]).format([voice], staveW - 45);
       voice.draw(ctx, stave);
     }
 
@@ -254,9 +454,12 @@
       document.getElementById('next-btn').style.display = 'none';
       clearAutoTimer();
 
-      current = NOTES[Math.floor(Math.random()*NOTES.length)];
+      // Havuzdan sadece filtrelenmiş (seçili) notalardan rastgele getiriyoruz
+      current = filteredNotes[Math.floor(Math.random() * filteredNotes.length)];
       
-      // Doğru nota isminin dışındaki diğer notalardan 3 adet yanlış şık seçiyoruz
+      // Sol üstteki etiketi o anki tel numarasına göre dinamik güncelliyoruz
+      document.getElementById('current-string-label').textContent = `Bu Nota Hangi Telde? (${current.string}. Tel Egzersizi)`;
+
       const wrongs = shuffle(ALL_NOTES.filter(n => n !== current.nota)).slice(0, 3);
       const choices = shuffle([current.nota, ...wrongs]);
 
@@ -301,8 +504,6 @@
         document.getElementById('next-btn').style.display='block';
       }
     }
-
-    nextCard();
   </script>
 </body>
 </html>
