@@ -406,7 +406,6 @@
       
       ctx.scale(1.45, 1.45);
       const scaledWidth = containerWidth / 1.45;
-      
       const staveW = Math.min(180, scaledWidth - 40);
       const staveX = (scaledWidth - staveW) / 2;
       
@@ -477,7 +476,7 @@
       });
     }
 
-    function answer(notaAdi, btn){
+function answer(notaAdi, btn){
       if(answered) return;
       answered = true;
       interacted = true;
@@ -504,6 +503,32 @@
         document.getElementById('next-btn').style.display='block';
       }
     }
+
+    // ── GÜVENLİK VE OTOMATİK GİRİŞ KONTROLÜ (BURAYA EKLENDİ) ──
+    (function init() {
+      const sid = localStorage.getItem('gitar_session');
+      
+      // Şifre girip oturum açmamışsa saniyesinde ana sayfaya postalar
+      if (!sid) {
+        window.location.href = 'https://gitar.yunusgedik.com.tr/';
+        return;
+      }
+
+      // Oturum varsa öğrencilerden adını doğrular
+      const found = STUDENTS.find(s => s.id === sid);
+      if (found) {
+        me = found;
+        if (typeof openDashboard === "function") {
+          openDashboard();
+        }
+      } else {
+        // Geçersiz veya eski bir oturumsa temizler ve ana sayfaya fırlatır
+        localStorage.removeItem('gitar_session');
+        localStorage.removeItem('gitar_student_name');
+        window.location.href = 'https://gitar.yunusgedik.com.tr/';
+        return;
+      }
+    })();
   </script>
 </body>
 </html>

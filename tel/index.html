@@ -702,6 +702,32 @@
         });
       }
     }
+
+    // ── GÜVENLİK VE OTOMATİK GİRİŞ KONTROLÜ (BURAYA EKLENDİ) ──
+    (function init() {
+      const sid = localStorage.getItem('gitar_session');
+      
+      // Eğer giriş oturumu yoksa saniyesinde ana şifre sayfasına postalar
+      if (!sid) {
+        window.location.href = 'https://gitar.yunusgedik.com.tr/';
+        return;
+      }
+
+      // Oturum varsa öğrencilerden adını doğrular
+      const found = STUDENTS.find(s => s.id === sid);
+      if (found) {
+        me = found;
+        if (typeof openDashboard === "function") {
+          openDashboard();
+        }
+      } else {
+        // Geçersiz veya sahte bir oturumsa temizler ve ana sayfaya fırlatır
+        localStorage.removeItem('gitar_session');
+        localStorage.removeItem('gitar_student_name');
+        window.location.href = 'https://gitar.yunusgedik.com.tr/';
+        return;
+      }
+    })();
   </script>
 </body>
 </html>
