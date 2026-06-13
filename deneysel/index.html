@@ -4,11 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Vals – Ole Halen</title>
-  <div style="text-align: center; margin-bottom: 15px;">
-  <span id="_gs_active_count" style="font-size: 0.8rem; font-weight: 600; background: #eaf3de; color: #3b6d11; padding: 5px 14px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(59,109,17,0.08);">
-    🟢 Canlı Oda Yükleniyor...
-  </span>
-</div>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght=0,600;1,400&family=Lato:wght=300;400;700&display=swap');
 
@@ -23,7 +18,6 @@
       align-items: center;
       padding: 1.4rem 1rem 2.5rem;
       color: #5a3e2b;
-      /* Mobilde tüm sayfanın sağa sola sallanmasını önlemek için */
       overflow-x: hidden; 
     }
 
@@ -45,13 +39,11 @@
       font-style: italic;
     }
 
-    /* ── APP WRAPPER (Beyaz çerçeveyi genişlettiğimiz yer) ── */
     #app-wrap {
       width: 100%;
-      max-width: 950px; /* İstediğin gibi beyaz çerçeveyi sağa-sola genişlettik */
+      max-width: 950px; 
     }
 
-    /* ── SCORE CARD (Dikeyde Yana Doğru Kayma Alanı) ── */
     .score-card {
       background: #fff;
       border: 1.5px solid #e8e0d5;
@@ -59,21 +51,16 @@
       padding: 1.5rem 0; 
       margin-bottom: 0.85rem;
       box-shadow: 0 4px 20px rgba(90,62,43,0.05);
-      
-      /* DIKEYDE YANA KAYMA SİHİRLİ SATIRLARI */
       width: 100%;
-      overflow-x: auto; /* İçerik büyük gelirse sağa doğru kaydırılabilir yap */
+      overflow-x: auto; 
       display: block;
-      -webkit-overflow-scrolling: touch; /* Telefonlarda pürüzsüz kaydırma */
+      -webkit-overflow-scrolling: touch; 
     }
 
     .score-rows {
       display: flex;
       flex-direction: column;
       gap: 1.8rem;
-      
-      /* Telefon dikeyken notaların büzüşüp küçülmesini engeller.
-         Resimleri orijinal netliğinde tutar ve yana doğru taşırarak kaydırmayı temizler. */
       min-width: 850px; 
       padding: 0 1rem;
     }
@@ -109,7 +96,6 @@
       border-radius: 2px;
     }
 
-    /* ── CONTROLS CARD ── */
     .controls-card {
       background: #fff;
       border: 1.5px solid #e8e0d5;
@@ -218,7 +204,6 @@
       text-align: center;
     }
 
-    /* ── TELEFON YATAY ÇEVRİLDİĞİNDE TAM EKRAN MODU ── */
     @media screen and (orientation: landscape) and (max-height: 500px) {
       body {
         padding: 0.2rem;
@@ -264,6 +249,12 @@
   </style>
 </head>
 <body>
+
+<div style="text-align: center; margin-bottom: 15px;">
+  <span id="_gs_active_count" style="font-size: 0.8rem; font-weight: 600; background: #eaf3de; color: #3b6d11; padding: 5px 14px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(59,109,17,0.08);">
+    🟢 Canlı Oda Yükleniyor...
+  </span>
+</div>
 
 <header>
   <h1>🎸 Vals – Ole Halen</h1>
@@ -553,16 +544,14 @@ function fmtTime(sec) {
 
 timeTotal.textContent = fmtTime(TOTAL_MEASURES * measureDuration() + AUDIO_OFFSET);
 
-// ── GÜVENLİK VE OTOMATİK GİRİŞ KONTROLÜ (BURAYA EKLENDİ) ──
+// ── GÜVENLİK VE OTOMATİK GİRİŞ KONTROLÜ (DÜZELTİLDİ) ──
 (function init() {
   const sid = localStorage.getItem('gitar_session');
-  
-  // Şifre girip oturum açmamışsa anında ana şifre sayfasına fırlatır
   if (!sid) {
     window.location.href = 'https://gitar.yunusgedik.com.tr/';
-    return;
   }
 })();
+</script>
 <script src="/live-bar.js"></script>
 </body>
 </html>
