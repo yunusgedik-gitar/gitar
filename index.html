@@ -348,10 +348,6 @@ let me = null;
 const pinInput = document.getElementById('pin-input');
 const pinError = document.getElementById('pin-error');
 
-const BIN_ID  = '6a2d76d3da38895dfeba83f0';
-const API_KEY = '$2a$10$ens/FDNc9OKl6AEj54jBxuhSsFD/s3CwWmLcuBF394V0CMdBPc2ue';
-const API_URL = 'https://api.jsonbin.io/v3/b/' + BIN_ID;
-
 if (pinInput) {
   pinInput.addEventListener('input', () => {
     if (pinInput.value.length === 4) checkPin(pinInput.value);
@@ -387,22 +383,9 @@ function openDashboard() {
   document.getElementById('welcome-name').textContent = me.name;
 }
 
+// ESKİ doLogout fonksiyonunu tamamen sil, BUNUNLA değiştir:
 async function doLogout() {
-  const sid = localStorage.getItem('gitar_session');
-  if (sid) {
-    try {
-      const res = await fetch(API_URL, { headers: { 'X-Master-Key': API_KEY } });
-      const json = await res.json();
-      if (json.record && json.record.online_users) {
-        delete json.record.online_users[sid];
-        await fetch(API_URL, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY, 'X-Bin-Versioning': 'false' },
-          body: JSON.stringify(json.record)
-        });
-      }
-    } catch(e) { console.error(e); }
-  }
+  if (window.firebaseLiveBarLogout) await window.firebaseLiveBarLogout();
   localStorage.removeItem('gitar_session');
   localStorage.removeItem('gitar_student_name');
   sessionStorage.removeItem('notified_online');
@@ -424,6 +407,6 @@ async function doLogout() {
 })();
 </script>
 
-<script src="/live-bar.js"></script>
+<script type="module" src="/live-bar.js"></script>
 </body>
 </html>
