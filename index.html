@@ -31,9 +31,6 @@
       align-items: center;
     }
 
-    /* ═══════════════════════════════════════════
-       BUZLU CAM GİRİŞ OVERLAY
-    ═══════════════════════════════════════════ */
     #login-overlay {
       position: fixed;
       inset: 0;
@@ -120,7 +117,6 @@
     @keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-8px)} 40%,80%{transform:translateX(8px)} }
     .shake { animation: shake .35s ease; }
 
-    /* ── 📋 DASHBOARD ── */
     #screen-dash { width: 100%; }
     .dash-inner { width: 100%; max-width: 920px; margin: 0 auto; padding: 1.5rem 1.25rem 4rem; }
 
@@ -206,7 +202,6 @@
   </div>
 </div>
 
-
 <div id="screen-dash">
   <div class="dash-inner">
 
@@ -261,7 +256,6 @@
     <footer class="site-footer">❤️ yunusgedik.com.tr</footer>
   </div>
 </div>
-
 
 <script>
 const STUDENTS = [
@@ -341,7 +335,6 @@ let me = null;
 const pinInput = document.getElementById('pin-input');
 const pinError = document.getElementById('pin-error');
 
-// JSONBin Bağlantı Ayarları
 const BIN_ID  = '6a2d76d3da38895dfeba83f0';
 const API_KEY = '$2a$10$ens/FDNc9OKl6AEj54jBxuhSsFD/s3CwWmLcuBF394V0CMdBPc2ue';
 const API_URL = 'https://api.jsonbin.io/v3/b/' + BIN_ID;
@@ -362,7 +355,6 @@ function checkPin(pin) {
     localStorage.setItem('gitar_session',      me.id);
     localStorage.setItem('gitar_student_name', me.name);
     sessionStorage.removeItem('notified_online');
-    
     window.location.reload();
   } else {
     const card = document.querySelector('.login-card');
@@ -380,8 +372,6 @@ function openDashboard() {
   const init = me.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
   document.getElementById('avatar-init').textContent  = init;
   document.getElementById('welcome-name').textContent = me.name;
-
-  initLiveBar();
 }
 
 async function doLogout() {
@@ -406,48 +396,6 @@ async function doLogout() {
   window.location.reload();
 }
 
-async function initLiveBar() {
-  const sid = localStorage.getItem('gitar_session');
-  const name = localStorage.getItem('gitar_student_name');
-  if (!sid || !name) return;
-
-  async function updateBar() {
-    try {
-      const res = await fetch(API_URL, { headers: { 'X-Master-Key': API_KEY } });
-      const json = await res.json();
-      const record = json.record || {};
-      if (!record.online_users) record.online_users = {};
-
-      record.online_users[sid] = {
-        name: name,
-        last_seen: Date.now()
-      };
-
-      const now = Date.now();
-      for (const id in record.online_users) {
-        if (now - record.online_users[id].last_seen > 30000) {
-          delete record.online_users[id];
-        }
-      }
-
-      await fetch(API_URL, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY, 'X-Bin-Versioning': 'false' },
-        body: JSON.stringify(record)
-      });
-
-      const names = Object.values(record.online_users).map(u => u.name);
-      const countEl = document.getElementById('_gs_active_count');
-      if (countEl) {
-        countEl.innerHTML = `🟢 <b>Aktif:</b> ${names.join(', ')}`;
-      }
-    } catch (e) { console.error(e); }
-  }
-
-  updateBar();
-  setInterval(updateBar, 10000);
-}
-
 (function init() {
   const sid = localStorage.getItem('gitar_session');
   if (sid) {
@@ -462,5 +410,7 @@ async function initLiveBar() {
   }
 })();
 </script>
+
+<script src="/live-bar.js"></script>
 </body>
 </html>
