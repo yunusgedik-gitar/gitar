@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tel Okuma Egzersizi – Klasik Gitar</title>
   <script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.2/build/cjs/vexflow.js"></script>
+  <script src="/score-save.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght=0,600;1,400&family=Lato:wght=300;400;700&display=swap');
 
@@ -166,7 +167,7 @@
       background: #fff;
       border: 1.5px solid #e8e0d5;
       border-radius: 20px;
-      padding: 1.25rem 1.25rem 0rem; 
+      padding: 1.25rem 1.25rem 0.5rem; 
       margin-bottom: 0.85rem;
       display: flex;
       flex-direction: column;
@@ -228,7 +229,7 @@
     #feedback.no { color: #a32d2d; }
 
     #progress-bar-wrap { height: 5px; background: #ede6d8; border-radius: 3px; margin-bottom: 0.8rem; overflow: hidden; display: none; border: 1px solid #e0d8c8; }
-    #progress-bar { height: 100%; width: 100%; background: linear-gradient(90deg, #8cb85f, #52a050); border-radius: 3px; transition: width 2s linear; }
+    #progress-bar { height: 100%; width: 100%; background: linear-gradient(90deg, #8cb85f, #52a050); border-radius: 3px; transition: width 0.5s linear; }
 
     /* ── 🎛完整控制中心 ── */
     .controls {
@@ -502,7 +503,6 @@
       }, 1000);
     }
 
-    // ── 🏆 AKILLI VE KOMİK DERECE MOTORU kanka ──
     function endGame() {
       clearAutoTimer();
       const appContainer = document.getElementById('app');
@@ -510,8 +510,7 @@
       let rankName = "";
       let comment = "";
 
-      // Derecelendirme Koşul Mantığı (30+ özel durum, diğerleri %20 barajı)
-if (correctCount >= 20) {
+      if (correctCount >= 20) {
         rankName = "🏆 Master Gitarist 1 Numara!";
         comment = "İnanılmaz! Parmaklar ve kulak uçuyor! Yunus Hoca gözyaşları içinde seni ayakta alkışlıyor! 🎸";
       } else if (correctCount >= 15) {
@@ -573,27 +572,35 @@ if (correctCount >= 20) {
       if(current) playNote(current.freq);
     }
 
+    /* ── 🎯 OTOMATİK HİZALAMALI DİNAMİK PORTE ÇİZİMİ ── */
     function drawNote(noteKey){
       const { Renderer, Stave, StaveNote, Voice, Formatter } = Vex.Flow;
       const container = document.getElementById('notation');
       container.innerHTML = '';
       
       const containerWidth = container.offsetWidth || 460;
-      const H = 180; 
+      
+      // Mobil cihazlar için taşmayı önleyen dinamik ölçeklendirme
+      let scaleFactor = 1.45;
+      if (containerWidth < 400) {
+        scaleFactor = 1.25; 
+      }
+      
+      const H = 140; // Kompakt yükseklik alanı
       
       const renderer = new Renderer(container, Renderer.Backends.SVG);
       renderer.resize(containerWidth, H);
       
       const ctx = renderer.getContext();
-      ctx.scale(1.45, 1.45);
+      ctx.scale(scaleFactor, scaleFactor);
       
-      const scaledWidth = containerWidth / 1.45;
-      const scaledHeight = H / 0.8;
+      const scaledWidth = containerWidth / scaleFactor;
+      const scaledHeight = H / scaleFactor;
       
-      const staveW = scaledWidth - 200; 
-      const staveX = (scaledWidth - staveW) / 2;
-      
-      const staveY = (scaledHeight - 40) / 2 - 100; 
+      // Kenarlardan 20'şer px dengeli boşluk bırakan akıllı genişlik
+      const staveW = scaledWidth - 40; 
+      const staveX = 20; 
+      const staveY = (scaledHeight - 60) / 2; 
       
       const stave = new Stave(staveX, staveY, staveW);
       stave.addClef('treble');
@@ -603,7 +610,8 @@ if (correctCount >= 20) {
       const voice = new Voice({ num_beats:4, beat_value:4 });
       voice.addTickables([sn]);
       
-      new Formatter().joinVoices([voice]).format([voice], staveW - 60);
+      // Notayı portenin tam ortasına dengeli bir biçimde ortalıyoruz
+      new Formatter().joinVoices([voice]).format([voice], staveW - 50);
       voice.draw(ctx, stave);
     }
 
