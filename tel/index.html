@@ -297,7 +297,7 @@
     <div id="setup-area" class="filter-card">
       <div class="filter-title">Çalışılacak Telleri Seçin</div>
       <div class="string-buttons">
-        <button id="btn-all" class="string-btn all-btn active" onclick="toggleAllStrings()">ALL / HEPSİ</button>
+        <button id="btn-all" class="string-btn all-btn active" onclick="toggleAllStrings()">HEPSİ</button>
         <button class="string-btn active string-num-btn" data-string="1" onclick="toggleString(1)">①</button>
         <button class="string-btn active string-num-btn" data-string="2" onclick="toggleString(2)">②</button>
         <button class="string-btn active string-num-btn" data-string="3" onclick="toggleString(3)">③</button>
@@ -590,7 +590,7 @@ if (correctCount >= 20) {
       const scaledWidth = containerWidth / 1.45;
       const scaledHeight = H / 0.8;
       
-      const staveW = scaledWidth - 100; 
+      const staveW = scaledWidth - 140; 
       const staveX = (scaledWidth - staveW) / 2;
       
       const staveY = (scaledHeight - 40) / 2 - 100; 
