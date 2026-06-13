@@ -192,7 +192,7 @@
     <div class="login-sub">Klasik Gitar Akademisi</div>
     <div class="gold-line"></div>
 
-    <div class="pin-label">Nota Bilmeyen Giremez! :)</div>
+    <div class="pin-label">Popçular giremez :)</div>
     <input
       type="password"
       id="pin-input"
@@ -204,7 +204,7 @@
       autofocus
     />
     <div id="pin-error">&nbsp;</div>
-    <div class="login-hint">4 haneli PIN · Enter ile giriş</div>
+    <div class="login-hint">Nota Bilmeyen de Giremez. :D </div>
   </div>
 </div>
 
@@ -267,16 +267,73 @@
 
 <script>
 const STUDENTS = [
-  { id:'s01', name:'Yunus GEDİK',  pin:'0427' },
-  { id:'s02', name:'Ceren KAYRAK', pin:'5979' },
-  { id:'s03', name:'Öğrenci 3',    pin:'2222' },
-  { id:'s04', name:'Öğrenci 4',    pin:'3333' },
-  { id:'s05', name:'Öğrenci 5',    pin:'4444' },
-  { id:'s06', name:'Öğrenci 6',    pin:'5555' },
-  { id:'s07', name:'Öğrenci 7',    pin:'6666' },
-  { id:'s08', name:'Öğrenci 8',    pin:'7777' },
-  { id:'s09', name:'Öğrenci 9',    pin:'8888' },
-  { id:'s10', name:'Öğrenci 10',   pin:'9999' },
+  { id: 's01', name: 'Dr. Yunus GEDİK', pin: '0427' },
+  { id: 's02', name: 'Mustafa Şahin GÜLYEŞİL', pin: '3842' },
+  { id: 's03', name: 'Dr. Ümit ÇELEBİ', pin: '7136' },
+  { id: 's04', name: 'Ertuğrul Emre BALKAN', pin: '4917' },
+  { id: 's05', name: 'Ahmet SARIAHMET', pin: '3930' },
+  { id: 's06', name: 'Fatih ÖZDÖŞEMECİ', pin: '2133' },
+  { id: 's07', name: 'Şevval ÖZBEK', pin: '7831' },
+  { id: 's08', name: 'Şaban Semih ER', pin: '6313' },
+  { id: 's09', name: 'Turgut KÖKLÜ', pin: '6682' },
+  { id: 's10', name: 'Nülüfer KARCAN', pin: '5929' },
+  { id: 's11', name: 'Zehra DİRİLEN', pin: '3046' },
+  { id: 's12', name: 'Elif AKKOYUN', pin: '0545' },
+  { id: 's13', name: 'Berfin ÇAKIR', pin: '5743' },
+  { id: 's14', name: 'Ece ESKİKÖY', pin: '4571' },
+  { id: 's15', name: 'Numan ERGÜL', pin: '6462' },
+  { id: 's16', name: 'Tuana GÜNGÖR', pin: '4632' },
+  { id: 's17', name: 'Nesrin ERDOĞAN', pin: '2836' },
+  { id: 's18', name: 'Fatma Filiz ERDOĞAN', pin: '8161' },
+  { id: 's19', name: 'Yasir URGAN', pin: '5835' },
+  { id: 's20', name: 'Kaya ÖZBOZDUMAN', pin: '7380' },
+  { id: 's21', name: 'Berra GÜZELLER', pin: '5898' },
+  { id: 's22', name: 'Filiz KÜÇ', pin: '0013' },
+  { id: 's23', name: 'Hatice Berra KAYA', pin: '6037' },
+  { id: 's24', name: 'Elif DEMİR', pin: '8223' },
+  { id: 's25', name: 'Oğuz POYRAZ', pin: '4558' },
+  { id: 's26', name: 'Ersin ERGEZER', pin: '0748' },
+  { id: 's27', name: 'Kaan Doğukan AYDOĞAN', pin: '1923' },
+  { id: 's28', name: 'Ayşe ÇORBACI', pin: '0813' },
+  { id: 's29', name: 'Zeynep YİĞİT', pin: '3658' },
+  { id: 's30', name: 'Bahar ERSOY', pin: '1757' },
+  { id: 's31', name: 'Kübra KIZMAZ', pin: '5504' },
+  { id: 's32', name: 'Yavuz ACAR', pin: '6949' },
+  { id: 's33', name: 'Sena BEKÇİ', pin: '6101' },
+  { id: 's34', name: 'Dilan ERDOĞAN', pin: '4942' },
+  { id: 's35', name: 'Recep ÇANKAYA', pin: '4763' },
+  { id: 's36', name: 'Nevra ARSLANTÜRK', pin: '0478' },
+  { id: 's37', name: 'Kadri KAYMAK', pin: '0269' },
+  { id: 's38', name: 'Melike GEDİK', pin: '7565' },
+  { id: 's39', name: 'Esmanur KARATAŞ', pin: '6903' },
+  { id: 's40', name: 'Ceren KAYRAK', pin: '5979' },
+  { id: 's41', name: 'Melisa ÇANKAYA', pin: '3411' },
+  { id: 's42', name: 'Yeşim MERCAN', pin: '5767' },
+  { id: 's43', name: 'Begüm Nur VERİM', pin: '8348' },
+  { id: 's44', name: 'Merve ÖZDEMİR', pin: '6606' },
+  { id: 's45', name: 'Yasemin BEKTAŞ', pin: '7844' },
+  { id: 's46', name: 'Ebrar ŞAHİNER', pin: '7106' },
+  { id: 's47', name: 'Rıfat Cenk AKSOY', pin: '5876' },
+  { id: 's48', name: 'Handan ALTUNER', pin: '4298' },
+  { id: 's49', name: 'Havva HOCAOĞLU', pin: '2752' },
+  { id: 's50', name: 'Ebrar Sümeyye ÖZ', pin: '8630' },
+  { id: 's51', name: 'Meryem ER', pin: '4697' },
+  { id: 's52', name: 'Ramazan Özgür İRİDERE', pin: '9487' },
+  { id: 's53', name: 'Yasemin YILDIZ', pin: '8189' },
+  { id: 's54', name: 'Sema SERBEST', pin: '3739' },
+  { id: 's55', name: 'Melike DURMUŞ', pin: '8180' },
+  { id: 's56', name: 'Tomris Ceylan CÖBEK', pin: '8443' },
+  { id: 's57', name: 'Didem PULAT', pin: '3222' },
+  { id: 's58', name: 'Gülçin SABAHLAR', pin: '7988' },
+  { id: 's59', name: 'Vahide AKDAĞ', pin: '8303' },
+  { id: 's60', name: 'Zeynep GEZİCİ', pin: '5780' },
+  { id: 's61', name: 'Dilek ALTAN', pin: '2829' },
+  { id: 's62', name: 'İbrahim ÇİN', pin: '4128' },
+  { id: 's63', name: 'Merve YALAP', pin: '2367' },
+  { id: 's64', name: 'Çiğdem KILIÇ', pin: '7484' },
+  { id: 's65', name: 'Derya KORKMAZ', pin: '0167' },
+  { id: 's66', name: 'Dr. Birsen Altaylı ÖZEMİR', pin: '5853' },
+  { id: 's67', name: 'Doç. Dr. Cihangir ÖZEMİR', pin: '7063' }
 ];
 
 let me = null;
