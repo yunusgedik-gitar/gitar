@@ -68,7 +68,7 @@
       gap: 1.8rem;
       
       /* Telefon dikeyken notaların büzüşüp küçülmesini engeller.
-         Resimleri orijinal netliğinde tutar ve yana doğru taşırarak kaydırmayı tetikler. */
+         Resimleri orijinal netliğinde tutar ve yana doğru taşırarak kaydırmayı temizler. */
       min-width: 850px; 
       padding: 0 1rem;
     }
@@ -324,7 +324,6 @@
 </audio>
 
 <script>
-// 1. Satırın ince ayarı senin için buraya entegre edildi
 const BPM_BASE       = 100;
 const BEATS          = 3;          
 const TOTAL_MEASURES = 16;
@@ -433,7 +432,6 @@ function tick() {
   rows.forEach((row, i) => {
     const ph = playheads[i];
     if (pos && i === pos.rowIdx) {
-      // Dikey ve dikey otomatik aşağı kaydırma
       if (!row.classList.contains('active-row')) {
         row.classList.add('active-row');
         row.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -549,6 +547,17 @@ function fmtTime(sec) {
 }
 
 timeTotal.textContent = fmtTime(TOTAL_MEASURES * measureDuration() + AUDIO_OFFSET);
+
+// ── GÜVENLİK VE OTOMATİK GİRİŞ KONTROLÜ (BURAYA EKLENDİ) ──
+(function init() {
+  const sid = localStorage.getItem('gitar_session');
+  
+  // Şifre girip oturum açmamışsa anında ana şifre sayfasına fırlatır
+  if (!sid) {
+    window.location.href = 'https://gitar.yunusgedik.com.tr/';
+    return;
+  }
+})();
 </script>
 </body>
 </html>

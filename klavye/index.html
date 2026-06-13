@@ -532,7 +532,19 @@ function resetQuiz(){
   nextQuestion();
 }
 
-resetQuiz();
+// ── GÜVENLİK VE OTOMATİK GİRİŞ KONTROLÜ (BURAYA EKLENDİ) ──
+(function checkSecurity() {
+  const sid = localStorage.getItem('gitar_session');
+  
+  // Şifre girip oturum açmamışsa quiz'i başlatmaz ve anında ana şifre sayfasına fırlatır
+  if (!sid) {
+    window.location.href = 'https://gitar.yunusgedik.com.tr/';
+    return;
+  }
+  
+  // Oturum geçerliyse quizi başlat
+  resetQuiz();
+})();
 </script>
 </body>
 </html>
