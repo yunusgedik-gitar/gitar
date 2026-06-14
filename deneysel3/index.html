@@ -95,7 +95,7 @@
       color: #3b6d11;
     }
 
-    /* Kanal / Enstrüman Seçici (Track Selector) */
+    /* Kanal / Enstrüman Seçici */
     .track-select-wrap {
       display: flex;
       align-items: center;
@@ -150,13 +150,33 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* NOTA VE ÖLÇÜ CANLI TAKİP RENKLERİ (HIGHLIGHTING) */
-    .at-cursor-note {
-      fill: #3b6d11 !important;       /* Canlı çalınan nota başı koyu yeşil */
-      stroke: #3b6d11 !important;     /* Nota sapları yeşil */
-    }
+    /* ── SIHİRLİ TIMELINE VE NOTA BOYAMA CSS SINIFLARI ── */
+    
+    /* 1. O an çalınan dikey ölçü/periyot arka planı (Yeşil hat) */
     .at-cursor-bar {
-      fill: rgba(59, 109, 17, 0.08) !important; /* Çalınan ölçünün arka plan vurgusu */
+      fill: rgba(59, 109, 17, 0.08) !important;
+      background: rgba(59, 109, 17, 0.08) !important;
+    }
+    
+    /* 2. O an basılan dikey çizgi/bar imleci */
+    .at-cursor-beat {
+      fill: #3b6d11 !important;
+      stroke: #3b6d11 !important;
+      opacity: 0.15;
+    }
+
+    /* 3. Tam o salisaniyede geçilen notaların başları ve sapları */
+    .at-cursor-note, .at-selection-note {
+      fill: #27ae60 !important;
+      stroke: #27ae60 !important;
+      font-weight: bold;
+    }
+
+    /* alphaTab'in kendi dahili imleç katmanı (Timeline çizgisi) */
+    .at-player-cursor {
+      border-left: 2px solid #3b6d11 !important;
+      box-shadow: 0 0 10px rgba(59, 109, 17, 0.5);
+      z-index: 10;
     }
   </style>
 </head>
@@ -210,27 +230,30 @@
   let isMetronomeActive = false;
   let currentScore = null; 
 
-  // 1. ALPHATAB API INITIALIZE
+  // 1. ALPHATAB API INITIALIZE (TIMELINE AKTİF EDİLDİ)
   const api = new alphaTab.AlphaTabApi(el, {
-    file: 'vals.gp', // Boşluksuz ve küçük harf olarak güncellendi kanka!
+    file: 'vals.gp', 
     player: {
       enablePlayer: true, 
       soundFont: 'https://cdn.jsdelivr.net/npm/@coderline/alphatab@latest/dist/soundfont/sonivox.sf2', 
-      scrollElement: window 
+      scrollElement: window,
+      enableCursor: true // Motor seviyesinde imleç takibini açıyoruz kanka
     },
     display: {
-      staveProfile: 'Default' 
-    }
+      staveProfile: 'Default'
+    },
+    // Burası çok kritik: Çalma esnasında imlecin görsel güncellemelerini zorla tetikler
+    useDisplayPlayer: true 
   });
 
-  // 2. SES MOTORU VE YÜKLEME ETKİNLİKLERİ (Eski/Yeni Versiyonlara Tam Uyumlu Çift Bağlama)
+  // 2. SES MOTORU VE YÜKLEME ETKİNLİKLERİ
   
   function handlePlayerReady() {
     loading.style.opacity = '0';
     setTimeout(() => loading.style.display = 'none', 300);
     playBtn.disabled = false;
     stopBtn.disabled = false;
-    console.log("alphaTab Ses motoru ve SoundFont hazır!");
+    console.log("alphaTab Ses motoru ve Timeline sistemi hazır!");
   }
 
   function handleScoreLoad(score) {
@@ -242,10 +265,9 @@
       option.textContent = track.name;
       trackSelect.appendChild(option);
     });
-    console.log("Nota dosyası başarıyla çözümlendi.");
   }
 
-  // Sürümler arası event adı farklılıklarına karşı önlem:
+  // Event bağlama kontrolleri
   if (api.playerReady) api.playerReady.on(handlePlayerReady);
   if (api.soundFontLoad) api.soundFontLoad.on(handlePlayerReady);
   if (api.soundFontLoaded) api.soundFontLoaded.on(handlePlayerReady);
@@ -266,7 +288,7 @@
     api.playPause();
   });
 
-  // Durum Değişiklikleri Takibi
+  // Play/Pause durum takibi ve görsel senkronizasyon
   if (api.playerStateChanged) {
     api.playerStateChanged.on((args) => {
       if (args.state === 1) { // 1 = Çalıyor
