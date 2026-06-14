@@ -44,6 +44,22 @@ async function initLiveBar() {
       countEl.innerHTML = names.length > 0 ? `🟢 ${names.join(', ')}` : `⚪ —`;
     }
   });
+
+  // Bulutları hemen listele ve Enter tetikleyicisini kur
+  listenClouds();
+  initInputListener();
+}
+
+function initInputListener() {
+  const input = document.getElementById('ovgu-input');
+  if (input) {
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        window.sendOvgu();
+      }
+    });
+  }
 }
 
 if (document.readyState === 'loading') {
@@ -52,32 +68,7 @@ if (document.readyState === 'loading') {
   initLiveBar();
 }
 
-// --- ÖVGÜ KÖŞESİ MODÜL FONKSİYONLARI ---
-
-window.openOvgüModal = function() {
-  const modal = document.getElementById('ovguModal');
-  if (modal) {
-    modal.style.display = 'flex';
-    listenClouds();
-    
-    // Enter tuşu dinleyicisini bağla
-    const input = document.getElementById('ovgu-input');
-    if (input && !input.dataset.listenerAdded) {
-      input.dataset.listenerAdded = "true";
-      input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          window.sendOvgu();
-        }
-      });
-    }
-  }
-};
-
-window.closeOvgüModal = function() {
-  const modal = document.getElementById('ovguModal');
-  if (modal) modal.style.display = 'none';
-};
+// --- DOĞRUDAN ÖVGÜ SİSTEMİ MODÜLLERİ ---
 
 window.sendOvgu = function() {
   const sid = localStorage.getItem('gitar_session');
@@ -100,25 +91,24 @@ window.sendOvgu = function() {
 };
 
 window.deleteOvgu = function(key) {
-  if (confirm("Bu övgü bulutunu patlatmak istediğinize emin misiniz?")) {
+  if (confirm("Bu övgü bulutunu tamamen silmek istediğinize emin misiniz?")) {
     const itemRef = ref(db, `ovguler/${key}`);
     set(itemRef, null);
   }
 };
 
-let activeListeners = false;
 function listenClouds() {
-  if (activeListeners) return;
-  activeListeners = true;
-  
   const currentUid = localStorage.getItem('gitar_session');
   const arena = document.getElementById('cloudArena');
+  if (!arena) return;
   const ovgulerRef = ref(db, 'ovguler');
   
   onValue(ovgulerRef, (snapshot) => {
-    arena.innerHTML = '';
-    const data = snapshot.val() || {};
+    // Sadece eski bulut divlerini temizle, input paneline dokunma
+    const existingClouds = arena.querySelectorAll('.gitar-cloud');
+    existingClouds.forEach(c => c.remove());
     
+    const data = snapshot.val() || {};
     Object.entries(data).forEach(([key, value]) => {
       createCloudElement(key, value, arena, currentUid);
     });
@@ -140,18 +130,19 @@ function createCloudElement(key, data, arena, currentUid) {
     <span class="cloud-author">— ${data.sender}</span>
   `;
   
-  const arenaWidth = arena.offsetWidth || 500;
-  const arenaHeight = arena.offsetHeight || 400;
+  const arenaWidth = arena.offsetWidth || 700;
+  const arenaHeight = arena.offsetHeight || 250;
   
+  // Bulutları giriş alanının sağına ve serbest yerlere rastgele fırlatır
   const posX = Math.random() * (arenaWidth - 220) + 10;
-  const posY = Math.random() * (arenaHeight - 100) + 20;
+  const posY = Math.random() * (arenaHeight - 90) + 10;
   
   cloud.style.left = `${posX}px`;
   cloud.style.top = `${posY}px`;
   
   arena.appendChild(cloud);
   
-  // --- SÜRÜKLE-FIRLAT MOTORU ---
+  // --- İNTERAKTİF SÜRÜKLE-FIRLAT MOTORU ---
   let isDragging = false;
   let startX, startY, currentX = posX, currentY = posY;
   let lastX = posX, lastY = posY;
@@ -161,7 +152,7 @@ function createCloudElement(key, data, arena, currentUid) {
   cloud.addEventListener('pointerdown', (e) => {
     isDragging = true;
     cloud.style.cursor = 'grabbing';
-    cloud.style.zIndex = '50';
+    cloud.style.zIndex = '40';
     cancelAnimationFrame(throwAnim);
     
     startX = e.clientX - currentX;
@@ -194,14 +185,14 @@ function createCloudElement(key, data, arena, currentUid) {
     cloud.style.cursor = 'grab';
     cloud.style.zIndex = '5';
     
-    if (Math.abs(vx) > 1.5 || Math.abs(vy) > 1.5) {
+    if (Math.abs(vx) > 1.2 || Math.abs(vy) > 1.2) {
       animateThrow();
     }
   });
 
   function animateThrow() {
-    vx *= 0.95;
-    vy *= 0.95;
+    vx *= 0.94;
+    vy *= 0.94;
     
     currentX += vx;
     currentY += vy;
@@ -209,7 +200,7 @@ function createCloudElement(key, data, arena, currentUid) {
     cloud.style.left = `${currentX}px`;
     cloud.style.top = `${currentY}px`;
     
-    if (currentX < -300 || currentX > arenaWidth + 300 || currentY < -200 || currentY > arenaHeight + 200) {
+    if (currentX < -250 || currentX > arenaWidth + 250 || currentY < -150 || currentY > arenaHeight + 150) {
       cloud.remove();
       cancelAnimationFrame(throwAnim);
       return;
