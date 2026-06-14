@@ -37,15 +37,18 @@
     .guitar-wrap svg { display: block; width: 100%; max-width: 440px; height: auto; }
 
     .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1rem; }
-    .choice-card { background: #fff; border: 2px solid #e8e0d5; border-radius: 16px; padding: 8px 10px 6px; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; position: relative; box-shadow: 0 2px 8px rgba(90,62,43,0.03); overflow: visible; -webkit-tap-highlight-color: transparent; outline: none; }
+    .choice-card { background: #fff; border: 2px solid #e8e0d5; border-radius: 16px; padding: 14px 10px 12px; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; position: relative; box-shadow: 0 2px 8px rgba(90,62,43,0.03); overflow: visible; -webkit-tap-highlight-color: transparent; outline: none; }
     @media (hover: hover) {
       .choice-card:hover:not(.disabled):not(.correct):not(.wrong) { border-color: #d4a373; transform: translateY(-3px); box-shadow: 0 8px 20px rgba(90,62,43,0.1); }
     }
     .choice-card:active:not(.disabled) { transform: scale(0.98); }
-    .choice-staff { width: 110px; height: 115px; margin: 4px 0 0; overflow: visible; }
+    .choice-staff { width: 110px; height: 150px; margin: 4px 0 0; overflow: visible; }
     .choice-staff svg { max-width: 100%; height: auto; overflow: visible; }
+    .choice-name { font-size: 1.2rem; font-weight: 700; color: #5a3e2b; margin-top: 10px; }
     .choice-card.correct { background: #eaf3de; border-color: #6b8c42; }
+    .choice-card.correct .choice-name { color: #3b6d11; }
     .choice-card.wrong { background: #fdf0f0; border-color: #c75b39; }
+    .choice-card.wrong .choice-name { color: #a32d2d; }
     .choice-card.disabled { cursor: default; opacity: 0.92; }
 
     .message { text-align: center; font-size: 0.9rem; font-weight: 700; color: #8b6b4e; margin-bottom: 0.65rem; min-height: 22px; }
@@ -76,7 +79,7 @@
     @media (max-width: 420px) {
       .choices { gap: 8px; }
       .choice-card { padding: 10px 6px; }
-      .choice-staff { width: 90px; height: 100px; }
+      .choice-staff { width: 90px; height: 130px; }
       .choice-name { font-size: 1rem; margin-top: 6px; }
       .controls { grid-template-columns: 1fr; }
       .ctrl-btn.primary { order: -1; }
@@ -96,6 +99,8 @@
         <button id="listen-btn" onclick="replay()">🔊 Dinle</button>
         <div class="timer-badge" id="timer-display">Süre: 00:00</div>
       </div>
+      <div class="q-title">Bu işaretli yer hangi notadır?</div>
+
       <div class="hint-box" id="hint-text">
         💡 <span class="hint-string-badge">1</span> . Tel – <span class="hint-fret-text">I. Perde</span>
       </div>
@@ -158,6 +163,7 @@
     </div>
 
     <div class="choices" id="choices"></div>
+    <div class="message" id="message">🎵 Doğru cevabı seç ve öğrenmeye devam et!</div>
     <div id="auto-bar-wrap"><div id="auto-bar"></div></div>
 
     <div class="progress-area">
@@ -296,9 +302,9 @@ function drawMiniStaff(div, noteObj) {
   try {
     const { Renderer, Stave, StaveNote, Voice, Formatter } = Vex.Flow;
     const renderer = new Renderer(div, Renderer.Backends.SVG);
-    renderer.resize(110, 115);
+    renderer.resize(110, 150);
     const ctx = renderer.getContext();
-    const stave = new Stave(0, -10, 110);
+    const stave = new Stave(0, 30, 110);
     stave.addClef('treble').setContext(ctx).draw();
     const note = new StaveNote({ keys: [noteObj.key], duration: 'w' });
     if (note.keyProps && note.keyProps[0]) {
@@ -373,7 +379,8 @@ function nextQuestion() {
     card.className = 'choice-card'; card.dataset.choice = noteObj.name;
     card.onclick = () => selectChoice(card, noteObj.name);
     const staffDiv = document.createElement('div'); staffDiv.className = 'choice-staff';
-    card.appendChild(staffDiv);
+    const nameDiv = document.createElement('div'); nameDiv.className = 'choice-name'; nameDiv.textContent = noteObj.name;
+    card.appendChild(staffDiv); card.appendChild(nameDiv);
     box.appendChild(card);
     drawMiniStaff(staffDiv, noteObj);
   });
