@@ -83,6 +83,13 @@
       color: #fff;
       box-shadow: 0 4px 10px rgba(90,62,43,0.2);
     }
+
+    .action-buttons-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
     .start-exercise-btn {
       width: 100%;
       padding: 10px;
@@ -95,14 +102,64 @@
       cursor: pointer;
       transition: all 0.12s;
     }
+    .start-race-btn {
+      border: 1.5px solid #e24b4a;
+      background: #fdf0f0;
+      color: #a32d2d;
+    }
     .start-exercise-btn:disabled {
       background: #f5f5f5;
       border-color: #ddd;
       color: #aaa;
       cursor: not-allowed;
     }
+    @media (hover: hover) {
+      #listen-btn:hover { background: #f5e6d3; border-color: #c4a88a; }
+      .start-exercise-btn:hover:not(:disabled) { background: #ebd3b8; }
+      .start-race-btn:hover:not(:disabled) { background: #f9d5d5; }
+      .back-to-menu-btn:hover { background: #f5e6d3; border-color: #d4c4b0; color: #5a3e2b; }
+      .ctrl-btn:hover:not(:disabled) { background: #f5e6d3; }
+      .ctrl-btn.primary:hover:not(:disabled) { background: #ebd3b8; }
+    }
+
+    /* ── ⏱️ GERİ SAYIM SAYACI VE MENÜ ÜST ALANI ── */
+    .top-bar-exercise {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      margin-bottom: 0.85rem;
+      min-height: 38px;
+    }
+
+    .back-to-menu-btn {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #b09070;
+      background: #fff;
+      border: 1.5px solid #e8e0d5;
+      padding: 6px 14px;
+      border-radius: 30px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.12s;
+      box-shadow: 0 2px 8px rgba(90,62,43,0.02);
+    }
+    #timer-display {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #e24b4a;
+      background: #fdf0f0;
+      border: 1.5px solid #f9d5d5;
+      padding: 6px 16px;
+      border-radius: 30px;
+      display: none;
+      box-shadow: 0 2px 8px rgba(226,75,74,0.05);
+    }
 
     /* Egzersiz Alanı Kutusu */
+    #exercise-area { display: none; text-align: center; }
+
     .card {
       background: #fff;
       border: 1.5px solid #e8e0d5;
@@ -132,11 +189,6 @@
       background: #fff; color: #5a3e2b; font-weight: 700;
       cursor: pointer; font-family: inherit;
       transition: all 0.12s;
-    }
-    @media (hover: hover) {
-      #listen-btn:hover { background: #f5e6d3; border-color: #c4a88a; }
-      .start-exercise-btn:hover { background: #ebd3b8; }
-      #next-btn:hover { background: #ebd3b8; }
     }
     #listen-btn.playing { border-color: #6b8c42; color: #3b6d11; background: #eaf3de; }
 
@@ -181,23 +233,58 @@
     #feedback.no { color: #a32d2d; }
 
     #progress-bar-wrap { height: 5px; background: #ede6d8; border-radius: 3px; margin-bottom: 0.8rem; overflow: hidden; display: none; border: 1px solid #e0d8c8; }
-    #progress-bar { height: 100%; width: 100%; background: linear-gradient(90deg, #8cb85f, #52a050); border-radius: 3px; transition: width 2s linear; }
+    #progress-bar { height: 100%; width: 100%; background: linear-gradient(90deg, #8cb85f, #52a050); border-radius: 3px; transition: width 0.5s linear; }
 
-    #next-btn {
-      width: 100%; padding: 14px;
-      font-size: 1rem; font-weight: 700;
-      border-radius: 14px; border: 1.5px solid #d4a373;
-      background: #f5e6d3; cursor: pointer;
-      font-family: inherit; color: #5a3e2b;
-      transition: all 0.12s; display: none;
+    /* ── 🎛️ KONTROL ALANI ── */
+    .controls {
+      display: flex;
+      gap: 10px;
+      margin-top: 0.85rem;
+      width: 100%;
+    }
+    .ctrl-btn {
+      flex: 1;
+      padding: 12px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      border-radius: 12px;
+      border: 1.5px solid #d4c4b0;
+      background: #fff;
+      color: #5a3e2b;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.12s;
+    }
+    .ctrl-btn.primary {
+      background: #f5e6d3;
+      border-color: #d4a373;
+    }
+    .ctrl-btn:disabled {
+      background: #f5f5f5;
+      border-color: #e0e0e0;
+      color: #b0b0b0;
+      cursor: not-allowed;
     }
 
-    #exercise-area { display: none; }
+    /* ── 🏆 SKOR EKRANI STİLİ ── */
+    .result-card {
+      background: #fff;
+      border: 2px solid #d4a373;
+      border-radius: 20px;
+      padding: 2.2rem 1.5rem;
+      text-align: center;
+      box-shadow: 0 8px 30px rgba(90,62,43,0.1);
+    }
+    .result-card h2 { font-family: 'Playfair Display', serif; font-size: 1.6rem; color: #5a3e2b; margin-bottom: 0.5rem; }
+    .result-rank { font-size: 1.25rem; font-weight: 700; color: #d4a373; background: #faf6ed; display: inline-block; padding: 6px 18px; border-radius: 30px; margin-top: 0.5rem; border: 1px dashed #d4c4b0; }
+    .result-score { font-size: 3.5rem; font-weight: 700; color: #6b8c42; margin: 0.8rem 0; }
+    .result-text { font-size: 0.95rem; color: #5a3e2b; margin-bottom: 1.5rem; font-style: italic; line-height: 1.4rem; padding: 0 10px; }
 
     footer { margin-top: 2.5rem; font-size: 0.75rem; color: #c4b5a0; text-align: center; }
 
     @media (max-width: 400px) {
-      .cbtn { font-size: 1.6rem; padding: 12px 6px; } 
+      .cbtn { font-size: 1.6rem; padding: 12px 6px; }
+      .controls { flex-direction: column; gap: 8px; }
     }
   </style>
 </head>
@@ -209,8 +296,8 @@
   </header>
 
   <div id="app">
-    
-    <div class="filter-card">
+
+    <div id="setup-area" class="filter-card">
       <div class="filter-title">Çalışılacak Telleri Seçin</div>
       <div class="string-buttons">
         <button id="btn-all" class="string-btn all-btn active" onclick="toggleAllStrings()">Hepsi</button>
@@ -221,10 +308,19 @@
         <button class="string-btn active string-num-btn" data-string="5" onclick="toggleString(5)">⑤</button>
         <button class="string-btn active string-num-btn" data-string="6" onclick="toggleString(6)">⑥</button>
       </div>
-      <button id="start-btn" class="start-exercise-btn" onclick="startExercise()">Egzersize Başla 🎯</button>
+      <div class="action-buttons-wrap">
+        <button id="start-btn" class="start-exercise-btn" onclick="startExercise('practice')">Egzersize Başla (Zamansız) 🎯</button>
+        <button id="race-btn" class="start-exercise-btn start-race-btn" onclick="startExercise('race')">Yarışmaya Başla (40 Saniye) 🏆</button>
+      </div>
     </div>
 
     <div id="exercise-area">
+
+      <div class="top-bar-exercise">
+        <button class="back-to-menu-btn" onclick="goBackToMenu()">← Menüye Dön</button>
+        <div id="timer-display">Kalan Süre: 40</div>
+      </div>
+
       <div class="card">
         <div class="card-top">
           <span id="current-string-label" class="card-label">Bu Hangi Nota?</span>
@@ -238,7 +334,12 @@
       <div class="choices" id="choices"></div>
       <div id="feedback"></div>
       <div id="progress-bar-wrap"><div id="progress-bar"></div></div>
-      <button id="next-btn" onclick="manualNext()">Sonraki →</button>
+
+      <div class="controls">
+        <button class="ctrl-btn" onclick="resetQuiz()">↻ Tekrar</button>
+        <button class="ctrl-btn primary" id="next-btn" onclick="manualNext()" disabled>Sonraki Soru →</button>
+        <button class="ctrl-btn" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Başa Dön</button>
+      </div>
     </div>
 
   </div>
@@ -302,7 +403,12 @@
 
     let audioCtx = null, current = null, answered = false, interacted = false;
     let autoTimer = null;
-    
+
+    let currentMode = 'practice';
+    let gameTimer = null;
+    let timeLeft = 40;
+    let correctCount = 0;
+
     function toggleAllStrings() {
       const allBtn = document.getElementById('btn-all');
       const numBtns = document.querySelectorAll('.string-num-btn');
@@ -341,15 +447,103 @@
 
     function checkStartButton() {
       const startBtn = document.getElementById('start-btn');
-      startBtn.disabled = selectedStrings.size === 0;
+      const raceBtn = document.getElementById('race-btn');
+      const isZero = selectedStrings.size === 0;
+      startBtn.disabled = isZero;
+      raceBtn.disabled = isZero;
     }
 
-    function startExercise() {
+    function startExercise(mode) {
       filteredNotes = NOTES.filter(n => selectedStrings.has(n.string));
       if (filteredNotes.length === 0) return;
+
+      currentMode = mode;
+      document.getElementById('setup-area').style.display = 'none';
       document.getElementById('exercise-area').style.display = 'block';
+
+      if (currentMode === 'race') {
+        timeLeft = 40;
+        correctCount = 0;
+        document.getElementById('timer-display').style.display = 'inline-block';
+        document.getElementById('timer-display').textContent = 'Kalan Süre: ' + timeLeft;
+        startGameTimer();
+      } else {
+        document.getElementById('timer-display').style.display = 'none';
+      }
+
       nextCard();
       document.getElementById('exercise-area').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function goBackToMenu() {
+      if (gameTimer) {
+        clearInterval(gameTimer);
+        gameTimer = null;
+      }
+      clearAutoTimer();
+
+      document.getElementById('exercise-area').style.display = 'none';
+      document.getElementById('setup-area').style.display = 'block';
+      document.getElementById('setup-area').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function resetQuiz() {
+      if (gameTimer) {
+        clearInterval(gameTimer);
+        gameTimer = null;
+      }
+      clearAutoTimer();
+      startExercise(currentMode);
+    }
+
+    function startGameTimer() {
+      if (gameTimer) clearInterval(gameTimer);
+
+      gameTimer = setInterval(() => {
+        timeLeft--;
+        if (timeLeft <= 0) {
+          document.getElementById('timer-display').textContent = 'Süre Bitti!';
+          clearInterval(gameTimer);
+          endGame();
+        } else {
+          document.getElementById('timer-display').textContent = 'Kalan Süre: ' + timeLeft;
+        }
+      }, 1000);
+    }
+
+    function endGame() {
+      clearAutoTimer();
+      const appContainer = document.getElementById('app');
+
+      let rankName = "";
+      let comment = "";
+
+      if (correctCount >= 20) {
+        rankName = "🏆 Master Gitarist 1 Numara!";
+        comment = "İnanılmaz! Parmaklar ve kulak uçuyor! Yunus Hoca gözyaşları içinde seni ayakta alkışlıyor! 🎸";
+      } else if (correctCount >= 15) {
+        rankName = "🔥 Sahne Sanatçısı";
+        comment = "Notalar tıkır tıkır çözülüyor, gözler hızlandı! Artık kulis kartını hak ettin kanka.";
+      } else if (correctCount >= 10) {
+        rankName = "⚡ Ritim Gitarist";
+        comment = "Solo atamıyorsun ama notaları fena okumuyorsun hani. Bir tık daha hızlansan solist seni fark edecek.";
+      } else if (correctCount >= 5) {
+        rankName = "🎸 Akustikçi Popçu";
+        comment = "Sahilde 'Akdeniz Akşamları' çalmaktan öteye geçemedin ama bir umut var. Notalar seni çağırıyor kanka!";
+      } else {
+        rankName = "🐢 Kaplumbağa Gitarist";
+        comment = "Gitarı yavaşça yere bırak ve notalara bir daha dokunma kanka... Hızın evlere şenlik!";
+      }
+
+      appContainer.innerHTML = `
+        <div class="result-card">
+          <h2>Yarışma Tamamlandı! 🏁</h2>
+          <div class="result-rank">${rankName}</div>
+          <div class="result-score">${correctCount} Doğru</div>
+          <p class="result-text">"${comment}"</p>
+          <button class="start-exercise-btn" onclick="window.location.reload()">Yeniden Dene 🔄</button>
+        </div>
+      `;
     }
 
     function shuffle(a){ return [...a].sort(()=>Math.random()-0.5); }
@@ -438,14 +632,21 @@
       autoTimer = setTimeout(()=>{ clearAutoTimer(); nextCard(); }, 1000);
     }
 
-    function manualNext(){ clearAutoTimer(); nextCard(); }
+    function manualNext(){
+      if(currentMode === 'race' && timeLeft <= 0) return;
+      clearAutoTimer();
+      nextCard();
+    }
 
     function nextCard(){
+      if (currentMode === 'race' && timeLeft <= 0) return;
+
       answered = false;
       if(document.activeElement) document.activeElement.blur();
       document.getElementById('feedback').textContent = '';
       document.getElementById('feedback').className = '';
-      document.getElementById('next-btn').style.display = 'none';
+
+      document.getElementById('next-btn').disabled = true;
       clearAutoTimer();
 
       current = filteredNotes[Math.floor(Math.random() * filteredNotes.length)];
@@ -470,13 +671,20 @@
 
     function answer(notaAdi, btn){
       if(answered) return;
+      if(currentMode === 'race' && timeLeft <= 0) return;
+
       answered = true;
       interacted = true;
       document.getElementById('hint').style.display='none';
       document.querySelectorAll('.cbtn').forEach(b=>b.disabled=true);
       const fb = document.getElementById('feedback');
-      
+
+      document.getElementById('next-btn').disabled = false;
+
       if(notaAdi===current.nota){
+        if(currentMode === 'race') {
+          correctCount++;
+        }
         btn.className='cbtn correct';
         btn.blur();
         fb.textContent='✓ Doğru!';
@@ -485,19 +693,18 @@
         startAutoAdvance();
       } else {
         btn.className='cbtn wrong';
-        
+
         const randomMsg = ERROR_MESSAGES[Math.floor(Math.random() * ERROR_MESSAGES.length)];
         fb.textContent = '✗ ' + randomMsg + ' — Doğrusu: ' + current.nota;
-        
+
         fb.className='no';
         document.querySelectorAll('.cbtn').forEach(b=>{
           if(b.textContent===current.nota) b.className='cbtn correct';
         });
-        document.getElementById('next-btn').style.display='block';
       }
     }
 
-    // ── GÜVENLİK VE OTOMATİK GİRİŞ KONTROLÜ (DÜZELTİLDİ) ──
+    // ── GÜVENLİK VE OTOMATİK GİRİŞ KONTROLÜ ──
     (function init() {
       const sid = localStorage.getItem('gitar_session');
       if (!sid) {
