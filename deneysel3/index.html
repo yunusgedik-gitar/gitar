@@ -1,197 +1,3 @@
-<!DOCTYPE html>
-<html lang="tr">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>alphaTab İnteraktif Gitar Akademisi Oynatıcısı</title>
-  
-  <script src="https://cdn.jsdelivr.net/npm/@coderline/alphatab@latest/dist/alphaTab.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Lato:wght@400;700&display=swap');
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: 'Lato', sans-serif;
-      background: #faf6ed;
-      color: #5a3e2b;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-height: 100vh;
-    }
-
-    .container {
-      width: 100%;
-      max-width: 1000px;
-      background: #fff;
-      border: 1.5px solid #e8e0d5;
-      border-radius: 20px;
-      padding: 20px;
-      box-shadow: 0 4px 25px rgba(90,62,43,0.05);
-    }
-
-    header {
-      text-align: center;
-      margin-bottom: 20px;
-      border-bottom: 1.5px solid #f2ece2;
-      padding-bottom: 15px;
-    }
-    header h1 {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.6rem;
-      color: #2c1f14;
-    }
-
-    /* OYNATICI KONTROL PANELİ (PLAYER CONTROLS) */
-    .player-controls {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: 15px;
-      background: #fdfbf7;
-      border: 1px solid #ebd3b8;
-      padding: 12px 20px;
-      border-radius: 14px;
-      margin-bottom: 20px;
-    }
-
-    .btn-group {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .alpha-btn {
-      padding: 10px 16px;
-      font-size: 0.9rem;
-      font-weight: 700;
-      border-radius: 10px;
-      border: 1.5px solid #d4c4b0;
-      background: #fff;
-      color: #5a3e2b;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      transition: all 0.15s;
-    }
-    .alpha-btn:hover:not(:disabled) { background: #f5e6d3; border-color: #c4a88a; }
-    .alpha-btn:active:not(:disabled) { transform: scale(0.96); }
-    .alpha-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-    #play-btn.playing {
-      background: #eaf3de;
-      border-color: #6b8c42;
-      color: #3b6d11;
-    }
-
-    /* Kanal / Enstrüman Seçici (Track Selector) */
-    .track-select-wrap {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .track-select-wrap label {
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: #8b7355;
-    }
-    .track-dropdown {
-      padding: 8px 12px;
-      font-family: inherit;
-      border: 1.5px solid #d4c4b0;
-      border-radius: 8px;
-      background: #fff;
-      color: #5a3e2b;
-      font-weight: 600;
-      outline: none;
-      cursor: pointer;
-    }
-
-    /* NOTA EKRANI (VIEWER) */
-    .alphatab-viewport {
-      border: 1.5px solid #e8e0d5;
-      border-radius: 12px;
-      background: #fff;
-      overflow: hidden;
-      position: relative;
-      min-height: 300px;
-    }
-
-    /* Yükleniyor Katmanı (Loading Overlay) */
-    .loading-overlay {
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(250, 246, 237, 0.9);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      z-index: 100;
-      transition: opacity 0.3s ease;
-    }
-    .spinner {
-      width: 40px; height: 40px;
-      border: 4px solid #ebd3b8;
-      border-top-color: #b8892a;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* SİTENİN ANA SAYFASINDAKİ GİBİ NOTA RENKLENDİRME (HIGHLIGHTING STYLES) */
-    .at-cursor-note {
-      fill: #52a050 !important;       /* Nota başı yeşil renk olur */
-      stroke: #52a050 !important;     /* Sapı ve bağları yeşil olur */
-    }
-    .at-cursor-bar {
-      fill: rgba(82, 160, 80, 0.08) !important; /* O an çalınan ölçünün arka planını hafif yeşil boyar */
-    }
-  </style>
-</head>
-<body>
-
-<div class="container">
-  <header>
-    <h1>🎸 alphaTab İnteraktif Nota Platformu</h1>
-    <p>Vals – Ole Halen (Guitar Pro Oynatıcı Deneyimi)</p>
-  </header>
-
-  <div class="player-controls">
-    <div class="btn-group">
-      <button class="alpha-btn" id="play-btn" disabled><i class="fa-solid fa-play"></i> Çal</button>
-      <button class="alpha-btn" id="stop-btn" disabled><i class="fa-solid fa-stop"></i> Durdur</button>
-      <button class="alpha-btn" id="metronome-btn"><i class="fa-solid fa-drum"></i> Metronom</button>
-    </div>
-
-    <div class="btn-group">
-      <button class="alpha-btn" id="speed-btn"><i class="fa-solid fa-gauge-high"></i> Hız: 1.0x</button>
-    </div>
-
-    <div class="track-select-wrap">
-      <label for="track-select"><i class="fa-solid fa-guitar"></i> Enstrüman:</label>
-      <select id="track-select" class="track-dropdown">
-        <option>Yükleniyor...</option>
-      </select>
-    </div>
-  </div>
-
-  <div class="alphatab-viewport">
-    <div id="loading" class="loading-overlay">
-      <div class="spinner"></div>
-      <p style="font-weight: 700; color: #8b7355;">Guitar Pro Dosyası Modüle Yükleniyor...</p>
-    </div>
-    
-    <div id="alphaTab"></div>
-  </div>
-</div>
-
 <script>
   // Elementleri Seçelim
   const el = document.getElementById('alphaTab');
@@ -204,33 +10,36 @@
 
   let currentSpeed = 1.0;
   let isMetronomeActive = false;
+  let currentScore = null; // score nesnesini hafızada tutmak için global değişken
 
   // 1. ALPHATAB API AYARLARINI BAŞLATALIM (INITIALIZE)
   const api = new alphaTab.AlphaTabApi(el, {
-    file: 'Vals - Ole Halen.gp', // Yüklenecek hedef dosya
+    file: 'Vals - Ole Halen.gp', 
     player: {
-      enablePlayer: true, // Ses motorunu aktif et
-      soundFont: 'https://cdn.jsdelivr.net/npm/@coderline/alphatab@latest/dist/soundfont/sonivox.sf2', // Ücretsiz kaliteli SoundFont
-      scrollElement: window // Çalarken sayfayı otomatik notaya göre aşağı kaydırır
+      enablePlayer: true, 
+      soundFont: 'https://cdn.jsdelivr.net/npm/@coderline/alphatab@latest/dist/soundfont/sonivox.sf2', 
+      scrollElement: window 
     },
     display: {
-      staveProfile: 'Default', // Hem nota hem tabı birlikte gösterir
+      staveProfile: 'Default', 
     }
   });
 
   // 2. ETKİNLİKLER (EVENTS) & INTERACTION
 
-  // Dosya ve Ses Motoru Tamamen Hazır Olduğunda Tetiklenir
-  api.soundFontLoad.on(() => {
+  // Ses Motoru Çalmaya Tamamen Hazır Olduğunda Tetiklenir (Ses Sorununu Çözen Kısım)
+  api.playerReady.on(() => {
     loading.style.opacity = '0';
     setTimeout(() => loading.style.display = 'none', 300);
     playBtn.disabled = false;
     stopBtn.disabled = false;
+    console.log("Ses motoru ve SoundFont başarıyla yüklendi, çalmaya hazır!");
   });
 
-  // Guitar Pro Dosyası Okunup İçindeki Kanallar Belirlenince Çalışır (Track Selector Yapımı)
+  // Guitar Pro Dosyası Okunup İçindeki Kanallar Belirlenince Çalışır
   api.scoreLoad.on((score) => {
-    trackSelect.innerHTML = ''; // Temizle
+    currentScore = score; // global değişkene eşitleme yaptık kanka
+    trackSelect.innerHTML = ''; 
     score.tracks.forEach((track) => {
       const option = document.createElement('option');
       option.value = track.index;
@@ -242,19 +51,18 @@
   // Kullanıcı Dropdown'dan Enstrüman Değiştirirse Notayı Yeniden Çizer
   trackSelect.addEventListener('change', (e) => {
     const trackIndex = parseInt(e.target.value);
-    api.renderTracks([score.tracks[trackIndex]]); 
+    if (currentScore && currentScore.tracks[trackIndex]) {
+      api.renderTracks([currentScore.tracks[trackIndex]]); 
+    }
   });
 
   // Oynat / Duraklat Butonu Kontrolü
   playBtn.addEventListener('click', () => {
+    // Tarayıcının ses engelini aşmak için tıklama anında audio context'i canlandırır
     api.playPause();
   });
 
-  // Çalma Durumu Değiştiğinde Buton Görselini Güncelle (Senkronizasyon)
-  api.playerReady.on(() => {
-    // Player hazır olduğunda tetiklenir
-  });
-
+  // Çalma Durumu Değiştiğinde Buton Görselini Güncelle
   api.playerStateChanged.on((args) => {
     // 1 = Çalıyor, 0 = Durdu/Duraklatıldı
     if (args.state === 1) {
@@ -278,14 +86,14 @@
     else if (currentSpeed === 1.5) currentSpeed = 0.75;
     else currentSpeed = 1.0;
 
-    api.playbackRate = currentSpeed; // API'ye yeni hızı bildiriyoruz
+    api.playbackRate = currentSpeed; 
     speedBtn.innerHTML = `<i class="fa-solid fa-gauge-high"></i> Hız: ${currentSpeed}x`;
   });
 
   // Metronom Aç / Kapat
   metronomeBtn.addEventListener('click', () => {
     isMetronomeActive = !isMetronomeActive;
-    api.metronomeVolume = isMetronomeActive ? 1.0 : 0.0; // Metronom sesini aç/kapat
+    api.metronomeVolume = isMetronomeActive ? 1.0 : 0.0; 
     
     if (isMetronomeActive) {
       metronomeBtn.style.background = '#eaf3de';
@@ -295,8 +103,4 @@
       metronomeBtn.style.borderColor = '#d4c4b0';
     }
   });
-
 </script>
-
-</body>
-</html>
