@@ -95,7 +95,6 @@
       cursor: pointer;
       transition: all 0.12s;
     }
-    .start-exercise-btn:hover { background: #ebd3b8; }
     .start-exercise-btn:disabled {
       background: #f5f5f5;
       border-color: #ddd;
@@ -134,7 +133,11 @@
       cursor: pointer; font-family: inherit;
       transition: all 0.12s;
     }
-    #listen-btn:hover { background: #f5e6d3; border-color: #c4a88a; }
+    @media (hover: hover) {
+      #listen-btn:hover { background: #f5e6d3; border-color: #c4a88a; }
+      .start-exercise-btn:hover { background: #ebd3b8; }
+      #next-btn:hover { background: #ebd3b8; }
+    }
     #listen-btn.playing { border-color: #6b8c42; color: #3b6d11; background: #eaf3de; }
 
     #notation { 
@@ -165,7 +168,9 @@
       -webkit-appearance: none;
       outline: none;
     }
-    .cbtn:hover:not(:disabled) { background: #f5e6d3; border-color: #c4a88a; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(90,62,43,0.08); }
+    @media (hover: hover) {
+      .cbtn:hover:not(:disabled) { background: #f5e6d3; border-color: #c4a88a; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(90,62,43,0.08); }
+    }
     .cbtn:active:not(:disabled) { transform: scale(0.97); box-shadow: none; }
     .cbtn.correct { background: #eaf3de; border-color: #6b8c42; color: #3b6d11; }
     .cbtn.wrong   { background: #fdf0f0; border-color: #e24b4a; color: #a32d2d; }
@@ -186,7 +191,6 @@
       font-family: inherit; color: #5a3e2b;
       transition: all 0.12s; display: none;
     }
-    #next-btn:hover { background: #ebd3b8; }
 
     #exercise-area { display: none; }
 
