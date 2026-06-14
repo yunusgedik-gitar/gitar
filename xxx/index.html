@@ -301,7 +301,7 @@ function drawMiniStaff(div, noteObj) {
     const renderer = new Renderer(div, Renderer.Backends.SVG);
     renderer.resize(110, 115);
     const ctx = renderer.getContext();
-    const stave = new Stave(0, 10, 110);
+    const stave = new Stave(0, 0, 110);
     stave.addClef('treble').setContext(ctx).draw();
     const note = new StaveNote({ keys: [noteObj.key], duration: 'w' });
     if (note.keyProps && note.keyProps[0]) {
