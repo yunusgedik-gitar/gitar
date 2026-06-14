@@ -1,305 +1,267 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>alphaTab İnteraktif Gitar Akademisi Oynatıcısı</title>
-  
-  <script src="https://cdn.jsdelivr.net/npm/@coderline/alphatab@latest/dist/alphaTab.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Guitar Pro Player</title>
 
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Lato:wght@400;700&display=swap');
+<script src="https://cdn.jsdelivr.net/npm/@coderline/alphatab@1.5.3/dist/alphaTab.js"></script>
 
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+<style>
+body{
+margin:0;
+font-family:Arial;
+background:#fafafa;
+}
 
-    body {
-      font-family: 'Lato', sans-serif;
-      background: #faf6ed;
-      color: #5a3e2b;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-height: 100vh;
-    }
+.topbar{
+display:flex;
+flex-wrap:wrap;
+gap:10px;
+padding:10px;
+background:white;
+border-bottom:1px solid #ddd;
+position:sticky;
+top:0;
+z-index:999;
+}
 
-    .container {
-      width: 100%;
-      max-width: 1000px;
-      background: #fff;
-      border: 1.5px solid #e8e0d5;
-      border-radius: 20px;
-      padding: 20px;
-      box-shadow: 0 4px 25px rgba(90,62,43,0.05);
-    }
+button,select,input{
+padding:8px;
+}
 
-    header {
-      text-align: center;
-      margin-bottom: 20px;
-      border-bottom: 1.5px solid #f2ece2;
-      padding-bottom: 15px;
-    }
-    header h1 {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.6rem;
-      color: #2c1f14;
-    }
-    header p {
-      font-size: 0.9rem;
-      color: #b09070;
-      margin-top: 4px;
-    }
+#alphaTab{
+padding:15px;
+}
 
-    /* OYNATICI KONTROL PANELİ */
-    .player-controls {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: 15px;
-      background: #fdfbf7;
-      border: 1px solid #ebd3b8;
-      padding: 12px 20px;
-      border-radius: 14px;
-      margin-bottom: 20px;
-    }
+.measureBar{
+display:flex;
+flex-wrap:wrap;
+gap:5px;
+padding:10px;
+border-top:1px solid #ddd;
+background:white;
+}
 
-    .btn-group {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+.measureBtn{
+padding:5px 10px;
+cursor:pointer;
+}
 
-    .alpha-btn {
-      padding: 10px 16px;
-      font-size: 0.9rem;
-      font-weight: 700;
-      border-radius: 10px;
-      border: 1.5px solid #d4c4b0;
-      background: #fff;
-      color: #5a3e2b;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      transition: all 0.15s;
-    }
-    .alpha-btn:hover:not(:disabled) { background: #f5e6d3; border-color: #c4a88a; }
-    .alpha-btn:active:not(:disabled) { transform: scale(0.96); }
-    .alpha-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.loopBox{
+display:flex;
+gap:5px;
+align-items:center;
+}
 
-    #play-btn.playing {
-      background: #eaf3de;
-      border-color: #6b8c42;
-      color: #3b6d11;
-    }
+.at-cursor-bar{
+fill:rgba(0,255,0,.15)!important;
+}
 
-    /* Kanal / Enstrüman Seçici (Track Selector) */
-    .track-select-wrap {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .track-select-wrap label {
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: #8b7355;
-    }
-    .track-dropdown {
-      padding: 8px 12px;
-      font-family: inherit;
-      border: 1.5px solid #d4c4b0;
-      border-radius: 8px;
-      background: #fff;
-      color: #5a3e2b;
-      font-weight: 600;
-      outline: none;
-      cursor: pointer;
-    }
-
-    /* NOTA EKRANI (VIEWER) */
-    .alphatab-viewport {
-      border: 1.5px solid #e8e0d5;
-      border-radius: 12px;
-      background: #fff;
-      overflow: hidden;
-      position: relative;
-      min-height: 300px;
-    }
-
-    /* Yükleniyor Katmanı (Loading Overlay) */
-    .loading-overlay {
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(250, 246, 237, 0.95);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      z-index: 100;
-      transition: opacity 0.3s ease;
-    }
-    .spinner {
-      width: 40px; height: 40px;
-      border: 4px solid #ebd3b8;
-      border-top-color: #b8892a;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* NOTA VE ÖLÇÜ CANLI TAKİP RENKLERİ (HIGHLIGHTING) */
-    .at-cursor-note {
-      fill: #3b6d11 !important;       /* Canlı çalınan nota başı koyu yeşil */
-      stroke: #3b6d11 !important;     /* Nota sapları yeşil */
-    }
-    .at-cursor-bar {
-      fill: rgba(59, 109, 17, 0.08) !important; /* Çalınan ölçünün arka plan vurgusu */
-    }
-  </style>
+.at-cursor-note{
+fill:#00aa00!important;
+stroke:#00aa00!important;
+}
+</style>
 </head>
 <body>
 
-<div class="container">
-  <header>
-    <h1>🎸 alphaTab İnteraktif Nota Platformu</h1>
-    <p>Vals – Ole Halen (Guitar Pro Oynatıcı Deneyimi)</p>
-  </header>
+<div class="topbar">
 
-  <div class="player-controls">
-    <div class="btn-group">
-      <button class="alpha-btn" id="play-btn" disabled><i class="fa-solid fa-play"></i> Çal</button>
-      <button class="alpha-btn" id="stop-btn" disabled><i class="fa-solid fa-stop"></i> Durdur</button>
-      <button class="alpha-btn" id="metronome-btn"><i class="fa-solid fa-drum"></i> Metronom</button>
-    </div>
+<button id="playBtn">▶</button>
+<button id="stopBtn">■</button>
 
-    <div class="btn-group">
-      <button class="alpha-btn" id="speed-btn"><i class="fa-solid fa-gauge-high"></i> Hız: 1.0x</button>
-    </div>
+<select id="speed">
+<option value="0.25">0.25x</option>
+<option value="0.5">0.5x</option>
+<option value="0.75">0.75x</option>
+<option value="1" selected>1x</option>
+<option value="1.25">1.25x</option>
+<option value="1.5">1.5x</option>
+<option value="2">2x</option>
+</select>
 
-    <div class="track-select-wrap">
-      <label for="track-select"><i class="fa-solid fa-guitar"></i> Enstrüman:</label>
-      <select id="track-select" class="track-dropdown">
-        <option>Yükleniyor...</option>
-      </select>
-    </div>
-  </div>
+<select id="trackSelect"></select>
 
-  <div class="alphatab-viewport">
-    <div id="loading" class="loading-overlay">
-      <div class="spinner"></div>
-      <p style="font-weight: 700; color: #8b7355;">Guitar Pro Dosyası ve Gitar Ses Bankası Yükleniyor...</p>
-    </div>
-    
-    <div id="alphaTab"></div>
-  </div>
+<button id="metroBtn">
+Metronom
+</button>
+
+<div class="loopBox">
+A:
+<input id="loopStart" type="number" value="1" style="width:70px">
+
+B:
+<input id="loopEnd" type="number" value="4" style="width:70px">
+
+<button id="loopBtn">
+Loop Aç
+</button>
 </div>
 
+</div>
+
+<div id="alphaTab"></div>
+
+<div id="measureBar" class="measureBar"></div>
+
 <script>
-  const el = document.getElementById('alphaTab');
-  const playBtn = document.getElementById('play-btn');
-  const stopBtn = document.getElementById('stop-btn');
-  const speedBtn = document.getElementById('speed-btn');
-  const metronomeBtn = document.getElementById('metronome-btn');
-  const trackSelect = document.getElementById('track-select');
-  const loading = document.getElementById('loading');
 
-  let currentSpeed = 1.0;
-  let isMetronomeActive = false;
-  let currentScore = null; 
+let score;
+let loopEnabled=false;
 
-  // 1. ALPHATAB API INITIALIZE
-  const api = new alphaTab.AlphaTabApi(el, {
-    file: 'Vals - Ole Halen.gp', 
-    player: {
-      enablePlayer: true, 
-      soundFont: 'https://cdn.jsdelivr.net/npm/@coderline/alphatab@latest/dist/soundfont/sonivox.sf2', 
-      scrollElement: window 
-    },
-    display: {
-      staveProfile: 'Default' 
-    }
-  });
+const api = new alphaTab.AlphaTabApi(
+document.getElementById("alphaTab"),
+{
+file:"Vals - Ole Halen.gp",
 
-  // 2. SES MOTORU VE YÜKLEME ETKİNLİKLERİ
+player:{
+enablePlayer:true,
+soundFont:"https://cdn.jsdelivr.net/npm/@coderline/alphatab@1.5.3/dist/soundfont/sonivox.sf2"
+}
+}
+);
 
-  // Ses bankası ve oynatıcı tamamen kilitleri açıp hazır olduğunda tetiklenir
-  api.playerReady.on(() => {
-    loading.style.opacity = '0';
-    setTimeout(() => loading.style.display = 'none', 300);
-    playBtn.disabled = false;
-    stopBtn.disabled = false;
-    console.log("alphaTab Ses motoru gümbür gümbür çalışmaya hazır kanka!");
-  });
+api.scoreLoaded.on(e=>{
 
-  // Şarkı dosyası yüklendiğinde kanalları dropdown'a doldurur
-  api.scoreLoad.on((score) => {
-    currentScore = score; 
-    trackSelect.innerHTML = ''; 
-    score.tracks.forEach((track) => {
-      const option = document.createElement('option');
-      option.value = track.index;
-      option.textContent = track.name;
-      trackSelect.appendChild(option);
-    });
-  });
+score=e.score;
 
-  // Kanal değiştirme tıklandığında sadece seçilen enstrümanı render eder
-  trackSelect.addEventListener('change', (e) => {
-    const trackIndex = parseInt(e.target.value);
-    if (currentScore && currentScore.tracks[trackIndex]) {
-      api.renderTracks([currentScore.tracks[trackIndex]]); 
-    }
-  });
+buildTracks();
+buildMeasures();
 
-  // Çal / Duraklat mekanizması
-  playBtn.addEventListener('click', () => {
-    api.playPause();
-  });
+});
 
-  // Motorun durum değişikliklerini arayüze senkronize etme (Play/Pause durum takibi)
-  api.playerStateChanged.on((args) => {
-    // state 1 = Çalıyor, 0 = Durduruldu veya Duraklatıldı
-    if (args.state === 1) {
-      playBtn.innerHTML = '<i class="fa-solid fa-pause"></i> Duraklat';
-      playBtn.classList.add('playing');
-    } else {
-      playBtn.innerHTML = '<i class="fa-solid fa-play"></i> Çal';
-      playBtn.classList.remove('playing');
-    }
-  });
+function buildTracks(){
 
-  // Şarkıyı sıfırlayıp durdurma düğmesi
-  stopBtn.addEventListener('click', () => {
-    api.stop();
-  });
+const sel=document.getElementById("trackSelect");
+sel.innerHTML="";
 
-  // Hız döngüsü ayarlayıcı (0.75x - 1.0x - 1.25x - 1.5x)
-  speedBtn.addEventListener('click', () => {
-    if (currentSpeed === 1.0) currentSpeed = 1.25;
-    else if (currentSpeed === 1.25) currentSpeed = 1.5;
-    else if (currentSpeed === 1.5) currentSpeed = 0.75;
-    else currentSpeed = 1.0;
+score.tracks.forEach(track=>{
 
-    api.playbackRate = currentSpeed; 
-    speedBtn.innerHTML = `<i class="fa-solid fa-gauge-high"></i> Hız: ${currentSpeed}x`;
-  });
+const o=document.createElement("option");
 
-  // Metronom sesi aç/kapat tıkacı
-  metronomeBtn.addEventListener('click', () => {
-    isMetronomeActive = !isMetronomeActive;
-    api.metronomeVolume = isMetronomeActive ? 1.0 : 0.0; 
-    
-    if (isMetronomeActive) {
-      metronomeBtn.style.background = '#eaf3de';
-      metronomeBtn.style.borderColor = '#6b8c42';
-    } else {
-      metronomeBtn.style.background = '#fff';
-      metronomeBtn.style.borderColor = '#d4c4b0';
-    }
-  });
+o.value=track.index;
+o.textContent=track.name;
+
+sel.appendChild(o);
+
+});
+
+}
+
+document.getElementById("trackSelect")
+.addEventListener("change",e=>{
+
+const i=parseInt(e.target.value);
+
+api.renderTracks(
+[score.tracks[i]]
+);
+
+});
+
+document.getElementById("playBtn")
+.onclick=()=>api.playPause();
+
+document.getElementById("stopBtn")
+.onclick=()=>api.stop();
+
+document.getElementById("speed")
+.onchange=e=>{
+
+api.playbackRate=
+parseFloat(e.target.value);
+
+};
+
+let metro=false;
+
+document.getElementById("metroBtn")
+.onclick=()=>{
+
+metro=!metro;
+
+api.metronomeVolume=
+metro?1:0;
+
+};
+
+function buildMeasures(){
+
+const wrap=
+document.getElementById("measureBar");
+
+wrap.innerHTML="";
+
+let total=0;
+
+score.masterBars.forEach((bar,index)=>{
+
+const b=document.createElement("button");
+
+b.className="measureBtn";
+
+b.textContent=index+1;
+
+b.onclick=()=>{
+
+api.tickPosition=
+bar.start;
+
+};
+
+wrap.appendChild(b);
+
+total++;
+
+});
+
+}
+
+document.getElementById("loopBtn")
+.onclick=()=>{
+
+loopEnabled=!loopEnabled;
+
+document.getElementById("loopBtn")
+.innerText=
+loopEnabled
+? "Loop Kapat"
+: "Loop Aç";
+
+};
+
+api.playerPositionChanged.on(pos=>{
+
+if(!loopEnabled) return;
+
+const a=
+parseInt(
+document.getElementById("loopStart").value
+)-1;
+
+const b=
+parseInt(
+document.getElementById("loopEnd").value
+)-1;
+
+if(
+score &&
+score.masterBars[b]
+)
+{
+const endTick=
+score.masterBars[b].start;
+
+if(pos.currentTick>endTick)
+{
+api.tickPosition=
+score.masterBars[a].start;
+}
+}
+
+});
+
 </script>
 
 </body>
