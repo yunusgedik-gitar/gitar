@@ -103,14 +103,20 @@
       cursor: pointer;
       transition: all 0.12s;
     }
-    .start-exercise-btn:hover:not(:disabled) { background: #ebd3b8; }
-    
+    @media (hover: hover) {
+      .start-exercise-btn:hover:not(:disabled) { background: #ebd3b8; }
+      .start-race-btn:hover:not(:disabled) { background: #f9d5d5; }
+      .back-to-menu-btn:hover { background: #f5e6d3; border-color: #d4c4b0; color: #5a3e2b; }
+      #listen-btn:hover { background: #f5e6d3; border-color: #c4a88a; }
+      .ctrl-btn:hover:not(:disabled) { background: #f5e6d3; }
+      .ctrl-btn.primary:hover:not(:disabled) { background: #ebd3b8; }
+    }
+
     .start-race-btn {
       border: 1.5px solid #e24b4a;
       background: #fdf0f0;
       color: #a32d2d;
     }
-    .start-race-btn:hover:not(:disabled) { background: #f9d5d5; }
 
     .start-exercise-btn:disabled {
       background: #f5f5f5;
@@ -142,12 +148,6 @@
       transition: all 0.12s;
       box-shadow: 0 2px 8px rgba(90,62,43,0.02);
     }
-    .back-to-menu-btn:hover {
-      background: #f5e6d3;
-      border-color: #d4c4b0;
-      color: #5a3e2b;
-    }
-
     #timer-display {
       font-size: 1rem;
       font-weight: 700;
@@ -195,7 +195,6 @@
       cursor: pointer; font-family: inherit;
       transition: all 0.12s;
     }
-    #listen-btn:hover { background: #f5e6d3; border-color: #c4a88a; }
     #listen-btn.playing { border-color: #6b8c42; color: #3b6d11; background: #eaf3de; }
 
     #notation { width: 100%; display: flex; justify-content: center; overflow: hidden; }
@@ -217,8 +216,13 @@
       text-align: center; 
       font-family: inherit;
       transition: background 0.12s, border-color 0.12s, transform 0.08s, box-shadow 0.12s;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-appearance: none;
+      outline: none;
     }
-    .cbtn:hover:not(:disabled) { background: #f5e6d3; border-color: #c4a88a; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(90,62,43,0.08); }
+    @media (hover: hover) {
+      .cbtn:hover:not(:disabled) { background: #f5e6d3; border-color: #c4a88a; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(90,62,43,0.08); }
+    }
     .cbtn:active:not(:disabled) { transform: scale(0.97); box-shadow: none; }
     .cbtn.correct { background: #eaf3de; border-color: #6b8c42; color: #3b6d11; }
     .cbtn.wrong   { background: #fdf0f0; border-color: #e24b4a; color: #a32d2d; }
@@ -251,12 +255,10 @@
       font-family: inherit;
       transition: all 0.12s;
     }
-    .ctrl-btn:hover:not(:disabled) { background: #f5e6d3; }
     .ctrl-btn.primary {
       background: #f5e6d3;
       border-color: #d4a373;
     }
-    .ctrl-btn.primary:hover:not(:disabled) { background: #ebd3b8; }
     .ctrl-btn:disabled {
       background: #f5f5f5;
       border-color: #e0e0e0;
@@ -636,6 +638,7 @@
       if (currentMode === 'race' && timeLeft <= 0) return;
       
       answered = false;
+      if(document.activeElement) document.activeElement.blur();
       document.getElementById('feedback').textContent = '';
       document.getElementById('feedback').className = '';
       
@@ -680,6 +683,7 @@
           correctCount++; 
         }
         btn.className='cbtn correct';
+        btn.blur();
         fb.textContent='✓ Doğru!';
         fb.className='ok';
         playNote(current.freq);
