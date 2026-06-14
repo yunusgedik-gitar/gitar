@@ -1,0 +1,32 @@
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Vals - Ole Halen (alphaTab Deney)</title>
+    <!-- alphaTab ve fontları yükle -->
+    <script src="https://cdn.jsdelivr.net/npm/@coderline/alphatab@latest/dist/alphaTab.js"></script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        #alphaTab-container { border: 1px solid #ccc; padding: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Vals - Ole Halen (alphaTab Deney)</h1>
+    <div id="alphaTab-container"></div>
+
+    <script>
+        const container = document.getElementById('alphaTab-container');
+        const api = new alphaTab.AlphaTabApi(container, {
+            // Ücretsiz gitar soundfont yolu (örnek bir URL)
+            // Gerçek kullanımda sunucuda bir yere koyman gerekir
+            player: {
+                soundFont: 'https://cdn.jsdelivr.net/npm/@coderline/alphatab@latest/dist/soundfont/sonivox.sf2'
+            }
+        });
+
+        // Guitar Pro dosyasını yükle
+        api.load('Vals - Ole Halen.gp');
+    </script>
+</body>
+</html>
