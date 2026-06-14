@@ -174,6 +174,65 @@
       .card { padding: 1.75rem 1.5rem; }
       .login-card { padding: 2.25rem 1.75rem 2rem; }
     }
+	/* Övgü Modalı ve Bulut Alanı Stilleri */
+.ovgu-modal {
+  position: fixed; inset: 0; z-index: 1000;
+  display: none; align-items: center; justify-content: center;
+  background: rgba(44, 31, 20, 0.4); backdrop-filter: blur(8px);
+  padding: 1rem;
+}
+.ovgu-content {
+  background: var(--cream); border: 2px solid var(--border);
+  border-radius: 28px; width: 100%; max-width: 650px; height: 85vh;
+  display: flex; flex-direction: column; overflow: hidden;
+  box-shadow: 0 24px 50px rgba(0,0,0,0.15); position: relative;
+}
+.ovgu-header {
+  padding: 1.2rem; border-bottom: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center; background: #fff;
+}
+.ovgu-cloud-arena {
+  flex: 1; position: relative; overflow: hidden; background: #e0f2fe; /* Gökyüzü mavisi */
+  background-image: linear-gradient(to bottom, #bae6fd, #e0f2fe);
+}
+.ovgu-footer {
+  padding: 1rem; border-top: 1px solid var(--border); background: #fff;
+  display: flex; gap: 10px;
+}
+#ovgu-input {
+  flex: 1; height: 44px; border: 1px solid var(--border); border-radius: 12px;
+  padding: 0 12px; font-family: inherit; outline: none;
+}
+#ovgu-input:focus { border-color: var(--gold); }
+.ovgu-btn {
+  background: var(--brown); color: #fff; border: none; border-radius: 12px;
+  padding: 0 20px; font-weight: 600; cursor: pointer; font-family: inherit; transition: background .2s;
+}
+.ovgu-btn:hover { background: var(--gold); }
+.close-modal { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--muted); }
+
+/* Komik Bulut Tasarımı */
+.gitar-cloud {
+  position: absolute; background: #fff; padding: 14px 20px;
+  border-radius: 30px; box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+  cursor: grab; user-select: none; max-width: 220px;
+  font-size: .85rem; line-height: 1.4; color: #334155;
+  transition: transform 0.1s ease-out; touch-action: none;
+}
+.gitar-cloud::before, .gitar-cloud::after {
+  content: ''; position: absolute; background: #fff; border-radius: 50%;
+}
+/* Bulut pofuduk kıvrımları */
+.gitar-cloud::before { width: 40px; height: 40px; top: -18px; left: 30px; }
+.gitar-cloud::after { width: 50px; height: 50px; top: -24px; right: 40px; }
+
+.cloud-text { position: relative; z-index: 2; font-weight: 500; word-wrap: break-word; }
+.cloud-author { position: relative; z-index: 2; display: block; font-size: .7rem; color: var(--gold); margin-top: 4px; font-weight: bold; }
+.cloud-del {
+  position: absolute; top: -5px; right: -5px; background: var(--red); color: #fff;
+  border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 10px;
+  cursor: pointer; z-index: 10; display: flex; align-items: center; justify-content: center;
+}
   </style>
   <script src="/score-save.js"></script>
 </head>
@@ -250,6 +309,14 @@
           </div>
           <div class="card-footer"><span class="badge badge-active">Aktif</span><span class="arrow">→</span></div>
         </a>
+		<div class="card" onclick="openOvgüModal()">
+  <div class="card-icon">👑</div>
+  <div>
+    <div class="card-title">Övgü Köşesi</div>
+    <div class="card-desc">Yunus Hoca hakkında hissettiklerinizi paylaşın ya da uçuşan öğrenci bulutlarına göz atın!</div>
+  </div>
+  <div class="card-footer"><span class="badge badge-new" style="background:linear-gradient(135deg, #b8892a, #2c1f14)">BULUTLU</span><span class="arrow">→</span></div>
+</div>
       </div>
     </div>
 
@@ -410,5 +477,20 @@ async function doLogout() {
 </script>
 
 <script type="module" src="/live-bar.js"></script>
+<div id="ovguModal" class="ovgu-modal">
+  <div class="ovgu-content">
+    <div class="ovgu-header">
+      <h3 class="welcome-name" style="font-size:1.2rem;">☁️ Yunus Hoca'ya Övgü Bulutları</h3>
+      <button class="close-modal" onclick="closeOvgüModal()">✕</button>
+    </div>
+    
+    <div class="ovgu-cloud-arena" id="cloudArena"></div>
+    
+    <div class="ovgu-footer">
+      <input type="text" id="ovgu-input" placeholder="Hocamız hakkında güzel bir şeyler yazın... (Max 120 kar.)" maxlength="120">
+      <button class="ovgu-btn" onclick="sendOvgu()">Gönder</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>

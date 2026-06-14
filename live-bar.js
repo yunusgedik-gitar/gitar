@@ -59,3 +59,169 @@ if (document.readyState === 'loading') {
 } else {
   initLiveBar();
 }
+
+import { push, child } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js";
+
+// Global fonksiyonları HTML'e bağlıyoruz
+window.openOvgüModal = function() {
+  document.getElementById('ovguModal').style.display = 'flex';
+  listenClouds();
+};
+
+window.closeOvgüModal = function() {
+  document.getElementById('ovguModal').style.display = 'none';
+};
+
+// Övgü Mesajı Gönderme
+window.sendOvgu = function() {
+  const sid = localStorage.getItem('gitar_session');
+  const name = localStorage.getItem('gitar_student_name');
+  const input = document.getElementById('ovgu-input');
+  
+  if (!sid || !input || !input.value.trim()) return;
+  
+  const text = input.value.trim();
+  const msgRef = ref(db, 'ovguler');
+  
+  push(msgRef, {
+    uid: sid,
+    sender: name,
+    message: text,
+    timestamp: serverTimestamp()
+  }).then(() => {
+    input.value = '';
+  }).catch(err => console.error("Hata:", err));
+};
+
+// Mesaj Silme (Sadece Yunus Hoca s01 için yetki)
+window.deleteOvgu = function(key) {
+  if (confirm("Bu övgü bulutunu patlatmak istediğinize emin misiniz?")) {
+    const itemRef = ref(db, `ovguler/${key}`);
+    set(itemRef, null); // Veritabanından siler
+  }
+};
+
+// Bulutları Dinle ve Ekrana Bas
+let activeListeners = false;
+function listenClouds() {
+  if (activeListeners) return;
+  activeListeners = true;
+  
+  const currentUid = localStorage.getItem('gitar_session');
+  const arena = document.getElementById('cloudArena');
+  const ovgulerRef = ref(db, 'ovguler');
+  
+  onValue(ovgulerRef, (snapshot) => {
+    // Önce arenayı temizle
+    arena.innerHTML = '';
+    const data = snapshot.val() || {};
+    
+    Object.entries(data).forEach(([key, value]) => {
+      createCloudElement(key, value, arena, currentUid);
+    });
+  });
+}
+
+// İnteraktif Bulut Oluşturma ve Sürükle-Fırlat (Throw) Sistemi
+function createCloudElement(key, data, arena, currentUid) {
+  const cloud = document.createElement('div');
+  cloud.className = 'gitar-cloud';
+  
+  // İçerik Yapısı
+  let deleteBtn = '';
+  // Eğer giriş yapan kişi Dr. Yunus Gedik (s01) ise silme butonu koy
+  if (currentUid === 's01') {
+    deleteBtn = `<button class="cloud-del" onclick="event.stopPropagation(); deleteOvgu('${key}')">X</button>`;
+  }
+  
+  cloud.innerHTML = `
+    ${deleteBtn}
+    <span class="cloud-text">"${data.message}"</span>
+    <span class="cloud-author">— ${data.sender}</span>
+  `;
+  
+  // Rastgele Başlangıç Pozisyonu (Arena sınırları dahilinde)
+  const arenaWidth = arena.offsetWidth || 500;
+  const arenaHeight = arena.offsetHeight || 400;
+  
+  const posX = Math.random() * (arenaWidth - 240) + 10;
+  const posY = Math.random() * (arenaHeight - 120) + 30;
+  
+  cloud.style.left = `${posX}px`;
+  cloud.style.top = `${posY}px`;
+  
+  arena.appendChild(cloud);
+  
+  // --- SÜRÜKLE BIRAK VE ELLE İTİNCE UÇURMA MOTORU ---
+  let isDragging = false;
+  let startX, startY, currentX = posX, currentY = posY;
+  let lastX = posX, lastY = posY;
+  let vx = 0, vy = 0; // Hız bileşenleri
+  let throwAnim;
+
+  cloud.addEventListener('pointerdown', (e) => {
+    isDragging = true;
+    cloud.style.cursor = 'grabbing';
+    cloud.style.zIndex = '50';
+    cancelAnimationFrame(throwAnim);
+    
+    startX = e.clientX - currentX;
+    startY = e.clientY - currentY;
+    lastX = e.clientX;
+    lastY = e.clientY;
+    
+    cloud.setPointerCapture(e.pointerId);
+  });
+
+  cloud.addEventListener('pointermove', (e) => {
+    if (!isDragging) return;
+    
+    currentX = e.clientX - startX;
+    currentY = e.clientY - startY;
+    
+    // Anlık hız hesabı (elle itme hızını yakalamak için)
+    vx = e.clientX - lastX;
+    vy = e.clientY - lastY;
+    
+    lastX = e.clientX;
+    lastY = e.clientY;
+    
+    cloud.style.left = `${currentX}px`;
+    cloud.style.top = `${currentY}px`;
+  });
+
+  cloud.addEventListener('pointerup', (e) => {
+    if (!isDragging) return;
+    isDragging = false;
+    cloud.style.cursor = 'grab';
+    cloud.style.zIndex = '5';
+    
+    // Eğer fırlatma hızı belliyse kayarak uçma animasyonunu başlat
+    if (Math.abs(vx) > 2 || Math.abs(vy) > 2) {
+      animateThrow();
+    }
+  });
+
+  function animateThrow() {
+    // Sürtünme katsayısı (yavaş yavaş durması ya da uçup gitmesi için)
+    vx *= 0.95;
+    vy *= 0.95;
+    
+    currentX += vx;
+    currentY += vy;
+    
+    cloud.style.left = `${currentX}px`;
+    cloud.style.top = `${currentY}px`;
+    
+    // Ekran dışına fırlatıldıysa (itildiyse) elementi görsel olarak gizle/kapat
+    if (currentX < -300 || currentX > arenaWidth + 300 || currentY < -200 || currentY > arenaHeight + 200) {
+      cloud.style.display = 'none';
+      cancelAnimationFrame(throwAnim);
+      return;
+    }
+    
+    if (Math.abs(vx) > 0.1 || Math.abs(vy) > 0.1) {
+      throwAnim = requestAnimationFrame(animateThrow);
+    }
+  }
+}
