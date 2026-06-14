@@ -45,32 +45,34 @@ async function initLiveBar() {
     }
   });
 
-  // Bulutları hemen listele ve Enter tetikleyicisini kur
+  // Bulutları dinle ve input tetikleyicilerini güvenli bir şekilde bağla
   listenClouds();
-  initInputListener();
+  bindOvguEvents();
 }
 
-function initInputListener() {
+// Buton tıklaması ve Enter olaylarını JavaScript üzerinden doğrudan bağlıyoruz (Garanti Çözüm)
+function bindOvguEvents() {
   const input = document.getElementById('ovgu-input');
+  const btn = document.getElementById('ovgu-submit-btn');
+
   if (input) {
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
-        window.sendOvgu();
+        executeSending();
       }
+    });
+  }
+
+  if (btn) {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      executeSending();
     });
   }
 }
 
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initLiveBar);
-} else {
-  initLiveBar();
-}
-
-// --- DOĞRUDAN ÖVGÜ SİSTEMİ MODÜLLERİ ---
-
-window.sendOvgu = function() {
+function executeSending() {
   const sid = localStorage.getItem('gitar_session');
   const name = localStorage.getItem('gitar_student_name');
   const input = document.getElementById('ovgu-input');
@@ -87,9 +89,10 @@ window.sendOvgu = function() {
     timestamp: serverTimestamp()
   }).then(() => {
     input.value = '';
-  }).catch(err => console.error("Hata:", err));
-};
+  }).catch(err => console.error("Firebase Gönderim Hatası:", err));
+}
 
+// Sadece Yunus Hoca'nın silebilmesi için window nesnesine bağlıyoruz
 window.deleteOvgu = function(key) {
   if (confirm("Bu övgü bulutunu tamamen silmek istediğinize emin misiniz?")) {
     const itemRef = ref(db, `ovguler/${key}`);
@@ -104,7 +107,7 @@ function listenClouds() {
   const ovgulerRef = ref(db, 'ovguler');
   
   onValue(ovgulerRef, (snapshot) => {
-    // Sadece eski bulut divlerini temizle, input paneline dokunma
+    // Sadece eski bulut divlerini temizle, input wrapper'ına dokunma
     const existingClouds = arena.querySelectorAll('.gitar-cloud');
     existingClouds.forEach(c => c.remove());
     
@@ -130,12 +133,13 @@ function createCloudElement(key, data, arena, currentUid) {
     <span class="cloud-author">— ${data.sender}</span>
   `;
   
-  const arenaWidth = arena.offsetWidth || 700;
-  const arenaHeight = arena.offsetHeight || 250;
+  // Kutunun boyutları küçüldüğü için bulutların konumlanacağı alanı sınırlandırıyoruz
+  const arenaWidth = arena.offsetWidth || 280;
+  const arenaHeight = arena.offsetHeight || 235;
   
-  // Bulutları giriş alanının sağına ve serbest yerlere rastgele fırlatır
-  const posX = Math.random() * (arenaWidth - 220) + 10;
-  const posY = Math.random() * (arenaHeight - 90) + 10;
+  // Bulutları kutunun üst yarısında ve input alanını kapatmayacak şekilde rastgele yerleştir
+  const posX = Math.random() * (arenaWidth - 150) + 5;
+  const posY = Math.random() * (arenaHeight - 140) + 5;
   
   cloud.style.left = `${posX}px`;
   cloud.style.top = `${posY}px`;
@@ -200,7 +204,8 @@ function createCloudElement(key, data, arena, currentUid) {
     cloud.style.left = `${currentX}px`;
     cloud.style.top = `${currentY}px`;
     
-    if (currentX < -250 || currentX > arenaWidth + 250 || currentY < -150 || currentY > arenaHeight + 150) {
+    // Küçük kutunun dışına fırlatıldıysa elementi tamamen kaldırır
+    if (currentX < -160 || currentX > arenaWidth + 160 || currentY < -100 || currentY > arenaHeight + 100) {
       cloud.remove();
       cancelAnimationFrame(throwAnim);
       return;
@@ -210,4 +215,11 @@ function createCloudElement(key, data, arena, currentUid) {
       throwAnim = requestAnimationFrame(animateThrow);
     }
   }
+}
+
+// Başlatıcıyı tetikle
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initLiveBar);
+} else {
+  initLiveBar();
 }
