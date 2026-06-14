@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Deneysel2 – MusicXML Play Sistemi</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Lato:wght@300;400;700&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Lato', sans-serif; background: #faf6ed; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 1.2rem 1rem 2rem; color: #5a3e2b; }
+    header { text-align: center; margin-bottom: 1rem; }
+    header h1 { font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 600; color: #5a3e2b; }
+    header p { font-size: 0.82rem; color: #b09070; margin-top: 4px; font-style: italic; }
+    #app-wrap { width: 100%; max-width: 1000px; }
+
+    #status-msg { text-align: center; padding: 1rem; font-size: 0.9rem; color: #8b6b4e; font-weight: 600; background: #fff; border: 1.5px solid #e8e0d5; border-radius: 12px; margin-bottom: 1rem; }
+    #status-msg.error { color: #c75b39; background: #fdf0f0; border-color: #e8c4b8; }
+    #status-msg.ok { color: #3b6d11; background: #eaf3de; border-color: #b0c999; }
+
+    #osmd-container { background: #fff; border: 1.5px solid #e8e0d5; border-radius: 16px; padding: 1.5rem; margin-bottom: 1rem; box-shadow: 0 4px 20px rgba(90,62,43,0.05); overflow-x: auto; min-height: 200px; }
+
+    .controls { background: #fff; border: 1.5px solid #e8e0d5; border-radius: 16px; padding: 1.2rem; box-shadow: 0 4px 20px rgba(90,62,43,0.05); display: flex; flex-direction: column; gap: 1rem; }
+
+    .ctrl-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+    .btn { padding: 10px 18px; font-size: 0.88rem; font-weight: 700; border-radius: 12px; border: 1.5px solid #d4c4b0; background: #fff; color: #5a3e2b; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+    .btn:hover { background: #f5e6d3; border-color: #c4a88a; }
+    .btn:active { transform: scale(0.97); }
+    .btn.primary { background: #f5e6d3; border-color: #d4a373; }
+    .btn.primary:hover { background: #ebd3b8; }
+    .btn.active { background: #eaf3de; border-color: #6b8c42; color: #3b6d11; }
+
+    .slider-wrap { display: flex; align-items: center; gap: 10px; flex: 1; }
+    .slider-wrap label { font-size: 0.85rem; font-weight: 700; color: #8b5a2b; white-space: nowrap; }
+    input[type="range"] { flex: 1; accent-color: #8b5a2b; cursor: pointer; }
+    .slider-val { font-size: 0.85rem; font-weight: 700; color: #8b5a2b; min-width: 70px; }
+
+    select { padding: 8px 10px; font-size: 0.85rem; font-weight: 600; border-radius: 10px; border: 1.5px solid #d4c4b0; background: #fff; color: #5a3e2b; cursor: pointer; font-family: inherit; }
+
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; border-top: 1px solid #ede6d8; padding-top: 0.8rem; font-size: 0.85rem; }
+    .info-item { display: flex; justify-content: space-between; }
+    .info-item span:last-child { font-weight: 700; color: #8b5a2b; }
+
+    footer { margin-top: 1.5rem; font-size: 0.75rem; color: #c4b5a0; text-align: center; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🎸 Vals – Ole Halen · Deneysel2</h1>
+  <p>MusicXML Play Sistemi – Ölçü Seç, Loop, Tempo</p>
+</header>
+
+<div id="app-wrap">
+  <div id="status-msg">⏳ Notalar yükleniyor...</div>
+  <div id="osmd-container"></div>
+
+  <div class="controls">
+    <div class="ctrl-row">
+      <button class="btn primary" id="play-btn" disabled>▶ Çal</button>
+      <button class="btn" id="stop-btn" disabled>⏹ Durdur</button>
+      <button class="btn" id="loop-btn" disabled>🔄 Loop Kapalı</button>
+    </div>
+
+    <div class="ctrl-row">
+      <div class="slider-wrap">
+        <label>Tempo:</label>
+        <input type="range" id="tempo" min="40" max="200" value="100" />
+        <span class="slider-val" id="tempo-val">100 BPM</span>
+      </div>
+    </div>
+
+    <div class="ctrl-row">
+      <label>Başlangıç Ölçü:</label>
+      <select id="loop-start"></select>
+      <label>Bitiş Ölçü:</label>
+      <select id="loop-end"></select>
+    </div>
+
+    <div class="info-grid">
+      <div class="info-item"><span>Mevcut Ölçü:</span><span id="cur-measure">—</span></div>
+      <div class="info-item"><span>Toplam Ölçü:</span><span id="total-measure">—</span></div>
+      <div class="info-item"><span>Durum:</span><span id="play-status">Yükleniyor</span></div>
+      <div class="info-item"><span>BPM:</span><span id="bpm-info">100</span></div>
+    </div>
+  </div>
+</div>
+
+<footer>Vals – Ole Halen · Gitar Eğitim Platformu</footer>
+
+<script src="https://unpkg.com/opensheetmusicdisplay@1.9.9/build/opensheetmusicdisplay.min.js"></script>
+<script>
+(function() {
+  if (!localStorage.getItem('gitar_session')) {
+    window.location.href = 'https://gitar.yunusgedik.com.tr/';
+  }
+})();
+
+let osmd, totalMeasures = 16, isPlaying = false, isLooping = false;
+let measureTimer = null, currentMeasure = 1;
+let bpm = 100;
+
+function setStatus(msg, type = '') {
+  const el = document.getElementById('status-msg');
+  el.textContent = msg;
+  el.className = type;
+}
+
+function populateMeasureSelects(total) {
+  const startSel = document.getElementById('loop-start');
+  const endSel   = document.getElementById('loop-end');
+  startSel.innerHTML = '';
+  endSel.innerHTML   = '';
+  for (let i = 1; i <= total; i++) {
+    startSel.innerHTML += `<option value="${i}">${i}</option>`;
+    endSel.innerHTML   += `<option value="${i}" ${i === total ? 'selected' : ''}>${i}</option>`;
+  }
+}
+
+async function initOSMD() {
+  try {
+    osmd = new opensheetmusicdisplay.OpenSheetMusicDisplay('osmd-container', {
+      autoResize: true,
+      backend: 'svg',
+      drawingParameters: 'default',
+    });
+
+    const response = await fetch('./Vals_-_Ole_Halen.musicxml');
+    if (!response.ok) throw new Error('Dosya bulunamadı: ' + response.status);
+    const xmlText = await response.text();
+
+    await osmd.load(xmlText);
+    osmd.render();
+
+    // Ölçü sayısını al
+    try {
+      totalMeasures = osmd.sheet.sourceMeasures.length;
+    } catch(e) {
+      totalMeasures = 16;
+    }
+
+    document.getElementById('total-measure').textContent = totalMeasures;
+    populateMeasureSelects(totalMeasures);
+
+    // Butonları aktif et
+    ['play-btn','stop-btn','loop-btn'].forEach(id => {
+      document.getElementById(id).disabled = false;
+    });
+
+    setStatus('✅ Notalar yüklendi — Hazır!', 'ok');
+    document.getElementById('play-status').textContent = 'Hazır';
+
+  } catch(err) {
+    console.error(err);
+    setStatus('❌ Hata: ' + err.message + ' — Dosya HTML ile aynı klasörde mi?', 'error');
+  }
+}
+
+function getMeasureDuration() {
+  return (60 / bpm) * 3 * 1000; // 3/4 → 3 beat/ölçü
+}
+
+function startPlaying() {
+  if (isPlaying) stopPlaying();
+  isPlaying = true;
+  const startM = parseInt(document.getElementById('loop-start').value);
+  const endM   = parseInt(document.getElementById('loop-end').value);
+  currentMeasure = startM;
+
+  document.getElementById('play-btn').textContent  = '⏸ Çalıyor';
+  document.getElementById('play-btn').className    = 'btn active';
+  document.getElementById('play-status').textContent = '▶ Oynatılıyor';
+
+  function tick() {
+    document.getElementById('cur-measure').textContent = currentMeasure;
+    currentMeasure++;
+
+    if (currentMeasure > endM) {
+      if (isLooping) {
+        currentMeasure = startM;
+      } else {
+        stopPlaying();
+        document.getElementById('play-status').textContent = '✓ Tamamlandı';
+        return;
+      }
+    }
+    measureTimer = setTimeout(tick, getMeasureDuration());
+  }
+  measureTimer = setTimeout(tick, getMeasureDuration());
+}
+
+function stopPlaying() {
+  isPlaying = false;
+  if (measureTimer) clearTimeout(measureTimer);
+  document.getElementById('play-btn').textContent = '▶ Çal';
+  document.getElementById('play-btn').className   = 'btn primary';
+  document.getElementById('cur-measure').textContent = '—';
+  document.getElementById('play-status').textContent = 'Durduruldu';
+}
+
+document.getElementById('play-btn').addEventListener('click', () => {
+  if (isPlaying) {
+    stopPlaying();
+  } else {
+    startPlaying();
+  }
+});
+
+document.getElementById('stop-btn').addEventListener('click', stopPlaying);
+
+document.getElementById('loop-btn').addEventListener('click', () => {
+  isLooping = !isLooping;
+  const btn = document.getElementById('loop-btn');
+  if (isLooping) {
+    btn.textContent = '🔄 Loop Açık';
+    btn.className   = 'btn active';
+  } else {
+    btn.textContent = '🔄 Loop Kapalı';
+    btn.className   = 'btn';
+  }
+});
+
+document.getElementById('tempo').addEventListener('input', e => {
+  bpm = parseInt(e.target.value);
+  document.getElementById('tempo-val').textContent = bpm + ' BPM';
+  document.getElementById('bpm-info').textContent  = bpm;
+});
+
+initOSMD();
+</script>
+
+<script type="module" src="/live-bar.js"></script>
+</body>
+</html>
