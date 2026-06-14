@@ -161,6 +161,9 @@
       text-align: center; 
       font-family: inherit;
       transition: background 0.12s, border-color 0.12s, transform 0.08s, box-shadow 0.12s;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-appearance: none;
+      outline: none;
     }
     .cbtn:hover:not(:disabled) { background: #f5e6d3; border-color: #c4a88a; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(90,62,43,0.08); }
     .cbtn:active:not(:disabled) { transform: scale(0.97); box-shadow: none; }
@@ -429,6 +432,7 @@
 
     function nextCard(){
       answered = false;
+      if(document.activeElement) document.activeElement.blur();
       document.getElementById('feedback').textContent = '';
       document.getElementById('feedback').className = '';
       document.getElementById('next-btn').style.display = 'none';
@@ -464,6 +468,7 @@
       
       if(notaAdi===current.nota){
         btn.className='cbtn correct';
+        btn.blur();
         fb.textContent='✓ Doğru!';
         fb.className='ok';
         playNote(current.freq);
