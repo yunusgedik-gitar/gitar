@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
-import { getDatabase, ref, set, onValue, onDisconnect, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js";
+import { getDatabase, ref, set, onValue, onDisconnect, serverTimestamp, push } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBkEd729B65y-NZIQ-sxScCgaEvlX-q7yA",
@@ -20,7 +20,6 @@ async function initLiveBar() {
 
   if (!sid || !name) return;
 
-  // Bar elementini oluştur (yoksa)
   let countEl = document.getElementById('_gs_active_count');
   if (!countEl) {
     const header = document.querySelector('header') || document.body;
@@ -33,23 +32,16 @@ async function initLiveBar() {
     countEl = document.getElementById('_gs_active_count');
   }
 
-  // Bu kullanıcıyı online olarak kaydet
   const userRef = ref(db, 'online_users/' + sid);
-
   set(userRef, { name: name, online: true });
-
-  // Sekme kapanınca otomatik sil — Firebase halleder
   onDisconnect(userRef).remove();
 
-  // Kim online? Gerçek zamanlı dinle
   const onlineRef = ref(db, 'online_users');
   onValue(onlineRef, (snapshot) => {
     const users = snapshot.val() || {};
     const names = Object.values(users).map(u => u.name);
     if (countEl) {
-      countEl.innerHTML = names.length > 0
-		? `🟢 ${names.join(', ')}`
-		: `⚪ —`;
+      countEl.innerHTML = names.length > 0 ? `🟢 ${names.join(', ')}` : `⚪ —`;
     }
   });
 }
@@ -60,19 +52,33 @@ if (document.readyState === 'loading') {
   initLiveBar();
 }
 
-import { push, child } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js";
+// --- ÖVGÜ KÖŞESİ MODÜL FONKSİYONLARI ---
 
-// Global fonksiyonları HTML'e bağlıyoruz
 window.openOvgüModal = function() {
-  document.getElementById('ovguModal').style.display = 'flex';
-  listenClouds();
+  const modal = document.getElementById('ovguModal');
+  if (modal) {
+    modal.style.display = 'flex';
+    listenClouds();
+    
+    // Enter tuşu dinleyicisini bağla
+    const input = document.getElementById('ovgu-input');
+    if (input && !input.dataset.listenerAdded) {
+      input.dataset.listenerAdded = "true";
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          window.sendOvgu();
+        }
+      });
+    }
+  }
 };
 
 window.closeOvgüModal = function() {
-  document.getElementById('ovguModal').style.display = 'none';
+  const modal = document.getElementById('ovguModal');
+  if (modal) modal.style.display = 'none';
 };
 
-// Övgü Mesajı Gönderme
 window.sendOvgu = function() {
   const sid = localStorage.getItem('gitar_session');
   const name = localStorage.getItem('gitar_student_name');
@@ -93,15 +99,13 @@ window.sendOvgu = function() {
   }).catch(err => console.error("Hata:", err));
 };
 
-// Mesaj Silme (Sadece Yunus Hoca s01 için yetki)
 window.deleteOvgu = function(key) {
   if (confirm("Bu övgü bulutunu patlatmak istediğinize emin misiniz?")) {
     const itemRef = ref(db, `ovguler/${key}`);
-    set(itemRef, null); // Veritabanından siler
+    set(itemRef, null);
   }
 };
 
-// Bulutları Dinle ve Ekrana Bas
 let activeListeners = false;
 function listenClouds() {
   if (activeListeners) return;
@@ -112,7 +116,6 @@ function listenClouds() {
   const ovgulerRef = ref(db, 'ovguler');
   
   onValue(ovgulerRef, (snapshot) => {
-    // Önce arenayı temizle
     arena.innerHTML = '';
     const data = snapshot.val() || {};
     
@@ -122,16 +125,13 @@ function listenClouds() {
   });
 }
 
-// İnteraktif Bulut Oluşturma ve Sürükle-Fırlat (Throw) Sistemi
 function createCloudElement(key, data, arena, currentUid) {
   const cloud = document.createElement('div');
   cloud.className = 'gitar-cloud';
   
-  // İçerik Yapısı
   let deleteBtn = '';
-  // Eğer giriş yapan kişi Dr. Yunus Gedik (s01) ise silme butonu koy
   if (currentUid === 's01') {
-    deleteBtn = `<button class="cloud-del" onclick="event.stopPropagation(); deleteOvgu('${key}')">X</button>`;
+    deleteBtn = `<button class="cloud-del" onclick="event.stopPropagation(); window.deleteOvgu('${key}')">X</button>`;
   }
   
   cloud.innerHTML = `
@@ -140,23 +140,22 @@ function createCloudElement(key, data, arena, currentUid) {
     <span class="cloud-author">— ${data.sender}</span>
   `;
   
-  // Rastgele Başlangıç Pozisyonu (Arena sınırları dahilinde)
   const arenaWidth = arena.offsetWidth || 500;
   const arenaHeight = arena.offsetHeight || 400;
   
-  const posX = Math.random() * (arenaWidth - 240) + 10;
-  const posY = Math.random() * (arenaHeight - 120) + 30;
+  const posX = Math.random() * (arenaWidth - 220) + 10;
+  const posY = Math.random() * (arenaHeight - 100) + 20;
   
   cloud.style.left = `${posX}px`;
   cloud.style.top = `${posY}px`;
   
   arena.appendChild(cloud);
   
-  // --- SÜRÜKLE BIRAK VE ELLE İTİNCE UÇURMA MOTORU ---
+  // --- SÜRÜKLE-FIRLAT MOTORU ---
   let isDragging = false;
   let startX, startY, currentX = posX, currentY = posY;
   let lastX = posX, lastY = posY;
-  let vx = 0, vy = 0; // Hız bileşenleri
+  let vx = 0, vy = 0;
   let throwAnim;
 
   cloud.addEventListener('pointerdown', (e) => {
@@ -179,7 +178,6 @@ function createCloudElement(key, data, arena, currentUid) {
     currentX = e.clientX - startX;
     currentY = e.clientY - startY;
     
-    // Anlık hız hesabı (elle itme hızını yakalamak için)
     vx = e.clientX - lastX;
     vy = e.clientY - lastY;
     
@@ -196,14 +194,12 @@ function createCloudElement(key, data, arena, currentUid) {
     cloud.style.cursor = 'grab';
     cloud.style.zIndex = '5';
     
-    // Eğer fırlatma hızı belliyse kayarak uçma animasyonunu başlat
-    if (Math.abs(vx) > 2 || Math.abs(vy) > 2) {
+    if (Math.abs(vx) > 1.5 || Math.abs(vy) > 1.5) {
       animateThrow();
     }
   });
 
   function animateThrow() {
-    // Sürtünme katsayısı (yavaş yavaş durması ya da uçup gitmesi için)
     vx *= 0.95;
     vy *= 0.95;
     
@@ -213,9 +209,8 @@ function createCloudElement(key, data, arena, currentUid) {
     cloud.style.left = `${currentX}px`;
     cloud.style.top = `${currentY}px`;
     
-    // Ekran dışına fırlatıldıysa (itildiyse) elementi görsel olarak gizle/kapat
     if (currentX < -300 || currentX > arenaWidth + 300 || currentY < -200 || currentY > arenaHeight + 200) {
-      cloud.style.display = 'none';
+      cloud.remove();
       cancelAnimationFrame(throwAnim);
       return;
     }
