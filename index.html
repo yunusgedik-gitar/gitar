@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>🎸 Dr. Yunus GEDİK – Gitar Akademisi</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
   <link rel="icon" href="/favicon.ico" type="image/x-icon">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -166,14 +167,30 @@
     .card:hover .arrow { transform: translateX(4px); }
 
     .site-footer { text-align: center; font-size: .75rem; color: #bbb0a0; margin-top: 2.5rem; }
+.site-footer {
+  display: flex;
+  justify-content: center;
+  gap: 22px;
+  margin-top: 2.5rem;
+}
 
+.site-footer a {
+  color: #b0a392;
+  font-size: 2.2rem;
+  transition: all .2s ease;
+}
+
+.site-footer a:hover {
+  color: var(--gold);
+  transform: translateY(-2px);
+}
     @keyframes pulseGlow { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
 
     @media(max-width:480px){
       .dash-inner { padding: 1rem 1rem 3rem; }
       .game-grid { grid-template-columns: 1fr; }
       .card { padding: 1.75rem 1.5rem; }
-      .login-card { padding: 2.25rem 1.75rem 2rem; }
+      .login-card { padding: 2.25rem 1.75rem 2rem; }ev
     }
   </style>
 </head>
@@ -249,8 +266,19 @@
         </a>
       </div>
     </div>
+<footer class="site-footer">
+  <a href="https://www.instagram.com/yunusgedik_/" target="_blank" aria-label="Instagram">
+    <i class="fa-brands fa-instagram"></i>
+  </a>
 
-    <footer class="site-footer">❤️ yunusgedik.com.tr</footer>
+  <a href="https://x.com/yunusgedik_" target="_blank" aria-label="X">
+    <i class="fa-brands fa-x-twitter"></i>
+  </a>
+
+  <a href="https://www.youtube.com/yunusgedik" target="_blank" aria-label="YouTube">
+    <i class="fa-brands fa-youtube"></i>
+  </a>
+</footer>
   </div>
 </div>
 
