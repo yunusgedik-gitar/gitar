@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
   <title>Nota Okuma Egzersizi – Klasik Gitar</title>
   <script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.2/build/cjs/vexflow.js"></script>
   <style>
@@ -285,6 +286,23 @@
       .cbtn { font-size: 1.6rem; padding: 12px 6px; }
       .controls { flex-direction: column; gap: 8px; }
     }
+	.site-footer {
+  display: flex;
+  justify-content: center;
+  gap: 22px;
+  margin-top: 2.5rem;
+}
+
+.site-footer a {
+  color: #b0a392;
+  font-size: 2.2rem;
+  transition: all .2s ease;
+}
+
+.site-footer a:hover {
+  color: var(--gold);
+  transform: translateY(-2px);
+}
   </style>
 </head>
 <body>
@@ -343,7 +361,19 @@
 
   </div>
 
-  <footer><p>❤️ yunusgedik.com.tr</p></footer>
+  <footer class="site-footer">
+  <a href="https://www.instagram.com/yunusgedik_/" target="_blank" aria-label="Instagram">
+    <i class="fa-brands fa-instagram"></i>
+  </a>
+
+  <a href="https://x.com/yunusgedik_" target="_blank" aria-label="X">
+    <i class="fa-brands fa-x-twitter"></i>
+  </a>
+
+  <a href="https://www.youtube.com/yunusgedik" target="_blank" aria-label="YouTube">
+    <i class="fa-brands fa-youtube"></i>
+  </a>
+</footer>
 
   <script>
     const NOTES = [
