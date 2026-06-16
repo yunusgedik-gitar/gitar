@@ -553,6 +553,7 @@ const STUDENTS = [
   { id: 's85', name: 'Misafir', pin: '0000' },
   { id: 's_extra_1', name: 'Erdinç DOĞRU', pin: '1234' }
 ];
+window.STUDENTS = STUDENTS;
 
 let me = null;
 window.me = me;
@@ -681,13 +682,13 @@ window.fetchExtraStudents = async function() {
 };
 
 // Öğretmenin değiştirdiği PIN'leri (sadece koddaki sabit öğrenciler için, extra
-// öğrencilerin PIN'i zaten extra_students içinde tutuluyor) STUDENTS listesine uygular.
+// öğrencilerin PIN'i zaten extra_students içinde tutuluyor) window.STUDENTS listesine uygular.
 window.applyPinOverrides = async function() {
   try {
     const snap = await get(ref(db, 'pin_overrides'));
     const data = snap.exists() ? snap.val() : {};
     for (const sid in data) {
-      const s = STUDENTS.find(x => x.id === sid);
+      const s = window.STUDENTS.find(x => x.id === sid);
       if (s) s.pin = data[sid];
     }
   } catch (e) {
@@ -695,7 +696,7 @@ window.applyPinOverrides = async function() {
   }
 };
 
-// Sayfa ilk açıldığında oturumu olan ama STUDENTS dizisinde henüz olmayan
+// Sayfa ilk açıldığında oturumu olan ama window.STUDENTS dizisinde henüz olmayan
 // (yeni eklenmiş) bir kullanıcı varsa, burada tamamlanır.
 (async function resolvePendingLogin() {
   await window.applyPinOverrides();
@@ -750,7 +751,7 @@ function calcWeightedScore(sid) {
 }
 
 function studentName(sid) {
-  const s = STUDENTS.find(x => x.id === sid);
+  const s = window.STUDENTS.find(x => x.id === sid);
   return s ? s.name : sid;
 }
 
@@ -950,10 +951,10 @@ window.changeStudentPin = async function() {
   const msgBox = document.getElementById('settings-msg');
 
   if (!/^\d{4}$/.test(newPin)) { msgBox.innerHTML = '<span style="color:#c0392b;">PIN 4 haneli rakam olmalı.</span>'; return; }
-  const taken = STUDENTS.some(s => s.id !== sid && s.pin === newPin);
+  const taken = window.STUDENTS.some(s => s.id !== sid && s.pin === newPin);
   if (taken) { msgBox.innerHTML = '<span style="color:#c0392b;">Bu PIN başka bir öğrencide kayıtlı, farklı bir PIN seçin.</span>'; return; }
 
-  const student = STUDENTS.find(s => s.id === sid);
+  const student = window.STUDENTS.find(s => s.id === sid);
   const isExtra = sid.startsWith('s_new_') || sid.startsWith('s_extra_');
 
   try {
@@ -995,7 +996,7 @@ window.saveNewStudent = async function() {
 
   if (!name) { errBox.textContent = 'Lütfen ad soyad girin.'; return; }
   if (!/^\d{4}$/.test(pin)) { errBox.textContent = 'PIN 4 haneli rakam olmalı.'; return; }
-  const pinTaken = STUDENTS.some(s => s.pin === pin) || (extraStudentsCache || []).some(s => s.pin === pin);
+  const pinTaken = window.STUDENTS.some(s => s.pin === pin) || (extraStudentsCache || []).some(s => s.pin === pin);
   if (pinTaken) { errBox.textContent = 'Bu PIN zaten kullanılıyor, başka bir PIN seçin.'; return; }
 
   const newId = 's_new_' + Date.now();
@@ -1007,7 +1008,7 @@ window.saveNewStudent = async function() {
     const entry = { completed: pieces.map(() => false) };
     await set(ref(db, `repertoire/${newId}/${grade}`), entry);
 
-    STUDENTS.push(newStudent);
+    window.STUDENTS.push(newStudent);
     if (extraStudentsCache) extraStudentsCache.push(newStudent);
     repProgress[newId] = { [grade]: entry };
 
