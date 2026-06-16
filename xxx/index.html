@@ -392,7 +392,27 @@
     <div id="rep-grade-view">
       <!-- Öğretmen modu: grade içi öğrenci sıralaması -->
       <div id="teacher-grade-ranking" style="display:none;">
+        <button class="back-btn" style="margin-bottom:1rem;" onclick="openAddStudentForm()">+ Yeni Öğrenci Ekle</button>
         <div class="leaderboard" id="grade-leaderboard"></div>
+      </div>
+
+      <!-- Öğretmen modu: yeni öğrenci ekleme formu -->
+      <div id="add-student-form" style="display:none;">
+        <div class="progress-summary">
+          <div class="progress-summary-head">
+            <div class="progress-summary-title">Yeni Öğrenci Ekle</div>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:10px; margin-top:.6rem;">
+            <input type="text" id="new-student-name" placeholder="Ad Soyad" style="padding:10px 14px; border-radius:10px; border:1px solid var(--border); font-family:inherit; font-size:.9rem;">
+            <input type="text" id="new-student-pin" placeholder="4 haneli şifre (PIN)" maxlength="4" style="padding:10px 14px; border-radius:10px; border:1px solid var(--border); font-family:inherit; font-size:.9rem;">
+            <select id="new-student-grade" style="padding:10px 14px; border-radius:10px; border:1px solid var(--border); font-family:inherit; font-size:.9rem;"></select>
+            <div style="display:flex; gap:8px;">
+              <button class="back-btn" onclick="saveNewStudent()" style="background:var(--gold); color:#fff; border-color:var(--gold);">Kaydet</button>
+              <button class="back-btn" onclick="closeAddStudentForm()">Vazgeç</button>
+            </div>
+            <div id="add-student-error" style="color:#c0392b; font-size:.82rem;"></div>
+          </div>
+        </div>
       </div>
 
       <!-- Öğretmen modu: seçili öğrencinin eser checklist'i (geri dön ile kapanır) -->
@@ -406,6 +426,7 @@
           <div class="progress-bar-track"><div class="progress-bar-fill" id="progress-bar-fill" style="width:0%"></div></div>
         </div>
         <div class="piece-list" id="piece-list"></div>
+        <div id="add-grade-box" style="margin-top:1rem;"></div>
       </div>
 
       <!-- Öğrenci modu: doğrudan kendi checklist'i -->
@@ -533,8 +554,13 @@ if (pinInput) {
   });
 }
 
-function checkPin(pin) {
-  const found = STUDENTS.find(s => s.pin === pin);
+async function checkPin(pin) {
+  let found = STUDENTS.find(s => s.pin === pin);
+  if (!found && window.fetchExtraStudents) {
+    const extra = await window.fetchExtraStudents();
+    found = extra.find(s => s.pin === pin);
+    if (found) STUDENTS.push(found);
+  }
   if (found) {
     me = found;
     localStorage.setItem('gitar_session',      me.id);
@@ -576,12 +602,25 @@ async function doLogout() {
       me = found;
       window.me = me;
       openDashboard();
+    } else {
+      // STUDENTS içinde yok; Firebase'deki ekstra öğrenciler henüz yüklenmemiş olabilir.
+      // repertoire modülü yüklenince bunu tamamlayacak (bkz: window.completePendingLogin).
+      window.pendingLoginSid = sid;
     }
   }
   if (!me && pinInput) {
     pinInput.focus();
   }
 })();
+
+window.completePendingLogin = function(student) {
+  if (!window.pendingLoginSid || student.id !== window.pendingLoginSid) return;
+  STUDENTS.push(student);
+  me = student;
+  window.me = me;
+  window.pendingLoginSid = null;
+  openDashboard();
+};
 </script>
 
 <script type="module" src="/live-bar.js"></script>
@@ -608,8 +647,32 @@ let repActiveGrade = null;
 let repActiveTab = 'grade'; // 'grade' veya 'leaderboard'
 let repActiveStudentId = null; // öğretmen modunda, checklist'i açık olan öğrenci
 let repLoaded = false;
+let extraStudentsCache = null;
 
 function getMe() { return window.me || (typeof me !== 'undefined' ? me : null); }
+
+// Firebase'deki extra_students node'undan, ana koda elle eklenmemiş yeni öğrencileri çeker
+window.fetchExtraStudents = async function() {
+  if (extraStudentsCache) return extraStudentsCache;
+  try {
+    const snap = await get(ref(db, 'extra_students'));
+    const data = snap.exists() ? snap.val() : {};
+    extraStudentsCache = Object.values(data);
+  } catch (e) {
+    console.error('Ekstra öğrenciler yüklenemedi:', e);
+    extraStudentsCache = [];
+  }
+  return extraStudentsCache;
+};
+
+// Sayfa ilk açıldığında oturumu olan ama STUDENTS dizisinde henüz olmayan
+// (yeni eklenmiş) bir kullanıcı varsa, burada tamamlanır.
+(async function resolvePendingLogin() {
+  if (!window.pendingLoginSid) return;
+  const extra = await window.fetchExtraStudents();
+  const found = extra.find(s => s.id === window.pendingLoginSid);
+  if (found && window.completePendingLogin) window.completePendingLogin(found);
+})();
 
 async function loadRepProgress() {
   if (repLoaded) return;
@@ -718,7 +781,7 @@ function renderGradeTabs() {
 }
 
 function showOnly(viewId) {
-  ['teacher-grade-ranking','teacher-student-detail','student-self-view'].forEach(id => {
+  ['teacher-grade-ranking','add-student-form','teacher-student-detail','student-self-view'].forEach(id => {
     document.getElementById(id).style.display = (id === viewId) ? '' : 'none';
   });
 }
@@ -777,11 +840,98 @@ window.openStudentDetail = function(sid) {
   repActiveStudentId = sid;
   showOnly('teacher-student-detail');
   renderTeacherPieceList();
+  renderAddGradeBox();
 };
 
 window.closeStudentDetail = function() {
   showOnly('teacher-grade-ranking');
   renderGradeRanking();
+};
+
+function renderAddGradeBox() {
+  const box = document.getElementById('add-grade-box');
+  const existing = Object.keys(repProgress[repActiveStudentId] || {});
+  const allGrades = Object.keys(GRADE_PIECES).sort((a,b)=>+a-+b);
+  const missing = allGrades.filter(g => !existing.includes(g));
+  if (!missing.length) {
+    box.innerHTML = '<p style="color:var(--muted);font-size:.82rem;">Bu öğrenci tüm grade\'lere zaten dahil.</p>';
+    return;
+  }
+  box.innerHTML = `
+    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+      <select id="add-grade-select" style="padding:9px 14px; border-radius:10px; border:1px solid var(--border); font-family:inherit; font-size:.85rem;">
+        ${missing.map(g => `<option value="${g}">Grade ${g}</option>`).join('')}
+      </select>
+      <button class="back-btn" onclick="addGradeToStudent()">+ Bu Grade'i Ekle</button>
+    </div>`;
+}
+
+window.addGradeToStudent = async function() {
+  const g = document.getElementById('add-grade-select').value;
+  const pieces = GRADE_PIECES[g] || [];
+  const entry = { completed: pieces.map(() => false) };
+  repProgress[repActiveStudentId] = repProgress[repActiveStudentId] || {};
+  repProgress[repActiveStudentId][g] = entry;
+  try {
+    await set(ref(db, `repertoire/${repActiveStudentId}/${g}`), entry);
+    showSaveToast();
+  } catch (e) {
+    console.error('Grade eklenemedi:', e);
+  }
+  repActiveGrade = g;
+  renderTeacherPieceList();
+  renderAddGradeBox();
+  renderGradeTabs();
+};
+
+// ===== Öğretmen: yeni öğrenci ekleme =====
+window.openAddStudentForm = function() {
+  const sel = document.getElementById('new-student-grade');
+  sel.innerHTML = Object.keys(GRADE_PIECES).sort((a,b)=>+a-+b)
+    .map(g => `<option value="${g}">Grade ${g}</option>`).join('');
+  document.getElementById('new-student-name').value = '';
+  document.getElementById('new-student-pin').value = '';
+  document.getElementById('add-student-error').textContent = '';
+  showOnly('add-student-form');
+};
+
+window.closeAddStudentForm = function() {
+  showOnly('teacher-grade-ranking');
+  renderGradeRanking();
+};
+
+window.saveNewStudent = async function() {
+  const name = document.getElementById('new-student-name').value.trim();
+  const pin = document.getElementById('new-student-pin').value.trim();
+  const grade = document.getElementById('new-student-grade').value;
+  const errBox = document.getElementById('add-student-error');
+
+  if (!name) { errBox.textContent = 'Lütfen ad soyad girin.'; return; }
+  if (!/^\d{4}$/.test(pin)) { errBox.textContent = 'PIN 4 haneli rakam olmalı.'; return; }
+  const pinTaken = STUDENTS.some(s => s.pin === pin) || (extraStudentsCache || []).some(s => s.pin === pin);
+  if (pinTaken) { errBox.textContent = 'Bu PIN zaten kullanılıyor, başka bir PIN seçin.'; return; }
+
+  const newId = 's_new_' + Date.now();
+  const newStudent = { id: newId, name, pin };
+
+  try {
+    await set(ref(db, `extra_students/${newId}`), newStudent);
+    const pieces = GRADE_PIECES[grade] || [];
+    const entry = { completed: pieces.map(() => false) };
+    await set(ref(db, `repertoire/${newId}/${grade}`), entry);
+
+    STUDENTS.push(newStudent);
+    if (extraStudentsCache) extraStudentsCache.push(newStudent);
+    repProgress[newId] = { [grade]: entry };
+
+    showSaveToast();
+    repActiveGrade = grade;
+    showOnly('teacher-grade-ranking');
+    renderGradeRanking();
+  } catch (e) {
+    console.error('Öğrenci eklenemedi:', e);
+    errBox.textContent = 'Kaydedilemedi, internet bağlantınızı kontrol edin.';
+  }
 };
 
 // ===== Öğretmen: seçili öğrencinin checklist'i (tıklanabilir, kaydeder) =====
