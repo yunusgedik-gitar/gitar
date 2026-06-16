@@ -427,6 +427,20 @@
         </div>
         <div class="piece-list" id="piece-list"></div>
         <div id="add-grade-box" style="margin-top:1rem;"></div>
+
+        <div class="progress-summary" style="margin-top:1.4rem;">
+          <div class="progress-summary-head">
+            <div class="progress-summary-title">Öğrenci Ayarları</div>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:10px; margin-top:.6rem;">
+            <button class="back-btn" id="delete-grade-btn" onclick="deleteGradeFromStudent()" style="color:#c0392b; border-color:#e3b3ab;">🗑️ Bu Grade'i Öğrenciden Sil</button>
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+              <input type="text" id="change-pin-input" placeholder="Yeni 4 haneli PIN" maxlength="4" style="padding:9px 14px; border-radius:10px; border:1px solid var(--border); font-family:inherit; font-size:.85rem; width:160px;">
+              <button class="back-btn" onclick="changeStudentPin()">PIN'i Değiştir</button>
+            </div>
+            <div id="settings-msg" style="font-size:.82rem;"></div>
+          </div>
+        </div>
       </div>
 
       <!-- Öğrenci modu: doğrudan kendi checklist'i -->
@@ -555,6 +569,7 @@ if (pinInput) {
 }
 
 async function checkPin(pin) {
+  if (window.applyPinOverrides) await window.applyPinOverrides();
   let found = STUDENTS.find(s => s.pin === pin);
   if (!found && window.fetchExtraStudents) {
     const extra = await window.fetchExtraStudents();
@@ -626,7 +641,7 @@ window.completePendingLogin = function(student) {
 <script type="module" src="/live-bar.js"></script>
 <script type="module">
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
-import { getDatabase, ref, get, set, onValue } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js";
+import { getDatabase, ref, get, set, remove, onValue } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBkEd729B65y-NZIQ-sxScCgaEvlX-q7yA",
@@ -665,9 +680,25 @@ window.fetchExtraStudents = async function() {
   return extraStudentsCache;
 };
 
+// Öğretmenin değiştirdiği PIN'leri (sadece koddaki sabit öğrenciler için, extra
+// öğrencilerin PIN'i zaten extra_students içinde tutuluyor) STUDENTS listesine uygular.
+window.applyPinOverrides = async function() {
+  try {
+    const snap = await get(ref(db, 'pin_overrides'));
+    const data = snap.exists() ? snap.val() : {};
+    for (const sid in data) {
+      const s = STUDENTS.find(x => x.id === sid);
+      if (s) s.pin = data[sid];
+    }
+  } catch (e) {
+    console.error('PIN güncellemeleri yüklenemedi:', e);
+  }
+};
+
 // Sayfa ilk açıldığında oturumu olan ama STUDENTS dizisinde henüz olmayan
 // (yeni eklenmiş) bir kullanıcı varsa, burada tamamlanır.
 (async function resolvePendingLogin() {
+  await window.applyPinOverrides();
   if (!window.pendingLoginSid) return;
   const extra = await window.fetchExtraStudents();
   const found = extra.find(s => s.id === window.pendingLoginSid);
@@ -841,6 +872,9 @@ window.openStudentDetail = function(sid) {
   showOnly('teacher-student-detail');
   renderTeacherPieceList();
   renderAddGradeBox();
+  document.getElementById('delete-grade-btn').textContent = `🗑️ Grade ${repActiveGrade} Kaydını Sil`;
+  document.getElementById('change-pin-input').value = '';
+  document.getElementById('settings-msg').textContent = '';
 };
 
 window.closeStudentDetail = function() {
@@ -882,6 +916,59 @@ window.addGradeToStudent = async function() {
   renderTeacherPieceList();
   renderAddGradeBox();
   renderGradeTabs();
+};
+
+window.deleteGradeFromStudent = async function() {
+  const sid = repActiveStudentId;
+  const g = repActiveGrade;
+  const existing = Object.keys(repProgress[sid] || {});
+  if (existing.length <= 1) {
+    document.getElementById('settings-msg').innerHTML = '<span style="color:#c0392b;">Bir öğrencinin en az 1 grade\'i olmalı, bu sonuncusunu silemezsiniz.</span>';
+    return;
+  }
+  if (!confirm(`${studentName(sid)} adlı öğrencinin Grade ${g} kaydını silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`)) return;
+
+  try {
+    await remove(ref(db, `repertoire/${sid}/${g}`));
+    delete repProgress[sid][g];
+    showSaveToast();
+  } catch (e) {
+    console.error('Grade silinemedi:', e);
+    document.getElementById('settings-msg').innerHTML = '<span style="color:#c0392b;">Silinemedi, bağlantınızı kontrol edin.</span>';
+    return;
+  }
+
+  // En son kalan grade'lerden birine geç ve sıralamaya dön
+  const remaining = Object.keys(repProgress[sid]).sort((a,b)=>+a-+b);
+  repActiveGrade = remaining[0];
+  closeStudentDetail();
+};
+
+window.changeStudentPin = async function() {
+  const sid = repActiveStudentId;
+  const newPin = document.getElementById('change-pin-input').value.trim();
+  const msgBox = document.getElementById('settings-msg');
+
+  if (!/^\d{4}$/.test(newPin)) { msgBox.innerHTML = '<span style="color:#c0392b;">PIN 4 haneli rakam olmalı.</span>'; return; }
+  const taken = STUDENTS.some(s => s.id !== sid && s.pin === newPin);
+  if (taken) { msgBox.innerHTML = '<span style="color:#c0392b;">Bu PIN başka bir öğrencide kayıtlı, farklı bir PIN seçin.</span>'; return; }
+
+  const student = STUDENTS.find(s => s.id === sid);
+  const isExtra = sid.startsWith('s_new_') || sid.startsWith('s_extra_');
+
+  try {
+    if (isExtra) {
+      await set(ref(db, `extra_students/${sid}/pin`), newPin);
+    } else {
+      await set(ref(db, `pin_overrides/${sid}`), newPin);
+    }
+    if (student) student.pin = newPin;
+    document.getElementById('change-pin-input').value = '';
+    msgBox.innerHTML = '<span style="color:var(--green);">✅ PIN güncellendi.</span>';
+  } catch (e) {
+    console.error('PIN değiştirilemedi:', e);
+    msgBox.innerHTML = '<span style="color:#c0392b;">Kaydedilemedi, bağlantınızı kontrol edin.</span>';
+  }
 };
 
 // ===== Öğretmen: yeni öğrenci ekleme =====
