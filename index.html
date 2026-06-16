@@ -127,12 +127,16 @@
       box-shadow: 0 2px 14px rgba(44,31,20,.05);
     }
     .welcome-left { display: flex; align-items: center; gap: 10px; }
+    .welcome-info { display: flex; flex-direction: column; gap: 2px; }
+    .welcome-grade-line { font-size: .72rem; color: var(--muted); font-weight: 500; }
     .avatar {
-      width: 40px; height: 40px; border-radius: 50%;
+      width: 48px; height: 48px; border-radius: 50%;
       background: linear-gradient(135deg, var(--gold), #8b5a10);
       display: flex; align-items: center; justify-content: center;
-      font-size: 1rem; color: #fff; font-weight: 700;
+      flex-direction: column;
+      font-size: .72rem; color: #fff; font-weight: 700;
       font-family: 'Playfair Display', serif; flex-shrink: 0;
+      line-height: 1.1;
     }
     .welcome-name { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700; }
     
@@ -320,12 +324,19 @@
 
     <div class="welcome-bar">
       <div class="welcome-left">
-        <div class="avatar" id="avatar-init">🎸</div>
-        <span class="welcome-name" id="welcome-name">Gitar Akademisi</span>
-        <span class="online-pill" id="_gs_active_count">🟢</span>
+        <div class="avatar" id="avatar-init">
+          <span id="avatar-score" style="font-size:.65rem; font-weight:700; line-height:1.1; text-align:center;">🎸</span>
+        </div>
+        <div class="welcome-info">
+          <span class="welcome-name" id="welcome-name">Gitar Akademisi</span>
+          <span class="welcome-grade-line" id="welcome-grade-line"></span>
+        </div>
+        <span class="online-pill" id="_gs_active_count">🟢 Canlı Oda...</span>
       </div>
       <button class="logout-btn" onclick="doLogout()">Çıkış Yap</button>
     </div>
+
+    <div class="section-title">🎮 Eğitim Alıştırmaları</div>
 
     <div id="tab-games">
       <div class="game-grid">
@@ -465,95 +476,17 @@
 <div class="save-toast" id="save-toast">✅ Kaydedildi</div>
 
 <script>
-const STUDENTS = [
-  { id: 's01', name: 'Dr. Yunus GEDİK', pin: '0427' },
-  { id: 's02', name: 'Burak SAVAŞ', pin: '5009' },
-  { id: 's03', name: 'Mustafa Şahin GÜLYEŞİL', pin: '4384' },
-  { id: 's04', name: 'Dr. Ümit ÇELEBİ', pin: '7136' },
-  { id: 's05', name: 'Ertuğrul Emre BALKAN', pin: '4917' },
-  { id: 's06', name: 'Ahmet SARIAHMET', pin: '3930' },
-  { id: 's07', name: 'Fatih ÖZDÖŞEMECİ', pin: '2133' },
-  { id: 's08', name: 'Şevval ÖZBEK', pin: '7831' },
-  { id: 's09', name: 'Şaban Semih ER', pin: '6313' },
-  { id: 's10', name: 'Turgut KÖKLÜ', pin: '6682' },
-  { id: 's11', name: 'Nülüfer KARCAN', pin: '5929' },
-  { id: 's12', name: 'Zehra DİRİLEN', pin: '3046' },
-  { id: 's13', name: 'Elif AKKOYUN', pin: '0545' },
-  { id: 's14', name: 'Berfin ÇAKIR', pin: '5743' },
-  { id: 's15', name: 'Ece ESKİKÖY', pin: '4571' },
-  { id: 's16', name: 'Numan ERGÜL', pin: '6462' },
-  { id: 's17', name: 'Tuana GÜNGÖR', pin: '4632' },
-  { id: 's18', name: 'Nesrin ERDOĞAN', pin: '2836' },
-  { id: 's19', name: 'Fatma Filiz ERDOĞAN', pin: '8161' },
-  { id: 's20', name: 'Yasir URGAN', pin: '5835' },
-  { id: 's21', name: 'Kaya ÖZBOZDUMAN', pin: '7380' },
-  { id: 's22', name: 'Berra GÜZELLER', pin: '5898' },
-  { id: 's23', name: 'Filiz KÜÇ', pin: '0013' },
-  { id: 's24', name: 'Hatice Berra KAYA', pin: '6037' },
-  { id: 's25', name: 'Elif DEMİR', pin: '8823' },
-  { id: 's26', name: 'Oğuz POYRAZ', pin: '4558' },
-  { id: 's27', name: 'Ersin ERGEZER', pin: '0748' },
-  { id: 's28', name: 'Kaan Doğukan AYDOĞAN', pin: '1923' },
-  { id: 's29', name: 'Ayşe ÇORBACI', pin: '0813' },
-  { id: 's30', name: 'Zeynep YİĞİT', pin: '3658' },
-  { id: 's31', name: 'Bahar ERSOY', pin: '1757' },
-  { id: 's32', name: 'Kübra KIZMAZ', pin: '5504' },
-  { id: 's33', name: 'Yavuz ACAR', pin: '6949' },
-  { id: 's34', name: 'Sena BEKÇİ', pin: '6101' },
-  { id: 's35', name: 'Dilan ERDOĞAN', pin: '4942' },
-  { id: 's36', name: 'Recep ÇANKAYA', pin: '4763' },
-  { id: 's37', name: 'Nevra ARSLANTÜRK', pin: '0478' },
-  { id: 's38', name: 'Kadri KAYMAK', pin: '0269' },
-  { id: 's39', name: 'Melike GEDİK', pin: '7565' },
-  { id: 's40', name: 'Esmanur KARATAŞ', pin: '6903' },
-  { id: 's41', name: 'Ceren KAYRAK', pin: '5979' },
-  { id: 's42', name: 'Melisa ÇANKAYA', pin: '3411' },
-  { id: 's43', name: 'Yeşim MERCAN', pin: '5767' },
-  { id: 's44', name: 'Begüm Nur VERİM', pin: '8348' },
-  { id: 's45', name: 'Merve ÖZDEMİR', pin: '6606' },
-  { id: 's46', name: 'Yasemin BEKTAŞ', pin: '7844' },
-  { id: 's47', name: 'Ebrar ŞAHİNER', pin: '7106' },
-  { id: 's48', name: 'Rıfat Cenk AKSOY', pin: '5876' },
-  { id: 's49', name: 'Handan ALTUNER', pin: '4298' },
-  { id: 's50', name: 'Havva HOCAOĞLU', pin: '2752' },
-  { id: 's51', name: 'Ebrar Sümeyye ÖZ', pin: '8630' },
-  { id: 's52', name: 'Meryem ER', pin: '4697' },
-  { id: 's53', name: 'Ramazan Özgür İRİDERE', pin: '9487' },
-  { id: 's54', name: 'Av. Yasemin YILDIZ', pin: '8189' },
-  { id: 's55', name: 'Sema SERBEST', pin: '3739' },
-  { id: 's56', name: 'Melike DURMUŞ', pin: '8180' },
-  { id: 's57', name: 'Tomris Ceylan CÖBEK', pin: '8443' },
-  { id: 's58', name: 'Didem PULAT', pin: '3222' },
-  { id: 's59', name: 'Av. Arb. Gülçin SABAHLAR', pin: '7988' },
-  { id: 's60', name: 'Vahide AKDAĞ', pin: '8303' },
-  { id: 's61', name: 'Zeynep GEZİCİ', pin: '5780' },
-  { id: 's62', name: 'Dilek ALTAN', pin: '2829' },
-  { id: 's63', name: 'İbrahim ÇİN', pin: '4128' },
-  { id: 's64', name: 'Merve YALAP', pin: '2367' },
-  { id: 's65', name: 'Çiğdem KILIÇ', pin: '7484' },
-  { id: 's66', name: 'Derya KORKMAZ', pin: '0167' },
-  { id: 's67', name: 'Dr. Birsen Altaylı ÖZEMİR', pin: '5853' },
-  { id: 's68', name: 'Doç. Dr. Cihangir ÖZEMİR', pin: '7063' },
-  { id: 's69', name: 'Oktay Alp KARAATA', pin: '5202' },
-  { id: 's70', name: 'Pars ODİN', pin: '6790' },
-  { id: 's71', name: 'Tunç KURTMAN', pin: '7003' },
-  { id: 's72', name: 'Timur', pin: '3552' },
-  { id: 's73', name: 'Bora ÖZTEPE', pin: '8861' },
-  { id: 's74', name: 'Çınar ÇAĞLARIRMAK', pin: '8972' },
-  { id: 's75', name: 'Ömer', pin: '2014' },
-  { id: 's76', name: 'Ali Toprak YETİŞ', pin: '0427' },
-  { id: 's77', name: 'Eyüp Eren', pin: '1544' },
-  { id: 's78', name: 'Nursev GARİPDOĞAN', pin: '9818' },
-  { id: 's79', name: 'Simge ALTIPARMAK', pin: '1109' },
-  { id: 's80', name: 'Derya UZUNBOY', pin: '2461' },
-  { id: 's81', name: 'Semra BULUT', pin: '6983' },
-  { id: 's82', name: 'Deniz KAYMARAZ', pin: '7359' },
-  { id: 's83', name: 'Gökçe GÖKÇEK', pin: '8365' },
-  { id: 's84', name: 'Barış AYNA', pin: '6363' },
-  { id: 's85', name: 'Misafir', pin: '0000' },
-  { id: 's_extra_1', name: 'Erdinç DOĞRU', pin: '1234' }
-];
-window.STUDENTS = STUDENTS;
+// PIN'ler artık index.html'de plain-text olarak YOK.
+// STUDENTS_DATA (SHA-256 hash'li) repertoire-data.js içinde tanımlı.
+// window.STUDENTS sadece {id, name} içerir — F12'de PIN görünmez.
+window.STUDENTS = STUDENTS_DATA.map(s => ({ id: s.id, name: s.name }));
+
+// Tarayıcı SubtleCrypto ile SHA-256 (global — hem login hem modül kullanır)
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+window.sha256 = sha256;
 
 let me = null;
 window.me = me;
@@ -571,11 +504,21 @@ if (pinInput) {
 
 async function checkPin(pin) {
   if (window.applyPinOverrides) await window.applyPinOverrides();
-  let found = STUDENTS.find(s => s.pin === pin);
+  const pinH = await sha256(pin);
+  // Ana liste: hash karşılaştırması (F12'de plain PIN görünmez)
+  let found = STUDENTS_DATA.find(s => s.pinHash === pinH);
+  if (found) {
+    // window.STUDENTS içinde sadece {id, name} var, found'u oradan al
+    found = window.STUDENTS.find(s => s.id === found.id) || { id: found.id, name: found.name };
+  }
+  // Extra öğrenciler Firebase'de (plain PIN) — teacher kontrolünde
   if (!found && window.fetchExtraStudents) {
     const extra = await window.fetchExtraStudents();
     found = extra.find(s => s.pin === pin);
-    if (found) STUDENTS.push(found);
+    if (found) {
+      const already = window.STUDENTS.find(s => s.id === found.id);
+      if (!already) window.STUDENTS.push({ id: found.id, name: found.name });
+    }
   }
   if (found) {
     me = found;
@@ -596,9 +539,16 @@ function openDashboard() {
   const overlay = document.getElementById('login-overlay');
   if (overlay) overlay.remove();
 
-  const init = me.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
-  document.getElementById('avatar-init').textContent  = init;
+  document.getElementById('avatar-score').textContent = '🎸';
   document.getElementById('welcome-name').textContent = me.name;
+  document.getElementById('welcome-grade-line').textContent = '';
+
+  // Avatar puan/grade bilgisini async yükle (repertoire modülü hazır olunca)
+  if (window.updateWelcomeCard) {
+    window.updateWelcomeCard(me.id);
+  } else {
+    window._pendingAvatarUpdate = me.id;
+  }
 }
 
 // ESKİ doLogout fonksiyonunu tamamen sil, BUNUNLA değiştir:
@@ -613,7 +563,7 @@ async function doLogout() {
 (function init() {
   const sid = localStorage.getItem('gitar_session');
   if (sid) {
-    const found = STUDENTS.find(s => s.id === sid);
+    const found = window.STUDENTS.find(s => s.id === sid);
     if (found) {
       me = found;
       window.me = me;
@@ -681,15 +631,14 @@ window.fetchExtraStudents = async function() {
   return extraStudentsCache;
 };
 
-// Öğretmenin değiştirdiği PIN'leri (sadece koddaki sabit öğrenciler için, extra
-// öğrencilerin PIN'i zaten extra_students içinde tutuluyor) window.STUDENTS listesine uygular.
+// Öğretmenin değiştirdiği PIN hash'lerini STUDENTS_DATA'ya uygular.
 window.applyPinOverrides = async function() {
   try {
     const snap = await get(ref(db, 'pin_overrides'));
     const data = snap.exists() ? snap.val() : {};
     for (const sid in data) {
-      const s = window.STUDENTS.find(x => x.id === sid);
-      if (s) s.pin = data[sid];
+      const s = STUDENTS_DATA.find(x => x.id === sid);
+      if (s) s.pinHash = data[sid]; // Firebase'de artık hash saklıyoruz
     }
   } catch (e) {
     console.error('PIN güncellemeleri yüklenemedi:', e);
@@ -964,19 +913,30 @@ window.changeStudentPin = async function() {
   const msgBox = document.getElementById('settings-msg');
 
   if (!/^\d{4}$/.test(newPin)) { msgBox.innerHTML = '<span style="color:#c0392b;">PIN 4 haneli rakam olmalı.</span>'; return; }
-  const taken = window.STUDENTS.some(s => s.id !== sid && s.pin === newPin);
-  if (taken) { msgBox.innerHTML = '<span style="color:#c0392b;">Bu PIN başka bir öğrencide kayıtlı, farklı bir PIN seçin.</span>'; return; }
 
-  const student = window.STUDENTS.find(s => s.id === sid);
+  const newHash = await window.sha256(newPin);
+  const takenMain = STUDENTS_DATA.some(s => s.id !== sid && s.pinHash === newHash);
+  // Extra liste: plain PIN ile
+  const takenExtra = (extraStudentsCache || []).some(s => s.id !== sid && s.pin === newPin);
+  if (takenMain || takenExtra) {
+    msgBox.innerHTML = '<span style="color:#c0392b;">Bu PIN başka bir öğrencide kayıtlı, farklı bir PIN seçin.</span>';
+    return;
+  }
+
   const isExtra = sid.startsWith('s_new_') || sid.startsWith('s_extra_');
 
   try {
     if (isExtra) {
+      // Extra öğrenciler Firebase'de plain PIN olarak
       await set(ref(db, `extra_students/${sid}/pin`), newPin);
+      const ec = (extraStudentsCache || []).find(s => s.id === sid);
+      if (ec) ec.pin = newPin;
     } else {
-      await set(ref(db, `pin_overrides/${sid}`), newPin);
+      // Ana öğrenciler: hash kaydediyoruz
+      await set(ref(db, `pin_overrides/${sid}`), newHash);
+      const sd = STUDENTS_DATA.find(s => s.id === sid);
+      if (sd) sd.pinHash = newHash;
     }
-    if (student) student.pin = newPin;
     document.getElementById('change-pin-input').value = '';
     msgBox.innerHTML = '<span style="color:var(--green);">✅ PIN güncellendi.</span>';
   } catch (e) {
@@ -1041,7 +1001,8 @@ window.saveNewStudent = async function() {
 
   if (!name) { errBox.textContent = 'Lütfen ad soyad girin.'; return; }
   if (!/^\d{4}$/.test(pin)) { errBox.textContent = 'PIN 4 haneli rakam olmalı.'; return; }
-  const pinTaken = window.STUDENTS.some(s => s.pin === pin) || (extraStudentsCache || []).some(s => s.pin === pin);
+  const newHash = await window.sha256(pin);
+  const pinTaken = STUDENTS_DATA.some(s => s.pinHash === newHash) || (extraStudentsCache || []).some(s => s.pin === pin);
   if (pinTaken) { errBox.textContent = 'Bu PIN zaten kullanılıyor, başka bir PIN seçin.'; return; }
 
   const newId = 's_new_' + Date.now();
@@ -1164,12 +1125,62 @@ function renderLeaderboard() {
 
   lb.innerHTML = rows.map((r, i) => {
     const isMe = meObj && r.sid === meObj.id;
-    return `<div class="lb-row ${isMe ? 'me' : ''}">
+    return `<div class="lb-row ${isMe ? 'me' : ''}" id="${isMe ? 'lb-me-row' : ''}">
       <div class="lb-rank">${i+1}</div>
       <div class="lb-name">${studentName(r.sid)}<span class="lb-grade">Grade ${r.maxGrade}</span></div>
       <div class="lb-pct">${(r.score*100).toFixed(1)} puan</div>
     </div>`;
   }).join('');
+
+  // Kullanıcının kendi satırına otomatik kaydır
+  setTimeout(() => {
+    const myRow = document.getElementById('lb-me-row');
+    if (myRow) myRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 200);
+}
+
+// Welcome card'ı repertoire verisi yüklendikten sonra güncelle
+window.updateWelcomeCard = async function(sid) {
+  await loadRepProgress();
+  if (sid === TEACHER_ID) {
+    document.getElementById('avatar-score').innerHTML = '👨‍🏫';
+    document.getElementById('avatar-score').style.fontSize = '1.2rem';
+    document.getElementById('welcome-grade-line').textContent = 'Öğretmen Paneli';
+    return;
+  }
+
+  const score = calcWeightedScore(sid);
+  const scoreDisplay = (score * 100).toFixed(1);
+
+  // Sıralamadaki yeri
+  const rows = Object.keys(repProgress)
+    .filter(s => s !== TEACHER_ID)
+    .map(s => ({ sid: s, score: calcWeightedScore(s) }))
+    .sort((a, b) => b.score - a.score);
+  const rank = rows.findIndex(r => r.sid === sid) + 1;
+
+  // En yüksek grade
+  const grades = Object.keys(repProgress[sid] || {}).sort((a, b) => +b - +a);
+  const maxGrade = grades[0] || '—';
+
+  // Avatar güncelle
+  const avatarEl = document.getElementById('avatar-score');
+  avatarEl.style.fontSize = score > 0 ? '.68rem' : '1rem';
+  avatarEl.innerHTML = score > 0
+    ? `<span style="display:block;font-size:.55rem;opacity:.8;">puan</span>${scoreDisplay}`
+    : '🎸';
+
+  // Alt bilgi
+  const gradeLine = document.getElementById('welcome-grade-line');
+  if (maxGrade !== '—') {
+    gradeLine.innerHTML = `Grade ${maxGrade}${rank > 0 ? ` &nbsp;·&nbsp; #${rank} sırada` : ''}`;
+  }
+};
+
+// Modül yüklenirken bekleyen avatar güncellemesini tetikle
+if (window._pendingAvatarUpdate) {
+  window.updateWelcomeCard(window._pendingAvatarUpdate);
+  window._pendingAvatarUpdate = null;
 }
 </script>
 </body>
