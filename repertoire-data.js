@@ -52,7 +52,7 @@ const GRADE_PIECES = {
   "Anonim – Fikrimin İnce Gülü",
   "Odell, T. – Another Love",
   "Ponce, M. M. – Preludio",
-  "Bécaud, G. – Nathalie",
+  "Moustaki, G. – Nathalie",
   "Wanders, J. – Rumba",
   "Sor, F. – Andante, Op. 35 No. 1"
 ],
