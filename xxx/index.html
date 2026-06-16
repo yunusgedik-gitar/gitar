@@ -383,29 +383,42 @@
   <div class="dash-inner">
     <div class="rep-topbar">
       <button class="back-btn" onclick="closeRepertoire()">← Panele Dön</button>
-      <div class="rep-mode-toggle" id="rep-mode-toggle" style="display:none;">
-        <button class="rep-mode-btn active" id="mode-btn-mine" onclick="setTeacherMode(false)">Benim Eserlerim</button>
-        <button class="rep-mode-btn" id="mode-btn-teacher" onclick="setTeacherMode(true)">Öğretmen Modu</button>
-      </div>
     </div>
 
     <div class="section-title" id="rep-section-title">📜 Eser Listesi</div>
 
-    <!-- Öğretmen modunda öğrenci seçim grid -->
-    <div class="student-select-grid" id="teacher-student-grid" style="display:none;"></div>
-
     <div class="grade-tabs" id="grade-tabs"></div>
 
     <div id="rep-grade-view">
-      <div class="progress-summary" id="progress-summary">
-        <div class="progress-summary-head">
-          <div class="progress-summary-title" id="progress-summary-title">Grade İlerlemesi</div>
-          <div class="progress-summary-pct" id="progress-summary-pct">0%</div>
-        </div>
-        <div class="progress-bar-track"><div class="progress-bar-fill" id="progress-bar-fill" style="width:0%"></div></div>
+      <!-- Öğretmen modu: grade içi öğrenci sıralaması -->
+      <div id="teacher-grade-ranking" style="display:none;">
+        <div class="leaderboard" id="grade-leaderboard"></div>
       </div>
 
-      <div class="piece-list" id="piece-list"></div>
+      <!-- Öğretmen modu: seçili öğrencinin eser checklist'i (geri dön ile kapanır) -->
+      <div id="teacher-student-detail" style="display:none;">
+        <button class="back-btn" style="margin-bottom:1rem;" onclick="closeStudentDetail()">← Sıralamaya Dön</button>
+        <div class="progress-summary" id="progress-summary">
+          <div class="progress-summary-head">
+            <div class="progress-summary-title" id="progress-summary-title">Grade İlerlemesi</div>
+            <div class="progress-summary-pct" id="progress-summary-pct">0%</div>
+          </div>
+          <div class="progress-bar-track"><div class="progress-bar-fill" id="progress-bar-fill" style="width:0%"></div></div>
+        </div>
+        <div class="piece-list" id="piece-list"></div>
+      </div>
+
+      <!-- Öğrenci modu: doğrudan kendi checklist'i -->
+      <div id="student-self-view" style="display:none;">
+        <div class="progress-summary" id="progress-summary-self">
+          <div class="progress-summary-head">
+            <div class="progress-summary-title" id="progress-summary-title-self">Grade İlerlemesi</div>
+            <div class="progress-summary-pct" id="progress-summary-pct-self">0%</div>
+          </div>
+          <div class="progress-bar-track"><div class="progress-bar-fill" id="progress-bar-fill-self" style="width:0%"></div></div>
+        </div>
+        <div class="piece-list" id="piece-list-self"></div>
+      </div>
     </div>
 
     <div id="rep-leaderboard-view" style="display:none;">
@@ -590,10 +603,10 @@ const db = getDatabase(app);
 
 const TEACHER_ID = 's01'; // Dr. Yunus GEDİK = öğretmen
 let repProgress = {};       // { studentId: { grade: { completed: [bool...] } } }
-let repTeacherMode = false;
+let isTeacherView = false;
 let repActiveGrade = null;
 let repActiveTab = 'grade'; // 'grade' veya 'leaderboard'
-let repActiveStudentId = null; // öğretmen modunda seçili öğrenci
+let repActiveStudentId = null; // öğretmen modunda, checklist'i açık olan öğrenci
 let repLoaded = false;
 
 function getMe() { return window.me || (typeof me !== 'undefined' ? me : null); }
@@ -603,7 +616,6 @@ async function loadRepProgress() {
   try {
     const snap = await get(ref(db, 'repertoire'));
     const fromDb = snap.exists() ? snap.val() : {};
-    // Firebase'de yoksa Excel'den gelen ilk veriyi tohumla
     repProgress = {};
     for (const sid in INITIAL_PROGRESS) {
       repProgress[sid] = JSON.parse(JSON.stringify(INITIAL_PROGRESS[sid]));
@@ -648,6 +660,11 @@ function studentName(sid) {
   return s ? s.name : sid;
 }
 
+// Tüm öğrencilerden, belirli bir grade'de kaydı olanları döndürür
+function studentsInGrade(grade) {
+  return Object.keys(repProgress).filter(sid => sid !== TEACHER_ID && repProgress[sid][grade]);
+}
+
 window.openRepertoire = async function(e) {
   if (e) e.preventDefault();
   await loadRepProgress();
@@ -655,25 +672,18 @@ window.openRepertoire = async function(e) {
   document.getElementById('screen-repertoire').classList.add('active');
 
   const meObj = getMe();
-  const isTeacher = meObj && meObj.id === TEACHER_ID;
-  document.getElementById('rep-mode-toggle').style.display = isTeacher ? 'flex' : 'none';
+  isTeacherView = !!(meObj && meObj.id === TEACHER_ID);
+  repActiveStudentId = isTeacherView ? null : (meObj ? meObj.id : null);
 
-  if (isTeacher) {
-    repTeacherMode = false;
-    renderTeacherStudentGrid();
+  // İlk grade'i belirle
+  let grades;
+  if (isTeacherView) {
+    grades = Object.keys(GRADE_PIECES).sort((a,b)=>+a-+b);
   } else {
-    repActiveStudentId = meObj ? meObj.id : null;
+    grades = Object.keys(repProgress[repActiveStudentId] || {}).sort((a,b)=>+a-+b);
   }
-
-  const grades = Object.keys(repProgress[repActiveStudentId] || {}).sort((a,b)=>+a-+b);
   repActiveGrade = grades.length ? grades[0] : '1';
-  repActiveTab = 'grade';
-  document.getElementById('rep-grade-view').style.display = '';
-  document.getElementById('rep-leaderboard-view').style.display = 'none';
-  document.getElementById('rep-section-title').textContent = '📜 Eser Listesi';
-  renderGradeTabs();
-  renderPieceList();
-  renderLeaderboard();
+  goToGradeTab(repActiveGrade);
 };
 
 window.closeRepertoire = function() {
@@ -681,75 +691,25 @@ window.closeRepertoire = function() {
   document.getElementById('screen-dash').classList.remove('hidden');
 };
 
-window.setTeacherMode = function(on) {
-  repTeacherMode = on;
-  document.getElementById('mode-btn-mine').classList.toggle('active', !on);
-  document.getElementById('mode-btn-teacher').classList.toggle('active', on);
-  document.getElementById('teacher-student-grid').style.display = on ? 'grid' : 'none';
-  if (on) {
-    renderTeacherStudentGrid();
-    if (!repActiveStudentId || repActiveStudentId === TEACHER_ID) {
-      const firstSid = Object.keys(repProgress).find(sid => sid !== TEACHER_ID);
-      repActiveStudentId = firstSid;
-    }
-  } else {
-    repActiveStudentId = TEACHER_ID;
-  }
-  const grades = Object.keys(repProgress[repActiveStudentId] || {}).sort((a,b)=>+a-+b);
-  repActiveGrade = grades.length ? grades[0] : '1';
-  repActiveTab = 'grade';
-  document.getElementById('rep-grade-view').style.display = '';
-  document.getElementById('rep-leaderboard-view').style.display = 'none';
-  document.getElementById('rep-section-title').textContent = '📜 Eser Listesi';
-  renderGradeTabs();
-  renderPieceList();
-};
-
-function renderTeacherStudentGrid() {
-  const grid = document.getElementById('teacher-student-grid');
-  grid.style.display = repTeacherMode ? 'grid' : 'none';
-  if (!repTeacherMode) return;
-  const ids = Object.keys(repProgress).filter(sid => sid !== TEACHER_ID);
-  grid.innerHTML = ids.map(sid => {
-    const grades = Object.keys(repProgress[sid]);
-    let totalDone = 0, totalAll = 0;
-    grades.forEach(g => {
-      const c = repProgress[sid][g].completed;
-      totalAll += c.length; totalDone += c.filter(Boolean).length;
-    });
-    const pct = totalAll ? Math.round(100*totalDone/totalAll) : 0;
-    const active = sid === repActiveStudentId ? 'active' : '';
-    return `<div class="student-select-card ${active}" data-sid="${sid}" onclick="selectTeacherStudent('${sid}')">
-      <span>${studentName(sid)}</span>
-      <span class="ssc-pct">${pct}% tamamlandı</span>
-    </div>`;
-  }).join('');
-}
-
-window.selectTeacherStudent = function(sid) {
-  repActiveStudentId = sid;
-  renderTeacherStudentGrid();
-  const grades = Object.keys(repProgress[sid] || {}).sort((a,b)=>+a-+b);
-  repActiveGrade = grades.length ? grades[0] : '1';
-  repActiveTab = 'grade';
-  document.getElementById('rep-grade-view').style.display = '';
-  document.getElementById('rep-leaderboard-view').style.display = 'none';
-  document.getElementById('rep-section-title').textContent = '📜 Eser Listesi';
-  renderGradeTabs();
-  renderPieceList();
-};
-
 function renderGradeTabs() {
   const tabs = document.getElementById('grade-tabs');
-  const grades = Object.keys(repProgress[repActiveStudentId] || {}).sort((a,b)=>+a-+b);
+  let grades;
+  if (isTeacherView) {
+    grades = Object.keys(GRADE_PIECES).sort((a,b)=>+a-+b);
+  } else {
+    grades = Object.keys(repProgress[repActiveStudentId] || {}).sort((a,b)=>+a-+b);
+  }
   let html = '';
   if (!grades.length) {
-    html = '<p style="color:var(--muted);font-size:.85rem;">Bu öğrenci için eser listesi tanımlı değil.</p>';
+    html = '<p style="color:var(--muted);font-size:.85rem;">Eser listesi tanımlı değil.</p>';
   } else {
     html = grades.map(g => {
-      const pct = Math.round(calcPct(repActiveStudentId, g) * 100);
+      let pctLabel = '';
+      if (!isTeacherView) {
+        pctLabel = `<span class="grade-pct">${Math.round(calcPct(repActiveStudentId, g) * 100)}%</span>`;
+      }
       const active = (repActiveTab === 'grade' && g === repActiveGrade) ? 'active' : '';
-      return `<button class="grade-tab ${active}" onclick="selectGrade('${g}')">Grade ${g}<span class="grade-pct">${pct}%</span></button>`;
+      return `<button class="grade-tab ${active}" onclick="selectGrade('${g}')">Grade ${g}${pctLabel}</button>`;
     }).join('');
   }
   const lbActive = repActiveTab === 'leaderboard' ? 'active' : '';
@@ -757,15 +717,32 @@ function renderGradeTabs() {
   tabs.innerHTML = html;
 }
 
+function showOnly(viewId) {
+  ['teacher-grade-ranking','teacher-student-detail','student-self-view'].forEach(id => {
+    document.getElementById(id).style.display = (id === viewId) ? '' : 'none';
+  });
+}
+
 window.selectGrade = function(g) {
   repActiveGrade = g;
   repActiveTab = 'grade';
-  renderGradeTabs();
-  renderPieceList();
+  goToGradeTab(g);
+};
+
+function goToGradeTab(g) {
   document.getElementById('rep-grade-view').style.display = '';
   document.getElementById('rep-leaderboard-view').style.display = 'none';
   document.getElementById('rep-section-title').textContent = '📜 Eser Listesi';
-};
+  renderGradeTabs();
+
+  if (isTeacherView) {
+    showOnly('teacher-grade-ranking');
+    renderGradeRanking();
+  } else {
+    showOnly('student-self-view');
+    renderSelfPieceList();
+  }
+}
 
 window.selectLeaderboardTab = function() {
   repActiveTab = 'leaderboard';
@@ -776,7 +753,39 @@ window.selectLeaderboardTab = function() {
   document.getElementById('rep-section-title').textContent = '🏆 Genel Sıralama';
 };
 
-function renderPieceList() {
+// ===== Öğretmen: grade içi sıralama =====
+function renderGradeRanking() {
+  const wrap = document.getElementById('grade-leaderboard');
+  const ids = studentsInGrade(repActiveGrade);
+  if (!ids.length) {
+    wrap.innerHTML = '<p style="color:var(--muted);font-size:.85rem;">Bu grade\'de kayıtlı öğrenci yok.</p>';
+    return;
+  }
+  const rows = ids.map(sid => ({ sid, pct: calcPct(sid, repActiveGrade) }))
+    .sort((a,b) => b.pct - a.pct);
+
+  wrap.innerHTML = rows.map((r,i) => {
+    return `<div class="lb-row" style="cursor:pointer;" onclick="openStudentDetail('${r.sid}')">
+      <div class="lb-rank">${i+1}</div>
+      <div class="lb-name">${studentName(r.sid)}</div>
+      <div class="lb-pct">${Math.round(r.pct*100)}%</div>
+    </div>`;
+  }).join('');
+}
+
+window.openStudentDetail = function(sid) {
+  repActiveStudentId = sid;
+  showOnly('teacher-student-detail');
+  renderTeacherPieceList();
+};
+
+window.closeStudentDetail = function() {
+  showOnly('teacher-grade-ranking');
+  renderGradeRanking();
+};
+
+// ===== Öğretmen: seçili öğrencinin checklist'i (tıklanabilir, kaydeder) =====
+function renderTeacherPieceList() {
   const list = document.getElementById('piece-list');
   const summaryTitle = document.getElementById('progress-summary-title');
   const summaryPct = document.getElementById('progress-summary-pct');
@@ -785,7 +794,50 @@ function renderPieceList() {
   const entry = repProgress[repActiveStudentId] && repProgress[repActiveStudentId][repActiveGrade];
   const pieces = (GRADE_PIECES[repActiveGrade] || []);
 
-  document.querySelector('#screen-repertoire .dash-inner').classList.toggle('teacher-mode', repTeacherMode);
+  if (!entry || !pieces.length) {
+    list.innerHTML = '<p style="color:var(--muted);font-size:.85rem;">Bu grade için kayıt bulunamadı.</p>';
+    summaryTitle.textContent = `${studentName(repActiveStudentId)} — Grade ${repActiveGrade}`;
+    summaryPct.textContent = '0%';
+    fill.style.width = '0%';
+    return;
+  }
+
+  const pct = Math.round(calcPct(repActiveStudentId, repActiveGrade) * 100);
+  summaryTitle.textContent = `${studentName(repActiveStudentId)} — Grade ${repActiveGrade} İlerlemesi`;
+  summaryPct.textContent = pct + '%';
+  fill.style.width = pct + '%';
+
+  list.innerHTML = pieces.map((name, i) => {
+    const done = !!entry.completed[i];
+    return `<div class="piece-row ${done ? 'done' : ''}" onclick="togglePiece(${i})">
+      <div class="piece-check">${done ? '✓' : ''}</div>
+      <div class="piece-name">${name}</div>
+      <div class="piece-status">${done ? 'Bitirdi' : 'Bekliyor'}</div>
+    </div>`;
+  }).join('');
+}
+
+window.togglePiece = async function(i) {
+  const entry = repProgress[repActiveStudentId][repActiveGrade];
+  entry.completed[i] = !entry.completed[i];
+  renderTeacherPieceList();
+  try {
+    await set(ref(db, `repertoire/${repActiveStudentId}/${repActiveGrade}`), entry);
+    showSaveToast();
+  } catch (e) {
+    console.error('Kaydedilemedi:', e);
+  }
+};
+
+// ===== Öğrenci: kendi checklist'i (salt okunur) =====
+function renderSelfPieceList() {
+  const list = document.getElementById('piece-list-self');
+  const summaryTitle = document.getElementById('progress-summary-title-self');
+  const summaryPct = document.getElementById('progress-summary-pct-self');
+  const fill = document.getElementById('progress-bar-fill-self');
+
+  const entry = repProgress[repActiveStudentId] && repProgress[repActiveStudentId][repActiveGrade];
+  const pieces = (GRADE_PIECES[repActiveGrade] || []);
 
   if (!entry || !pieces.length) {
     list.innerHTML = '<p style="color:var(--muted);font-size:.85rem;">Bu grade için kayıt bulunamadı.</p>';
@@ -796,35 +848,19 @@ function renderPieceList() {
   }
 
   const pct = Math.round(calcPct(repActiveStudentId, repActiveGrade) * 100);
-  summaryTitle.textContent = `${repTeacherMode ? studentName(repActiveStudentId) + ' — ' : ''}Grade ${repActiveGrade} İlerlemesi`;
+  summaryTitle.textContent = `Grade ${repActiveGrade} İlerlemesi`;
   summaryPct.textContent = pct + '%';
   fill.style.width = pct + '%';
 
   list.innerHTML = pieces.map((name, i) => {
     const done = !!entry.completed[i];
-    const clickAttr = repTeacherMode ? `onclick="togglePiece(${i})"` : '';
-    return `<div class="piece-row ${done ? 'done' : ''}" ${clickAttr}>
+    return `<div class="piece-row ${done ? 'done' : ''}">
       <div class="piece-check">${done ? '✓' : ''}</div>
       <div class="piece-name">${name}</div>
       <div class="piece-status">${done ? 'Bitirdi' : 'Bekliyor'}</div>
     </div>`;
   }).join('');
 }
-
-window.togglePiece = async function(i) {
-  if (!repTeacherMode) return;
-  const entry = repProgress[repActiveStudentId][repActiveGrade];
-  entry.completed[i] = !entry.completed[i];
-  renderPieceList();
-  renderTeacherStudentGrid();
-  try {
-    await set(ref(db, `repertoire/${repActiveStudentId}/${repActiveGrade}`), entry);
-    showSaveToast();
-    renderLeaderboard();
-  } catch (e) {
-    console.error('Kaydedilemedi:', e);
-  }
-};
 
 function showSaveToast() {
   const t = document.getElementById('save-toast');
