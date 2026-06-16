@@ -204,6 +204,8 @@
     .grade-tab:hover { border-color: var(--gold); color: var(--brown); }
     .grade-tab.active { background: var(--brown); color: #fff; border-color: var(--brown); }
     .grade-tab .grade-pct { font-size: .7rem; opacity: .75; margin-left: 4px; }
+    .grade-tab.lb-tab { background: #fff7e8; border-color: var(--gold); color: var(--brown); margin-left: 6px; }
+    .grade-tab.lb-tab.active { background: var(--gold); color: #fff; border-color: var(--gold); }
 
     .progress-summary {
       background: #fff; border: 1px solid var(--border); border-radius: 20px;
@@ -387,25 +389,28 @@
       </div>
     </div>
 
-    <div class="section-title">📜 Eser Listesi</div>
+    <div class="section-title" id="rep-section-title">📜 Eser Listesi</div>
 
     <!-- Öğretmen modunda öğrenci seçim grid -->
     <div class="student-select-grid" id="teacher-student-grid" style="display:none;"></div>
 
     <div class="grade-tabs" id="grade-tabs"></div>
 
-    <div class="progress-summary" id="progress-summary">
-      <div class="progress-summary-head">
-        <div class="progress-summary-title" id="progress-summary-title">Grade İlerlemesi</div>
-        <div class="progress-summary-pct" id="progress-summary-pct">0%</div>
+    <div id="rep-grade-view">
+      <div class="progress-summary" id="progress-summary">
+        <div class="progress-summary-head">
+          <div class="progress-summary-title" id="progress-summary-title">Grade İlerlemesi</div>
+          <div class="progress-summary-pct" id="progress-summary-pct">0%</div>
+        </div>
+        <div class="progress-bar-track"><div class="progress-bar-fill" id="progress-bar-fill" style="width:0%"></div></div>
       </div>
-      <div class="progress-bar-track"><div class="progress-bar-fill" id="progress-bar-fill" style="width:0%"></div></div>
+
+      <div class="piece-list" id="piece-list"></div>
     </div>
 
-    <div class="piece-list" id="piece-list"></div>
-
-    <div class="section-title" style="margin-top:2rem;">🏆 Genel Sıralama</div>
-    <div class="leaderboard" id="leaderboard"></div>
+    <div id="rep-leaderboard-view" style="display:none;">
+      <div class="leaderboard" id="leaderboard"></div>
+    </div>
   </div>
 </div>
 
@@ -587,6 +592,7 @@ const TEACHER_ID = 's01'; // Dr. Yunus GEDİK = öğretmen
 let repProgress = {};       // { studentId: { grade: { completed: [bool...] } } }
 let repTeacherMode = false;
 let repActiveGrade = null;
+let repActiveTab = 'grade'; // 'grade' veya 'leaderboard'
 let repActiveStudentId = null; // öğretmen modunda seçili öğrenci
 let repLoaded = false;
 
@@ -622,6 +628,21 @@ function calcPct(sid, grade) {
   return done / entry.completed.length;
 }
 
+// Genel sıralama puanı: her grade'in kendi katsayısı var (Grade1=0.125 ... Grade8=1.0)
+// Üst grade'lerde aynı yüzde daha değerli sayılır.
+function gradeCoefficient(grade) {
+  return (+grade) * 0.125;
+}
+
+function calcWeightedScore(sid) {
+  const grades = Object.keys(repProgress[sid] || {});
+  let score = 0;
+  grades.forEach(g => {
+    score += calcPct(sid, g) * gradeCoefficient(g);
+  });
+  return score;
+}
+
 function studentName(sid) {
   const s = STUDENTS.find(x => x.id === sid);
   return s ? s.name : sid;
@@ -646,6 +667,10 @@ window.openRepertoire = async function(e) {
 
   const grades = Object.keys(repProgress[repActiveStudentId] || {}).sort((a,b)=>+a-+b);
   repActiveGrade = grades.length ? grades[0] : '1';
+  repActiveTab = 'grade';
+  document.getElementById('rep-grade-view').style.display = '';
+  document.getElementById('rep-leaderboard-view').style.display = 'none';
+  document.getElementById('rep-section-title').textContent = '📜 Eser Listesi';
   renderGradeTabs();
   renderPieceList();
   renderLeaderboard();
@@ -672,6 +697,10 @@ window.setTeacherMode = function(on) {
   }
   const grades = Object.keys(repProgress[repActiveStudentId] || {}).sort((a,b)=>+a-+b);
   repActiveGrade = grades.length ? grades[0] : '1';
+  repActiveTab = 'grade';
+  document.getElementById('rep-grade-view').style.display = '';
+  document.getElementById('rep-leaderboard-view').style.display = 'none';
+  document.getElementById('rep-section-title').textContent = '📜 Eser Listesi';
   renderGradeTabs();
   renderPieceList();
 };
@@ -702,6 +731,10 @@ window.selectTeacherStudent = function(sid) {
   renderTeacherStudentGrid();
   const grades = Object.keys(repProgress[sid] || {}).sort((a,b)=>+a-+b);
   repActiveGrade = grades.length ? grades[0] : '1';
+  repActiveTab = 'grade';
+  document.getElementById('rep-grade-view').style.display = '';
+  document.getElementById('rep-leaderboard-view').style.display = 'none';
+  document.getElementById('rep-section-title').textContent = '📜 Eser Listesi';
   renderGradeTabs();
   renderPieceList();
 };
@@ -709,18 +742,38 @@ window.selectTeacherStudent = function(sid) {
 function renderGradeTabs() {
   const tabs = document.getElementById('grade-tabs');
   const grades = Object.keys(repProgress[repActiveStudentId] || {}).sort((a,b)=>+a-+b);
-  if (!grades.length) { tabs.innerHTML = '<p style="color:var(--muted);font-size:.85rem;">Bu öğrenci için eser listesi tanımlı değil.</p>'; return; }
-  tabs.innerHTML = grades.map(g => {
-    const pct = Math.round(calcPct(repActiveStudentId, g) * 100);
-    const active = g === repActiveGrade ? 'active' : '';
-    return `<button class="grade-tab ${active}" onclick="selectGrade('${g}')">Grade ${g}<span class="grade-pct">${pct}%</span></button>`;
-  }).join('');
+  let html = '';
+  if (!grades.length) {
+    html = '<p style="color:var(--muted);font-size:.85rem;">Bu öğrenci için eser listesi tanımlı değil.</p>';
+  } else {
+    html = grades.map(g => {
+      const pct = Math.round(calcPct(repActiveStudentId, g) * 100);
+      const active = (repActiveTab === 'grade' && g === repActiveGrade) ? 'active' : '';
+      return `<button class="grade-tab ${active}" onclick="selectGrade('${g}')">Grade ${g}<span class="grade-pct">${pct}%</span></button>`;
+    }).join('');
+  }
+  const lbActive = repActiveTab === 'leaderboard' ? 'active' : '';
+  html += `<button class="grade-tab lb-tab ${lbActive}" onclick="selectLeaderboardTab()">🏆 Genel Sıralama</button>`;
+  tabs.innerHTML = html;
 }
 
 window.selectGrade = function(g) {
   repActiveGrade = g;
+  repActiveTab = 'grade';
   renderGradeTabs();
   renderPieceList();
+  document.getElementById('rep-grade-view').style.display = '';
+  document.getElementById('rep-leaderboard-view').style.display = 'none';
+  document.getElementById('rep-section-title').textContent = '📜 Eser Listesi';
+};
+
+window.selectLeaderboardTab = function() {
+  repActiveTab = 'leaderboard';
+  renderGradeTabs();
+  renderLeaderboard();
+  document.getElementById('rep-grade-view').style.display = 'none';
+  document.getElementById('rep-leaderboard-view').style.display = '';
+  document.getElementById('rep-section-title').textContent = '🏆 Genel Sıralama';
 };
 
 function renderPieceList() {
@@ -784,22 +837,18 @@ function renderLeaderboard() {
   const meObj = getMe();
   const rows = Object.keys(repProgress).filter(sid => sid !== TEACHER_ID).map(sid => {
     const grades = Object.keys(repProgress[sid]);
-    let totalDone = 0, totalAll = 0, maxGrade = 0;
-    grades.forEach(g => {
-      const c = repProgress[sid][g].completed;
-      totalAll += c.length; totalDone += c.filter(Boolean).length;
-      if (+g > maxGrade) maxGrade = +g;
-    });
-    const pct = totalAll ? totalDone/totalAll : 0;
-    return { sid, pct, maxGrade };
-  }).sort((a,b) => b.pct - a.pct);
+    let maxGrade = 0;
+    grades.forEach(g => { if (+g > maxGrade) maxGrade = +g; });
+    const score = calcWeightedScore(sid);
+    return { sid, score, maxGrade };
+  }).sort((a,b) => b.score - a.score);
 
   lb.innerHTML = rows.map((r, i) => {
     const isMe = meObj && r.sid === meObj.id;
     return `<div class="lb-row ${isMe ? 'me' : ''}">
       <div class="lb-rank">${i+1}</div>
       <div class="lb-name">${studentName(r.sid)}<span class="lb-grade">Grade ${r.maxGrade}</span></div>
-      <div class="lb-pct">${Math.round(r.pct*100)}%</div>
+      <div class="lb-pct">${(r.score*100).toFixed(1)} puan</div>
     </div>`;
   }).join('');
 }
