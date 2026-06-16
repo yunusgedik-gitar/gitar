@@ -128,16 +128,30 @@
     }
     .welcome-left { display: flex; align-items: center; gap: 10px; }
     .welcome-info { display: flex; flex-direction: column; gap: 2px; }
-    .welcome-grade-line { font-size: .72rem; color: var(--muted); font-weight: 500; }
     .avatar {
-      width: 48px; height: 48px; border-radius: 50%;
-      background: linear-gradient(135deg, var(--gold), #8b5a10);
+      width: 56px; height: 56px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold), #7a4a08);
       display: flex; align-items: center; justify-content: center;
-      flex-direction: column;
-      font-size: .72rem; color: #fff; font-weight: 700;
+      flex-direction: column; gap: 0;
+      color: #fff; font-weight: 900;
       font-family: 'Playfair Display', serif; flex-shrink: 0;
-      line-height: 1.1;
+      box-shadow: 0 4px 14px rgba(184,137,42,.35);
     }
+    .avatar-rank {
+      font-size: 1.25rem; line-height: 1; letter-spacing: -.02em;
+    }
+    .avatar-label {
+      font-size: .5rem; font-weight: 600; opacity: .85; letter-spacing: .06em; text-transform: uppercase; margin-top: 1px;
+    }
+    .welcome-badges { display: flex; gap: 6px; margin-top: 5px; flex-wrap: wrap; align-items: center; }
+    .w-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: .72rem; font-weight: 700; padding: 3px 10px;
+      border-radius: 20px; letter-spacing: .02em; white-space: nowrap;
+    }
+    .w-badge-grade { background: var(--brown); color: #fff; }
+    .w-badge-score { background: #fff7e8; color: var(--gold); border: 1px solid #e8c97a; }
+    .w-badge-rank  { background: var(--green-bg); color: var(--green); border: 1px solid #b0d890; }
     .welcome-name { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700; }
     
     .online-pill { font-size: .75rem; font-weight: 600; background: var(--green-bg); color: var(--green); padding: 5px 14px; border-radius: 20px; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(59,109,17,0.08); }
@@ -222,7 +236,7 @@
     .progress-summary-title { font-family: 'Playfair Display', serif; font-size: 1.15rem; font-weight: 700; }
     .progress-summary-pct { font-size: 1.4rem; font-weight: 700; color: var(--gold); }
     .progress-bar-track { width: 100%; height: 10px; background: var(--cream); border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
-    .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--gold), #8b5a10); border-radius: 8px; transition: width .5s ease; }
+    .progress-bar-fill { height: 100%; background: linear-gradient(90deg, #4caf50, #2e7d32); border-radius: 8px; transition: width .5s ease; }
 
     .piece-list { display: flex; flex-direction: column; gap: 8px; }
     .piece-row {
@@ -246,6 +260,29 @@
     .teacher-mode .piece-row { cursor: pointer; }
     .teacher-mode .piece-check { cursor: pointer; }
     .teacher-mode .piece-row:hover { border-color: var(--gold); transform: translateX(2px); }
+
+    /* Eser aksiyon butonları (öğretmen) */
+    .piece-actions { display: flex; gap: 4px; flex-shrink: 0; margin-left: auto; }
+    .piece-action-btn {
+      font-size: .72rem; padding: 3px 8px; border-radius: 8px; border: 1px solid var(--border);
+      background: #fff; color: var(--muted); cursor: pointer; font-family: inherit;
+      transition: all .15s; white-space: nowrap; font-weight: 600;
+    }
+    .piece-action-btn:hover { border-color: var(--gold); color: var(--brown); background: #fff8ec; }
+    .piece-action-btn.danger:hover { border-color: #e3b3ab; color: #c0392b; background: var(--red-bg); }
+
+    /* Taşı paneli */
+    #move-piece-panel {
+      background: #fff8ec; border: 1px solid #e8c97a; border-radius: 16px;
+      padding: 14px 16px; margin-top: 10px; display: none;
+    }
+    #move-piece-panel.open { display: block; }
+    .move-panel-title { font-size: .82rem; font-weight: 700; color: var(--brown); margin-bottom: 10px; }
+    .move-panel-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+    /* Eser ekleme paneli */
+    #add-piece-panel { margin-top: 12px; }
+    .add-piece-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
 
     .student-select-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px,1fr)); gap: 10px; margin-bottom: 1.4rem; }
     .student-select-card {
@@ -300,7 +337,7 @@
   <div class="login-card">
     <div class="login-logo">🎸</div>
     <div class="login-title">Dr. Yunus GEDİK</div>
-    <div class="login-sub">Klasik Gitar Akademisi</div>
+    <div class="login-sub">Gitar Akademisi</div>
     <div class="gold-line"></div>
 
     <div class="pin-label">Popçular giremez :)</div>
@@ -315,7 +352,6 @@
       autofocus
     />
     <div id="pin-error">&nbsp;</div>
-    <div class="login-hint">Nota Bilmeyen de Giremez. :D </div>
   </div>
 </div>
 
@@ -325,18 +361,17 @@
     <div class="welcome-bar">
       <div class="welcome-left">
         <div class="avatar" id="avatar-init">
-          <span id="avatar-score" style="font-size:.65rem; font-weight:700; line-height:1.1; text-align:center;">🎸</span>
+          <span class="avatar-rank" id="avatar-rank">🎸</span>
+          <span class="avatar-label" id="avatar-label"></span>
         </div>
         <div class="welcome-info">
           <span class="welcome-name" id="welcome-name">Gitar Akademisi</span>
-          <span class="welcome-grade-line" id="welcome-grade-line"></span>
+          <div class="welcome-badges" id="welcome-badges"></div>
         </div>
         <span class="online-pill" id="_gs_active_count">🟢 Canlı Oda...</span>
       </div>
       <button class="logout-btn" onclick="doLogout()">Çıkış Yap</button>
     </div>
-
-    <div class="section-title">🎮 Eğitim Alıştırmaları</div>
 
     <div id="tab-games">
       <div class="game-grid">
@@ -435,6 +470,30 @@
           <div class="progress-bar-track"><div class="progress-bar-fill" id="progress-bar-fill" style="width:0%"></div></div>
         </div>
         <div class="piece-list" id="piece-list"></div>
+
+        <!-- Eser Taşı Paneli -->
+        <div id="move-piece-panel">
+          <div class="move-panel-title">↗ Eseri Başka Grade'e Taşı</div>
+          <div style="font-size:.8rem;color:var(--muted);margin-bottom:8px;" id="move-piece-name-label"></div>
+          <div class="move-panel-row">
+            <select id="move-target-grade" style="padding:9px 14px; border-radius:10px; border:1px solid var(--border); font-family:inherit; font-size:.85rem;"></select>
+            <button class="back-btn" onclick="confirmMovePiece()" style="background:var(--gold);color:#fff;border-color:var(--gold);">Taşı</button>
+            <button class="back-btn" onclick="closeMovePanel()">Vazgeç</button>
+          </div>
+        </div>
+
+        <!-- Eser Ekleme Paneli -->
+        <div id="add-piece-panel">
+          <div class="progress-summary" style="padding:1rem 1.4rem;">
+            <div style="font-size:.85rem;font-weight:700;color:var(--brown);margin-bottom:8px;">➕ Bu Grade'e Yeni Eser Ekle</div>
+            <div class="add-piece-row">
+              <input type="text" id="new-piece-name" placeholder="Eser adı (ör: Tárrega – Recuerdos)" style="flex:1;min-width:180px;padding:9px 14px;border-radius:10px;border:1px solid var(--border);font-family:inherit;font-size:.85rem;">
+              <button class="back-btn" onclick="addCustomPiece()" style="background:var(--green);color:#fff;border-color:var(--green);">Ekle</button>
+            </div>
+            <div id="add-piece-msg" style="font-size:.78rem;margin-top:6px;"></div>
+          </div>
+        </div>
+
         <div id="add-grade-box" style="margin-top:1rem;"></div>
 
         <div class="progress-summary" style="margin-top:1.4rem;">
@@ -539,11 +598,11 @@ function openDashboard() {
   const overlay = document.getElementById('login-overlay');
   if (overlay) overlay.remove();
 
-  document.getElementById('avatar-score').textContent = '🎸';
-  document.getElementById('welcome-name').textContent = me.name;
-  document.getElementById('welcome-grade-line').textContent = '';
+  document.getElementById('avatar-rank').textContent  = '🎸';
+  document.getElementById('avatar-label').textContent = '';
+  document.getElementById('welcome-name').textContent  = me.name;
+  document.getElementById('welcome-badges').innerHTML  = '';
 
-  // Avatar puan/grade bilgisini async yükle (repertoire modülü hazır olunca)
   if (window.updateWelcomeCard) {
     window.updateWelcomeCard(me.id);
   } else {
@@ -679,9 +738,18 @@ async function loadRepProgress() {
 
 function calcPct(sid, grade) {
   const entry = repProgress[sid] && repProgress[sid][grade];
-  if (!entry || !entry.completed || !entry.completed.length) return 0;
-  const done = entry.completed.filter(Boolean).length;
-  return done / entry.completed.length;
+  if (!entry) return 0;
+  const pieces  = GRADE_PIECES[grade] || [];
+  const removed = entry.removedIndices || [];
+  const custom  = entry.customPieces  || [];
+
+  const stdTotal  = pieces.length - removed.length;
+  const stdDone   = (entry.completed || []).filter((v, i) => v && !removed.includes(i)).length;
+  const custTotal = custom.length;
+  const custDone  = custom.filter(p => p.done).length;
+
+  const total = stdTotal + custTotal;
+  return total ? (stdDone + custDone) / total : 0;
 }
 
 // Genel sıralama puanı: her grade'in kendi katsayısı var (Grade1=0.125 ... Grade8=1.0)
@@ -1032,13 +1100,15 @@ window.saveNewStudent = async function() {
 function renderTeacherPieceList() {
   const list = document.getElementById('piece-list');
   const summaryTitle = document.getElementById('progress-summary-title');
-  const summaryPct = document.getElementById('progress-summary-pct');
-  const fill = document.getElementById('progress-bar-fill');
+  const summaryPct   = document.getElementById('progress-summary-pct');
+  const fill         = document.getElementById('progress-bar-fill');
 
-  const entry = repProgress[repActiveStudentId] && repProgress[repActiveStudentId][repActiveGrade];
+  const entry  = repProgress[repActiveStudentId] && repProgress[repActiveStudentId][repActiveGrade];
   const pieces = (GRADE_PIECES[repActiveGrade] || []);
 
-  if (!entry || !pieces.length) {
+  closeMovePanel();
+
+  if (!entry) {
     list.innerHTML = '<p style="color:var(--muted);font-size:.85rem;">Bu grade için kayıt bulunamadı.</p>';
     summaryTitle.textContent = `${studentName(repActiveStudentId)} — Grade ${repActiveGrade}`;
     summaryPct.textContent = '0%';
@@ -1051,14 +1121,39 @@ function renderTeacherPieceList() {
   summaryPct.textContent = pct + '%';
   fill.style.width = pct + '%';
 
-  list.innerHTML = pieces.map((name, i) => {
-    const done = !!entry.completed[i];
+  const removed = entry.removedIndices || [];
+  const custom  = entry.customPieces  || [];
+
+  // Standart eserler (silinmemiş olanlar)
+  const stdRows = pieces.map((name, i) => {
+    if (removed.includes(i)) return '';
+    const done = !!(entry.completed && entry.completed[i]);
     return `<div class="piece-row ${done ? 'done' : ''}" onclick="togglePiece(${i})">
       <div class="piece-check">${done ? '✓' : ''}</div>
       <div class="piece-name">${name}</div>
       <div class="piece-status">${done ? 'Bitirdi' : 'Bekliyor'}</div>
+      <div class="piece-actions" onclick="event.stopPropagation()">
+        <button class="piece-action-btn" onclick="openMovePiece(${i}, false, \`${name.replace(/`/g,"'")}\`)">↗ Taşı</button>
+        <button class="piece-action-btn danger" onclick="deletePiece(${i}, false)">✕ Sil</button>
+      </div>
     </div>`;
   }).join('');
+
+  // Custom (özel eklenen) eserler
+  const custRows = custom.map((p, ci) => {
+    const done = !!p.done;
+    return `<div class="piece-row ${done ? 'done' : ''}" onclick="toggleCustomPiece(${ci})">
+      <div class="piece-check">${done ? '✓' : ''}</div>
+      <div class="piece-name">${p.name} <span style="font-size:.68rem;color:var(--gold);margin-left:4px;">● özel</span></div>
+      <div class="piece-status">${done ? 'Bitirdi' : 'Bekliyor'}</div>
+      <div class="piece-actions" onclick="event.stopPropagation()">
+        <button class="piece-action-btn" onclick="openMovePiece(${ci}, true, \`${p.name.replace(/`/g,"'")}\`)">↗ Taşı</button>
+        <button class="piece-action-btn danger" onclick="deletePiece(${ci}, true)">✕ Sil</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  list.innerHTML = stdRows + custRows;
 }
 
 window.togglePiece = async function(i) {
@@ -1068,9 +1163,123 @@ window.togglePiece = async function(i) {
   try {
     await set(ref(db, `repertoire/${repActiveStudentId}/${repActiveGrade}`), entry);
     showSaveToast();
-  } catch (e) {
-    console.error('Kaydedilemedi:', e);
+  } catch (e) { console.error('Kaydedilemedi:', e); }
+};
+
+window.toggleCustomPiece = async function(ci) {
+  const entry = repProgress[repActiveStudentId][repActiveGrade];
+  if (!entry.customPieces || !entry.customPieces[ci]) return;
+  entry.customPieces[ci].done = !entry.customPieces[ci].done;
+  renderTeacherPieceList();
+  try {
+    await set(ref(db, `repertoire/${repActiveStudentId}/${repActiveGrade}`), entry);
+    showSaveToast();
+  } catch (e) { console.error('Kaydedilemedi:', e); }
+};
+
+// Eser sil
+window.deletePiece = async function(idx, isCustom) {
+  const entry = repProgress[repActiveStudentId][repActiveGrade];
+  if (isCustom) {
+    if (!confirm('Bu özel eseri listeden kaldırmak istiyor musunuz?')) return;
+    entry.customPieces = (entry.customPieces || []).filter((_, ci) => ci !== idx);
+  } else {
+    if (!confirm('Bu eseri bu öğrencinin listesinden kaldırmak istiyor musunuz?')) return;
+    entry.removedIndices = [...(entry.removedIndices || []), idx];
   }
+  renderTeacherPieceList();
+  try {
+    await set(ref(db, `repertoire/${repActiveStudentId}/${repActiveGrade}`), entry);
+    showSaveToast();
+  } catch (e) { console.error('Silinemedi:', e); }
+};
+
+// Taşı: paneli aç
+let _movePieceIdx = null;
+let _movePieceIsCustom = false;
+
+window.openMovePiece = function(idx, isCustom, name) {
+  _movePieceIdx = idx;
+  _movePieceIsCustom = isCustom;
+  const panel = document.getElementById('move-piece-panel');
+  document.getElementById('move-piece-name-label').textContent = `"${name}"`;
+  const allGrades = Object.keys(GRADE_PIECES).sort((a,b) => +a - +b);
+  const select = document.getElementById('move-target-grade');
+  select.innerHTML = allGrades
+    .filter(g => g !== repActiveGrade)
+    .map(g => `<option value="${g}">Grade ${g}</option>`).join('');
+  panel.classList.add('open');
+};
+
+window.closeMovePanel = function() {
+  const panel = document.getElementById('move-piece-panel');
+  if (panel) panel.classList.remove('open');
+  _movePieceIdx = null;
+};
+
+window.confirmMovePiece = async function() {
+  const toGrade = document.getElementById('move-target-grade').value;
+  const sid = repActiveStudentId;
+  const fromGrade = repActiveGrade;
+  const fromEntry = repProgress[sid][fromGrade];
+  if (!fromEntry || _movePieceIdx === null) return;
+
+  // Kaynak eserin adını ve completion durumunu al
+  let pieceName, pieceDone;
+  if (_movePieceIsCustom) {
+    const cp = (fromEntry.customPieces || [])[_movePieceIdx];
+    if (!cp) return;
+    pieceName = cp.name;
+    pieceDone = !!cp.done;
+    fromEntry.customPieces = fromEntry.customPieces.filter((_, ci) => ci !== _movePieceIdx);
+  } else {
+    const pieces = GRADE_PIECES[fromGrade] || [];
+    pieceName = pieces[_movePieceIdx];
+    pieceDone = !!(fromEntry.completed && fromEntry.completed[_movePieceIdx]);
+    fromEntry.removedIndices = [...(fromEntry.removedIndices || []), _movePieceIdx];
+  }
+
+  // Hedef grade'e ekle (yoksa oluştur)
+  repProgress[sid][toGrade] = repProgress[sid][toGrade] || {
+    completed: (GRADE_PIECES[toGrade] || []).map(() => false)
+  };
+  const toEntry = repProgress[sid][toGrade];
+  toEntry.customPieces = toEntry.customPieces || [];
+  toEntry.customPieces.push({ name: pieceName, done: pieceDone });
+
+  closeMovePanel();
+  renderTeacherPieceList();
+  renderAddGradeBox();
+  renderGradeTabs();
+
+  try {
+    await set(ref(db, `repertoire/${sid}/${fromGrade}`), fromEntry);
+    await set(ref(db, `repertoire/${sid}/${toGrade}`), repProgress[sid][toGrade]);
+    showSaveToast();
+  } catch (e) { console.error('Taşıma hatası:', e); }
+};
+
+// Özel eser ekle
+window.addCustomPiece = async function() {
+  const nameEl = document.getElementById('new-piece-name');
+  const msgEl  = document.getElementById('add-piece-msg');
+  const name   = nameEl.value.trim();
+  if (!name) { msgEl.innerHTML = '<span style="color:#c0392b;">Eser adı boş olamaz.</span>'; return; }
+
+  const entry = repProgress[repActiveStudentId][repActiveGrade];
+  if (!entry) { msgEl.innerHTML = '<span style="color:#c0392b;">Grade kaydı bulunamadı.</span>'; return; }
+  entry.customPieces = entry.customPieces || [];
+  entry.customPieces.push({ name, done: false });
+
+  nameEl.value = '';
+  msgEl.innerHTML = '<span style="color:var(--green);">✅ Eser eklendi.</span>';
+  setTimeout(() => { msgEl.innerHTML = ''; }, 2000);
+
+  renderTeacherPieceList();
+  try {
+    await set(ref(db, `repertoire/${repActiveStudentId}/${repActiveGrade}`), entry);
+    showSaveToast();
+  } catch (e) { console.error('Eser eklenemedi:', e); }
 };
 
 // ===== Öğrenci: kendi checklist'i (salt okunur) =====
@@ -1142,10 +1351,15 @@ function renderLeaderboard() {
 // Welcome card'ı repertoire verisi yüklendikten sonra güncelle
 window.updateWelcomeCard = async function(sid) {
   await loadRepProgress();
+
+  const rankEl   = document.getElementById('avatar-rank');
+  const labelEl  = document.getElementById('avatar-label');
+  const badgesEl = document.getElementById('welcome-badges');
+
   if (sid === TEACHER_ID) {
-    document.getElementById('avatar-score').innerHTML = '👨‍🏫';
-    document.getElementById('avatar-score').style.fontSize = '1.2rem';
-    document.getElementById('welcome-grade-line').textContent = 'Öğretmen Paneli';
+    rankEl.textContent  = '👨‍🏫';
+    labelEl.textContent = '';
+    badgesEl.innerHTML  = '<span class="w-badge w-badge-grade">Öğretmen Paneli</span>';
     return;
   }
 
@@ -1161,20 +1375,25 @@ window.updateWelcomeCard = async function(sid) {
 
   // En yüksek grade
   const grades = Object.keys(repProgress[sid] || {}).sort((a, b) => +b - +a);
-  const maxGrade = grades[0] || '—';
+  const maxGrade = grades[0];
 
-  // Avatar güncelle
-  const avatarEl = document.getElementById('avatar-score');
-  avatarEl.style.fontSize = score > 0 ? '.68rem' : '1rem';
-  avatarEl.innerHTML = score > 0
-    ? `<span style="display:block;font-size:.55rem;opacity:.8;">puan</span>${scoreDisplay}`
-    : '🎸';
-
-  // Alt bilgi
-  const gradeLine = document.getElementById('welcome-grade-line');
-  if (maxGrade !== '—') {
-    gradeLine.innerHTML = `Grade ${maxGrade}${rank > 0 ? ` &nbsp;·&nbsp; #${rank} sırada` : ''}`;
+  if (!maxGrade) {
+    rankEl.textContent  = '🎸';
+    labelEl.textContent = '';
+    badgesEl.innerHTML  = '';
+    return;
   }
+
+  // Avatar: rank numarası
+  rankEl.textContent  = `#${rank}`;
+  labelEl.textContent = 'sıra';
+
+  // Badges: Grade + puan
+  badgesEl.innerHTML = `
+    <span class="w-badge w-badge-grade">Grade ${maxGrade}</span>
+    <span class="w-badge w-badge-score">⭐ ${scoreDisplay} puan</span>
+    ${rank <= 3 ? '<span class="w-badge w-badge-rank">🏆 İlk 3</span>' : ''}
+  `;
 };
 
 // Modül yüklenirken bekleyen avatar güncellemesini tetikle
