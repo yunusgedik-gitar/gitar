@@ -439,6 +439,8 @@
               <button class="back-btn" onclick="changeStudentPin()">PIN'i Değiştir</button>
             </div>
             <div id="settings-msg" style="font-size:.82rem;"></div>
+            <hr style="border:none; border-top:1px solid var(--border); margin:.4rem 0;">
+            <button class="back-btn" id="delete-student-btn" onclick="deleteEntireStudent()" style="display:none; color:#fff; background:#c0392b; border-color:#c0392b;">🗑️ Bu Öğrenciyi Sistemden Tamamen Sil</button>
           </div>
         </div>
       </div>
@@ -763,11 +765,22 @@ function studentsInGrade(grade) {
 window.openRepertoire = async function(e) {
   if (e) e.preventDefault();
   await loadRepProgress();
-  document.getElementById('screen-dash').classList.add('hidden');
-  document.getElementById('screen-repertoire').classList.add('active');
 
   const meObj = getMe();
   isTeacherView = !!(meObj && meObj.id === TEACHER_ID);
+
+  if (isTeacherView) {
+    // Öğretmen sıralamayı/öğrenci adlarını doğru görsün diye, henüz STUDENTS
+    // dizisinde olmayan (yeni eklenmiş) öğrencileri Firebase'den çekip ekle.
+    const extra = await window.fetchExtraStudents();
+    extra.forEach(s => {
+      if (!window.STUDENTS.find(x => x.id === s.id)) window.STUDENTS.push(s);
+    });
+  }
+
+  document.getElementById('screen-dash').classList.add('hidden');
+  document.getElementById('screen-repertoire').classList.add('active');
+
   repActiveStudentId = isTeacherView ? null : (meObj ? meObj.id : null);
 
   // İlk grade'i belirle
@@ -876,6 +889,8 @@ window.openStudentDetail = function(sid) {
   document.getElementById('delete-grade-btn').textContent = `🗑️ Grade ${repActiveGrade} Kaydını Sil`;
   document.getElementById('change-pin-input').value = '';
   document.getElementById('settings-msg').textContent = '';
+  const isExtra = sid.startsWith('s_new_') || sid.startsWith('s_extra_');
+  document.getElementById('delete-student-btn').style.display = isExtra ? '' : 'none';
 };
 
 window.closeStudentDetail = function() {
@@ -970,6 +985,38 @@ window.changeStudentPin = async function() {
     console.error('PIN değiştirilemedi:', e);
     msgBox.innerHTML = '<span style="color:#c0392b;">Kaydedilemedi, bağlantınızı kontrol edin.</span>';
   }
+};
+
+window.deleteEntireStudent = async function() {
+  const sid = repActiveStudentId;
+  const isExtra = sid.startsWith('s_new_') || sid.startsWith('s_extra_');
+  if (!isExtra) {
+    document.getElementById('settings-msg').innerHTML = '<span style="color:#c0392b;">Bu öğrenci ana listede tanımlı, sistemden tamamen silinemez.</span>';
+    return;
+  }
+  const name = studentName(sid);
+  if (!confirm(`${name} adlı öğrenciyi sistemden TAMAMEN silmek istediğinize emin misiniz?\n\nTüm grade kayıtları ve giriş bilgisi kalıcı olarak silinecek. Bu işlem geri alınamaz.`)) return;
+
+  try {
+    await remove(ref(db, `extra_students/${sid}`));
+    await remove(ref(db, `repertoire/${sid}`));
+  } catch (e) {
+    console.error('Öğrenci silinemedi:', e);
+    document.getElementById('settings-msg').innerHTML = '<span style="color:#c0392b;">Silinemedi, bağlantınızı kontrol edin.</span>';
+    return;
+  }
+
+  // Yerel listelerden de temizle
+  const idx = window.STUDENTS.findIndex(s => s.id === sid);
+  if (idx !== -1) window.STUDENTS.splice(idx, 1);
+  if (extraStudentsCache) {
+    const eidx = extraStudentsCache.findIndex(s => s.id === sid);
+    if (eidx !== -1) extraStudentsCache.splice(eidx, 1);
+  }
+  delete repProgress[sid];
+
+  showSaveToast();
+  closeStudentDetail();
 };
 
 // ===== Öğretmen: yeni öğrenci ekleme =====
