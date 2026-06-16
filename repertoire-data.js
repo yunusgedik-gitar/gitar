@@ -75,15 +75,20 @@ const GRADE_PIECES = {
 ],
 "4": [
   "Tárrega, F. – Etude in E Minor",
-  "Carulli, F. – Allegretto, Op. 241 No. 14",
+  "Carulli, F. – Allegretto Op. 241 No. 14",
   "Giuliani, M. – Op. 50 No. 7",
   "Vivaldi, A. – Concerto in D Major RV 93 II: Largo",
   "Sor, F. – Op. 35 No. 22 (Segovia Study No. 5)",
-  "Bach, J. S. – Minuet in G Major, BWV Anh. 114",
-  "Carulli, F. – Rondo, Op. 241 No. 34",
+  "Petzold, C. – Minuet in G Major",
+  "Carulli, F. – Rondo Op. 241 No. 34",
   "Giuliani, M. – Op. 100 No. 13",
   "Brouwer, L. – Estudio Sencillo No. VI",
-  "Anonim – Historia de un Amor"
+  "Anonim – Historia de un Amor",
+  "Paganini, N. – Allegretto (from Sonata in F, MS 84 No. 6)",
+  "Carcassi, M. – Pastorale (No. 16 from 24 Pezzi Op. 21)",
+  "Ferrer, J. – Vals in E minor (No. 11 from Colección 3a de Ejercicios)",
+  "Sor, F. – Petite Pièce in D (No. 14 from 24 Pièces Progressives Op. 44)",
+  "Brouwer, L. – Étude No. 8 (from Études Simples)"
 ],
 "5": [
   "Anonim (19th C) – Romance",
