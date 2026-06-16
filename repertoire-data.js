@@ -82,7 +82,7 @@ const GRADE_PIECES = {
   "Petzold, C. – Minuet in G Major",
   "Carulli, F. – Rondo Op. 241 No. 34",
   "Giuliani, M. – Op. 100 No. 13",
-  "Brouwer, L. – Estudio Sencillo No. VI",
+  "Brouwer, L. – Étude No. 6 (from Études Simples)",
   "Anonim – Historia de un Amor",
   "Paganini, N. – Allegretto (from Sonata in F, MS 84 No. 6)",
   "Carcassi, M. – Pastorale (No. 16 from 24 Pezzi Op. 21)",
