@@ -51,7 +51,7 @@ const GRADE_PIECES = {
   "Fenerbahçe – 100. Yıl Marşı",
   "Anonim – Fikrimin İnce Gülü",
   "Odell, T. – Another Love",
-  "Ponce, M. M. – Preludio",
+  "Ponce, M. – Preludio",
   "Moustaki, G. – Nathalie",
   "Wanders, J. – Rumba",
   "Sor, F. – Andante, Op. 35 No. 1"
@@ -134,7 +134,7 @@ const GRADE_PIECES = {
   "Giuliani, M. – Andantino Op. 111 No. 5",
   "Tárrega, F. – Capricho Árabe",
   "Villa-Lobos, H. – Valsa-Choro",
-  "Ponce, M. M. – Campo (from Sonatina Meridional)",
+  "Ponce, M. – Campo (from Sonatina Meridional)",
   "Barrios, A. – Preludio Saudade (from La Catedral)",
   "Lauro, A. – Natalia (Valse Criollo)",
   "Sor, F. – Introduction and Variations on a Theme by Mozart",
