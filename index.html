@@ -3,748 +3,1483 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
-  <title>Nota Okuma Egzersizi – Klasik Gitar</title>
-  <script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.2/build/cjs/vexflow.js"></script>
+  <title>🎸 Dr. Yunus GEDİK – Gitar Akademisi</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght=0,600;1,400&family=Lato:wght=300;400;700&display=swap');
-
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    :root {
+      --cream: #f7f4ef;
+      --brown: #2c1f14;
+      --gold:  #b8892a;
+      --muted: #7a6a5a;
+      --border: #e2d9cc;
+      --green: #3b6d11;
+      --green-bg: #eaf3de;
+      --red: #a32d2d;
+      --red-bg: #fdf0f0;
+    }
+
     body {
-      font-family: 'Lato', sans-serif;
-      background: #faf6ed;
+      font-family: 'DM Sans', sans-serif;
+      background: var(--cream);
+      color: var(--brown);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 1.4rem 1rem 2.5rem;
-      color: #5a3e2b;
-      overflow-x: hidden; 
     }
 
-    header { text-align: center; margin-bottom: 1.2rem; }
-    header h1 { font-family: 'Playfair Display', serif; font-size: 1.45rem; font-weight: 600; color: #5a3e2b; }
-    header p  { font-size: 0.8rem; color: #b09070; margin-top: 0.3rem; font-style: italic; }
+    #login-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      background: rgba(247, 244, 239, 0.40);
+      backdrop-filter: blur(14px) saturate(1.2);
+      -webkit-backdrop-filter: blur(14px) saturate(1.2);
+      animation: fadeIn .3s ease both;
+    }
 
-    #app { width: 100%; max-width: 550px; }
+    @keyframes fadeIn  { from{opacity:0} to{opacity:1} }
+    @keyframes fadeOut { from{opacity:1} to{opacity:0} }
+    #login-overlay.hiding {
+      animation: fadeOut .25s ease forwards;
+      pointer-events: none;
+    }
 
-    /* ── 🎸 TEL SEÇİM PANELİ STİLLERİ ── */
-    .filter-card {
-      background: #fff;
-      border: 1.5px solid #e8e0d5;
-      border-radius: 20px;
-      padding: 1rem;
-      margin-bottom: 1rem;
-      box-shadow: 0 4px 20px rgba(90,62,43,0.04);
+    .login-card {
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid rgba(226, 217, 204, 0.9);
+      border-radius: 28px;
+      padding: 2.75rem 2.25rem 2.25rem;
+      box-shadow: 0 24px 64px rgba(44, 31, 20, 0.18);
+      width: 100%;
+      max-width: 340px;
       text-align: center;
-    }
-    .filter-title {
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: #b09070;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 0.75rem;
-    }
-    .string-buttons {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-bottom: 0.85rem;
-    }
-    .string-btn {
-      width: 42px;
-      height: 42px;
-      border-radius: 50%;
-      border: 1.5px solid #d4c4b0;
-      background: #fff;
-      color: #5a3e2b;
-      font-size: 1.1rem;
-      font-weight: 700;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.15s ease;
-    }
-    .string-btn.all-btn {
-      width: auto;
-      height: 42px;
-      padding: 0 16px;
-      border-radius: 20px;
-      font-size: 0.9rem;
-    }
-    .string-btn.active {
-      background: #5a3e2b;
-      border-color: #5a3e2b;
-      color: #fff;
-      box-shadow: 0 4px 10px rgba(90,62,43,0.2);
+      animation: popIn .35s cubic-bezier(.34,1.56,.64,1) both;
     }
 
-    .action-buttons-wrap {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
+    @keyframes popIn {
+      from { opacity:0; transform:scale(.88) translateY(12px); }
+      to   { opacity:1; transform:scale(1)   translateY(0);    }
     }
 
-    .start-exercise-btn {
+    .login-logo { font-size: 2.6rem; line-height: 1; margin-bottom: .6rem; }
+    .login-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.45rem; font-weight: 700;
+      color: var(--brown); margin-bottom: .25rem;
+    }
+    .login-sub { font-size: .78rem; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 2rem; }
+    .gold-line { width: 40px; height: 2px; background: var(--gold); margin: .8rem auto 2rem; border-radius: 2px; }
+
+    .pin-label { font-size: .78rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: .9rem; }
+
+    #pin-input {
       width: 100%;
-      padding: 10px;
-      font-size: 0.95rem;
+      height: 56px;
+      border: 2px solid var(--border);
+      border-radius: 16px;
+      background: var(--cream);
+      font-size: 1.8rem;
       font-weight: 700;
-      border-radius: 12px;
-      border: 1.5px solid #d4a373;
-      background: #f5e6d3;
-      color: #5a3e2b;
-      cursor: pointer;
-      transition: all 0.12s;
-    }
-    .start-race-btn {
-      border: 1.5px solid #e24b4a;
-      background: #fdf0f0;
-      color: #a32d2d;
-    }
-    .start-exercise-btn:disabled {
-      background: #f5f5f5;
-      border-color: #ddd;
-      color: #aaa;
-      cursor: not-allowed;
-    }
-    @media (hover: hover) {
-      #listen-btn:hover { background: #f5e6d3; border-color: #c4a88a; }
-      .start-exercise-btn:hover:not(:disabled) { background: #ebd3b8; }
-      .start-race-btn:hover:not(:disabled) { background: #f9d5d5; }
-      .back-to-menu-btn:hover { background: #f5e6d3; border-color: #d4c4b0; color: #5a3e2b; }
-      .ctrl-btn:hover:not(:disabled) { background: #f5e6d3; }
-      .ctrl-btn.primary:hover:not(:disabled) { background: #ebd3b8; }
-    }
-
-    /* ── ⏱️ GERİ SAYIM SAYACI VE MENÜ ÜST ALANI ── */
-    .top-bar-exercise {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      width: 100%;
-      margin-bottom: 0.85rem;
-      min-height: 38px;
-    }
-
-    .back-to-menu-btn {
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: #b09070;
-      background: #fff;
-      border: 1.5px solid #e8e0d5;
-      padding: 6px 14px;
-      border-radius: 30px;
-      cursor: pointer;
+      letter-spacing: .4em;
+      text-align: center;
+      color: var(--brown);
       font-family: inherit;
-      transition: all 0.12s;
-      box-shadow: 0 2px 8px rgba(90,62,43,0.02);
-    }
-    #timer-display {
-      font-size: 1rem;
-      font-weight: 700;
-      color: #e24b4a;
-      background: #fdf0f0;
-      border: 1.5px solid #f9d5d5;
-      padding: 6px 16px;
-      border-radius: 30px;
-      display: none;
-      box-shadow: 0 2px 8px rgba(226,75,74,0.05);
-    }
-
-    /* Egzersiz Alanı Kutusu */
-    #exercise-area { display: none; text-align: center; }
-
-    .card {
-      background: #fff;
-      border: 1.5px solid #e8e0d5;
-      border-radius: 20px;
-      padding: 1.25rem 1.25rem 0.5rem;
-      margin-bottom: 0.85rem;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      box-shadow: 0 4px 20px rgba(90,62,43,0.04);
-    }
-
-    .card-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      width: 100%;
-      margin-bottom: 0.25rem;
-    }
-
-    .card-label { font-size: 0.8rem; color: #b09070; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
-
-    #listen-btn {
-      display: flex; align-items: center; gap: 5px;
-      font-size: 0.8rem; padding: 6px 14px;
-      border-radius: 10px; border: 1.5px solid #d4c4b0;
-      background: #fff; color: #5a3e2b; font-weight: 700;
-      cursor: pointer; font-family: inherit;
-      transition: all 0.12s;
-    }
-    #listen-btn.playing { border-color: #6b8c42; color: #3b6d11; background: #eaf3de; }
-
-    #notation { 
-      width: 100%; 
-      display: flex; 
-      justify-content: center; 
-      overflow: hidden; 
-    }
-    #notation svg { max-width: 100%; }
-
-    #hint { font-size: 0.78rem; color: #b09070; text-align: center; margin-bottom: 1rem; font-style: italic; }
-
-    .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 0.75rem; }
-
-    .cbtn {
-      padding: 14px 10px; 
-      font-size: 1.8rem;   
-      font-weight: 700;    
-      border-radius: 14px; 
-      border: 1.5px solid #d4c4b0;
-      background: #fff; 
-      color: #5a3e2b;
-      cursor: pointer; 
-      text-align: center; 
-      font-family: inherit;
-      transition: background 0.12s, border-color 0.12s, transform 0.08s, box-shadow 0.12s;
-      -webkit-tap-highlight-color: transparent;
-      -webkit-appearance: none;
       outline: none;
+      transition: border-color .2s, box-shadow .2s;
+      padding: 0 1rem;
+      -webkit-text-security: disc;
     }
-    @media (hover: hover) {
-      .cbtn:hover:not(:disabled) { background: #f5e6d3; border-color: #c4a88a; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(90,62,43,0.08); }
+    #pin-input:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(184,137,42,.15);
     }
-    .cbtn:active:not(:disabled) { transform: scale(0.97); box-shadow: none; }
-    .cbtn.correct { background: #eaf3de; border-color: #6b8c42; color: #3b6d11; }
-    .cbtn.wrong   { background: #fdf0f0; border-color: #e24b4a; color: #a32d2d; }
-    .cbtn:disabled { cursor: default; transform: none; box-shadow: none; }
+    #pin-input::placeholder { color: var(--border); letter-spacing: .3em; font-size: 1.5rem; }
 
-    #feedback { text-align: center; font-size: 0.92rem; font-weight: 700; min-height: 22px; margin-bottom: 0.6rem; padding: 0 5px; }
-    #feedback.ok { color: #3b6d11; }
-    #feedback.no { color: #a32d2d; }
-
-    #progress-bar-wrap { height: 5px; background: #ede6d8; border-radius: 3px; margin-bottom: 0.8rem; overflow: hidden; display: none; border: 1px solid #e0d8c8; }
-    #progress-bar { height: 100%; width: 100%; background: linear-gradient(90deg, #8cb85f, #52a050); border-radius: 3px; transition: width 0.5s linear; }
-
-    /* ── 🎛️ KONTROL ALANI ── */
-    .controls {
-      display: flex;
-      gap: 10px;
-      margin-top: 0.85rem;
-      width: 100%;
-    }
-    .ctrl-btn {
-      flex: 1;
-      padding: 12px;
-      font-size: 0.9rem;
-      font-weight: 700;
-      border-radius: 12px;
-      border: 1.5px solid #d4c4b0;
-      background: #fff;
-      color: #5a3e2b;
-      cursor: pointer;
-      font-family: inherit;
-      transition: all 0.12s;
-    }
-    .ctrl-btn.primary {
-      background: #f5e6d3;
-      border-color: #d4a373;
-    }
-    .ctrl-btn:disabled {
-      background: #f5f5f5;
-      border-color: #e0e0e0;
-      color: #b0b0b0;
-      cursor: not-allowed;
+    #pin-error {
+      margin-top: .9rem;
+      font-size: .82rem;
+      font-weight: 600;
+      color: var(--red);
+      min-height: 20px;
+      transition: opacity .2s;
     }
 
-    /* ── 🏆 SKOR EKRANI STİLİ ── */
-    .result-card {
-      background: #fff;
-      border: 2px solid #d4a373;
-      border-radius: 20px;
-      padding: 2.2rem 1.5rem;
-      text-align: center;
-      box-shadow: 0 8px 30px rgba(90,62,43,0.1);
+    .login-hint { font-size: .72rem; color: var(--muted); margin-top: 1.25rem; }
+
+    @keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-8px)} 40%,80%{transform:translateX(8px)} }
+    .shake { animation: shake .35s ease; }
+
+    #screen-dash { width: 100%; }
+    .dash-inner { width: 100%; max-width: 920px; margin: 0 auto; padding: 1.5rem 1.25rem 4rem; }
+
+    .welcome-bar {
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+      background: #fff; border: 1px solid var(--border); border-radius: 18px;
+      padding: 1rem 1.4rem; margin-bottom: 1.4rem;
+      box-shadow: 0 2px 14px rgba(44,31,20,.05);
     }
-    .result-card h2 { font-family: 'Playfair Display', serif; font-size: 1.6rem; color: #5a3e2b; margin-bottom: 0.5rem; }
-    .result-rank { font-size: 1.25rem; font-weight: 700; color: #d4a373; background: #faf6ed; display: inline-block; padding: 6px 18px; border-radius: 30px; margin-top: 0.5rem; border: 1px dashed #d4c4b0; }
-    .result-score { font-size: 3.5rem; font-weight: 700; color: #6b8c42; margin: 0.8rem 0; }
-    .result-text { font-size: 0.95rem; color: #5a3e2b; margin-bottom: 1.5rem; font-style: italic; line-height: 1.4rem; padding: 0 10px; }
-
-    footer { margin-top: 2.5rem; font-size: 0.75rem; color: #c4b5a0; text-align: center; }
-
-    @media (max-width: 400px) {
-      .cbtn { font-size: 1.6rem; padding: 12px 6px; }
-      .controls { flex-direction: column; gap: 8px; }
+    .welcome-left { display: flex; align-items: center; gap: 10px; }
+    .welcome-info { display: flex; flex-direction: column; gap: 2px; }
+    .avatar {
+      width: 56px; height: 56px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold), #7a4a08);
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 0;
+      color: #fff; font-weight: 900;
+      font-family: 'Playfair Display', serif; flex-shrink: 0;
+      box-shadow: 0 4px 14px rgba(184,137,42,.35);
     }
-	.site-footer {
-  display: flex;
-  justify-content: center;
-  gap: 22px;
-  margin-top: 2.5rem;
-}
+    .avatar-rank {
+      font-size: 1.25rem; line-height: 1; letter-spacing: -.02em;
+    }
+    .avatar-label {
+      font-size: .5rem; font-weight: 600; opacity: .85; letter-spacing: .06em; text-transform: uppercase; margin-top: 1px;
+    }
+    .welcome-badges { display: flex; gap: 6px; margin-top: 5px; flex-wrap: wrap; align-items: center; }
+    .w-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: .72rem; font-weight: 700; padding: 3px 10px;
+      border-radius: 20px; letter-spacing: .02em; white-space: nowrap;
+    }
+    .w-badge-grade { background: var(--brown); color: #fff; }
+    .w-badge-score { background: #fff7e8; color: var(--gold); border: 1px solid #e8c97a; }
+    .w-badge-rank  { background: var(--green-bg); color: var(--green); border: 1px solid #b0d890; }
+    .welcome-name { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700; }
+    
+    .online-pill { font-size: .75rem; font-weight: 600; background: var(--green-bg); color: var(--green); padding: 5px 14px; border-radius: 20px; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(59,109,17,0.08); }
+    #online-badges-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .online-name-badge {
+      font-size: .75rem; font-weight: 600;
+      background: var(--green-bg); color: var(--green);
+      padding: 4px 11px; border-radius: 20px;
+      display: inline-flex; align-items: center; gap: 5px;
+      box-shadow: 0 2px 6px rgba(59,109,17,0.08);
+      border: 1px solid #b0d890;
+      white-space: nowrap;
+    }
+    
+    .logout-btn { font-size: .78rem; color: var(--muted); background: none; border: 1px solid var(--border); padding: 6px 14px; border-radius: 20px; cursor: pointer; font-family: inherit; transition: all .15s; }
+    .logout-btn:hover { background: var(--red-bg); color: var(--red); border-color: #e8b8b8; }
 
-.site-footer a {
-  color: #b0a392;
-  font-size: 2.2rem;
-  transition: all .2s ease;
-}
+    .section-title { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 700; margin: 1rem 0 1.2rem 0; letter-spacing: 0.02em; color: var(--brown); }
 
-.site-footer a:hover {
-  color: var(--gold);
-  transform: translateY(-2px);
-}
+    .game-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.2rem; }
+    .card {
+      background: #fff; border: 1px solid var(--border); border-radius: 20px;
+      padding: 2rem 1.75rem; cursor: pointer; text-decoration: none; color: inherit;
+      display: flex; flex-direction: column; gap: 1rem;
+      position: relative; overflow: hidden;
+      transition: transform .2s, box-shadow .2s, border-color .2s;
+    }
+    .card::before { content:''; position:absolute; top:0;left:0;right:0; height:3px; background:var(--gold); opacity:0; transition:opacity .2s; }
+    .card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(44, 31, 20, 0.08); border-color: #c8b8a8; }
+    .card:hover::before { opacity: 1; }
+    .card-icon { font-size: 2.2rem; }
+    .card-title { font-family: 'Playfair Display', serif; font-size: 1.35rem; font-weight: 700; margin-bottom: .35rem; }
+    .card-desc  { font-size: .84rem; color: var(--muted); line-height: 1.65; }
+    .card-footer { display: flex; align-items: center; justify-content: space-between; padding-top: .9rem; border-top: 1px solid var(--border); }
+    .badge { font-size: .7rem; font-weight: 600; padding: 3px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: .03em; }
+    .badge-active { background: var(--green-bg); color: var(--green); }
+    .badge-new { background: linear-gradient(135deg, #ff9f43, #ff5252); color: #fff; font-weight: 700; box-shadow: 0 2px 8px rgba(255,82,82,.35); animation: pulseGlow 2s infinite; }
+    .arrow { font-size: 1.1rem; color: var(--gold); transition: transform .2s; }
+    .card:hover .arrow { transform: translateX(4px); }
+
+    .site-footer { text-align: center; font-size: .75rem; color: #bbb0a0; margin-top: 2.5rem; }
+
+    @keyframes pulseGlow { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
+
+    /* ===== Repertuar Paneli ===== */
+    #screen-repertoire { width: 100%; display: none; }
+    #screen-repertoire.active { display: block; }
+    #screen-dash.hidden { display: none; }
+
+    .rep-topbar {
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+      margin-bottom: 1.2rem;
+    }
+    .back-btn {
+      font-size: .82rem; color: var(--brown); background: #fff; border: 1px solid var(--border);
+      padding: 8px 16px; border-radius: 20px; cursor: pointer; font-family: inherit;
+      display: flex; align-items: center; gap: 6px; transition: all .15s;
+    }
+    .back-btn:hover { background: var(--cream); border-color: var(--gold); }
+
+    .rep-mode-toggle {
+      display: flex; gap: 6px; background: #fff; border: 1px solid var(--border);
+      border-radius: 20px; padding: 4px;
+    }
+    .rep-mode-btn {
+      font-size: .78rem; font-weight: 600; padding: 7px 16px; border-radius: 16px;
+      border: none; background: transparent; color: var(--muted); cursor: pointer; font-family: inherit;
+      transition: all .15s;
+    }
+    .rep-mode-btn.active { background: var(--gold); color: #fff; }
+
+    .grade-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 1.4rem; }
+    .grade-tab {
+      font-size: .82rem; font-weight: 600; padding: 9px 18px; border-radius: 14px;
+      border: 1px solid var(--border); background: #fff; color: var(--muted); cursor: pointer;
+      font-family: inherit; transition: all .15s; position: relative;
+    }
+    .grade-tab:hover { border-color: var(--gold); color: var(--brown); }
+    .grade-tab.active { background: var(--brown); color: #fff; border-color: var(--brown); }
+    .grade-tab .grade-pct { font-size: .7rem; opacity: .75; margin-left: 4px; }
+    .grade-tab.lb-tab { background: #fff7e8; border-color: var(--gold); color: var(--brown); margin-left: 6px; }
+    .grade-tab.lb-tab.active { background: var(--gold); color: #fff; border-color: var(--gold); }
+
+    .progress-summary {
+      background: #fff; border: 1px solid var(--border); border-radius: 20px;
+      padding: 1.4rem 1.6rem; margin-bottom: 1.4rem;
+      box-shadow: 0 2px 14px rgba(44,31,20,.05);
+    }
+    .progress-summary-head {
+      display: flex; align-items: baseline; justify-content: space-between; margin-bottom: .9rem; flex-wrap: wrap; gap: 6px;
+    }
+    .progress-summary-title { font-family: 'Playfair Display', serif; font-size: 1.15rem; font-weight: 700; }
+    .progress-summary-pct { font-size: 1.4rem; font-weight: 700; color: var(--gold); }
+    .progress-bar-track { width: 100%; height: 10px; background: var(--cream); border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+    .progress-bar-fill { height: 100%; background: linear-gradient(90deg, #4caf50, #2e7d32); border-radius: 8px; transition: width .5s ease; }
+
+    .piece-list { display: flex; flex-direction: column; gap: 8px; }
+    .piece-row {
+      display: flex; align-items: center; gap: 12px;
+      background: #fff; border: 1px solid var(--border); border-radius: 14px;
+      padding: 12px 16px; transition: all .15s;
+    }
+    .piece-row.done { background: var(--green-bg); border-color: #c5dba8; }
+    .piece-check {
+      width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+      border: 2px solid var(--border); display: flex; align-items: center; justify-content: center;
+      font-size: .85rem; color: transparent; transition: all .15s; cursor: default;
+    }
+    .piece-row.done .piece-check { background: var(--green); border-color: var(--green); color: #fff; }
+    .piece-name { font-size: .9rem; flex: 1; }
+    .piece-row.done .piece-name { color: var(--green); font-weight: 600; }
+    .piece-status { font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; flex-shrink: 0; }
+    .piece-row.done .piece-status { color: var(--green); }
+
+    /* öğretmen modunda checkbox tıklanabilir */
+    .teacher-mode .piece-row { cursor: pointer; }
+    .teacher-mode .piece-check { cursor: pointer; }
+    .teacher-mode .piece-row:hover { border-color: var(--gold); transform: translateX(2px); }
+
+    /* Eser aksiyon butonları (öğretmen) */
+    .piece-actions { display: flex; gap: 4px; flex-shrink: 0; margin-left: auto; }
+    .piece-action-btn {
+      font-size: .72rem; padding: 3px 8px; border-radius: 8px; border: 1px solid var(--border);
+      background: #fff; color: var(--muted); cursor: pointer; font-family: inherit;
+      transition: all .15s; white-space: nowrap; font-weight: 600;
+    }
+    .piece-action-btn:hover { border-color: var(--gold); color: var(--brown); background: #fff8ec; }
+    .piece-action-btn.danger:hover { border-color: #e3b3ab; color: #c0392b; background: var(--red-bg); }
+
+    /* Taşı paneli */
+    #move-piece-panel {
+      background: #fff8ec; border: 1px solid #e8c97a; border-radius: 16px;
+      padding: 14px 16px; margin-top: 10px; display: none;
+    }
+    #move-piece-panel.open { display: block; }
+    .move-panel-title { font-size: .82rem; font-weight: 700; color: var(--brown); margin-bottom: 10px; }
+    .move-panel-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+    /* Eser ekleme paneli */
+    #add-piece-panel { margin-top: 12px; }
+    .add-piece-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
+
+    .student-select-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px,1fr)); gap: 10px; margin-bottom: 1.4rem; }
+    .student-select-card {
+      background: #fff; border: 1px solid var(--border); border-radius: 14px;
+      padding: 12px 14px; cursor: pointer; font-size: .85rem; font-weight: 600;
+      transition: all .15s; display: flex; flex-direction: column; gap: 4px;
+    }
+    .student-select-card:hover { border-color: var(--gold); transform: translateY(-2px); }
+    .student-select-card.active { background: var(--brown); color: #fff; border-color: var(--brown); }
+    .student-select-card .ssc-pct { font-size: .72rem; color: var(--muted); font-weight: 500; }
+    .student-select-card.active .ssc-pct { color: #e8d9c5; }
+
+    .leaderboard { display: flex; flex-direction: column; gap: 6px; }
+    .lb-row {
+      display: flex; align-items: center; gap: 12px;
+      background: #fff; border: 1px solid var(--border); border-radius: 14px;
+      padding: 11px 16px;
+    }
+    .lb-row.me { border-color: var(--gold); background: #fff8ec; }
+    .lb-rank {
+      width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+      background: var(--cream); display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: .85rem; color: var(--brown);
+    }
+    .lb-row:nth-child(1) .lb-rank { background: linear-gradient(135deg,#ffd76a,#e0a526); color: #fff; }
+    .lb-row:nth-child(2) .lb-rank { background: linear-gradient(135deg,#dcdcdc,#b0b0b0); color: #fff; }
+    .lb-row:nth-child(3) .lb-rank { background: linear-gradient(135deg,#e3b08c,#b97a4f); color: #fff; }
+    .lb-name { flex: 1; font-size: .88rem; font-weight: 600; }
+    .lb-name .lb-grade { font-size: .72rem; color: var(--muted); font-weight: 500; margin-left: 6px; }
+    .lb-pct { font-size: .9rem; font-weight: 700; color: var(--gold); }
+
+    .save-toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px);
+      background: var(--brown); color: #fff; padding: 12px 22px; border-radius: 16px;
+      font-size: .85rem; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,.2);
+      transition: transform .3s ease; z-index: 1000; pointer-events: none;
+    }
+    .save-toast.show { transform: translateX(-50%) translateY(0); }
+
+    @media(max-width:480px){
+      .dash-inner { padding: 1rem 1rem 3rem; }
+      .game-grid { grid-template-columns: 1fr; }
+      .card { padding: 1.75rem 1.5rem; }
+      .login-card { padding: 2.25rem 1.75rem 2rem; }
+    }
   </style>
+  <script src="repertoire-data.js"></script>
 </head>
 <body>
 
-  <header>
-    <h1>🎸 Nota Okuma Egzersizi</h1>
-    <p>İyi ki Yunus Hoca var! :)</p>
-  </header>
+<div id="login-overlay">
+  <div class="login-card">
+    <div class="login-logo">🎸</div>
+    <div class="login-title">Dr. Yunus GEDİK</div>
+    <div class="login-sub">Gitar Akademisi</div>
+    <div class="gold-line"></div>
 
-  <div id="app">
-
-    <div id="setup-area" class="filter-card">
-      <div style="display:flex; justify-content:flex-end; margin-bottom:0.5rem;">
-        <button class="back-to-menu-btn" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Başa Dön</button>
-      </div>
-      <div class="filter-title">Çalışılacak Telleri Seçin</div>
-      <div class="string-buttons">
-        <button id="btn-all" class="string-btn all-btn active" onclick="toggleAllStrings()">Hepsi</button>
-        <button class="string-btn active string-num-btn" data-string="1" onclick="toggleString(1)">①</button>
-        <button class="string-btn active string-num-btn" data-string="2" onclick="toggleString(2)">②</button>
-        <button class="string-btn active string-num-btn" data-string="3" onclick="toggleString(3)">③</button>
-        <button class="string-btn active string-num-btn" data-string="4" onclick="toggleString(4)">④</button>
-        <button class="string-btn active string-num-btn" data-string="5" onclick="toggleString(5)">⑤</button>
-        <button class="string-btn active string-num-btn" data-string="6" onclick="toggleString(6)">⑥</button>
-      </div>
-      <div class="action-buttons-wrap">
-        <button id="start-btn" class="start-exercise-btn" onclick="startExercise('practice')">Egzersize Başla (Zamansız) 🎯</button>
-        <button id="race-btn" class="start-exercise-btn start-race-btn" onclick="startExercise('race')">Yarışmaya Başla (40 Saniye) 🏆</button>
-      </div>
-    </div>
-
-    <div id="exercise-area">
-
-      <div class="top-bar-exercise">
-        <button class="back-to-menu-btn" onclick="goBackToMenu()">← Menüye Dön</button>
-        <div id="timer-display">Kalan Süre: 40</div>
-      </div>
-
-      <div class="card">
-        <div class="card-top">
-          <span id="current-string-label" class="card-label">Bu Hangi Nota?</span>
-          <button id="listen-btn" onclick="replay()">🔊 Dinle</button>
-        </div>
-        <div id="notation"></div>
-      </div>
-
-      <p id="hint">🔊 Notayı duymak için "Dinle" tuşuna basın</p>
-
-      <div class="choices" id="choices"></div>
-      <div id="feedback"></div>
-      <div id="progress-bar-wrap"><div id="progress-bar"></div></div>
-
-      <div class="controls">
-        <button class="ctrl-btn" onclick="resetQuiz()">↻ Tekrar</button>
-        <button class="ctrl-btn primary" id="next-btn" onclick="manualNext()" disabled>Sonraki Soru →</button>
-        <button class="ctrl-btn" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Başa Dön</button>
-      </div>
-    </div>
-
+    <div class="pin-label">Popçular giremez :)</div>
+    <input
+      type="password"
+      id="pin-input"
+      maxlength="4"
+      inputmode="numeric"
+      pattern="[0-9]*"
+      placeholder="••••"
+      autocomplete="off"
+      autofocus
+    />
+    <div id="pin-error">&nbsp;</div>
   </div>
+</div>
 
-  <footer class="site-footer">
-  <a href="https://www.instagram.com/yunusgedik_/" target="_blank" aria-label="Instagram">
-    <i class="fa-brands fa-instagram"></i>
-  </a>
+<div id="screen-dash">
+  <div class="dash-inner">
 
-  <a href="https://x.com/yunusgedik_" target="_blank" aria-label="X">
-    <i class="fa-brands fa-x-twitter"></i>
-  </a>
-
-  <a href="https://www.youtube.com/yunusgedik" target="_blank" aria-label="YouTube">
-    <i class="fa-brands fa-youtube"></i>
-  </a>
-</footer>
-
-  <script>
-    const NOTES = [
-      { key:'e/3', freq:164.81, nota:'Mi', string:6 },
-      { key:'f/3', freq:174.61, nota:'Fa', string:6 },
-      { key:'g/3', freq:196.00, nota:'Sol', string:6 },
-      
-      { key:'a/3', freq:220.00, nota:'La', string:5 },
-      { key:'b/3', freq:246.94, nota:'Si', string:5 },
-      { key:'c/4', freq:261.63, nota:'Do', string:5 },
-      
-      { key:'d/4', freq:293.66, nota:'Re', string:4 },
-      { key:'e/4', freq:329.63, nota:'Mi', string:4 },
-      { key:'f/4', freq:349.23, nota:'Fa', string:4 },
-      
-      { key:'g/4', freq:392.00, nota:'Sol', string:3 },
-      { key:'a/4', freq:440.00, nota:'La', string:3 },
-      
-      { key:'b/4', freq:493.88, nota:'Si', string:2 },
-      { key:'c/5', freq:523.25, nota:'Do', string:2 },
-      { key:'d/5', freq:587.33, nota:'Re', string:2 },
-      
-      { key:'e/5', freq:659.25, nota:'Mi', string:1 },
-      { key:'f/5', freq:698.46, nota:'Fa', string:1 },
-      { key:'g/5', freq:783.99, nota:'Sol', string:1 },
-      { key:'a/5', freq:880.00, nota:'La', string:1 },
-      { key:'b/5', freq:987.77, nota:'Si', string:1 },
-    ];
-    
-    const ALL_NOTES = ['Do', 'Re', 'Mi', 'Fa', 'Sol', 'La', 'Si'];
-    
-    const ERROR_MESSAGES = [
-      "Yazıklar olsun!",
-      "Kulaklarımız kanadı...",
-      "Sende hiç utanma yok mu yaa",
-      "Instagram'dan ekle beni seni engellim",
-      "Tüm başarılar Yunus Hocadan, bunun gibi hatalar ise senden..",
-      "Yunus Hoca bunu görmemiş olsun...",
-      "Gitarı yavaşça yere bırak...",
-      "Sen daha iyi enstrümanlara layıksın",
-      "Aynen knk aynen sensin",
-      "Iyyy yine mi hata",
-      "Ağır popçusun belli knk",
-      "Lâ havle..",
-      "Sen en iyisi flüt çal knk",
-      "Tekrar deneme, yeter.",
-      "Bir yerde bırakmak lazım sanki",
-      "Bir durun olsun beea",
-      "Sen öyle bil aynen",
-      "En sevmediğim öğrencim naber",
-      "Ex'den Next olur senden öğrenci olmaz :D"
-    ];
-
-    let selectedStrings = new Set([1, 2, 3, 4, 5, 6]);
-    let filteredNotes = [];
-
-    let audioCtx = null, current = null, answered = false, interacted = false;
-    let autoTimer = null;
-
-    let currentMode = 'practice';
-    let gameTimer = null;
-    let timeLeft = 40;
-    let correctCount = 0;
-
-    function toggleAllStrings() {
-      const allBtn = document.getElementById('btn-all');
-      const numBtns = document.querySelectorAll('.string-num-btn');
-      
-      if (selectedStrings.size === 6) {
-        selectedStrings.clear();
-        allBtn.classList.remove('active');
-        numBtns.forEach(b => b.classList.remove('active'));
-      } else {
-        selectedStrings = new Set([1, 2, 3, 4, 5, 6]);
-        allBtn.classList.add('active');
-        numBtns.forEach(b => b.classList.add('active'));
-      }
-      checkStartButton();
-    }
-
-    function toggleString(num) {
-      const btn = document.querySelector(`.string-num-btn[data-string="${num}"]`);
-      const allBtn = document.getElementById('btn-all');
-      
-      if (selectedStrings.has(num)) {
-        selectedStrings.delete(num);
-        btn.classList.remove('active');
-      } else {
-        selectedStrings.add(num);
-        btn.classList.add('active');
-      }
-      
-      if (selectedStrings.size === 6) {
-        allBtn.classList.add('active');
-      } else {
-        allBtn.classList.remove('active');
-      }
-      checkStartButton();
-    }
-
-    function checkStartButton() {
-      const startBtn = document.getElementById('start-btn');
-      const raceBtn = document.getElementById('race-btn');
-      const isZero = selectedStrings.size === 0;
-      startBtn.disabled = isZero;
-      raceBtn.disabled = isZero;
-    }
-
-    function startExercise(mode) {
-      filteredNotes = NOTES.filter(n => selectedStrings.has(n.string));
-      if (filteredNotes.length === 0) return;
-
-      currentMode = mode;
-      document.getElementById('setup-area').style.display = 'none';
-      document.getElementById('exercise-area').style.display = 'block';
-
-      if (currentMode === 'race') {
-        timeLeft = 40;
-        correctCount = 0;
-        document.getElementById('timer-display').style.display = 'inline-block';
-        document.getElementById('timer-display').textContent = 'Kalan Süre: ' + timeLeft;
-        startGameTimer();
-      } else {
-        document.getElementById('timer-display').style.display = 'none';
-      }
-
-      nextCard();
-      document.getElementById('exercise-area').scrollIntoView({ behavior: 'smooth' });
-    }
-
-    function goBackToMenu() {
-      if (gameTimer) {
-        clearInterval(gameTimer);
-        gameTimer = null;
-      }
-      clearAutoTimer();
-
-      document.getElementById('exercise-area').style.display = 'none';
-      document.getElementById('setup-area').style.display = 'block';
-      document.getElementById('setup-area').scrollIntoView({ behavior: 'smooth' });
-    }
-
-    function resetQuiz() {
-      if (gameTimer) {
-        clearInterval(gameTimer);
-        gameTimer = null;
-      }
-      clearAutoTimer();
-      startExercise(currentMode);
-    }
-
-    function startGameTimer() {
-      if (gameTimer) clearInterval(gameTimer);
-
-      gameTimer = setInterval(() => {
-        timeLeft--;
-        if (timeLeft <= 0) {
-          document.getElementById('timer-display').textContent = 'Süre Bitti!';
-          clearInterval(gameTimer);
-          endGame();
-        } else {
-          document.getElementById('timer-display').textContent = 'Kalan Süre: ' + timeLeft;
-        }
-      }, 1000);
-    }
-
-    function endGame() {
-      clearAutoTimer();
-      const appContainer = document.getElementById('app');
-
-      let rankName = "";
-      let comment = "";
-
-      if (correctCount >= 20) {
-        rankName = "🏆 Master Gitarist 1 Numara!";
-        comment = "İnanılmaz! Parmaklar ve kulak uçuyor! Yunus Hoca gözyaşları içinde seni ayakta alkışlıyor! 🎸";
-      } else if (correctCount >= 15) {
-        rankName = "🔥 Sahne Sanatçısı";
-        comment = "Notalar tıkır tıkır çözülüyor, gözler hızlandı! Artık kulis kartını hak ettin kanka.";
-      } else if (correctCount >= 10) {
-        rankName = "⚡ Ritim Gitarist";
-        comment = "Solo atamıyorsun ama notaları fena okumuyorsun hani. Bir tık daha hızlansan solist seni fark edecek.";
-      } else if (correctCount >= 5) {
-        rankName = "🎸 Akustikçi Popçu";
-        comment = "Sahilde 'Akdeniz Akşamları' çalmaktan öteye geçemedin ama bir umut var. Notalar seni çağırıyor kanka!";
-      } else {
-        rankName = "🐢 Kaplumbağa Gitarist";
-        comment = "Gitarı yavaşça yere bırak ve notalara bir daha dokunma kanka... Hızın evlere şenlik!";
-      }
-
-      appContainer.innerHTML = `
-        <div class="result-card">
-          <h2>Yarışma Tamamlandı! 🏁</h2>
-          <div class="result-rank">${rankName}</div>
-          <div class="result-score">${correctCount} Doğru</div>
-          <p class="result-text">"${comment}"</p>
-          <button class="start-exercise-btn" onclick="window.location.reload()">Yeniden Dene 🔄</button>
+    <div class="welcome-bar">
+      <div class="welcome-left">
+        <div class="avatar" id="avatar-init">
+          <span class="avatar-rank" id="avatar-rank">🎸</span>
+          <span class="avatar-label" id="avatar-label"></span>
         </div>
-      `;
+        <div class="welcome-info">
+          <span class="welcome-name" id="welcome-name">Gitar Akademisi</span>
+          <div class="welcome-badges" id="welcome-badges"></div>
+        </div>
+        <!-- live-bar.js bu gizli span'ı günceller; MutationObserver onu izler -->
+        <span id="_gs_active_count" style="display:none;">🟢 Canlı Oda...</span>
+        <div id="online-badges-row">
+          <span class="online-name-badge">🟢 Canlı Oda...</span>
+        </div>
+      </div>
+      <button class="logout-btn" onclick="doLogout()">Çıkış Yap</button>
+    </div>
+
+    <div id="tab-games">
+      <div class="game-grid">
+        <a class="card" id="repertoire-card" href="#" onclick="openRepertoire(event)">
+          <div class="card-icon">📜</div>
+          <div>
+            <div class="card-title">Eser Listesi</div>
+            <div class="card-desc">Grade'ine göre çalman gereken eserleri gör, ne kadar tamamladığını ve genel sıralamadaki yerini takip et.</div>
+          </div>
+          <div class="card-footer"><span class="badge badge-new">YENİ</span><span class="arrow">→</span></div>
+        </a>
+        <a class="card" href="/klavye/">
+          <div class="card-icon">🎛️</div>
+          <div>
+            <div class="card-title">Klavye Alıştırması</div>
+            <div class="card-desc">I. Pozisyondaki tüm perdeleri, telleri ve notaların dizekteki tam karşılıklarını interaktif olarak deneyimleyin.</div>
+          </div>
+          <div class="card-footer"><span class="badge badge-new">YENİ</span><span class="arrow">→</span></div>
+        </a>
+        <a class="card" href="/nota/">
+          <div class="card-icon">🎵</div>
+          <div>
+            <div class="card-title">Nota Okuma</div>
+            <div class="card-desc">Portenin üzerindeki notayı tanı. Sol anahtarı, E3–E5 arası tüm notalar.</div>
+          </div>
+          <div class="card-footer"><span class="badge badge-active">Aktif</span><span class="arrow">→</span></div>
+        </a>
+        <a class="card" href="/tel/">
+          <div class="card-icon">🎸</div>
+          <div>
+            <div class="card-title">Tel Egzersizi</div>
+            <div class="card-desc">Gitarın tellerini ve perdelerini tanımak için alıştırmalar.</div>
+          </div>
+          <div class="card-footer"><span class="badge badge-active">Aktif</span><span class="arrow">→</span></div>
+        </a>
+        <a class="card" href="/deneysel/">
+          <div class="card-icon">🧪</div>
+          <div>
+            <div class="card-title">Deneysel</div>
+            <div class="card-desc">Yeni eklenen deneysel alıştırma ve içerikler burada yer alır.</div>
+          </div>
+          <div class="card-footer"><span class="badge badge-active">Aktif</span><span class="arrow">→</span></div>
+        </a>
+      </div>
+    </div>
+
+    <footer class="site-footer">❤️ yunusgedik.com.tr</footer>
+  </div>
+</div>
+
+<!-- ===== Repertuar / Eser Listesi Paneli ===== -->
+<div id="screen-repertoire">
+  <div class="dash-inner">
+    <div class="rep-topbar">
+      <button class="back-btn" onclick="closeRepertoire()">← Panele Dön</button>
+    </div>
+
+    <div class="section-title" id="rep-section-title">📜 Eser Listesi</div>
+
+    <div class="grade-tabs" id="grade-tabs"></div>
+
+    <div id="rep-grade-view">
+      <!-- Öğretmen modu: grade içi öğrenci sıralaması -->
+      <div id="teacher-grade-ranking" style="display:none;">
+        <button class="back-btn" style="margin-bottom:1rem;" onclick="openAddStudentForm()">+ Yeni Öğrenci Ekle</button>
+        <div class="leaderboard" id="grade-leaderboard"></div>
+      </div>
+
+      <!-- Öğretmen modu: yeni öğrenci ekleme formu -->
+      <div id="add-student-form" style="display:none;">
+        <div class="progress-summary">
+          <div class="progress-summary-head">
+            <div class="progress-summary-title">Yeni Öğrenci Ekle</div>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:10px; margin-top:.6rem;">
+            <input type="text" id="new-student-name" placeholder="Ad Soyad" style="padding:10px 14px; border-radius:10px; border:1px solid var(--border); font-family:inherit; font-size:.9rem;">
+            <input type="text" id="new-student-pin" placeholder="4 haneli şifre (PIN)" maxlength="4" style="padding:10px 14px; border-radius:10px; border:1px solid var(--border); font-family:inherit; font-size:.9rem;">
+            <select id="new-student-grade" style="padding:10px 14px; border-radius:10px; border:1px solid var(--border); font-family:inherit; font-size:.9rem;"></select>
+            <div style="display:flex; gap:8px;">
+              <button class="back-btn" onclick="saveNewStudent()" style="background:var(--gold); color:#fff; border-color:var(--gold);">Kaydet</button>
+              <button class="back-btn" onclick="closeAddStudentForm()">Vazgeç</button>
+            </div>
+            <div id="add-student-error" style="color:#c0392b; font-size:.82rem;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Öğretmen modu: seçili öğrencinin eser checklist'i (geri dön ile kapanır) -->
+      <div id="teacher-student-detail" style="display:none;">
+        <button class="back-btn" style="margin-bottom:1rem;" onclick="closeStudentDetail()">← Sıralamaya Dön</button>
+        <div class="progress-summary" id="progress-summary">
+          <div class="progress-summary-head">
+            <div class="progress-summary-title" id="progress-summary-title">Grade İlerlemesi</div>
+            <div class="progress-summary-pct" id="progress-summary-pct">0%</div>
+          </div>
+          <div class="progress-bar-track"><div class="progress-bar-fill" id="progress-bar-fill" style="width:0%"></div></div>
+        </div>
+        <div class="piece-list" id="piece-list"></div>
+
+        <!-- Eser Taşı Paneli -->
+        <div id="move-piece-panel">
+          <div class="move-panel-title">↗ Eseri Başka Grade'e Taşı</div>
+          <div style="font-size:.8rem;color:var(--muted);margin-bottom:8px;" id="move-piece-name-label"></div>
+          <div class="move-panel-row">
+            <select id="move-target-grade" style="padding:9px 14px; border-radius:10px; border:1px solid var(--border); font-family:inherit; font-size:.85rem;"></select>
+            <button class="back-btn" onclick="confirmMovePiece()" style="background:var(--gold);color:#fff;border-color:var(--gold);">Taşı</button>
+            <button class="back-btn" onclick="closeMovePanel()">Vazgeç</button>
+          </div>
+        </div>
+
+        <!-- Eser Ekleme Paneli -->
+        <div id="add-piece-panel">
+          <div class="progress-summary" style="padding:1rem 1.4rem;">
+            <div style="font-size:.85rem;font-weight:700;color:var(--brown);margin-bottom:8px;">➕ Bu Grade'e Yeni Eser Ekle</div>
+            <div class="add-piece-row">
+              <input type="text" id="new-piece-name" placeholder="Eser adı (ör: Tárrega – Recuerdos)" style="flex:1;min-width:180px;padding:9px 14px;border-radius:10px;border:1px solid var(--border);font-family:inherit;font-size:.85rem;">
+              <button class="back-btn" onclick="addCustomPiece()" style="background:var(--green);color:#fff;border-color:var(--green);">Ekle</button>
+            </div>
+            <div id="add-piece-msg" style="font-size:.78rem;margin-top:6px;"></div>
+          </div>
+        </div>
+
+        <div id="add-grade-box" style="margin-top:1rem;"></div>
+
+        <div class="progress-summary" style="margin-top:1.4rem;">
+          <div class="progress-summary-head">
+            <div class="progress-summary-title">Öğrenci Ayarları</div>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:10px; margin-top:.6rem;">
+            <button class="back-btn" id="delete-grade-btn" onclick="deleteGradeFromStudent()" style="color:#c0392b; border-color:#e3b3ab;">🗑️ Bu Grade'i Öğrenciden Sil</button>
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+              <input type="text" id="change-pin-input" placeholder="Yeni 4 haneli PIN" maxlength="4" style="padding:9px 14px; border-radius:10px; border:1px solid var(--border); font-family:inherit; font-size:.85rem; width:160px;">
+              <button class="back-btn" onclick="changeStudentPin()">PIN'i Değiştir</button>
+            </div>
+            <div id="settings-msg" style="font-size:.82rem;"></div>
+            <hr style="border:none; border-top:1px solid var(--border); margin:.4rem 0;">
+            <button class="back-btn" id="delete-student-btn" onclick="deleteEntireStudent()" style="display:none; color:#fff; background:#c0392b; border-color:#c0392b;">🗑️ Bu Öğrenciyi Sistemden Tamamen Sil</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Öğrenci modu: doğrudan kendi checklist'i -->
+      <div id="student-self-view" style="display:none;">
+        <div class="progress-summary" id="progress-summary-self">
+          <div class="progress-summary-head">
+            <div class="progress-summary-title" id="progress-summary-title-self">Grade İlerlemesi</div>
+            <div class="progress-summary-pct" id="progress-summary-pct-self">0%</div>
+          </div>
+          <div class="progress-bar-track"><div class="progress-bar-fill" id="progress-bar-fill-self" style="width:0%"></div></div>
+        </div>
+        <div class="piece-list" id="piece-list-self"></div>
+      </div>
+    </div>
+
+    <div id="rep-leaderboard-view" style="display:none;">
+      <div class="leaderboard" id="leaderboard"></div>
+    </div>
+  </div>
+</div>
+
+<div class="save-toast" id="save-toast">✅ Kaydedildi</div>
+
+<script>
+// PIN'ler artık index.html'de plain-text olarak YOK.
+// STUDENTS_DATA (SHA-256 hash'li) repertoire-data.js içinde tanımlı.
+// window.STUDENTS sadece {id, name} içerir — F12'de PIN görünmez.
+window.STUDENTS = STUDENTS_DATA.map(s => ({ id: s.id, name: s.name }));
+
+// Tarayıcı SubtleCrypto ile SHA-256 (global — hem login hem modül kullanır)
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+window.sha256 = sha256;
+
+let me = null;
+window.me = me;
+const pinInput = document.getElementById('pin-input');
+const pinError = document.getElementById('pin-error');
+
+if (pinInput) {
+  pinInput.addEventListener('input', () => {
+    if (pinInput.value.length === 4) checkPin(pinInput.value);
+  });
+  pinInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && pinInput.value.length > 0) checkPin(pinInput.value);
+  });
+}
+
+async function checkPin(pin) {
+  if (window.applyPinOverrides) await window.applyPinOverrides();
+  const pinH = await sha256(pin);
+  // Ana liste: hash karşılaştırması (F12'de plain PIN görünmez)
+  let found = STUDENTS_DATA.find(s => s.pinHash === pinH);
+  if (found) {
+    // window.STUDENTS içinde sadece {id, name} var, found'u oradan al
+    found = window.STUDENTS.find(s => s.id === found.id) || { id: found.id, name: found.name };
+  }
+  // Extra öğrenciler Firebase'de (plain PIN) — teacher kontrolünde
+  if (!found && window.fetchExtraStudents) {
+    const extra = await window.fetchExtraStudents();
+    found = extra.find(s => s.pin === pin);
+    if (found) {
+      const already = window.STUDENTS.find(s => s.id === found.id);
+      if (!already) window.STUDENTS.push({ id: found.id, name: found.name });
     }
+  }
+  if (found) {
+    me = found;
+    localStorage.setItem('gitar_session',      me.id);
+    localStorage.setItem('gitar_student_name', me.name);
+    sessionStorage.removeItem('notified_online');
+    window.location.reload();
+  } else {
+    const card = document.querySelector('.login-card');
+    card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake');
+    pinError.textContent = '❌ Yanlış şifre, tekrar dene';
+    pinInput.value = '';
+    setTimeout(() => { pinError.innerHTML = '&nbsp;'; }, 2200);
+  }
+}
 
-    function shuffle(a){ return [...a].sort(()=>Math.random()-0.5); }
+function openDashboard() {
+  const overlay = document.getElementById('login-overlay');
+  if (overlay) overlay.remove();
 
-    function getAudio(){
-      if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
-      return audioCtx;
+  document.getElementById('avatar-rank').textContent  = '🎸';
+  document.getElementById('avatar-label').textContent = '';
+  document.getElementById('welcome-name').textContent  = me.name;
+  document.getElementById('welcome-badges').innerHTML  = '';
+
+  if (window.updateWelcomeCard) {
+    window.updateWelcomeCard(me.id);
+  } else {
+    window._pendingAvatarUpdate = me.id;
+  }
+}
+
+// ESKİ doLogout fonksiyonunu tamamen sil, BUNUNLA değiştir:
+async function doLogout() {
+  if (window.firebaseLiveBarLogout) await window.firebaseLiveBarLogout();
+  localStorage.removeItem('gitar_session');
+  localStorage.removeItem('gitar_student_name');
+  sessionStorage.removeItem('notified_online');
+  window.location.reload();
+}
+
+(function init() {
+  const sid = localStorage.getItem('gitar_session');
+  if (sid) {
+    const found = window.STUDENTS.find(s => s.id === sid);
+    if (found) {
+      me = found;
+      window.me = me;
+      openDashboard();
+    } else {
+      // STUDENTS içinde yok; Firebase'deki ekstra öğrenciler henüz yüklenmemiş olabilir.
+      // repertoire modülü yüklenince bunu tamamlayacak (bkz: window.completePendingLogin).
+      window.pendingLoginSid = sid;
     }
+  }
+  if (!me && pinInput) {
+    pinInput.focus();
+  }
+})();
 
-    function playNote(freq){
-      try {
-        const ctx = getAudio();
-        if(ctx.state==='suspended') ctx.resume();
-        const master = ctx.createGain();
-        const now = ctx.currentTime;
-        master.gain.setValueAtTime(0, now);
-        master.gain.linearRampToValueAtTime(0.55, now+0.006);
-        master.gain.exponentialRampToValueAtTime(0.001, now+2.2);
-        master.connect(ctx.destination);
-        [[1,0.5],[2,0.28],[3,0.12],[4,0.06]].forEach(([m,v])=>{
-          const o=ctx.createOscillator(), g=ctx.createGain();
-          o.type='sine'; o.frequency.value=freq*m; g.gain.value=v;
-          o.connect(g); g.connect(master); o.start(now); o.stop(now+2.2);
-        });
-        const btn=document.getElementById('listen-btn');
-        btn.classList.add('playing');
-        setTimeout(()=>btn.classList.remove('playing'),600);
-      } catch(e){}
+window.completePendingLogin = function(student) {
+  if (!window.pendingLoginSid || student.id !== window.pendingLoginSid) return;
+  STUDENTS.push(student);
+  me = student;
+  window.me = me;
+  window.pendingLoginSid = null;
+  openDashboard();
+};
+
+// ===== Online Rozet Gösterimi =====
+(function setupOnlineBadges() {
+  function buildBadges(rawText) {
+    const row = document.getElementById('online-badges-row');
+    if (!row) return;
+    // live-bar.js "🟢 İsim1, İsim2" formatında yazıyor
+    const clean = (rawText || '').replace(/🟢\s*/g, '').trim();
+    if (!clean || clean === 'Canlı Oda...') {
+      row.innerHTML = '<span class="online-name-badge">🟢 Canlı Oda...</span>';
+      return;
     }
+    const names = clean.split(',').map(n => n.trim()).filter(Boolean);
+    row.innerHTML = names.map(n =>
+      `<span class="online-name-badge">🟢 ${n}</span>`
+    ).join('');
+  }
 
-    function replay(){
-      interacted=true;
-      document.getElementById('hint').style.display='none';
-      if(current) playNote(current.freq);
-    }
+  const pill = document.getElementById('_gs_active_count');
+  if (!pill) return;
+  const obs = new MutationObserver(() => {
+    buildBadges(pill.textContent || pill.innerText || '');
+  });
+  obs.observe(pill, { childList: true, subtree: true, characterData: true });
+  buildBadges(pill.textContent || '');
+})();
+</script>
 
-    function drawNote(noteKey){
-      const { Renderer, Stave, StaveNote, Voice, Formatter } = Vex.Flow;
-      const container = document.getElementById('notation');
-      container.innerHTML = '';
-      
-      const containerWidth = container.offsetWidth || 500;
-      const H = 160; 
-      
-      const renderer = new Renderer(container, Renderer.Backends.SVG);
-      renderer.resize(containerWidth, H);
-      
-      const ctx = renderer.getContext();
-      ctx.scale(1.45, 1.45);
-      
-      const scaledWidth = containerWidth / 1.45;
-      const staveW = Math.min(180, scaledWidth - 40);
-      const staveX = (scaledWidth - staveW) / 2;
-      
-      const stave = new Stave(staveX, -10, staveW);
-      stave.addClef('treble');
-      stave.setContext(ctx).draw();
-      
-      const sn = new StaveNote({ keys:[noteKey], duration:'w' });
-      sn.setXShift(30); 
-      
-      const voice = new Voice({ num_beats:4, beat_value:4 });
-      voice.addTickables([sn]);
-      
-      new Formatter().joinVoices([voice]).format([voice], staveW - 45);
-      voice.draw(ctx, stave);
-    }
-
-    function clearAutoTimer(){
-      if(autoTimer){ clearTimeout(autoTimer); autoTimer=null; }
-      document.getElementById('progress-bar-wrap').style.display='none';
-    }
-
-    function startAutoAdvance(){
-      const wrap = document.getElementById('progress-bar-wrap');
-      const bar  = document.getElementById('progress-bar');
-      wrap.style.display = 'block';
-      bar.style.width = '100%';
-      bar.style.transition = 'none';
-      requestAnimationFrame(()=>{
-        requestAnimationFrame(()=>{
-          bar.style.transition = 'width 1s linear';
-          bar.style.width = '0%';
-        });
-      });
-      autoTimer = setTimeout(()=>{ clearAutoTimer(); nextCard(); }, 1000);
-    }
-
-    function manualNext(){
-      if(currentMode === 'race' && timeLeft <= 0) return;
-      clearAutoTimer();
-      nextCard();
-    }
-
-    function nextCard(){
-      if (currentMode === 'race' && timeLeft <= 0) return;
-
-      answered = false;
-      if(document.activeElement) document.activeElement.blur();
-      document.getElementById('feedback').textContent = '';
-      document.getElementById('feedback').className = '';
-
-      document.getElementById('next-btn').disabled = true;
-      clearAutoTimer();
-
-      current = filteredNotes[Math.floor(Math.random() * filteredNotes.length)];
-      document.getElementById('current-string-label').textContent = `Bu Nota Hangi Telde? (${current.string}. Tel Egzersizi)`;
-
-      const wrongs = shuffle(ALL_NOTES.filter(n => n !== current.nota)).slice(0, 3);
-      const choices = shuffle([current.nota, ...wrongs]);
-
-      drawNote(current.key);
-      if(interacted) setTimeout(()=>playNote(current.freq), 280);
-
-      const box = document.getElementById('choices');
-      box.innerHTML = '';
-      choices.forEach(notaAdi=>{
-        const btn = document.createElement('button');
-        btn.className = 'cbtn';
-        btn.textContent = notaAdi;
-        btn.onclick = ()=>answer(notaAdi, btn);
-        box.appendChild(btn);
-      });
-    }
-
-    function answer(notaAdi, btn){
-      if(answered) return;
-      if(currentMode === 'race' && timeLeft <= 0) return;
-
-      answered = true;
-      interacted = true;
-      document.getElementById('hint').style.display='none';
-      document.querySelectorAll('.cbtn').forEach(b=>b.disabled=true);
-      const fb = document.getElementById('feedback');
-
-      document.getElementById('next-btn').disabled = false;
-
-      if(notaAdi===current.nota){
-        if(currentMode === 'race') {
-          correctCount++;
-        }
-        btn.className='cbtn correct';
-        btn.blur();
-        fb.textContent='✓ Doğru!';
-        fb.className='ok';
-        playNote(current.freq);
-        startAutoAdvance();
-      } else {
-        btn.className='cbtn wrong';
-
-        const randomMsg = ERROR_MESSAGES[Math.floor(Math.random() * ERROR_MESSAGES.length)];
-        fb.textContent = '✗ ' + randomMsg + ' — Doğrusu: ' + current.nota;
-
-        fb.className='no';
-        document.querySelectorAll('.cbtn').forEach(b=>{
-          if(b.textContent===current.nota) b.className='cbtn correct';
-        });
-      }
-    }
-
-    // ── GÜVENLİK VE OTOMATİK GİRİŞ KONTROLÜ ──
-    (function init() {
-      const sid = localStorage.getItem('gitar_session');
-      if (!sid) {
-        window.location.href = 'https://gitar.yunusgedik.com.tr/';
-        return;
-      }
-    })();
-  </script>
 <script type="module" src="/live-bar.js"></script>
+<script type="module">
+import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+import { getDatabase, ref, get, set, remove, onValue } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBkEd729B65y-NZIQ-sxScCgaEvlX-q7yA",
+  authDomain: "gitar-yunus.firebaseapp.com",
+  databaseURL: "https://gitar-yunus-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "gitar-yunus",
+  storageBucket: "gitar-yunus.firebasestorage.app",
+  messagingSenderId: "184803778782",
+  appId: "1:184803778782:web:8f9fbeb4fe625eb386e24f"
+};
+const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const TEACHER_ID = 's01'; // Dr. Yunus GEDİK = öğretmen
+let repProgress = {};       // { studentId: { grade: { completed: [bool...] } } }
+let isTeacherView = false;
+let repActiveGrade = null;
+let repActiveTab = 'grade'; // 'grade' veya 'leaderboard'
+let repActiveStudentId = null; // öğretmen modunda, checklist'i açık olan öğrenci
+let repLoaded = false;
+let extraStudentsCache = null;
+
+function getMe() { return window.me || (typeof me !== 'undefined' ? me : null); }
+
+// Firebase'deki extra_students node'undan, ana koda elle eklenmemiş yeni öğrencileri çeker
+window.fetchExtraStudents = async function() {
+  if (extraStudentsCache) return extraStudentsCache;
+  try {
+    const snap = await get(ref(db, 'extra_students'));
+    const data = snap.exists() ? snap.val() : {};
+    extraStudentsCache = Object.values(data);
+  } catch (e) {
+    console.error('Ekstra öğrenciler yüklenemedi:', e);
+    extraStudentsCache = [];
+  }
+  return extraStudentsCache;
+};
+
+// Öğretmenin değiştirdiği PIN hash'lerini STUDENTS_DATA'ya uygular.
+window.applyPinOverrides = async function() {
+  try {
+    const snap = await get(ref(db, 'pin_overrides'));
+    const data = snap.exists() ? snap.val() : {};
+    for (const sid in data) {
+      const s = STUDENTS_DATA.find(x => x.id === sid);
+      if (s) s.pinHash = data[sid]; // Firebase'de artık hash saklıyoruz
+    }
+  } catch (e) {
+    console.error('PIN güncellemeleri yüklenemedi:', e);
+  }
+};
+
+// Sayfa ilk açıldığında oturumu olan ama window.STUDENTS dizisinde henüz olmayan
+// (yeni eklenmiş) bir kullanıcı varsa, burada tamamlanır.
+(async function resolvePendingLogin() {
+  await window.applyPinOverrides();
+  if (!window.pendingLoginSid) return;
+  const extra = await window.fetchExtraStudents();
+  const found = extra.find(s => s.id === window.pendingLoginSid);
+  if (found && window.completePendingLogin) window.completePendingLogin(found);
+})();
+
+async function loadRepProgress() {
+  if (repLoaded) return;
+  try {
+    const snap = await get(ref(db, 'repertoire'));
+    const fromDb = snap.exists() ? snap.val() : {};
+    repProgress = {};
+    for (const sid in INITIAL_PROGRESS) {
+      repProgress[sid] = JSON.parse(JSON.stringify(INITIAL_PROGRESS[sid]));
+    }
+    for (const sid in fromDb) {
+      repProgress[sid] = repProgress[sid] || {};
+      for (const g in fromDb[sid]) {
+        repProgress[sid][g] = fromDb[sid][g];
+      }
+    }
+    repLoaded = true;
+  } catch (e) {
+    console.error('Repertuar verisi yüklenemedi:', e);
+    repProgress = JSON.parse(JSON.stringify(INITIAL_PROGRESS));
+  }
+}
+
+function calcPct(sid, grade) {
+  const entry = repProgress[sid] && repProgress[sid][grade];
+  if (!entry) return 0;
+  const pieces  = GRADE_PIECES[grade] || [];
+  const removed = entry.removedIndices || [];
+  const custom  = entry.customPieces  || [];
+
+  const stdTotal  = pieces.length - removed.length;
+  const stdDone   = (entry.completed || []).filter((v, i) => v && !removed.includes(i)).length;
+  const custTotal = custom.length;
+  const custDone  = custom.filter(p => p.done).length;
+
+  const total = stdTotal + custTotal;
+  return total ? (stdDone + custDone) / total : 0;
+}
+
+// Genel sıralama puanı: her grade'in kendi katsayısı var (Grade1=0.125 ... Grade8=1.0)
+// Üst grade'lerde aynı yüzde daha değerli sayılır.
+function gradeCoefficient(grade) {
+  return (+grade) * 0.125;
+}
+
+function calcWeightedScore(sid) {
+  const grades = Object.keys(repProgress[sid] || {});
+  let score = 0;
+  grades.forEach(g => {
+    score += calcPct(sid, g) * gradeCoefficient(g);
+  });
+  return score;
+}
+
+function studentName(sid) {
+  const s = window.STUDENTS.find(x => x.id === sid);
+  return s ? s.name : sid;
+}
+
+// Tüm öğrencilerden, belirli bir grade'de kaydı olanları döndürür
+function studentsInGrade(grade) {
+  return Object.keys(repProgress).filter(sid => sid !== TEACHER_ID && repProgress[sid][grade]);
+}
+
+window.openRepertoire = async function(e) {
+  if (e) e.preventDefault();
+  await loadRepProgress();
+
+  const meObj = getMe();
+  isTeacherView = !!(meObj && meObj.id === TEACHER_ID);
+
+  if (isTeacherView) {
+    // Öğretmen sıralamayı/öğrenci adlarını doğru görsün diye, henüz STUDENTS
+    // dizisinde olmayan (yeni eklenmiş) öğrencileri Firebase'den çekip ekle.
+    const extra = await window.fetchExtraStudents();
+    extra.forEach(s => {
+      if (!window.STUDENTS.find(x => x.id === s.id)) window.STUDENTS.push(s);
+    });
+  }
+
+  document.getElementById('screen-dash').classList.add('hidden');
+  document.getElementById('screen-repertoire').classList.add('active');
+
+  repActiveStudentId = isTeacherView ? null : (meObj ? meObj.id : null);
+
+  // İlk grade'i belirle
+  let grades;
+  if (isTeacherView) {
+    grades = Object.keys(GRADE_PIECES).sort((a,b)=>+a-+b);
+  } else {
+    grades = Object.keys(repProgress[repActiveStudentId] || {}).sort((a,b)=>+a-+b);
+  }
+  repActiveGrade = grades.length ? grades[0] : '1';
+  goToGradeTab(repActiveGrade);
+};
+
+window.closeRepertoire = function() {
+  document.getElementById('screen-repertoire').classList.remove('active');
+  document.getElementById('screen-dash').classList.remove('hidden');
+};
+
+function renderGradeTabs() {
+  const tabs = document.getElementById('grade-tabs');
+  let grades;
+  if (isTeacherView) {
+    grades = Object.keys(GRADE_PIECES).sort((a,b)=>+a-+b);
+  } else {
+    grades = Object.keys(repProgress[repActiveStudentId] || {}).sort((a,b)=>+a-+b);
+  }
+  let html = '';
+  if (!grades.length) {
+    html = '<p style="color:var(--muted);font-size:.85rem;">Eser listesi tanımlı değil.</p>';
+  } else {
+    html = grades.map(g => {
+      let pctLabel = '';
+      if (!isTeacherView) {
+        pctLabel = `<span class="grade-pct">${Math.round(calcPct(repActiveStudentId, g) * 100)}%</span>`;
+      }
+      const active = (repActiveTab === 'grade' && g === repActiveGrade) ? 'active' : '';
+      return `<button class="grade-tab ${active}" onclick="selectGrade('${g}')">Grade ${g}${pctLabel}</button>`;
+    }).join('');
+  }
+  const lbActive = repActiveTab === 'leaderboard' ? 'active' : '';
+  html += `<button class="grade-tab lb-tab ${lbActive}" onclick="selectLeaderboardTab()">🏆 Genel Sıralama</button>`;
+  tabs.innerHTML = html;
+}
+
+function showOnly(viewId) {
+  ['teacher-grade-ranking','add-student-form','teacher-student-detail','student-self-view'].forEach(id => {
+    document.getElementById(id).style.display = (id === viewId) ? '' : 'none';
+  });
+}
+
+window.selectGrade = function(g) {
+  repActiveGrade = g;
+  repActiveTab = 'grade';
+  goToGradeTab(g);
+};
+
+function goToGradeTab(g) {
+  document.getElementById('rep-grade-view').style.display = '';
+  document.getElementById('rep-leaderboard-view').style.display = 'none';
+  document.getElementById('rep-section-title').textContent = '📜 Eser Listesi';
+  renderGradeTabs();
+
+  if (isTeacherView) {
+    showOnly('teacher-grade-ranking');
+    renderGradeRanking();
+  } else {
+    showOnly('student-self-view');
+    renderSelfPieceList();
+  }
+}
+
+window.selectLeaderboardTab = function() {
+  repActiveTab = 'leaderboard';
+  renderGradeTabs();
+  renderLeaderboard();
+  document.getElementById('rep-grade-view').style.display = 'none';
+  document.getElementById('rep-leaderboard-view').style.display = '';
+  document.getElementById('rep-section-title').textContent = '🏆 Genel Sıralama';
+};
+
+// ===== Öğretmen: grade içi sıralama =====
+function renderGradeRanking() {
+  const wrap = document.getElementById('grade-leaderboard');
+  const ids = studentsInGrade(repActiveGrade);
+  if (!ids.length) {
+    wrap.innerHTML = '<p style="color:var(--muted);font-size:.85rem;">Bu grade\'de kayıtlı öğrenci yok.</p>';
+    return;
+  }
+  const rows = ids.map(sid => ({ sid, pct: calcPct(sid, repActiveGrade) }))
+    .sort((a,b) => b.pct - a.pct);
+
+  wrap.innerHTML = rows.map((r,i) => {
+    return `<div class="lb-row" style="cursor:pointer;" onclick="openStudentDetail('${r.sid}')">
+      <div class="lb-rank">${i+1}</div>
+      <div class="lb-name">${studentName(r.sid)}</div>
+      <div class="lb-pct">${Math.round(r.pct*100)}%</div>
+    </div>`;
+  }).join('');
+}
+
+window.openStudentDetail = function(sid) {
+  repActiveStudentId = sid;
+  showOnly('teacher-student-detail');
+  renderTeacherPieceList();
+  renderAddGradeBox();
+  document.getElementById('delete-grade-btn').textContent = `🗑️ Grade ${repActiveGrade} Kaydını Sil`;
+  document.getElementById('change-pin-input').value = '';
+  document.getElementById('settings-msg').textContent = '';
+  const isExtra = sid.startsWith('s_new_') || sid.startsWith('s_extra_');
+  document.getElementById('delete-student-btn').style.display = isExtra ? '' : 'none';
+};
+
+window.closeStudentDetail = function() {
+  showOnly('teacher-grade-ranking');
+  renderGradeRanking();
+};
+
+function renderAddGradeBox() {
+  const box = document.getElementById('add-grade-box');
+  const existing = Object.keys(repProgress[repActiveStudentId] || {});
+  const allGrades = Object.keys(GRADE_PIECES).sort((a,b)=>+a-+b);
+  const missing = allGrades.filter(g => !existing.includes(g));
+  if (!missing.length) {
+    box.innerHTML = '<p style="color:var(--muted);font-size:.82rem;">Bu öğrenci tüm grade\'lere zaten dahil.</p>';
+    return;
+  }
+  box.innerHTML = `
+    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+      <select id="add-grade-select" style="padding:9px 14px; border-radius:10px; border:1px solid var(--border); font-family:inherit; font-size:.85rem;">
+        ${missing.map(g => `<option value="${g}">Grade ${g}</option>`).join('')}
+      </select>
+      <button class="back-btn" onclick="addGradeToStudent()">+ Bu Grade'i Ekle</button>
+    </div>`;
+}
+
+window.addGradeToStudent = async function() {
+  const g = document.getElementById('add-grade-select').value;
+  const pieces = GRADE_PIECES[g] || [];
+  const entry = { completed: pieces.map(() => false) };
+  repProgress[repActiveStudentId] = repProgress[repActiveStudentId] || {};
+  repProgress[repActiveStudentId][g] = entry;
+  try {
+    await set(ref(db, `repertoire/${repActiveStudentId}/${g}`), entry);
+    showSaveToast();
+  } catch (e) {
+    console.error('Grade eklenemedi:', e);
+  }
+  repActiveGrade = g;
+  renderTeacherPieceList();
+  renderAddGradeBox();
+  renderGradeTabs();
+};
+
+window.deleteGradeFromStudent = async function() {
+  const sid = repActiveStudentId;
+  const g = repActiveGrade;
+  const existing = Object.keys(repProgress[sid] || {});
+  if (existing.length <= 1) {
+    document.getElementById('settings-msg').innerHTML = '<span style="color:#c0392b;">Bir öğrencinin en az 1 grade\'i olmalı, bu sonuncusunu silemezsiniz.</span>';
+    return;
+  }
+  if (!confirm(`${studentName(sid)} adlı öğrencinin Grade ${g} kaydını silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`)) return;
+
+  try {
+    await remove(ref(db, `repertoire/${sid}/${g}`));
+    delete repProgress[sid][g];
+    showSaveToast();
+  } catch (e) {
+    console.error('Grade silinemedi:', e);
+    document.getElementById('settings-msg').innerHTML = '<span style="color:#c0392b;">Silinemedi, bağlantınızı kontrol edin.</span>';
+    return;
+  }
+
+  // En son kalan grade'lerden birine geç ve sıralamaya dön
+  const remaining = Object.keys(repProgress[sid]).sort((a,b)=>+a-+b);
+  repActiveGrade = remaining[0];
+  closeStudentDetail();
+};
+
+window.changeStudentPin = async function() {
+  const sid = repActiveStudentId;
+  const newPin = document.getElementById('change-pin-input').value.trim();
+  const msgBox = document.getElementById('settings-msg');
+
+  if (!/^\d{4}$/.test(newPin)) { msgBox.innerHTML = '<span style="color:#c0392b;">PIN 4 haneli rakam olmalı.</span>'; return; }
+
+  const newHash = await window.sha256(newPin);
+  const takenMain = STUDENTS_DATA.some(s => s.id !== sid && s.pinHash === newHash);
+  // Extra liste: plain PIN ile
+  const takenExtra = (extraStudentsCache || []).some(s => s.id !== sid && s.pin === newPin);
+  if (takenMain || takenExtra) {
+    msgBox.innerHTML = '<span style="color:#c0392b;">Bu PIN başka bir öğrencide kayıtlı, farklı bir PIN seçin.</span>';
+    return;
+  }
+
+  const isExtra = sid.startsWith('s_new_') || sid.startsWith('s_extra_');
+
+  try {
+    if (isExtra) {
+      // Extra öğrenciler Firebase'de plain PIN olarak
+      await set(ref(db, `extra_students/${sid}/pin`), newPin);
+      const ec = (extraStudentsCache || []).find(s => s.id === sid);
+      if (ec) ec.pin = newPin;
+    } else {
+      // Ana öğrenciler: hash kaydediyoruz
+      await set(ref(db, `pin_overrides/${sid}`), newHash);
+      const sd = STUDENTS_DATA.find(s => s.id === sid);
+      if (sd) sd.pinHash = newHash;
+    }
+    document.getElementById('change-pin-input').value = '';
+    msgBox.innerHTML = '<span style="color:var(--green);">✅ PIN güncellendi.</span>';
+  } catch (e) {
+    console.error('PIN değiştirilemedi:', e);
+    msgBox.innerHTML = '<span style="color:#c0392b;">Kaydedilemedi, bağlantınızı kontrol edin.</span>';
+  }
+};
+
+window.deleteEntireStudent = async function() {
+  const sid = repActiveStudentId;
+  const isExtra = sid.startsWith('s_new_') || sid.startsWith('s_extra_');
+  if (!isExtra) {
+    document.getElementById('settings-msg').innerHTML = '<span style="color:#c0392b;">Bu öğrenci ana listede tanımlı, sistemden tamamen silinemez.</span>';
+    return;
+  }
+  const name = studentName(sid);
+  if (!confirm(`${name} adlı öğrenciyi sistemden TAMAMEN silmek istediğinize emin misiniz?\n\nTüm grade kayıtları ve giriş bilgisi kalıcı olarak silinecek. Bu işlem geri alınamaz.`)) return;
+
+  try {
+    await remove(ref(db, `extra_students/${sid}`));
+    await remove(ref(db, `repertoire/${sid}`));
+  } catch (e) {
+    console.error('Öğrenci silinemedi:', e);
+    document.getElementById('settings-msg').innerHTML = '<span style="color:#c0392b;">Silinemedi, bağlantınızı kontrol edin.</span>';
+    return;
+  }
+
+  // Yerel listelerden de temizle
+  const idx = window.STUDENTS.findIndex(s => s.id === sid);
+  if (idx !== -1) window.STUDENTS.splice(idx, 1);
+  if (extraStudentsCache) {
+    const eidx = extraStudentsCache.findIndex(s => s.id === sid);
+    if (eidx !== -1) extraStudentsCache.splice(eidx, 1);
+  }
+  delete repProgress[sid];
+
+  showSaveToast();
+  closeStudentDetail();
+};
+
+// ===== Öğretmen: yeni öğrenci ekleme =====
+window.openAddStudentForm = function() {
+  const sel = document.getElementById('new-student-grade');
+  sel.innerHTML = Object.keys(GRADE_PIECES).sort((a,b)=>+a-+b)
+    .map(g => `<option value="${g}">Grade ${g}</option>`).join('');
+  document.getElementById('new-student-name').value = '';
+  document.getElementById('new-student-pin').value = '';
+  document.getElementById('add-student-error').textContent = '';
+  showOnly('add-student-form');
+};
+
+window.closeAddStudentForm = function() {
+  showOnly('teacher-grade-ranking');
+  renderGradeRanking();
+};
+
+window.saveNewStudent = async function() {
+  const name = document.getElementById('new-student-name').value.trim();
+  const pin = document.getElementById('new-student-pin').value.trim();
+  const grade = document.getElementById('new-student-grade').value;
+  const errBox = document.getElementById('add-student-error');
+
+  if (!name) { errBox.textContent = 'Lütfen ad soyad girin.'; return; }
+  if (!/^\d{4}$/.test(pin)) { errBox.textContent = 'PIN 4 haneli rakam olmalı.'; return; }
+  const newHash = await window.sha256(pin);
+  const pinTaken = STUDENTS_DATA.some(s => s.pinHash === newHash) || (extraStudentsCache || []).some(s => s.pin === pin);
+  if (pinTaken) { errBox.textContent = 'Bu PIN zaten kullanılıyor, başka bir PIN seçin.'; return; }
+
+  const newId = 's_new_' + Date.now();
+  const newStudent = { id: newId, name, pin };
+
+  try {
+    await set(ref(db, `extra_students/${newId}`), newStudent);
+    const pieces = GRADE_PIECES[grade] || [];
+    const entry = { completed: pieces.map(() => false) };
+    await set(ref(db, `repertoire/${newId}/${grade}`), entry);
+
+    window.STUDENTS.push(newStudent);
+    if (extraStudentsCache) extraStudentsCache.push(newStudent);
+    repProgress[newId] = { [grade]: entry };
+
+    showSaveToast();
+    repActiveGrade = grade;
+    showOnly('teacher-grade-ranking');
+    renderGradeRanking();
+  } catch (e) {
+    console.error('Öğrenci eklenemedi:', e);
+    errBox.textContent = 'Kaydedilemedi, internet bağlantınızı kontrol edin.';
+  }
+};
+
+// ===== Öğretmen: seçili öğrencinin checklist'i (tıklanabilir, kaydeder) =====
+function renderTeacherPieceList() {
+  const list = document.getElementById('piece-list');
+  const summaryTitle = document.getElementById('progress-summary-title');
+  const summaryPct   = document.getElementById('progress-summary-pct');
+  const fill         = document.getElementById('progress-bar-fill');
+
+  const entry  = repProgress[repActiveStudentId] && repProgress[repActiveStudentId][repActiveGrade];
+  const pieces = (GRADE_PIECES[repActiveGrade] || []);
+
+  closeMovePanel();
+
+  if (!entry) {
+    list.innerHTML = '<p style="color:var(--muted);font-size:.85rem;">Bu grade için kayıt bulunamadı.</p>';
+    summaryTitle.textContent = `${studentName(repActiveStudentId)} — Grade ${repActiveGrade}`;
+    summaryPct.textContent = '0%';
+    fill.style.width = '0%';
+    return;
+  }
+
+  const pct = Math.round(calcPct(repActiveStudentId, repActiveGrade) * 100);
+  summaryTitle.textContent = `${studentName(repActiveStudentId)} — Grade ${repActiveGrade} İlerlemesi`;
+  summaryPct.textContent = pct + '%';
+  fill.style.width = pct + '%';
+
+  const removed = entry.removedIndices || [];
+  const custom  = entry.customPieces  || [];
+
+  // Standart eserler (silinmemiş olanlar)
+  const stdRows = pieces.map((name, i) => {
+    if (removed.includes(i)) return '';
+    const done = !!(entry.completed && entry.completed[i]);
+    return `<div class="piece-row ${done ? 'done' : ''}" onclick="togglePiece(${i})">
+      <div class="piece-check">${done ? '✓' : ''}</div>
+      <div class="piece-name">${name}</div>
+      <div class="piece-status">${done ? 'Bitirdi' : 'Bekliyor'}</div>
+      <div class="piece-actions" onclick="event.stopPropagation()">
+        <button class="piece-action-btn" onclick="openMovePiece(${i}, false, \`${name.replace(/`/g,"'")}\`)">↗ Taşı</button>
+        <button class="piece-action-btn danger" onclick="deletePiece(${i}, false)">✕ Sil</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Custom (özel eklenen) eserler
+  const custRows = custom.map((p, ci) => {
+    const done = !!p.done;
+    return `<div class="piece-row ${done ? 'done' : ''}" onclick="toggleCustomPiece(${ci})">
+      <div class="piece-check">${done ? '✓' : ''}</div>
+      <div class="piece-name">${p.name} <span style="font-size:.68rem;color:var(--gold);margin-left:4px;">● özel</span></div>
+      <div class="piece-status">${done ? 'Bitirdi' : 'Bekliyor'}</div>
+      <div class="piece-actions" onclick="event.stopPropagation()">
+        <button class="piece-action-btn" onclick="openMovePiece(${ci}, true, \`${p.name.replace(/`/g,"'")}\`)">↗ Taşı</button>
+        <button class="piece-action-btn danger" onclick="deletePiece(${ci}, true)">✕ Sil</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  list.innerHTML = stdRows + custRows;
+}
+
+window.togglePiece = async function(i) {
+  const entry = repProgress[repActiveStudentId][repActiveGrade];
+  entry.completed[i] = !entry.completed[i];
+  renderTeacherPieceList();
+  try {
+    await set(ref(db, `repertoire/${repActiveStudentId}/${repActiveGrade}`), entry);
+    showSaveToast();
+  } catch (e) { console.error('Kaydedilemedi:', e); }
+};
+
+window.toggleCustomPiece = async function(ci) {
+  const entry = repProgress[repActiveStudentId][repActiveGrade];
+  if (!entry.customPieces || !entry.customPieces[ci]) return;
+  entry.customPieces[ci].done = !entry.customPieces[ci].done;
+  renderTeacherPieceList();
+  try {
+    await set(ref(db, `repertoire/${repActiveStudentId}/${repActiveGrade}`), entry);
+    showSaveToast();
+  } catch (e) { console.error('Kaydedilemedi:', e); }
+};
+
+// Eser sil
+window.deletePiece = async function(idx, isCustom) {
+  const entry = repProgress[repActiveStudentId][repActiveGrade];
+  if (isCustom) {
+    if (!confirm('Bu özel eseri listeden kaldırmak istiyor musunuz?')) return;
+    entry.customPieces = (entry.customPieces || []).filter((_, ci) => ci !== idx);
+  } else {
+    if (!confirm('Bu eseri bu öğrencinin listesinden kaldırmak istiyor musunuz?')) return;
+    entry.removedIndices = [...(entry.removedIndices || []), idx];
+  }
+  renderTeacherPieceList();
+  try {
+    await set(ref(db, `repertoire/${repActiveStudentId}/${repActiveGrade}`), entry);
+    showSaveToast();
+  } catch (e) { console.error('Silinemedi:', e); }
+};
+
+// Taşı: paneli aç
+let _movePieceIdx = null;
+let _movePieceIsCustom = false;
+
+window.openMovePiece = function(idx, isCustom, name) {
+  _movePieceIdx = idx;
+  _movePieceIsCustom = isCustom;
+  const panel = document.getElementById('move-piece-panel');
+  document.getElementById('move-piece-name-label').textContent = `"${name}"`;
+  const allGrades = Object.keys(GRADE_PIECES).sort((a,b) => +a - +b);
+  const select = document.getElementById('move-target-grade');
+  select.innerHTML = allGrades
+    .filter(g => g !== repActiveGrade)
+    .map(g => `<option value="${g}">Grade ${g}</option>`).join('');
+  panel.classList.add('open');
+};
+
+window.closeMovePanel = function() {
+  const panel = document.getElementById('move-piece-panel');
+  if (panel) panel.classList.remove('open');
+  _movePieceIdx = null;
+};
+
+window.confirmMovePiece = async function() {
+  const toGrade = document.getElementById('move-target-grade').value;
+  const fromGrade = repActiveGrade;
+  const fromEntry = repProgress[repActiveStudentId][fromGrade];
+  if (!fromEntry || _movePieceIdx === null) return;
+
+  // Eserin adını aktif öğrenciden al
+  let pieceName;
+  if (_movePieceIsCustom) {
+    const cp = (fromEntry.customPieces || [])[_movePieceIdx];
+    if (!cp) return;
+    pieceName = cp.name;
+  } else {
+    const pieces = GRADE_PIECES[fromGrade] || [];
+    pieceName = pieces[_movePieceIdx];
+  }
+
+  // Bu grade'de kaydı olan TÜM öğrenciler için taşıma yap
+  const gradeStudents = Object.keys(repProgress).filter(sid =>
+    sid !== TEACHER_ID && repProgress[sid] && repProgress[sid][fromGrade]
+  );
+
+  const savePromises = [];
+
+  for (const sid of gradeStudents) {
+    const sFrom = repProgress[sid][fromGrade];
+    let sDone = false;
+
+    if (_movePieceIsCustom) {
+      // Custom piece: isim eşleşmesi
+      const cpIdx = (sFrom.customPieces || []).findIndex(p => p.name === pieceName);
+      if (cpIdx === -1) continue; // bu öğrencide bu özel eser yoksa atla
+      sDone = !!sFrom.customPieces[cpIdx].done;
+      sFrom.customPieces = sFrom.customPieces.filter((_, ci) => ci !== cpIdx);
+    } else {
+      // Standart piece: index ile
+      sDone = !!(sFrom.completed && sFrom.completed[_movePieceIdx]);
+      sFrom.removedIndices = [...(sFrom.removedIndices || []), _movePieceIdx];
+    }
+
+    // Hedef grade'i oluştur (yoksa)
+    repProgress[sid][toGrade] = repProgress[sid][toGrade] || {
+      completed: (GRADE_PIECES[toGrade] || []).map(() => false)
+    };
+    const sTo = repProgress[sid][toGrade];
+    sTo.customPieces = sTo.customPieces || [];
+    // Zaten varsa tekrar ekleme
+    if (!sTo.customPieces.find(p => p.name === pieceName)) {
+      sTo.customPieces.push({ name: pieceName, done: sDone });
+    }
+
+    savePromises.push(set(ref(db, `repertoire/${sid}/${fromGrade}`), sFrom));
+    savePromises.push(set(ref(db, `repertoire/${sid}/${toGrade}`), repProgress[sid][toGrade]));
+  }
+
+  closeMovePanel();
+  renderTeacherPieceList();
+  renderAddGradeBox();
+  renderGradeTabs();
+
+  try {
+    await Promise.all(savePromises);
+    showSaveToast();
+  } catch (e) { console.error('Taşıma hatası:', e); }
+};
+
+// Özel eser ekle — aynı grade'deki TÜM öğrencilere eklenir (ortak eser)
+window.addCustomPiece = async function() {
+  const nameEl = document.getElementById('new-piece-name');
+  const msgEl  = document.getElementById('add-piece-msg');
+  const name   = nameEl.value.trim();
+  if (!name) { msgEl.innerHTML = '<span style="color:#c0392b;">Eser adı boş olamaz.</span>'; return; }
+
+  // Bu grade'de kaydı olan tüm öğrenciler
+  const gradeStudents = Object.keys(repProgress).filter(sid =>
+    sid !== TEACHER_ID && repProgress[sid] && repProgress[sid][repActiveGrade]
+  );
+
+  if (!gradeStudents.length) {
+    msgEl.innerHTML = '<span style="color:#c0392b;">Grade kaydı bulunamadı.</span>'; return;
+  }
+
+  const savePromises = [];
+  for (const sid of gradeStudents) {
+    const entry = repProgress[sid][repActiveGrade];
+    entry.customPieces = entry.customPieces || [];
+    // Aynı isimde eser zaten varsa tekrar ekleme
+    if (!entry.customPieces.find(p => p.name === name)) {
+      entry.customPieces.push({ name, done: false });
+      savePromises.push(set(ref(db, `repertoire/${sid}/${repActiveGrade}`), entry));
+    }
+  }
+
+  nameEl.value = '';
+  msgEl.innerHTML = '<span style="color:var(--green);">✅ Eser tüm öğrencilere eklendi.</span>';
+  setTimeout(() => { msgEl.innerHTML = ''; }, 2000);
+
+  renderTeacherPieceList();
+  try {
+    await Promise.all(savePromises);
+    showSaveToast();
+  } catch (e) { console.error('Eser eklenemedi:', e); }
+};
+
+// ===== Öğrenci: kendi checklist'i (salt okunur) =====
+function renderSelfPieceList() {
+  const list = document.getElementById('piece-list-self');
+  const summaryTitle = document.getElementById('progress-summary-title-self');
+  const summaryPct = document.getElementById('progress-summary-pct-self');
+  const fill = document.getElementById('progress-bar-fill-self');
+
+  const entry = repProgress[repActiveStudentId] && repProgress[repActiveStudentId][repActiveGrade];
+  const pieces = (GRADE_PIECES[repActiveGrade] || []);
+
+  if (!entry || !pieces.length) {
+    list.innerHTML = '<p style="color:var(--muted);font-size:.85rem;">Bu grade için kayıt bulunamadı.</p>';
+    summaryTitle.textContent = `Grade ${repActiveGrade}`;
+    summaryPct.textContent = '0%';
+    fill.style.width = '0%';
+    return;
+  }
+
+  const pct = Math.round(calcPct(repActiveStudentId, repActiveGrade) * 100);
+  summaryTitle.textContent = `Grade ${repActiveGrade} İlerlemesi`;
+  summaryPct.textContent = pct + '%';
+  fill.style.width = pct + '%';
+
+  list.innerHTML = pieces.map((name, i) => {
+    const done = !!entry.completed[i];
+    return `<div class="piece-row ${done ? 'done' : ''}">
+      <div class="piece-check">${done ? '✓' : ''}</div>
+      <div class="piece-name">${name}</div>
+      <div class="piece-status">${done ? 'Bitirdi' : 'Bekliyor'}</div>
+    </div>`;
+  }).join('');
+}
+
+function showSaveToast() {
+  const t = document.getElementById('save-toast');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1600);
+}
+
+function renderLeaderboard() {
+  const lb = document.getElementById('leaderboard');
+  const meObj = getMe();
+  const rows = Object.keys(repProgress).filter(sid => sid !== TEACHER_ID).map(sid => {
+    const grades = Object.keys(repProgress[sid]);
+    let maxGrade = 0;
+    grades.forEach(g => { if (+g > maxGrade) maxGrade = +g; });
+    const score = calcWeightedScore(sid);
+    return { sid, score, maxGrade };
+  }).sort((a,b) => b.score - a.score);
+
+  lb.innerHTML = rows.map((r, i) => {
+    const isMe = meObj && r.sid === meObj.id;
+    return `<div class="lb-row ${isMe ? 'me' : ''}" id="${isMe ? 'lb-me-row' : ''}">
+      <div class="lb-rank">${i+1}</div>
+      <div class="lb-name">${studentName(r.sid)}<span class="lb-grade">Grade ${r.maxGrade}</span></div>
+      <div class="lb-pct">${(r.score*100).toFixed(1)} puan</div>
+    </div>`;
+  }).join('');
+
+  // Kullanıcının kendi satırına otomatik kaydır
+  setTimeout(() => {
+    const myRow = document.getElementById('lb-me-row');
+    if (myRow) myRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 200);
+}
+
+// Welcome card'ı repertoire verisi yüklendikten sonra güncelle
+window.updateWelcomeCard = async function(sid) {
+  await loadRepProgress();
+
+  const rankEl   = document.getElementById('avatar-rank');
+  const labelEl  = document.getElementById('avatar-label');
+  const badgesEl = document.getElementById('welcome-badges');
+
+  if (sid === TEACHER_ID) {
+    rankEl.textContent  = '👨‍🏫';
+    labelEl.textContent = '';
+    badgesEl.innerHTML  = '<span class="w-badge w-badge-grade">Öğretmen Paneli</span>';
+    return;
+  }
+
+  const score = calcWeightedScore(sid);
+  const scoreDisplay = (score * 100).toFixed(1);
+
+  // Sıralamadaki yeri
+  const rows = Object.keys(repProgress)
+    .filter(s => s !== TEACHER_ID)
+    .map(s => ({ sid: s, score: calcWeightedScore(s) }))
+    .sort((a, b) => b.score - a.score);
+  const rank = rows.findIndex(r => r.sid === sid) + 1;
+
+  // En yüksek grade
+  const grades = Object.keys(repProgress[sid] || {}).sort((a, b) => +b - +a);
+  const maxGrade = grades[0];
+
+  if (!maxGrade) {
+    rankEl.textContent  = '🎸';
+    labelEl.textContent = '';
+    badgesEl.innerHTML  = '';
+    return;
+  }
+
+  // Avatar: rank numarası
+  rankEl.textContent  = `#${rank}`;
+  labelEl.textContent = 'sıra';
+
+  // Badges: Grade + puan
+  badgesEl.innerHTML = `
+    <span class="w-badge w-badge-grade">Grade ${maxGrade}</span>
+    <span class="w-badge w-badge-score">⭐ ${scoreDisplay} puan</span>
+    ${rank <= 3 ? '<span class="w-badge w-badge-rank">🏆 İlk 3</span>' : ''}
+  `;
+};
+
+// Modül yüklenirken bekleyen avatar güncellemesini tetikle
+if (window._pendingAvatarUpdate) {
+  window.updateWelcomeCard(window._pendingAvatarUpdate);
+  window._pendingAvatarUpdate = null;
+}
+</script>
 </body>
 </html>
