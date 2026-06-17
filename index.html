@@ -370,8 +370,8 @@
           <span class="welcome-name" id="welcome-name">Gitar Akademisi</span>
           <div class="welcome-badges" id="welcome-badges"></div>
         </div>
-        <span id="_gs_active_count" style="display:none;">🟢 Canlı Oda...</span>
-        <div id="online-badges-row"><span class="online-name-badge">🟢 Canlı Oda...</span></div>
+        <span id="_gs_active_count" style="display:none;">🟢</span>
+        <div id="online-badges-row"><span class="online-name-badge">🟢</span></div>
       </div>
       <button class="logout-btn" onclick="doLogout()">Çıkış Yap</button>
     </div>
@@ -666,7 +666,7 @@ window.completePendingLogin = function(student) {
     if (!row) return;
     const clean = (rawText || '').replace(/🟢\s*/g, '').trim();
     if (!clean || clean === 'Canlı Oda...') {
-      row.innerHTML = '<span class="online-name-badge">🟢 Canlı Oda...</span>';
+      row.innerHTML = '<span class="online-name-badge">🟢</span>';
       return;
     }
     const names = clean.split(',').map(n => n.trim()).filter(Boolean);
