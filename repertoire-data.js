@@ -1294,42 +1294,6 @@ const INITIAL_PROGRESS = {
       "pct": 0.2727272727272727
     }
   },
-  "s_extra_1": {
-    "1": {
-      "completed": [
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        false,
-        false,
-        false,
-        false,
-        true,
-        false,
-        true,
-        true,
-        true,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        true,
-        true,
-        true,
-        false,
-        false,
-        true,
-        true,
-        false
-      ],
-      "pct": 0.5172413793103449
-    }
-  },
   "s22": {
     "1": {
       "completed": [
@@ -3439,13 +3403,8 @@ const INITIAL_PROGRESS = {
   }
 };
 
-const EXTRA_STUDENTS = [
-  {
-    "id": "s_extra_1",
-    "name": "Erdinç DOĞRU",
-    "pin": "1234"
-  }
-];
+const EXTRA_STUDENTS = [];
+// (Eski s_extra_1 = Erdinç DOĞRU buradan kaldırıldı. Yeni öğrenciler Firebase'e kaydedilir.)
 // =====================================================================
 // GÜVENLİK: PIN'ler artık burada SHA-256 hash olarak saklanır.
 // F12 açan biri sadece hash değerlerini görür, gerçek PIN'leri değil.

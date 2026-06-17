@@ -155,16 +155,6 @@
     .welcome-name { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700; }
     
     .online-pill { font-size: .75rem; font-weight: 600; background: var(--green-bg); color: var(--green); padding: 5px 14px; border-radius: 20px; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(59,109,17,0.08); }
-    #online-badges-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-    .online-name-badge {
-      font-size: .75rem; font-weight: 600;
-      background: var(--green-bg); color: var(--green);
-      padding: 4px 11px; border-radius: 20px;
-      display: inline-flex; align-items: center; gap: 5px;
-      box-shadow: 0 2px 6px rgba(59,109,17,0.08);
-      border: 1px solid #b0d890;
-      white-space: nowrap;
-    }
     
     .logout-btn { font-size: .78rem; color: var(--muted); background: none; border: 1px solid var(--border); padding: 6px 14px; border-radius: 20px; cursor: pointer; font-family: inherit; transition: all .15s; }
     .logout-btn:hover { background: var(--red-bg); color: var(--red); border-color: #e8b8b8; }
@@ -378,11 +368,7 @@
           <span class="welcome-name" id="welcome-name">Gitar Akademisi</span>
           <div class="welcome-badges" id="welcome-badges"></div>
         </div>
-        <!-- live-bar.js bu gizli span'ı günceller; MutationObserver onu izler -->
-        <span id="_gs_active_count" style="display:none;">🟢 Canlı Oda...</span>
-        <div id="online-badges-row">
-          <span class="online-name-badge">🟢 Canlı Oda...</span>
-        </div>
+        <span class="online-pill" id="_gs_active_count">🟢 Canlı Oda...</span>
       </div>
       <button class="logout-btn" onclick="doLogout()">Çıkış Yap</button>
     </div>
@@ -450,8 +436,18 @@
     <div id="rep-grade-view">
       <!-- Öğretmen modu: grade içi öğrenci sıralaması -->
       <div id="teacher-grade-ranking" style="display:none;">
-        <button class="back-btn" style="margin-bottom:1rem;" onclick="openAddStudentForm()">+ Yeni Öğrenci Ekle</button>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:1rem;">
+          <button class="back-btn" onclick="openAddStudentForm()">+ Yeni Öğrenci Ekle</button>
+          <button class="back-btn" onclick="openAllStudentsView()">👥 Tüm Öğrenciler</button>
+        </div>
         <div class="leaderboard" id="grade-leaderboard"></div>
+      </div>
+
+      <!-- Öğretmen modu: tüm öğrenciler (grade'den bağımsız) -->
+      <div id="all-students-view" style="display:none;">
+        <button class="back-btn" style="margin-bottom:1rem;" onclick="closeAllStudentsView()">← Sıralamaya Dön</button>
+        <p style="font-size:.8rem; color:var(--muted); margin-bottom:1rem;">🔑 simgesi = eser listesine henüz eklenmemiş öğrenciler</p>
+        <div class="student-select-grid" id="all-students-grid"></div>
       </div>
 
       <!-- Öğretmen modu: yeni öğrenci ekleme formu -->
@@ -460,10 +456,10 @@
           <div class="progress-summary-head">
             <div class="progress-summary-title">Yeni Öğrenci Ekle</div>
           </div>
+          <p style="font-size:.82rem; color:var(--muted); margin-bottom:.8rem;">Sadece giriş bilgisi oluşturulur. Eser listesine <strong>Tüm Öğrenciler → Öğrenci Detayı</strong> üzerinden grade eklenebilir.</p>
           <div style="display:flex; flex-direction:column; gap:10px; margin-top:.6rem;">
             <input type="text" id="new-student-name" placeholder="Ad Soyad" style="padding:10px 14px; border-radius:10px; border:1px solid var(--border); font-family:inherit; font-size:.9rem;">
             <input type="text" id="new-student-pin" placeholder="4 haneli şifre (PIN)" maxlength="4" style="padding:10px 14px; border-radius:10px; border:1px solid var(--border); font-family:inherit; font-size:.9rem;">
-            <select id="new-student-grade" style="padding:10px 14px; border-radius:10px; border:1px solid var(--border); font-family:inherit; font-size:.9rem;"></select>
             <div style="display:flex; gap:8px;">
               <button class="back-btn" onclick="saveNewStudent()" style="background:var(--gold); color:#fff; border-color:var(--gold);">Kaydet</button>
               <button class="back-btn" onclick="closeAddStudentForm()">Vazgeç</button>
@@ -660,32 +656,6 @@ window.completePendingLogin = function(student) {
   window.pendingLoginSid = null;
   openDashboard();
 };
-
-// ===== Online Rozet Gösterimi =====
-(function setupOnlineBadges() {
-  function buildBadges(rawText) {
-    const row = document.getElementById('online-badges-row');
-    if (!row) return;
-    // live-bar.js "🟢 İsim1, İsim2" formatında yazıyor
-    const clean = (rawText || '').replace(/🟢\s*/g, '').trim();
-    if (!clean || clean === 'Canlı Oda...') {
-      row.innerHTML = '<span class="online-name-badge">🟢 Canlı Oda...</span>';
-      return;
-    }
-    const names = clean.split(',').map(n => n.trim()).filter(Boolean);
-    row.innerHTML = names.map(n =>
-      `<span class="online-name-badge">🟢 ${n}</span>`
-    ).join('');
-  }
-
-  const pill = document.getElementById('_gs_active_count');
-  if (!pill) return;
-  const obs = new MutationObserver(() => {
-    buildBadges(pill.textContent || pill.innerText || '');
-  });
-  obs.observe(pill, { childList: true, subtree: true, characterData: true });
-  buildBadges(pill.textContent || '');
-})();
 </script>
 
 <script type="module" src="/live-bar.js"></script>
@@ -812,9 +782,13 @@ function studentName(sid) {
   return s ? s.name : sid;
 }
 
-// Tüm öğrencilerden, belirli bir grade'de kaydı olanları döndürür
+// Tüm öğrencilerden, belirli bir grade'de kaydı olanları döndürür (sadece tanınan öğrenciler)
 function studentsInGrade(grade) {
-  return Object.keys(repProgress).filter(sid => sid !== TEACHER_ID && repProgress[sid][grade]);
+  return Object.keys(repProgress).filter(sid =>
+    sid !== TEACHER_ID &&
+    window.STUDENTS.find(s => s.id === sid) &&
+    repProgress[sid][grade]
+  );
 }
 
 window.openRepertoire = async function(e) {
@@ -823,6 +797,12 @@ window.openRepertoire = async function(e) {
 
   const meObj = getMe();
   isTeacherView = !!(meObj && meObj.id === TEACHER_ID);
+
+  // Grade'i olmayan öğrenci eser listesine giremez
+  if (!isTeacherView && meObj) {
+    const grades = Object.keys(repProgress[meObj.id] || {});
+    if (!grades.length) return;
+  }
 
   if (isTeacherView) {
     // Öğretmen sıralamayı/öğrenci adlarını doğru görsün diye, henüz STUDENTS
@@ -881,7 +861,7 @@ function renderGradeTabs() {
 }
 
 function showOnly(viewId) {
-  ['teacher-grade-ranking','add-student-form','teacher-student-detail','student-self-view'].forEach(id => {
+  ['teacher-grade-ranking','add-student-form','teacher-student-detail','student-self-view','all-students-view'].forEach(id => {
     document.getElementById(id).style.display = (id === viewId) ? '' : 'none';
   });
 }
@@ -938,10 +918,14 @@ function renderGradeRanking() {
 
 window.openStudentDetail = function(sid) {
   repActiveStudentId = sid;
+  repProgress[sid] = repProgress[sid] || {}; // grade'i olmayan öğrenciyi başlat
   showOnly('teacher-student-detail');
   renderTeacherPieceList();
   renderAddGradeBox();
-  document.getElementById('delete-grade-btn').textContent = `🗑️ Grade ${repActiveGrade} Kaydını Sil`;
+  const hasGrades = Object.keys(repProgress[sid]).length > 0;
+  const deleteGradeBtn = document.getElementById('delete-grade-btn');
+  deleteGradeBtn.textContent = `🗑️ Grade ${repActiveGrade} Kaydını Sil`;
+  deleteGradeBtn.style.display = hasGrades ? '' : 'none';
   document.getElementById('change-pin-input').value = '';
   document.getElementById('settings-msg').textContent = '';
   const isExtra = sid.startsWith('s_new_') || sid.startsWith('s_extra_');
@@ -1087,9 +1071,6 @@ window.deleteEntireStudent = async function() {
 
 // ===== Öğretmen: yeni öğrenci ekleme =====
 window.openAddStudentForm = function() {
-  const sel = document.getElementById('new-student-grade');
-  sel.innerHTML = Object.keys(GRADE_PIECES).sort((a,b)=>+a-+b)
-    .map(g => `<option value="${g}">Grade ${g}</option>`).join('');
   document.getElementById('new-student-name').value = '';
   document.getElementById('new-student-pin').value = '';
   document.getElementById('add-student-error').textContent = '';
@@ -1101,10 +1082,59 @@ window.closeAddStudentForm = function() {
   renderGradeRanking();
 };
 
+// ===== Tüm Öğrenciler görünümü =====
+window.openAllStudentsView = function() {
+  showOnly('all-students-view');
+  const grid = document.getElementById('all-students-grid');
+  const allStudents = window.STUDENTS.filter(s => s.id !== TEACHER_ID);
+  if (!allStudents.length) {
+    grid.innerHTML = '<p style="color:var(--muted);font-size:.85rem;">Henüz öğrenci yok.</p>';
+    return;
+  }
+  grid.innerHTML = allStudents.map(s => {
+    const grades = Object.keys(repProgress[s.id] || {});
+    const hasGrades = grades.length > 0;
+    const maxGrade = hasGrades ? Math.max(...grades.map(Number)) : null;
+    const score = hasGrades ? (calcWeightedScore(s.id) * 100).toFixed(1) : null;
+    return `<div class="student-select-card" onclick="openStudentDetailFromAll('${s.id}')">
+      <span>${hasGrades ? '' : '🔑 '}<strong>${s.name}</strong></span>
+      <span class="ssc-pct">${hasGrades ? `Grade ${maxGrade} · ${score} puan` : 'Eser listesine eklenmemiş'}</span>
+    </div>`;
+  }).join('');
+};
+
+window.closeAllStudentsView = function() {
+  showOnly('teacher-grade-ranking');
+  renderGradeRanking();
+};
+
+window.openStudentDetailFromAll = function(sid) {
+  repProgress[sid] = repProgress[sid] || {};
+  const grades = Object.keys(repProgress[sid]).sort((a,b) => +a - +b);
+  // Eğer öğrencinin grade'i varsa ilkini aç, yoksa Grade 1'i varsayılan yap
+  repActiveGrade = grades.length ? grades[0] : Object.keys(GRADE_PIECES).sort((a,b) => +a - +b)[0];
+  openStudentDetail(sid);
+};
+
+// ===== Eser Listesi kilitli mi kontrolü (öğrenci için) =====
+function checkRepertoireAccess(sid) {
+  const card = document.getElementById('repertoire-card');
+  if (!card) return;
+  const grades = Object.keys(repProgress[sid] || {});
+  if (grades.length === 0) {
+    card.style.pointerEvents = 'none';
+    card.style.filter = 'grayscale(0.3) opacity(0.7)';
+    card.querySelector('.card-icon').textContent = '🔑';
+    const desc = card.querySelector('.card-desc');
+    if (desc) desc.textContent = 'Eser listesine erişiminiz henüz açılmamış. Öğretmeniniz sizi bir grade\'e ekledikten sonra bu bölüme girebilirsiniz.';
+    const badge = card.querySelector('.badge');
+    if (badge) { badge.textContent = 'Kilitli'; badge.className = 'badge'; badge.style.cssText = 'background:#eee;color:#999;font-size:.7rem;font-weight:600;padding:3px 10px;border-radius:20px;'; }
+  }
+}
+
 window.saveNewStudent = async function() {
   const name = document.getElementById('new-student-name').value.trim();
   const pin = document.getElementById('new-student-pin').value.trim();
-  const grade = document.getElementById('new-student-grade').value;
   const errBox = document.getElementById('add-student-error');
 
   if (!name) { errBox.textContent = 'Lütfen ad soyad girin.'; return; }
@@ -1118,16 +1148,11 @@ window.saveNewStudent = async function() {
 
   try {
     await set(ref(db, `extra_students/${newId}`), newStudent);
-    const pieces = GRADE_PIECES[grade] || [];
-    const entry = { completed: pieces.map(() => false) };
-    await set(ref(db, `repertoire/${newId}/${grade}`), entry);
-
     window.STUDENTS.push(newStudent);
     if (extraStudentsCache) extraStudentsCache.push(newStudent);
-    repProgress[newId] = { [grade]: entry };
+    repProgress[newId] = {}; // henüz grade yok — öğrenci kilitte görünür
 
     showSaveToast();
-    repActiveGrade = grade;
     showOnly('teacher-grade-ranking');
     renderGradeRanking();
   } catch (e) {
@@ -1259,58 +1284,33 @@ window.closeMovePanel = function() {
 
 window.confirmMovePiece = async function() {
   const toGrade = document.getElementById('move-target-grade').value;
+  const sid = repActiveStudentId;
   const fromGrade = repActiveGrade;
-  const fromEntry = repProgress[repActiveStudentId][fromGrade];
+  const fromEntry = repProgress[sid][fromGrade];
   if (!fromEntry || _movePieceIdx === null) return;
 
-  // Eserin adını aktif öğrenciden al
-  let pieceName;
+  // Kaynak eserin adını ve completion durumunu al
+  let pieceName, pieceDone;
   if (_movePieceIsCustom) {
     const cp = (fromEntry.customPieces || [])[_movePieceIdx];
     if (!cp) return;
     pieceName = cp.name;
+    pieceDone = !!cp.done;
+    fromEntry.customPieces = fromEntry.customPieces.filter((_, ci) => ci !== _movePieceIdx);
   } else {
     const pieces = GRADE_PIECES[fromGrade] || [];
     pieceName = pieces[_movePieceIdx];
+    pieceDone = !!(fromEntry.completed && fromEntry.completed[_movePieceIdx]);
+    fromEntry.removedIndices = [...(fromEntry.removedIndices || []), _movePieceIdx];
   }
 
-  // Bu grade'de kaydı olan TÜM öğrenciler için taşıma yap
-  const gradeStudents = Object.keys(repProgress).filter(sid =>
-    sid !== TEACHER_ID && repProgress[sid] && repProgress[sid][fromGrade]
-  );
-
-  const savePromises = [];
-
-  for (const sid of gradeStudents) {
-    const sFrom = repProgress[sid][fromGrade];
-    let sDone = false;
-
-    if (_movePieceIsCustom) {
-      // Custom piece: isim eşleşmesi
-      const cpIdx = (sFrom.customPieces || []).findIndex(p => p.name === pieceName);
-      if (cpIdx === -1) continue; // bu öğrencide bu özel eser yoksa atla
-      sDone = !!sFrom.customPieces[cpIdx].done;
-      sFrom.customPieces = sFrom.customPieces.filter((_, ci) => ci !== cpIdx);
-    } else {
-      // Standart piece: index ile
-      sDone = !!(sFrom.completed && sFrom.completed[_movePieceIdx]);
-      sFrom.removedIndices = [...(sFrom.removedIndices || []), _movePieceIdx];
-    }
-
-    // Hedef grade'i oluştur (yoksa)
-    repProgress[sid][toGrade] = repProgress[sid][toGrade] || {
-      completed: (GRADE_PIECES[toGrade] || []).map(() => false)
-    };
-    const sTo = repProgress[sid][toGrade];
-    sTo.customPieces = sTo.customPieces || [];
-    // Zaten varsa tekrar ekleme
-    if (!sTo.customPieces.find(p => p.name === pieceName)) {
-      sTo.customPieces.push({ name: pieceName, done: sDone });
-    }
-
-    savePromises.push(set(ref(db, `repertoire/${sid}/${fromGrade}`), sFrom));
-    savePromises.push(set(ref(db, `repertoire/${sid}/${toGrade}`), repProgress[sid][toGrade]));
-  }
+  // Hedef grade'e ekle (yoksa oluştur)
+  repProgress[sid][toGrade] = repProgress[sid][toGrade] || {
+    completed: (GRADE_PIECES[toGrade] || []).map(() => false)
+  };
+  const toEntry = repProgress[sid][toGrade];
+  toEntry.customPieces = toEntry.customPieces || [];
+  toEntry.customPieces.push({ name: pieceName, done: pieceDone });
 
   closeMovePanel();
   renderTeacherPieceList();
@@ -1318,45 +1318,31 @@ window.confirmMovePiece = async function() {
   renderGradeTabs();
 
   try {
-    await Promise.all(savePromises);
+    await set(ref(db, `repertoire/${sid}/${fromGrade}`), fromEntry);
+    await set(ref(db, `repertoire/${sid}/${toGrade}`), repProgress[sid][toGrade]);
     showSaveToast();
   } catch (e) { console.error('Taşıma hatası:', e); }
 };
 
-// Özel eser ekle — aynı grade'deki TÜM öğrencilere eklenir (ortak eser)
+// Özel eser ekle
 window.addCustomPiece = async function() {
   const nameEl = document.getElementById('new-piece-name');
   const msgEl  = document.getElementById('add-piece-msg');
   const name   = nameEl.value.trim();
   if (!name) { msgEl.innerHTML = '<span style="color:#c0392b;">Eser adı boş olamaz.</span>'; return; }
 
-  // Bu grade'de kaydı olan tüm öğrenciler
-  const gradeStudents = Object.keys(repProgress).filter(sid =>
-    sid !== TEACHER_ID && repProgress[sid] && repProgress[sid][repActiveGrade]
-  );
-
-  if (!gradeStudents.length) {
-    msgEl.innerHTML = '<span style="color:#c0392b;">Grade kaydı bulunamadı.</span>'; return;
-  }
-
-  const savePromises = [];
-  for (const sid of gradeStudents) {
-    const entry = repProgress[sid][repActiveGrade];
-    entry.customPieces = entry.customPieces || [];
-    // Aynı isimde eser zaten varsa tekrar ekleme
-    if (!entry.customPieces.find(p => p.name === name)) {
-      entry.customPieces.push({ name, done: false });
-      savePromises.push(set(ref(db, `repertoire/${sid}/${repActiveGrade}`), entry));
-    }
-  }
+  const entry = repProgress[repActiveStudentId][repActiveGrade];
+  if (!entry) { msgEl.innerHTML = '<span style="color:#c0392b;">Grade kaydı bulunamadı.</span>'; return; }
+  entry.customPieces = entry.customPieces || [];
+  entry.customPieces.push({ name, done: false });
 
   nameEl.value = '';
-  msgEl.innerHTML = '<span style="color:var(--green);">✅ Eser tüm öğrencilere eklendi.</span>';
+  msgEl.innerHTML = '<span style="color:var(--green);">✅ Eser eklendi.</span>';
   setTimeout(() => { msgEl.innerHTML = ''; }, 2000);
 
   renderTeacherPieceList();
   try {
-    await Promise.all(savePromises);
+    await set(ref(db, `repertoire/${repActiveStudentId}/${repActiveGrade}`), entry);
     showSaveToast();
   } catch (e) { console.error('Eser eklenemedi:', e); }
 };
@@ -1403,7 +1389,9 @@ function showSaveToast() {
 function renderLeaderboard() {
   const lb = document.getElementById('leaderboard');
   const meObj = getMe();
-  const rows = Object.keys(repProgress).filter(sid => sid !== TEACHER_ID).map(sid => {
+  const rows = Object.keys(repProgress)
+    .filter(sid => sid !== TEACHER_ID && window.STUDENTS.find(s => s.id === sid))
+    .map(sid => {
     const grades = Object.keys(repProgress[sid]);
     let maxGrade = 0;
     grades.forEach(g => { if (+g > maxGrade) maxGrade = +g; });
@@ -1460,6 +1448,7 @@ window.updateWelcomeCard = async function(sid) {
     rankEl.textContent  = '🎸';
     labelEl.textContent = '';
     badgesEl.innerHTML  = '';
+    checkRepertoireAccess(sid); // grade yok → kilitle
     return;
   }
 
@@ -1473,6 +1462,9 @@ window.updateWelcomeCard = async function(sid) {
     <span class="w-badge w-badge-score">⭐ ${scoreDisplay} puan</span>
     ${rank <= 3 ? '<span class="w-badge w-badge-rank">🏆 İlk 3</span>' : ''}
   `;
+
+  // Eser listesi erişim kontrolü
+  checkRepertoireAccess(sid);
 };
 
 // Modül yüklenirken bekleyen avatar güncellemesini tetikle
