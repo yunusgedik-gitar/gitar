@@ -155,6 +155,8 @@
     .welcome-name { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700; }
     
     .online-pill { font-size: .75rem; font-weight: 600; background: var(--green-bg); color: var(--green); padding: 5px 14px; border-radius: 20px; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(59,109,17,0.08); }
+    #online-badges-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .online-name-badge { font-size: .75rem; font-weight: 600; background: var(--green-bg); color: var(--green); padding: 4px 11px; border-radius: 20px; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 2px 6px rgba(59,109,17,0.08); border: 1px solid #b0d890; white-space: nowrap; }
     
     .logout-btn { font-size: .78rem; color: var(--muted); background: none; border: 1px solid var(--border); padding: 6px 14px; border-radius: 20px; cursor: pointer; font-family: inherit; transition: all .15s; }
     .logout-btn:hover { background: var(--red-bg); color: var(--red); border-color: #e8b8b8; }
@@ -368,7 +370,8 @@
           <span class="welcome-name" id="welcome-name">Gitar Akademisi</span>
           <div class="welcome-badges" id="welcome-badges"></div>
         </div>
-        <span class="online-pill" id="_gs_active_count">🟢 Canlı Oda...</span>
+        <span id="_gs_active_count" style="display:none;">🟢 Canlı Oda...</span>
+        <div id="online-badges-row"><span class="online-name-badge">🟢 Canlı Oda...</span></div>
       </div>
       <button class="logout-btn" onclick="doLogout()">Çıkış Yap</button>
     </div>
@@ -656,6 +659,29 @@ window.completePendingLogin = function(student) {
   window.pendingLoginSid = null;
   openDashboard();
 };
+
+(function setupOnlineBadges() {
+  function buildBadges(rawText) {
+    const row = document.getElementById('online-badges-row');
+    if (!row) return;
+    const clean = (rawText || '').replace(/🟢\s*/g, '').trim();
+    if (!clean || clean === 'Canlı Oda...') {
+      row.innerHTML = '<span class="online-name-badge">🟢 Canlı Oda...</span>';
+      return;
+    }
+    const names = clean.split(',').map(n => n.trim()).filter(Boolean);
+    row.innerHTML = names.map(n =>
+      `<span class="online-name-badge">🟢 ${n}</span>`
+    ).join('');
+  }
+  const pill = document.getElementById('_gs_active_count');
+  if (!pill) return;
+  const obs = new MutationObserver(() => {
+    buildBadges(pill.textContent || pill.innerText || '');
+  });
+  obs.observe(pill, { childList: true, subtree: true, characterData: true });
+  buildBadges(pill.textContent || '');
+})();
 </script>
 
 <script type="module" src="/live-bar.js"></script>
