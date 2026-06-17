@@ -1126,7 +1126,7 @@ function checkRepertoireAccess(sid) {
     card.style.filter = 'grayscale(0.3) opacity(0.7)';
     card.querySelector('.card-icon').textContent = '🔑';
     const desc = card.querySelector('.card-desc');
-    if (desc) desc.textContent = 'Eser listesine erişiminiz henüz açılmamış. Öğretmeniniz sizi bir grade\'e ekledikten sonra bu bölüme girebilirsiniz.';
+    if (desc) desc.textContent = 'Grade fakiri olduğunuzdan eser listesine erişiminiz henüz açılmamış. Çok çalışırsanız bir gün bu bölüme girebilirsiniz.';
     const badge = card.querySelector('.badge');
     if (badge) { badge.textContent = 'Kilitli'; badge.className = 'badge'; badge.style.cssText = 'background:#eee;color:#999;font-size:.7rem;font-weight:600;padding:3px 10px;border-radius:20px;'; }
   }
