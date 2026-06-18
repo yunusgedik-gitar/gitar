@@ -19,6 +19,9 @@
       --green-bg: #eaf3de;
       --red: #a32d2d;
       --red-bg: #fdf0f0;
+      --orange: #c9650f;
+      --orange-bg: #fdf0e1;
+      --orange-border: #f0c896;
     }
 
     body {
@@ -251,21 +254,28 @@
 
     .piece-list { display: flex; flex-direction: column; gap: 8px; }
     .piece-row {
-      display: flex; align-items: center; gap: 12px;
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
       background: #fff; border: 1px solid var(--border); border-radius: 14px;
       padding: 12px 16px; transition: all .15s;
     }
     .piece-row.done { background: var(--green-bg); border-color: #c5dba8; }
+    .piece-row.decode { background: var(--orange-bg); border-color: var(--orange-border); }
     .piece-check {
       width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
       border: 2px solid var(--border); display: flex; align-items: center; justify-content: center;
       font-size: .85rem; color: transparent; transition: all .15s; cursor: default;
     }
     .piece-row.done .piece-check { background: var(--green); border-color: var(--green); color: #fff; }
+    .piece-row.decode .piece-check { background: var(--orange); border-color: var(--orange); color: #fff; }
     .piece-name { font-size: .9rem; flex: 1; }
     .piece-row.done .piece-name { color: var(--green); font-weight: 600; }
+    .piece-row.decode .piece-name { color: var(--orange); font-weight: 600; }
     .piece-status { font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; flex-shrink: 0; }
     .piece-row.done .piece-status { color: var(--green); }
+    .piece-status.decode-text {
+      flex: 1 0 100%; margin: 2px 0 0 38px; text-transform: none; letter-spacing: 0;
+      font-size: .76rem; font-weight: 600; color: var(--orange);
+    }
 
     /* öğretmen modunda checkbox tıklanabilir */
     .teacher-mode .piece-row { cursor: pointer; }
@@ -281,6 +291,9 @@
     }
     .piece-action-btn:hover { border-color: var(--gold); color: var(--brown); background: #fff8ec; }
     .piece-action-btn.danger:hover { border-color: #e3b3ab; color: #c0392b; background: var(--red-bg); }
+    .piece-action-btn.decode-action { border-color: var(--orange-border); color: var(--orange); }
+    .piece-action-btn.decode-action:hover { border-color: var(--orange); background: var(--orange-bg); }
+    .piece-action-btn.decode-action.active { background: var(--orange); color: #fff; border-color: var(--orange); }
 
     /* Taşı paneli */
     #move-piece-panel {
@@ -765,6 +778,18 @@ async function loadRepProgress() {
   }
 }
 
+// Bir eserin durumunu sayısal değere çevirir: 0 = çalışılmadı, 0.5 = deşifre seviyesi, 1 = tam
+// (eski veride boolean true/false olarak kayıtlıydı; geriye dönük uyumluluk için kontrol ediyoruz)
+function toStatus(v) {
+  if (typeof v === 'number') return v;
+  return v === true ? 1 : 0;
+}
+function customStatus(p) {
+  if (!p) return 0;
+  if (typeof p.status === 'number') return p.status;
+  return p.done ? 1 : 0;
+}
+
 function calcPct(sid, grade) {
   const entry = repProgress[sid] && repProgress[sid][grade];
   if (!entry) return 0;
@@ -773,9 +798,9 @@ function calcPct(sid, grade) {
   const custom  = entry.customPieces  || [];
 
   const stdTotal  = pieces.length - removed.length;
-  const stdDone   = (entry.completed || []).filter((v, i) => v && !removed.includes(i)).length;
+  const stdDone   = (entry.completed || []).reduce((sum, v, i) => removed.includes(i) ? sum : sum + toStatus(v), 0);
   const custTotal = custom.length;
-  const custDone  = custom.filter(p => p.done).length;
+  const custDone  = custom.reduce((sum, p) => sum + customStatus(p), 0);
 
   const total = stdTotal + custTotal;
   return total ? (stdDone + custDone) / total : 0;
@@ -1248,13 +1273,17 @@ function renderTeacherPieceList() {
   // Standart eserler (silinmemiş olanlar)
   const stdRows = pieces.map((name, i) => {
     if (removed.includes(i)) return '';
-    const done = !!(entry.completed && entry.completed[i]);
-    return `<div class="piece-row ${done ? 'done' : ''}" onclick="togglePiece(${i})">
-      <div class="piece-check">${done ? '✓' : ''}</div>
+    const status = toStatus(entry.completed && entry.completed[i]);
+    const rowClass = status === 1 ? 'done' : (status === 0.5 ? 'decode' : '');
+    const check = status === 1 ? '✓' : (status === 0.5 ? '½' : '');
+    const escName = name.replace(/`/g,"'");
+    return `<div class="piece-row ${rowClass}" onclick="togglePiece(${i})">
+      <div class="piece-check">${check}</div>
       <div class="piece-name">${name}</div>
-      <div class="piece-status">${done ? 'Bitirdi' : 'Bekliyor'}</div>
       <div class="piece-actions" onclick="event.stopPropagation()">
-        <button class="piece-action-btn" onclick="openMovePiece(${i}, false, \`${name.replace(/`/g,"'")}\`)">↗ Taşı</button>
+        <button class="piece-action-btn" onclick="renamePiece(${i}, false)">✎ Değiştir</button>
+        <button class="piece-action-btn decode-action ${status === 0.5 ? 'active' : ''}" onclick="toggleDecodePiece(${i})">🟠 Deşifre Çalım</button>
+        <button class="piece-action-btn" onclick="openMovePiece(${i}, false, \`${escName}\`)">↗ Taşı</button>
         <button class="piece-action-btn danger" onclick="deletePiece(${i}, false)">✕ Sil</button>
       </div>
     </div>`;
@@ -1262,13 +1291,17 @@ function renderTeacherPieceList() {
 
   // Custom (özel eklenen) eserler
   const custRows = custom.map((p, ci) => {
-    const done = !!p.done;
-    return `<div class="piece-row ${done ? 'done' : ''}" onclick="toggleCustomPiece(${ci})">
-      <div class="piece-check">${done ? '✓' : ''}</div>
+    const status = customStatus(p);
+    const rowClass = status === 1 ? 'done' : (status === 0.5 ? 'decode' : '');
+    const check = status === 1 ? '✓' : (status === 0.5 ? '½' : '');
+    const escName = p.name.replace(/`/g,"'");
+    return `<div class="piece-row ${rowClass}" onclick="toggleCustomPiece(${ci})">
+      <div class="piece-check">${check}</div>
       <div class="piece-name">${p.name} <span style="font-size:.68rem;color:var(--gold);margin-left:4px;">● özel</span></div>
-      <div class="piece-status">${done ? 'Bitirdi' : 'Bekliyor'}</div>
       <div class="piece-actions" onclick="event.stopPropagation()">
-        <button class="piece-action-btn" onclick="openMovePiece(${ci}, true, \`${p.name.replace(/`/g,"'")}\`)">↗ Taşı</button>
+        <button class="piece-action-btn" onclick="renamePiece(${ci}, true)">✎ Değiştir</button>
+        <button class="piece-action-btn decode-action ${status === 0.5 ? 'active' : ''}" onclick="toggleCustomDecodePiece(${ci})">🟠 Deşifre Çalım</button>
+        <button class="piece-action-btn" onclick="openMovePiece(${ci}, true, \`${escName}\`)">↗ Taşı</button>
         <button class="piece-action-btn danger" onclick="deletePiece(${ci}, true)">✕ Sil</button>
       </div>
     </div>`;
@@ -1279,7 +1312,22 @@ function renderTeacherPieceList() {
 
 window.togglePiece = async function(i) {
   const entry = repProgress[repActiveStudentId][repActiveGrade];
-  entry.completed[i] = !entry.completed[i];
+  entry.completed = entry.completed || [];
+  const cur = toStatus(entry.completed[i]);
+  entry.completed[i] = cur === 1 ? 0 : 1;
+  renderTeacherPieceList();
+  try {
+    await set(ref(db, `repertoire/${repActiveStudentId}/${repActiveGrade}`), entry);
+    showSaveToast();
+  } catch (e) { console.error('Kaydedilemedi:', e); }
+};
+
+// Deşifre çalım: tik atılmadı ama öğrenci eseri deşifre ederek (ilk görüşte) çaldı, yarım puan
+window.toggleDecodePiece = async function(i) {
+  const entry = repProgress[repActiveStudentId][repActiveGrade];
+  entry.completed = entry.completed || [];
+  const cur = toStatus(entry.completed[i]);
+  entry.completed[i] = cur === 0.5 ? 0 : 0.5;
   renderTeacherPieceList();
   try {
     await set(ref(db, `repertoire/${repActiveStudentId}/${repActiveGrade}`), entry);
@@ -1289,13 +1337,61 @@ window.togglePiece = async function(i) {
 
 window.toggleCustomPiece = async function(ci) {
   const entry = repProgress[repActiveStudentId][repActiveGrade];
-  if (!entry.customPieces || !entry.customPieces[ci]) return;
-  entry.customPieces[ci].done = !entry.customPieces[ci].done;
+  const cp = (entry.customPieces || [])[ci];
+  if (!cp) return;
+  const cur = customStatus(cp);
+  cp.status = cur === 1 ? 0 : 1;
+  delete cp.done;
   renderTeacherPieceList();
   try {
     await set(ref(db, `repertoire/${repActiveStudentId}/${repActiveGrade}`), entry);
     showSaveToast();
   } catch (e) { console.error('Kaydedilemedi:', e); }
+};
+
+window.toggleCustomDecodePiece = async function(ci) {
+  const entry = repProgress[repActiveStudentId][repActiveGrade];
+  const cp = (entry.customPieces || [])[ci];
+  if (!cp) return;
+  const cur = customStatus(cp);
+  cp.status = cur === 0.5 ? 0 : 0.5;
+  delete cp.done;
+  renderTeacherPieceList();
+  try {
+    await set(ref(db, `repertoire/${repActiveStudentId}/${repActiveGrade}`), entry);
+    showSaveToast();
+  } catch (e) { console.error('Kaydedilemedi:', e); }
+};
+
+// Eser adını değiştir. Standart eser değiştirilirse, bu öğrenciye özel olarak
+// (durumu korunarak) özel eser haline getirilir; standart liste diğer öğrenciler için aynı kalır.
+window.renamePiece = async function(idx, isCustom) {
+  const entry = repProgress[repActiveStudentId][repActiveGrade];
+  if (isCustom) {
+    const cp = (entry.customPieces || [])[idx];
+    if (!cp) return;
+    const newName = prompt('Yeni eser adı:', cp.name);
+    if (newName === null) return;
+    const trimmed = newName.trim();
+    if (!trimmed) { alert('Eser adı boş olamaz.'); return; }
+    cp.name = trimmed;
+  } else {
+    const pieces = GRADE_PIECES[repActiveGrade] || [];
+    const oldName = pieces[idx];
+    const newName = prompt('Yeni eser adı:', oldName);
+    if (newName === null) return;
+    const trimmed = newName.trim();
+    if (!trimmed) { alert('Eser adı boş olamaz.'); return; }
+    const status = toStatus(entry.completed && entry.completed[idx]);
+    entry.removedIndices = [...(entry.removedIndices || []), idx];
+    entry.customPieces = entry.customPieces || [];
+    entry.customPieces.push({ name: trimmed, status });
+  }
+  renderTeacherPieceList();
+  try {
+    await set(ref(db, `repertoire/${repActiveStudentId}/${repActiveGrade}`), entry);
+    showSaveToast();
+  } catch (e) { console.error('Değiştirilemedi:', e); }
 };
 
 // Eser sil
@@ -1345,18 +1441,18 @@ window.confirmMovePiece = async function() {
   const fromEntry = repProgress[sid][fromGrade];
   if (!fromEntry || _movePieceIdx === null) return;
 
-  // Kaynak eserin adını ve completion durumunu al
-  let pieceName, pieceDone;
+  // Kaynak eserin adını ve durumunu al
+  let pieceName, pieceStatus;
   if (_movePieceIsCustom) {
     const cp = (fromEntry.customPieces || [])[_movePieceIdx];
     if (!cp) return;
     pieceName = cp.name;
-    pieceDone = !!cp.done;
+    pieceStatus = customStatus(cp);
     fromEntry.customPieces = fromEntry.customPieces.filter((_, ci) => ci !== _movePieceIdx);
   } else {
     const pieces = GRADE_PIECES[fromGrade] || [];
     pieceName = pieces[_movePieceIdx];
-    pieceDone = !!(fromEntry.completed && fromEntry.completed[_movePieceIdx]);
+    pieceStatus = toStatus(fromEntry.completed && fromEntry.completed[_movePieceIdx]);
     fromEntry.removedIndices = [...(fromEntry.removedIndices || []), _movePieceIdx];
   }
 
@@ -1366,7 +1462,7 @@ window.confirmMovePiece = async function() {
   };
   const toEntry = repProgress[sid][toGrade];
   toEntry.customPieces = toEntry.customPieces || [];
-  toEntry.customPieces.push({ name: pieceName, done: pieceDone });
+  toEntry.customPieces.push({ name: pieceName, status: pieceStatus });
 
   closeMovePanel();
   renderTeacherPieceList();
@@ -1390,7 +1486,7 @@ window.addCustomPiece = async function() {
   const entry = repProgress[repActiveStudentId][repActiveGrade];
   if (!entry) { msgEl.innerHTML = '<span style="color:#c0392b;">Grade kaydı bulunamadı.</span>'; return; }
   entry.customPieces = entry.customPieces || [];
-  entry.customPieces.push({ name, done: false });
+  entry.customPieces.push({ name, status: 0 });
 
   nameEl.value = '';
   msgEl.innerHTML = '<span style="color:var(--green);">✅ Eser eklendi.</span>';
@@ -1439,14 +1535,31 @@ function renderSelfPieceList() {
     gradeRankEl.style.display = 'none';
   }
 
-  list.innerHTML = pieces.map((name, i) => {
-    const done = !!entry.completed[i];
-    return `<div class="piece-row ${done ? 'done' : ''}">
-      <div class="piece-check">${done ? '✓' : ''}</div>
+  const removed = entry.removedIndices || [];
+  const custom  = entry.customPieces  || [];
+
+  function rowHtml(name, status) {
+    const rowClass = status === 1 ? 'done' : (status === 0.5 ? 'decode' : '');
+    const check = status === 1 ? '✓' : (status === 0.5 ? '½' : '');
+    const statusHtml = status === 0.5
+      ? `<div class="piece-status decode-text">Bu eser deşifre seviyesinde performe edilmiştir.</div>`
+      : '';
+    return `<div class="piece-row ${rowClass}">
+      <div class="piece-check">${check}</div>
       <div class="piece-name">${name}</div>
-      <div class="piece-status">${done ? 'Bitirdi' : 'Bekliyor'}</div>
+      ${statusHtml}
     </div>`;
+  }
+
+  const stdRows = pieces.map((name, i) => {
+    if (removed.includes(i)) return '';
+    const status = toStatus(entry.completed && entry.completed[i]);
+    return rowHtml(name, status);
   }).join('');
+
+  const custRows = custom.map(p => rowHtml(p.name, customStatus(p))).join('');
+
+  list.innerHTML = stdRows + custRows;
 }
 
 function showSaveToast() {
