@@ -540,7 +540,10 @@
         <div class="progress-summary" id="progress-summary-self">
           <div class="progress-summary-head">
             <div class="progress-summary-title" id="progress-summary-title-self">Grade İlerlemesi</div>
-            <div class="progress-summary-pct" id="progress-summary-pct-self">0%</div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div id="summary-grade-rank" style="font-size:.72rem;font-weight:700;background:var(--gold);color:#fff;padding:2px 9px;border-radius:20px;display:none;"></div>
+              <div class="progress-summary-pct" id="progress-summary-pct-self">0%</div>
+            </div>
           </div>
           <div class="progress-bar-track"><div class="progress-bar-fill" id="progress-bar-fill-self" style="width:0%"></div></div>
         </div>
@@ -888,8 +891,10 @@ function renderGradeTabs() {
     CATEGORIES.forEach(cat => {
       if (myCats[cat.id]) {
         const active = repActiveTab === `cat_${cat.id}` ? 'active' : '';
-        const style = active ? `background:${cat.color};color:#fff;border-color:${cat.color};border-style:solid` : `border-color:${cat.color};color:${cat.color}`;
-        html += `<button class="grade-tab cat-tab ${active}" style="${style}" onclick="selectCategoryTab('${cat.id}')">${cat.emoji} ${cat.label}</button>`;
+        const style  = active ? `background:${cat.color};color:#fff;border-color:${cat.color};border-style:solid` : `border-color:${cat.color};color:${cat.color}`;
+        const rank   = calcCategoryRank(repActiveStudentId, cat.id);
+        const rankLabel = rank ? `<span class="grade-pct">#${rank}</span>` : '';
+        html += `<button class="grade-tab cat-tab ${active}" style="${style}" onclick="selectCategoryTab('${cat.id}')">${cat.emoji} ${cat.label}${rankLabel}</button>`;
       }
     });
   }
@@ -1421,6 +1426,19 @@ function renderSelfPieceList() {
   summaryPct.textContent = pct + '%';
   fill.style.width = pct + '%';
 
+  // Grade içindeki sıra
+  const gradeRankEl = document.getElementById('summary-grade-rank');
+  const gradeStudents = studentsInGrade(repActiveGrade)
+    .map(s => ({ sid: s, pct: calcPct(s, repActiveGrade) }))
+    .sort((a, b) => b.pct - a.pct);
+  const gradeRankIdx = gradeStudents.findIndex(r => r.sid === repActiveStudentId);
+  if (gradeRankIdx >= 0 && gradeStudents.length > 1) {
+    gradeRankEl.textContent = `#${gradeRankIdx + 1} / ${gradeStudents.length}`;
+    gradeRankEl.style.display = '';
+  } else {
+    gradeRankEl.style.display = 'none';
+  }
+
   list.innerHTML = pieces.map((name, i) => {
     const done = !!entry.completed[i];
     return `<div class="piece-row ${done ? 'done' : ''}">
@@ -1458,6 +1476,17 @@ function renderLeaderboard() {
       <div class="lb-pct">${(r.score*100).toFixed(1)} puan</div>
     </div>`;
   }).join('');
+
+  // Kişinin kendi sırasını listenin başında vurgula
+  if (meObj && meObj.id !== TEACHER_ID) {
+    const myRank = rows.findIndex(r => r.sid === meObj.id) + 1;
+    if (myRank > 0) {
+      const banner = `<div style="background:var(--gold);color:#fff;border-radius:10px;padding:8px 14px;font-size:.82rem;font-weight:700;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;">
+        <span>📍 Genel sıranız</span><span style="font-size:1.1rem;">#${myRank} / ${rows.length}</span>
+      </div>`;
+      lb.innerHTML = banner + lb.innerHTML;
+    }
+  }
 
   // Kullanıcının kendi satırına otomatik kaydır
   setTimeout(() => {
@@ -1585,6 +1614,21 @@ window.selectCategoryTab = function(catId) {
   renderCategoryLeaderboard(catId);
 };
 
+// Bir öğrencinin kategori içindeki sırasını döndürür (1-based), yoksa 0
+function calcCategoryRank(sid, catId) {
+  const members = Object.keys(studentCategories)
+    .filter(s =>
+      !!studentCategories[s][catId] &&
+      s !== TEACHER_ID &&
+      window.STUDENTS.find(st => st.id === s) &&
+      repProgress[s] && Object.keys(repProgress[s]).length > 0
+    )
+    .map(s => ({ sid: s, score: calcWeightedScore(s) }))
+    .sort((a, b) => b.score - a.score);
+  const idx = members.findIndex(r => r.sid === sid);
+  return idx >= 0 ? idx + 1 : 0;
+}
+
 // Kategori sıralamasını render et
 function renderCategoryLeaderboard(catId) {
   const lb    = document.getElementById('cat-leaderboard');
@@ -1621,6 +1665,17 @@ function renderCategoryLeaderboard(catId) {
       <div class="lb-pct">${(r.score * 100).toFixed(1)} puan</div>
     </div>`;
   }).join('');
+
+  // Kişinin kendi sırasını başta göster
+  if (meObj && meObj.id !== TEACHER_ID) {
+    const myRank = rows.findIndex(r => r.sid === meObj.id) + 1;
+    if (myRank > 0) {
+      const banner = `<div style="background:${cat.color};color:#fff;border-radius:10px;padding:8px 14px;font-size:.82rem;font-weight:700;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;">
+        <span>📍 ${cat.emoji} ${cat.label} sıranız</span><span style="font-size:1.1rem;">#${myRank} / ${rows.length}</span>
+      </div>`;
+      lb.innerHTML = banner + lb.innerHTML;
+    }
+  }
 
   setTimeout(() => {
     const myRow = document.getElementById('lb-me-cat-row');
