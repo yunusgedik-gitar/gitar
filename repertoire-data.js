@@ -3404,8 +3404,6 @@ const INITIAL_PROGRESS = {
 };
 
 const EXTRA_STUDENTS = [];
-// (Eski s_extra_1 = Erdinç DOĞRU buradan kaldırıldı. Yeni öğrenciler Firebase'e kaydedilir.)
-// =====================================================================
 // GÜVENLİK: PIN'ler artık burada SHA-256 hash olarak saklanır.
 // F12 açan biri sadece hash değerlerini görür, gerçek PIN'leri değil.
 // =====================================================================
