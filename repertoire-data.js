@@ -3424,7 +3424,6 @@ const STUDENTS_DATA = [
   { id: 's14', name: 'Berfin ÇAKIR', pinHash: '8a8b6089b6da2f1ef8b696693cba7dd7312db37fb0e21bb6918041c19610f047' },
   { id: 's15', name: 'Ece ESKİKÖY', pinHash: '2c6b7bf2a4ef2fc87ce92b7097c6c477825b898877f3c7406c9609f7e5ddb8e6' },
   { id: 's16', name: 'Numan ERGÜL', pinHash: 'a8c42a5a10da46f05265436854dc4e59d412d694214bbe67d22c656e481d97bf' },
-  { id: 's17', name: 'Tuana GÜNGÖR', pinHash: '9509368b9a5172b8d96f18644356e636b4999607ec09c62b6d92d365169cedfa' },
   { id: 's18', name: 'Nesrin ERDOĞAN', pinHash: '79182cdeea49c82f3d64f1c55567cecce87ad0e6cb08d35d6eb39a107879be8b' },
   { id: 's19', name: 'Fatma Filiz ERDOĞAN', pinHash: '0b0829e2c11114e877eaaf3115a09f8abe8c3a1bcc9be27925f4df79ce964785' },
   { id: 's20', name: 'Yasir URGAN', pinHash: '08ca8b015675a5d4d4abe881fd602c1964fcd78ada8cf255d1ad62c0893b6a8a' },
@@ -3486,11 +3485,5 @@ const STUDENTS_DATA = [
   { id: 's76', name: 'Ali Toprak YETİŞ', pinHash: 'e4782cfc2b471cd4e24686f692188416d8a313cccb62679dc08c348447c2507b' },
   { id: 's77', name: 'Eyüp Eren', pinHash: '194af3b3d7b007443c26af23c035430b0afb9abebf8c89432884147fc41af759' },
   { id: 's78', name: 'Nursev GARİPDOĞAN', pinHash: 'bf9825fc1aa3a828121bb77c2c3a79c8b6850ed6816b3a91c7a0531c2959b67d' },
-  { id: 's79', name: 'Simge ALTIPARMAK', pinHash: '6711597a2bc4e5878638c2115353f0792a9bec6ff55a84f283c4be5d897fe110' },
-  { id: 's80', name: 'Derya UZUNBOY', pinHash: 'a1e2bd5c65064ebba3b2e01115e719eb8c83551ca71a9bcaf3bfd2e746c783c0' },
-  { id: 's81', name: 'Semra BULUT', pinHash: 'a7d0415f9c3d366bc4ab334a384176f0449b45d248c7ba40884cb5be20a3cbbb' },
-  { id: 's82', name: 'Deniz KAYMARAZ', pinHash: '2a7938a24f1673741237f660ffa7ff31f5e9f3a558eda111afad02d03176c01c' },
-  { id: 's83', name: 'Gökçe GÖKÇEK', pinHash: '7df0c14cb0d42be40feaed0355561db88ec8cbf774d2d4389f14e02df25b17a7' },
-  { id: 's84', name: 'Barış AYNA', pinHash: '7f4fdeb9266dd07985291dd0b31361ed2f75bdc371b2cf9f952a87fc69da25bb' },
   { id: 's85', name: 'Misafir', pinHash: '9af15b336e6a9619928537df30b2e6a2376569fcf9d7e773eccede65606529a0' }
 ];
