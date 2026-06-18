@@ -1477,17 +1477,6 @@ function renderLeaderboard() {
     </div>`;
   }).join('');
 
-  // Kişinin kendi sırasını listenin başında vurgula
-  if (meObj && meObj.id !== TEACHER_ID) {
-    const myRank = rows.findIndex(r => r.sid === meObj.id) + 1;
-    if (myRank > 0) {
-      const banner = `<div style="background:var(--gold);color:#fff;border-radius:10px;padding:8px 14px;font-size:.82rem;font-weight:700;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;">
-        <span>📍 Genel sıranız</span><span style="font-size:1.1rem;">#${myRank} / ${rows.length}</span>
-      </div>`;
-      lb.innerHTML = banner + lb.innerHTML;
-    }
-  }
-
   // Kullanıcının kendi satırına otomatik kaydır
   setTimeout(() => {
     const myRow = document.getElementById('lb-me-row');
