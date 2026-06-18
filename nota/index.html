@@ -379,7 +379,7 @@ function answer(n,btn){if(answered)return;if(currentMode==='race'&&timeLeft<=0)r
 import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js';
 import {
   getDatabase, ref, set, get, update, remove,
-  onValue, onDisconnect, serverTimestamp, runTransaction, off
+  onValue, onDisconnect, serverTimestamp, runTransaction
 } from 'https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js';
 
 const FIREBASE_CONFIG = {
@@ -468,7 +468,7 @@ window.showDuelSetup = function(){
 
 function loadOnlinePlayers(){
   const listEl = document.getElementById('online-players-list');
-  if(onlineListener){ off(ref(db,'online_users'), onlineListener); onlineListener=null; }
+  if(onlineListener){ onlineListener(); onlineListener=null; }
 
   onlineListener = onValue(ref(db,'online_users'), snap=>{
     const users = snap.val() || {};
@@ -492,7 +492,7 @@ window.sendChallenge = async function(toSid, toName){
   if(duelStrings.size===0){ alert('En az bir tel seçin.'); return; }
 
   // Önceki dinleyiciyi kapat
-  if(onlineListener){ off(ref(db,'online_users'), onlineListener); onlineListener=null; }
+  if(onlineListener){ onlineListener(); onlineListener=null; }
 
   myRole   = 'host';
   oppSid   = toSid;
@@ -528,12 +528,12 @@ window.sendChallenge = async function(toSid, toName){
     const c = snap.val();
     if(!c) return;
     if(c.status==='accepted'){
-      off(challengeRef, unsub);
+      unsub();
       clearTimeout(challengeExpiry);
       oppName = toName;
       beginGame();
     } else if(c.status==='declined'){
-      off(challengeRef, unsub);
+      unsub();
       clearTimeout(challengeExpiry);
       remove(ref(db,`duel_rooms/${roomCode}`));
       alert(`${toName} daveti reddetti.`);
@@ -544,7 +544,7 @@ window.sendChallenge = async function(toSid, toName){
 
   // 30s içinde kabul edilmezse iptal
   challengeExpiry = setTimeout(async ()=>{
-    off(challengeRef, unsub);
+    unsub();
     await remove(ref(db,`duel_challenges/${toSid}`));
     await remove(ref(db,`duel_rooms/${roomCode}`));
     showArea('duel-setup-area');
@@ -646,7 +646,7 @@ function beginGame(){
    TUR DİNLEYİCİSİ
 ═════════════════════════════ */
 function listenRound(){
-  if(roundListener){ off(ref(db,`duel_rooms/${roomCode}/round`), roundListener); }
+  if(roundListener){ roundListener(); }
   roundListener = onValue(ref(db,`duel_rooms/${roomCode}/round`), snap=>{
     const round=snap.val(); if(!round) return;
 
@@ -708,20 +708,25 @@ function duelAnswer(nota,btn){
   btn.classList.add(correct?'correct':'wrong');
   if(correct && window.playNote) window.playNote(currentQ.freq);
 
-  // Kazananı transaction ile yaz — ilk doğru basan alır
-  if(correct){
-    runTransaction(ref(db,`duel_rooms/${roomCode}/round`), r=>{
-      if(!r||r.winner!==null) return; // zaten kazanan var
+  // Bu cevap hangi tura ait — geç gelen yazmalar yeni turu bozmasın diye sakla
+  const roundNumAtAnswer = currentQ.num;
+
+  // Transaction: round.num hâlâ aynıysa yaz, ilerlemişse (yeni soru gelmişse) hiç yazma
+  runTransaction(ref(db,`duel_rooms/${roomCode}/round`), r=>{
+    if(!r || r.num!==roundNumAtAnswer) return; // tur değişmiş, bu cevap artık geçersiz — iptal
+    if(correct){
+      if(r.winner) return; // zaten bir kazanan var, dokunma
       return{...r, winner:myRole, winnerName:myName, [myRole+'Done']:true};
-    }).then(({committed})=>{
-      if(committed){
+    }
+    return{...r, [myRole+'Done']:true};
+  }).then(({committed, snapshot})=>{
+    if(committed && correct){
+      const val = snapshot.val();
+      if(val && val.winner===myRole){
         runTransaction(ref(db,`duel_rooms/${roomCode}/scores/${myRole}`), s=>(s||0)+1);
       }
-    });
-  } else {
-    // Yanlış — sadece kendi "Done" durumunu işaretle
-    update(ref(db,`duel_rooms/${roomCode}/round`),{[myRole+'Done']:true});
-  }
+    }
+  });
 }
 
 /* ═════════════════════════════
@@ -779,7 +784,7 @@ function setCd(el,n){el.textContent=n;el.classList.remove('duel-cd');void el.off
 ═════════════════════════════ */
 function endDuel(){
   if(cdTimer) clearInterval(cdTimer);
-  if(roundListener){ off(ref(db,`duel_rooms/${roomCode}/round`), roundListener); roundListener=null; }
+  if(roundListener){ roundListener(); roundListener=null; }
 
   const myFinal  = myScore_;
   const oppFinal = oppScore_;
@@ -814,7 +819,7 @@ function handleAbandoned(){
 
 window.leaveGame = async function(){
   if(cdTimer) clearInterval(cdTimer);
-  if(roundListener&&roomCode){ off(ref(db,`duel_rooms/${roomCode}/round`), roundListener); roundListener=null; }
+  if(roundListener&&roomCode){ roundListener(); roundListener=null; }
   if(roomCode) await update(ref(db,`duel_rooms/${roomCode}`),{status:'abandoned'});
   showArea('setup-area');
 };
