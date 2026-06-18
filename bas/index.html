@@ -15,7 +15,7 @@
     header h1 { font-family: 'Playfair Display', serif; font-size: 1.35rem; font-weight: 600; color: #5a3e2b; }
     #app-wrap { width: 100%; max-width: 600px; }
 
-    /* ── 🎸 TEL SEÇİM PANELİ STİLLERİ (index.html'den Entegre) ── */
+    /* ── TEL SEÇİM PANELİ STİLLERİ ── */
     .filter-card {
       background: #fff;
       border: 1.5px solid #e8e0d5;
@@ -111,7 +111,7 @@
       box-shadow: 0 2px 8px rgba(90,62,43,0.02);
     }
 
-    /* ── ⏱️ OYUN VE KART STİLLERİ ── */
+    /* ── OYUN VE KART STİLLERİ ── */
     .card { background: #fff; border: 1.5px solid #e8e0d5; border-radius: 20px; padding: 1.1rem 1.1rem 0.9rem; margin-bottom: 0.85rem; box-shadow: 0 4px 20px rgba(90,62,43,0.04); }
     .card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; gap: 8px; }
 
@@ -128,8 +128,6 @@
     }
 
     .timer-badge { font-size: 0.85rem; font-weight: 700; color: #8b5a2b; background: #f5e6d3; padding: 5px 12px; border-radius: 12px; border: 1px solid #e8d5c0; white-space: nowrap; }
-
-    .q-title { text-align: center; font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; color: #5a3e2b; }
 
     .hint-box { text-align: center; font-size: 1.15rem; font-weight: 700; color: #5a3e2b; margin-bottom: 1rem; display: flex; align-items: center; justify-content: center; gap: 8px; background: #fdfaf4; padding: 8px 12px; border-radius: 12px; border: 1px dashed #d4c4b0; }
     .hint-string-badge { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: #8b5a2b; color: #fff; border-radius: 50%; font-size: 0.95rem; font-weight: 700; }
@@ -159,8 +157,9 @@
     .progress-track { flex: 1; height: 10px; background: #ede6d8; border-radius: 5px; overflow: hidden; border: 1px solid #e0d8c8; }
     .progress-fill { height: 100%; width: 0%; background: #8cb85f; border-radius: 5px; transition: width 0.4s ease; }
 
-    .controls { display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 8px; }
-    .ctrl-btn { padding: 11px; font-size: 0.85rem; font-weight: 700; border-radius: 12px; border: 1.5px solid #d4c4b0; background: #fff; color: #5a3e2b; cursor: pointer; font-family: inherit; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 5px; }
+    /* Orijinal referanstaki gibi tekli ve tam genişlikte buton kontrolü */
+    .controls { display: grid; grid-template-columns: 1fr; gap: 8px; }
+    .ctrl-btn { padding: 11px; font-size: 0.85rem; font-weight: 700; border-radius: 12px; border: 1.5px solid #d4c4b0; background: #fff; color: #5a3e2b; cursor: pointer; font-family: inherit; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 5px; width: 100%; }
     .ctrl-btn.primary { background: #f5e6d3; border-color: #d4a373; }
     .ctrl-btn:disabled { opacity: 0.45; cursor: not-allowed; }
 
@@ -173,14 +172,10 @@
     .stat-val.correct-val { color: #6b8c42; }
     .stat-val.wrong-val { color: #c75b39; }
 
-    footer { margin-top: 1.5rem; font-size: 0.75rem; color: #c4b5a0; text-align: center; }
-
     @media (max-width: 420px) {
       .choices { gap: 8px; }
       .choice-card { padding: 10px 6px; }
       .choice-staff { width: 90px; height: 100px; }
-      .controls { grid-template-columns: 1fr; }
-      .ctrl-btn.primary { order: -1; }
     }
     .site-footer {
       display: flex;
@@ -208,9 +203,6 @@
 <div id="app-wrap">
 
   <div id="setup-area" class="filter-card">
-    <div style="display:flex; justify-content:flex-end; margin-bottom:0.5rem;">
-      <button class="back-to-menu-btn" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Başa Dön</button>
-    </div>
     <div class="filter-title">Çalışılacak Telleri Seçin</div>
     <div class="string-buttons">
       <button id="btn-all" class="string-btn all-btn active" onclick="toggleAllStrings()">Hepsi</button>
@@ -305,9 +297,12 @@
       <div class="stat-row"><span>Doğru Cevap:</span><span class="stat-val correct-val" id="res-correct">0</span></div>
       <div class="stat-row"><span>Yanlış Cevap:</span><span class="stat-val wrong-val" id="res-wrong">0</span></div>
     </div>
-    <p id="result-comment" style="color:#8b6b4e; font-weight:700; margin-bottom:1.5rem;">Bravo! Ekran görüntüsü al ve grupta paylaş 🎸</p>
+    <p id="result-comment" style="color:#8b6b4e; font-weight:700; margin-bottom:1.5rem;"></p>
   </div>
 
+  <div class="controls">
+    <button class="ctrl-btn primary" id="next-btn" onclick="manualNext()" disabled>Sonraki Soru →</button>
+  </div>
 </div>
 
 <footer class="site-footer">
@@ -373,7 +368,6 @@ const TOTAL_QUESTIONS_COUNT = 12;
 let audioCtx=null, current=null, answered=false, interacted=false, autoTimer=null;
 let correctCount=0, wrongCount=0, startTime=null, timerInterval=null;
 
-// Mod ve Filtre Değişkenleri
 let selectedStrings = new Set([1, 2, 3, 4]);
 let filteredNotes = [];
 let currentMode = 'practice';
@@ -386,7 +380,6 @@ function shuffle(a) { return [...a].sort(() => Math.random() - 0.5); }
 function toggleAllStrings() {
   const allBtn = document.getElementById('btn-all');
   const numBtns = document.querySelectorAll('.string-num-btn');
-  
   if (selectedStrings.size === 4) {
     selectedStrings.clear();
     allBtn.classList.remove('active');
@@ -402,7 +395,6 @@ function toggleAllStrings() {
 function toggleString(num) {
   const btn = document.querySelector(`.string-num-btn[data-string="${num}"]`);
   const allBtn = document.getElementById('btn-all');
-  
   if (selectedStrings.has(num)) {
     selectedStrings.delete(num);
     btn.classList.remove('active');
@@ -410,7 +402,6 @@ function toggleString(num) {
     selectedStrings.add(num);
     btn.classList.add('active');
   }
-  
   if (selectedStrings.size === 4) {
     allBtn.classList.add('active');
   } else {
@@ -451,18 +442,15 @@ function startExercise(mode) {
   }
 
   nextQuestion();
-  document.getElementById('quiz-zone').scrollIntoView({ behavior: 'smooth' });
 }
 
 function goBackToMenu() {
   if (timerInterval) clearInterval(timerInterval);
   if (gameTimer) clearInterval(gameTimer);
   clearAutoTimer();
-
   document.getElementById('quiz-zone').style.display = 'none';
   document.getElementById('result-zone').style.display = 'none';
   document.getElementById('setup-area').style.display = 'block';
-  document.getElementById('setup-area').scrollIntoView({ behavior: 'smooth' });
 }
 
 function startGameTimer() {
@@ -513,15 +501,6 @@ function playGuitar(freq) {
       o.connect(g); g.connect(filter); o.start(now); o.stop(now + 1.2);
     });
 
-    const bufSize = ctx.sampleRate * 0.04;
-    const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
-    const d = buf.getChannelData(0);
-    for (let i = 0; i < bufSize; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / bufSize);
-    const noise = ctx.createBufferSource(); noise.buffer = buf;
-    const nf = ctx.createBiquadFilter(); nf.type = 'bandpass'; nf.frequency.value = freq; nf.Q.value = 0.8;
-    const ng = ctx.createGain(); ng.gain.setValueAtTime(0.2, now); ng.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
-    noise.connect(nf); nf.connect(master); noise.start(now);
-
     master.gain.setValueAtTime(0.75, now); master.gain.exponentialRampToValueAtTime(0.001, now + 2.5);
     const btn = document.getElementById('listen-btn');
     btn.classList.add('playing'); setTimeout(() => btn.classList.remove('playing'), 700);
@@ -547,18 +526,12 @@ function drawMiniStaff(div, noteObj) {
     renderer.resize(110, 115);
     const ctx = renderer.getContext();
     const stave = new Stave(0, -10, 110);
-    const currentClef = 'bass';
-    
-    stave.addClef(currentClef).setContext(ctx).draw();
-    const note = new StaveNote({ keys: [noteObj.key], clef: currentClef, duration: 'w' });
-    
+    stave.addClef('bass').setContext(ctx).draw();
+    const note = new StaveNote({ keys: [noteObj.key], clef: 'bass', duration: 'w' });
     const voice = new Voice({ num_beats: 4, beat_value: 4 });
     voice.addTickables([note]);
     new Formatter().joinVoices([voice]).format([voice], 85);
     voice.draw(ctx, stave);
-    
-    const s = div.querySelector('svg');
-    if (s) { s.style.width = '100%'; s.style.height = 'auto'; }
   } catch(e) { console.log(e); }
 }
 
@@ -604,7 +577,6 @@ function showFinalResults() {
 
   if (currentMode === 'race') {
     document.querySelector('.result-title').textContent = "Yarışma Tamamlandı! 🏁";
-    
     let rankName = "";
     let comment = "";
 
@@ -634,7 +606,6 @@ function showFinalResults() {
     document.querySelector('.result-title').textContent = "🎉 Test Tamamlandı!";
     const s = Math.floor((Date.now() - startTime) / 1000);
     const mins = Math.floor(s / 60), secs = s % 60;
-    
     statsBox.innerHTML = `
       <div class="stat-row"><span>Toplam Süre:</span><span class="stat-val">${mins > 0 ? mins + ' dk ' + secs + ' sn' : secs + ' sn'}</span></div>
       <div class="stat-row"><span>Doğru Cevap:</span><span class="stat-val correct-val">${correctCount}</span></div>
@@ -713,17 +684,6 @@ function selectChoice(card, name) {
   if (currentMode === 'practice') {
     currentIndex++;
   }
-}
-
-function resetQuiz() {
-  clearAutoTimer();
-  if (timerInterval) clearInterval(timerInterval);
-  if (gameTimer) clearInterval(gameTimer);
-  
-  document.getElementById('quiz-zone').style.display = 'block';
-  document.getElementById('result-zone').style.display = 'none';
-  
-  startExercise(currentMode);
 }
 </script>
 <script type="module" src="/live-bar.js"></script>
