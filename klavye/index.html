@@ -15,6 +15,110 @@
     header h1 { font-family: 'Playfair Display', serif; font-size: 1.35rem; font-weight: 600; color: #5a3e2b; }
     #app-wrap { width: 100%; max-width: 600px; }
 
+    /* ── 🎸 TEL SEÇİM PANELİ STİLLERİ ── */
+    .filter-card {
+      background: #fff;
+      border: 1.5px solid #e8e0d5;
+      border-radius: 20px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 4px 20px rgba(90,62,43,0.04);
+      text-align: center;
+    }
+    .filter-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #b09070;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.75rem;
+    }
+    .string-buttons {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 0.85rem;
+    }
+    .string-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: 1.5px solid #d4c4b0;
+      background: #fff;
+      color: #5a3e2b;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+    }
+    .string-btn.all-btn {
+      width: auto;
+      height: 42px;
+      padding: 0 16px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+    }
+    .string-btn.active {
+      background: #5a3e2b;
+      border-color: #5a3e2b;
+      color: #fff;
+      box-shadow: 0 4px 10px rgba(90,62,43,0.2);
+    }
+    .action-buttons-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .start-exercise-btn {
+      width: 100%;
+      padding: 10px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      border-radius: 12px;
+      border: 1.5px solid #d4a373;
+      background: #f5e6d3;
+      color: #5a3e2b;
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+    .start-race-btn {
+      border: 1.5px solid #e24b4a;
+      background: #fdf0f0;
+      color: #a32d2d;
+    }
+    .start-exercise-btn:disabled {
+      background: #f5f5f5;
+      border-color: #ddd;
+      color: #aaa;
+      cursor: not-allowed;
+    }
+    .back-to-menu-btn {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #b09070;
+      background: #fff;
+      border: 1.5px solid #e8e0d5;
+      padding: 6px 14px;
+      border-radius: 30px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.12s;
+      box-shadow: 0 2px 8px rgba(90,62,43,0.02);
+      margin-bottom: 0.85rem;
+      display: inline-block;
+    }
+    .timer-badge.race-mode { background: #fdf0f0; border: 1.5px solid #f9d5d5; color: #e24b4a; }
+    @media (hover: hover) {
+      .start-exercise-btn:hover:not(:disabled) { background: #ebd3b8; }
+      .start-race-btn:hover:not(:disabled) { background: #f9d5d5; }
+      .back-to-menu-btn:hover { background: #f5e6d3; border-color: #d4c4b0; color: #5a3e2b; }
+    }
+
     .card { background: #fff; border: 1.5px solid #e8e0d5; border-radius: 20px; padding: 1.1rem 1.1rem 0.9rem; margin-bottom: 0.85rem; box-shadow: 0 4px 20px rgba(90,62,43,0.04); }
     .card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
 
@@ -108,14 +212,40 @@
 </header>
 
 <div id="app-wrap">
-  <div id="quiz-zone">
+
+  <!-- ── GİRİŞ EKRANI ── -->
+  <div id="setup-area" class="filter-card">
+    <div style="display:flex; justify-content:flex-end; margin-bottom:0.5rem;">
+      <button class="back-to-menu-btn" style="margin-bottom:0;" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Başa Dön</button>
+    </div>
+    <div class="filter-title">Çalışılacak Telleri Seçin</div>
+    <div class="string-buttons">
+      <button id="btn-all" class="string-btn all-btn active" onclick="toggleAllStrings()">Hepsi</button>
+      <button class="string-btn active string-num-btn" data-string="1" onclick="toggleString(1)">①</button>
+      <button class="string-btn active string-num-btn" data-string="2" onclick="toggleString(2)">②</button>
+      <button class="string-btn active string-num-btn" data-string="3" onclick="toggleString(3)">③</button>
+      <button class="string-btn active string-num-btn" data-string="4" onclick="toggleString(4)">④</button>
+      <button class="string-btn active string-num-btn" data-string="5" onclick="toggleString(5)">⑤</button>
+      <button class="string-btn active string-num-btn" data-string="6" onclick="toggleString(6)">⑥</button>
+    </div>
+    <div class="action-buttons-wrap">
+      <button id="start-btn" class="start-exercise-btn" onclick="startExercise('practice')">Egzersize Başla (Zamansız) 🎯</button>
+      <button id="race-btn" class="start-exercise-btn start-race-btn" onclick="startExercise('race')">Yarışmaya Başla (40 Saniye) 🏆</button>
+    </div>
+  </div>
+
+  <!-- ── EGZERSIZ ALANI ── -->
+  <div id="quiz-zone" style="display:none;">
+    <div style="display:flex; justify-content:flex-start; align-items:center; margin-bottom:0.85rem;">
+      <button class="back-to-menu-btn" style="margin-bottom:0;" onclick="goBackToMenu()">← Menüye Dön</button>
+    </div>
+
     <div class="card">
       <div class="card-top">
         <button id="listen-btn" onclick="replay()">🔊 Dinle</button>
-        <div class="timer-badge" id="timer-display">Süre: 00:00</div>
+        <div class="timer-badge" id="timer-display" style="display:none;">Kalan Süre: 40</div>
       </div>
-      <div class="q-title">Bu işaretli yer hangi notadır?</div>
-
+      
       <div class="hint-box" id="hint-text">
         💡 <span class="hint-string-badge">1</span> . Tel – <span class="hint-fret-text">I. Perde</span>
       </div>
@@ -184,6 +314,12 @@
     <div class="progress-area">
       <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
     </div>
+
+    <div class="controls">
+      <button class="ctrl-btn" onclick="resetQuiz(false)">↻ Tekrar</button>
+      <button class="ctrl-btn primary" id="next-btn" onclick="manualNext()" disabled>Sonraki Soru →</button>
+      <button class="ctrl-btn" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
+    </div>
   </div>
 
   <div id="result-zone" class="result-screen">
@@ -194,12 +330,6 @@
       <div class="stat-row"><span>Yanlış Cevap:</span><span class="stat-val wrong-val" id="res-wrong">0</span></div>
     </div>
     <p style="color:#8b6b4e; font-weight:700; margin-bottom:1.5rem;">Bravo! Ekran görüntüsü al ve grupta paylaş 🎸</p>
-  </div>
-
-  <div class="controls">
-    <button class="ctrl-btn" onclick="resetQuiz()">↻ Tekrar</button>
-    <button class="ctrl-btn primary" id="next-btn" onclick="manualNext()" disabled>Sonraki Soru →</button>
-    <button class="ctrl-btn" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
   </div>
 </div>
 
@@ -271,8 +401,94 @@ const FRET_CX = { 0:116, 1:155, 2:243, 3:328, 4:412 };
 const STRING_CY = { 1:50, 2:74, 3:98, 4:122, 5:146, 6:170 };
 const TOTAL_QUESTIONS_COUNT = 12;
 
+let selectedStrings = new Set([1, 2, 3, 4, 5, 6]);
+let filteredNotes = [...NOTES];
+let currentMode = 'practice';
+let gameTimer = null;
+let timeLeft = 40;
+
 let audioCtx=null, questions=[], currentIndex=0, current=null, answered=false, interacted=false, autoTimer=null;
 let correctCount=0, wrongCount=0, startTime=null, timerInterval=null;
+
+function toggleAllStrings() {
+  const allBtn = document.getElementById('btn-all');
+  const numBtns = document.querySelectorAll('.string-num-btn');
+  if (selectedStrings.size === 6) {
+    selectedStrings.clear();
+    allBtn.classList.remove('active');
+    numBtns.forEach(b => b.classList.remove('active'));
+  } else {
+    selectedStrings = new Set([1,2,3,4,5,6]);
+    allBtn.classList.add('active');
+    numBtns.forEach(b => b.classList.add('active'));
+  }
+  checkStartButton();
+}
+
+function toggleString(num) {
+  const btn = document.querySelector(`.string-num-btn[data-string="${num}"]`);
+  const allBtn = document.getElementById('btn-all');
+  if (selectedStrings.has(num)) {
+    selectedStrings.delete(num);
+    btn.classList.remove('active');
+  } else {
+    selectedStrings.add(num);
+    btn.classList.add('active');
+  }
+  allBtn.classList.toggle('active', selectedStrings.size === 6);
+  checkStartButton();
+}
+
+function checkStartButton() {
+  const isZero = selectedStrings.size === 0;
+  document.getElementById('start-btn').disabled = isZero;
+  document.getElementById('race-btn').disabled = isZero;
+}
+
+function startExercise(mode) {
+  filteredNotes = NOTES.filter(n => selectedStrings.has(n.string));
+  if (filteredNotes.length === 0) return;
+
+  currentMode = mode;
+  document.getElementById('setup-area').style.display = 'none';
+  document.getElementById('quiz-zone').style.display = 'block';
+
+  const timerEl = document.getElementById('timer-display');
+  if (currentMode === 'race') {
+    timeLeft = 40;
+    timerEl.textContent = 'Kalan Süre: 40';
+    timerEl.style.display = 'inline-block';
+    timerEl.classList.add('race-mode');
+    startGameTimer();
+  } else {
+    timerEl.style.display = 'none';
+  }
+
+  resetQuiz(false);
+}
+
+function goBackToMenu() {
+  if (gameTimer) { clearInterval(gameTimer); gameTimer = null; }
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+  clearAutoTimer();
+  document.getElementById('quiz-zone').style.display = 'none';
+  document.getElementById('result-zone').style.display = 'none';
+  document.getElementById('setup-area').style.display = 'block';
+}
+
+function startGameTimer() {
+  if (gameTimer) clearInterval(gameTimer);
+  gameTimer = setInterval(() => {
+    timeLeft--;
+    if (timeLeft <= 0) {
+      document.getElementById('timer-display').textContent = 'Süre Bitti!';
+      clearInterval(gameTimer);
+      showFinalResults();
+    } else {
+      document.getElementById('timer-display').textContent = 'Kalan Süre: ' + timeLeft;
+    }
+  }, 1000);
+}
 
 function shuffle(a) { return [...a].sort(() => Math.random() - 0.5); }
 function generateRandomQuizSet(pool, count) {
@@ -365,9 +581,13 @@ function drawMiniStaff(div, noteObj) {
 function startTimer() {
   startTime = Date.now();
   if (timerInterval) clearInterval(timerInterval);
+  const timerEl = document.getElementById('timer-display');
+  timerEl.style.display = 'inline-block';
+  timerEl.classList.remove('race-mode');
+  timerEl.textContent = 'Süre: 00:00';
   timerInterval = setInterval(() => {
     const s = Math.floor((Date.now() - startTime) / 1000);
-    document.getElementById('timer-display').textContent = 'Süre: ' + String(Math.floor(s / 60)).padStart(2,'0') + ':' + String(s % 60).padStart(2,'0');
+    timerEl.textContent = 'Süre: ' + String(Math.floor(s / 60)).padStart(2,'0') + ':' + String(s % 60).padStart(2,'0');
   }, 1000);
 }
 
@@ -388,12 +608,18 @@ function startAutoAdvance() {
 function manualNext() { clearAutoTimer(); nextQuestion(); }
 
 function showFinalResults() {
-  clearInterval(timerInterval);
-  const s = Math.floor((Date.now() - startTime) / 1000);
-  const mins = Math.floor(s / 60), secs = s % 60;
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+  if (gameTimer) { clearInterval(gameTimer); gameTimer = null; }
+  clearAutoTimer();
   document.getElementById('quiz-zone').style.display = 'none';
   document.getElementById('result-zone').style.display = 'block';
-  document.getElementById('res-time').textContent = mins > 0 ? `${mins} dk ${secs} sn` : `${secs} sn`;
+  if (currentMode === 'race') {
+    document.getElementById('res-time').textContent = (40 - timeLeft) + ' sn';
+  } else {
+    const s = Math.floor((Date.now() - startTime) / 1000);
+    const mins = Math.floor(s / 60), secs = s % 60;
+    document.getElementById('res-time').textContent = mins > 0 ? `${mins} dk ${secs} sn` : `${secs} sn`;
+  }
   document.getElementById('res-correct').textContent = correctCount;
   document.getElementById('res-wrong').textContent = wrongCount;
 }
@@ -405,14 +631,22 @@ function nextQuestion() {
   document.getElementById('message').style.color = '#8b6b4e';
   document.getElementById('next-btn').disabled = true;
 
-  if (currentIndex >= TOTAL_QUESTIONS_COUNT) { showFinalResults(); return; }
+  if (currentMode !== 'race' && currentIndex >= TOTAL_QUESTIONS_COUNT) { showFinalResults(); return; }
 
-  current = questions[currentIndex];
+  if (currentMode === 'race') {
+    const pool = filteredNotes.length > 0 ? filteredNotes : NOTES;
+    current = pool[Math.floor(Math.random() * pool.length)];
+  } else {
+    current = questions[currentIndex];
+  }
+
   moveHighlight(current.string, current.fret);
   document.getElementById('hint-text').innerHTML = `💡 <span class="hint-string-badge">${current.string}</span> . Tel – <span class="hint-fret-text">${ROMAN_FRETS[current.fret]}</span>`;
 
-  const wrongs = shuffle(NOTES.filter(n => n.name !== current.name)).slice(0, 3);
-  const choices = shuffle([current, ...wrongs]);
+  const allNames = ['Mi','Fa','Sol','La','Si','Do','Re'];
+  const wrongs = shuffle(allNames.filter(n => n !== current.name)).slice(0, 3);
+  const wrongNotes = wrongs.map(n => NOTES.find(note => note.name === n) || NOTES.find(note => note.name !== current.name));
+  const choices = shuffle([current, ...wrongNotes]);
   const box = document.getElementById('choices');
   box.innerHTML = '';
 
@@ -426,7 +660,9 @@ function nextQuestion() {
     drawMiniStaff(staffDiv, noteObj);
   });
 
-  document.getElementById('progress-fill').style.width = (currentIndex / TOTAL_QUESTIONS_COUNT * 100) + '%';
+  if (currentMode !== 'race') {
+    document.getElementById('progress-fill').style.width = (currentIndex / TOTAL_QUESTIONS_COUNT * 100) + '%';
+  }
   if (interacted) setTimeout(() => playGuitar(current.freq), 300);
 }
 
@@ -452,23 +688,38 @@ function selectChoice(card, name) {
     document.querySelectorAll('.choice-card').forEach(c => { if (c.dataset.choice === current.name) c.classList.add('correct'); });
     document.getElementById('next-btn').disabled = false;
   }
-  currentIndex++;
+  if (currentMode !== 'race') currentIndex++;
 }
 
-function resetQuiz() {
+function resetQuiz(showSetup = true) {
   clearAutoTimer();
-  if (timerInterval) clearInterval(timerInterval);
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+  if (gameTimer) { clearInterval(gameTimer); gameTimer = null; }
+
+  if (showSetup) {
+    goBackToMenu();
+    return;
+  }
+
   document.getElementById('quiz-zone').style.display = 'block';
   document.getElementById('result-zone').style.display = 'none';
   correctCount = 0; wrongCount = 0; currentIndex = 0; answered = false; interacted = false;
-  questions = generateRandomQuizSet(NOTES, TOTAL_QUESTIONS_COUNT);
+  const pool = filteredNotes.length > 0 ? filteredNotes : NOTES;
+  questions = generateRandomQuizSet(pool, TOTAL_QUESTIONS_COUNT);
   document.getElementById('hint-text').innerHTML = '💡 Soruyu incele ve doğru notayı seç';
-  document.getElementById('timer-display').textContent = 'Süre: 00:00';
-  startTimer();
+  if (currentMode === 'race') {
+    timeLeft = 40;
+    const timerEl = document.getElementById('timer-display');
+    timerEl.textContent = 'Kalan Süre: 40';
+    timerEl.style.display = 'inline-block';
+    timerEl.classList.add('race-mode');
+    startGameTimer();
+  } else {
+    startTimer();
+  }
   nextQuestion();
 }
 
-resetQuiz();
 </script>
 
 <script type="module" src="/live-bar.js"></script>
