@@ -336,27 +336,13 @@ function drawMiniStaff(div, noteObj) {
     const ctx = renderer.getContext();
     const stave = new Stave(0, -10, 110);
     
-    // Tüm şıkların anahtarı, o an sorulan aktif sorunun (current) anahtarı ile birebir eşitlenir
-    const currentClef = current.string >= 4 ? 'bass' : 'treble';
+    // Uygulamanın tamamında şıklar dahil sadece Fa (bass) anahtarı kullanılır
+    const currentClef = 'bass';
     
     stave.addClef(currentClef).setContext(ctx).draw();
     
-    // Şıkların portede müzikal açıdan doğru çizgide/konumda belirmesi için akıllı eşleme yapıyoruz
-    let displayNote = noteObj;
-    if (currentClef === 'bass' && noteObj.string < 4) {
-      // Soru Fa anahtarı modundaysa ama gelen şık ince tellerdense, aynı notanın kalın tellerdeki görsel karşılığını bulur
-      displayNote = NOTES.find(n => n.name === noteObj.name && n.string >= 4) || noteObj;
-    } else if (currentClef === 'treble' && noteObj.string >= 4) {
-      // Soru Sol anahtarı modundaysa ama gelen şık kalın tellerdense, aynı notanın ince tellerdeki görsel karşılığını bulur
-      displayNote = NOTES.find(n => n.name === noteObj.name && n.string < 4) || noteObj;
-    }
-    
-    const note = new StaveNote({ keys: [displayNote.key], clef: currentClef, duration: 'w' });
-    
-    if (note.keyProps && note.keyProps[0]) {
-      note.keyProps[0].line = displayNote.line;
-      note.keyProps[0].clef = currentClef;
-    }
+    // Notayı doğrudan Fa anahtarı normlarına göre VexFlow'a otomatik hesaplatıyoruz
+    const note = new StaveNote({ keys: [noteObj.key], clef: currentClef, duration: 'w' });
     
     const voice = new Voice({ num_beats: 4, beat_value: 4 });
     voice.addTickables([note]);
@@ -367,7 +353,6 @@ function drawMiniStaff(div, noteObj) {
     if (s) { s.style.width = '100%'; s.style.height = 'auto'; }
   } catch(e) { console.log(e); }
 }
-
 function startTimer() {
   startTime = Date.now();
   if (timerInterval) clearInterval(timerInterval);
