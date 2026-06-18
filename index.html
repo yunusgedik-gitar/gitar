@@ -155,8 +155,6 @@
     .welcome-name { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700; }
     
     .online-pill { font-size: .75rem; font-weight: 600; background: var(--green-bg); color: var(--green); padding: 5px 14px; border-radius: 20px; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(59,109,17,0.08); }
-    #online-badges-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-    .online-name-badge { font-size: .75rem; font-weight: 600; background: var(--green-bg); color: var(--green); padding: 4px 11px; border-radius: 20px; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 2px 6px rgba(59,109,17,0.08); border: 1px solid #b0d890; white-space: nowrap; }
     
     .logout-btn { font-size: .78rem; color: var(--muted); background: none; border: 1px solid var(--border); padding: 6px 14px; border-radius: 20px; cursor: pointer; font-family: inherit; transition: all .15s; }
     .logout-btn:hover { background: var(--red-bg); color: var(--red); border-color: #e8b8b8; }
@@ -286,7 +284,17 @@
     #add-piece-panel { margin-top: 12px; }
     .add-piece-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
 
-    .student-select-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px,1fr)); gap: 10px; margin-bottom: 1.4rem; }
+    /* ===== Kategori sistemi ===== */
+    .student-select-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px,1fr)); gap: 10px; margin-bottom: 1.4rem; }
+    .student-all-card { background:#fff; border:1px solid var(--border); border-radius:12px; padding:12px 14px; display:flex; flex-direction:column; gap:6px; }
+    .student-all-header { display:flex; flex-direction:column; cursor:pointer; gap:2px; }
+    .student-all-header:hover strong { color:var(--gold); }
+    .cat-chips-row { display:flex; flex-wrap:wrap; gap:5px; margin-top:2px; }
+    .cat-chip { font-size:.68rem; font-weight:700; padding:3px 9px; border-radius:20px; border:1.5px solid; cursor:pointer; background:transparent; font-family:inherit; transition:all .15s; line-height:1.4; }
+    .cat-chip:hover { opacity:.8; transform:scale(1.03); }
+    .grade-tab.cat-tab { border-style: dashed; font-size:.72rem; }
+    .grade-tab.cat-tab.active { border-style: solid; }
+
     .student-select-card {
       background: #fff; border: 1px solid var(--border); border-radius: 14px;
       padding: 12px 14px; cursor: pointer; font-size: .85rem; font-weight: 600;
@@ -370,8 +378,7 @@
           <span class="welcome-name" id="welcome-name">Gitar Akademisi</span>
           <div class="welcome-badges" id="welcome-badges"></div>
         </div>
-        <span id="_gs_active_count" style="display:none;">🟢</span>
-        <div id="online-badges-row"><span class="online-name-badge">🟢</span></div>
+        <span class="online-pill" id="_gs_active_count">🟢 Canlı Oda...</span>
       </div>
       <button class="logout-btn" onclick="doLogout()">Çıkış Yap</button>
     </div>
@@ -542,6 +549,10 @@
     <div id="rep-leaderboard-view" style="display:none;">
       <div class="leaderboard" id="leaderboard"></div>
     </div>
+
+    <div id="rep-category-view" style="display:none;">
+      <div class="leaderboard" id="cat-leaderboard"></div>
+    </div>
   </div>
 </div>
 
@@ -659,29 +670,6 @@ window.completePendingLogin = function(student) {
   window.pendingLoginSid = null;
   openDashboard();
 };
-
-(function setupOnlineBadges() {
-  function buildBadges(rawText) {
-    const row = document.getElementById('online-badges-row');
-    if (!row) return;
-    const clean = (rawText || '').replace(/🟢\s*/g, '').trim();
-    if (!clean || clean === 'Canlı Oda...') {
-      row.innerHTML = '<span class="online-name-badge">🟢</span>';
-      return;
-    }
-    const names = clean.split(',').map(n => n.trim()).filter(Boolean);
-    row.innerHTML = names.map(n =>
-      `<span class="online-name-badge">🟢 ${n}</span>`
-    ).join('');
-  }
-  const pill = document.getElementById('_gs_active_count');
-  if (!pill) return;
-  const obs = new MutationObserver(() => {
-    buildBadges(pill.textContent || pill.innerText || '');
-  });
-  obs.observe(pill, { childList: true, subtree: true, characterData: true });
-  buildBadges(pill.textContent || '');
-})();
 </script>
 
 <script type="module" src="/live-bar.js"></script>
@@ -820,6 +808,7 @@ function studentsInGrade(grade) {
 window.openRepertoire = async function(e) {
   if (e) e.preventDefault();
   await loadRepProgress();
+  await loadCategories();
 
   const meObj = getMe();
   isTeacherView = !!(meObj && meObj.id === TEACHER_ID);
@@ -883,6 +872,19 @@ function renderGradeTabs() {
   }
   const lbActive = repActiveTab === 'leaderboard' ? 'active' : '';
   html += `<button class="grade-tab lb-tab ${lbActive}" onclick="selectLeaderboardTab()">🏆 Genel Sıralama</button>`;
+
+  // Öğrenci kendi kategorilerini görür
+  if (!isTeacherView) {
+    const myCats = studentCategories[repActiveStudentId] || {};
+    CATEGORIES.forEach(cat => {
+      if (myCats[cat.id]) {
+        const active = repActiveTab === `cat_${cat.id}` ? 'active' : '';
+        const activeStyle = active ? `background:${cat.color};color:#fff;border-color:${cat.color};border-style:solid` : `border-color:${cat.color};color:${cat.color}`;
+        html += `<button class="grade-tab cat-tab ${active}" style="${activeStyle}" onclick="selectCategoryTab('${cat.id}')">${cat.emoji} ${cat.label}</button>`;
+      }
+    });
+  }
+
   tabs.innerHTML = html;
 }
 
@@ -901,6 +903,7 @@ window.selectGrade = function(g) {
 function goToGradeTab(g) {
   document.getElementById('rep-grade-view').style.display = '';
   document.getElementById('rep-leaderboard-view').style.display = 'none';
+  document.getElementById('rep-category-view').style.display = 'none';
   document.getElementById('rep-section-title').textContent = '📜 Eser Listesi';
   renderGradeTabs();
 
@@ -919,6 +922,7 @@ window.selectLeaderboardTab = function() {
   renderLeaderboard();
   document.getElementById('rep-grade-view').style.display = 'none';
   document.getElementById('rep-leaderboard-view').style.display = '';
+  document.getElementById('rep-category-view').style.display = 'none';
   document.getElementById('rep-section-title').textContent = '🏆 Genel Sıralama';
 };
 
@@ -1109,8 +1113,9 @@ window.closeAddStudentForm = function() {
 };
 
 // ===== Tüm Öğrenciler görünümü =====
-window.openAllStudentsView = function() {
+window.openAllStudentsView = async function() {
   showOnly('all-students-view');
+  await loadCategories();
   const grid = document.getElementById('all-students-grid');
   const allStudents = window.STUDENTS.filter(s => s.id !== TEACHER_ID);
   if (!allStudents.length) {
@@ -1122,9 +1127,24 @@ window.openAllStudentsView = function() {
     const hasGrades = grades.length > 0;
     const maxGrade = hasGrades ? Math.max(...grades.map(Number)) : null;
     const score = hasGrades ? (calcWeightedScore(s.id) * 100).toFixed(1) : null;
-    return `<div class="student-select-card" onclick="openStudentDetailFromAll('${s.id}')">
-      <span>${hasGrades ? '' : '🔑 '}<strong>${s.name}</strong></span>
-      <span class="ssc-pct">${hasGrades ? `Grade ${maxGrade} · ${score} puan` : 'Eser listesine eklenmemiş'}</span>
+    const cats = studentCategories[s.id] || {};
+
+    const chipsHtml = CATEGORIES.map(cat => {
+      const on = !!cats[cat.id];
+      const style = on
+        ? `background:${cat.color};color:#fff;border-color:${cat.color}`
+        : `background:transparent;border-color:${cat.color};color:${cat.color}`;
+      return `<button class="cat-chip" style="${style}"
+        onclick="event.stopPropagation();toggleCategory('${s.id}','${cat.id}',this)">
+        ${cat.emoji} ${cat.label}</button>`;
+    }).join('');
+
+    return `<div class="student-all-card">
+      <div class="student-all-header" onclick="openStudentDetailFromAll('${s.id}')">
+        <span>${hasGrades ? '' : '🔑 '}<strong>${s.name}</strong></span>
+        <span class="ssc-pct">${hasGrades ? `Grade ${maxGrade} · ${score} puan` : 'Eser listesine eklenmemiş'}</span>
+      </div>
+      <div class="cat-chips-row">${chipsHtml}</div>
     </div>`;
   }).join('');
 };
@@ -1444,6 +1464,7 @@ function renderLeaderboard() {
 // Welcome card'ı repertoire verisi yüklendikten sonra güncelle
 window.updateWelcomeCard = async function(sid) {
   await loadRepProgress();
+  await loadCategories();
 
   const rankEl   = document.getElementById('avatar-rank');
   const labelEl  = document.getElementById('avatar-label');
@@ -1474,7 +1495,7 @@ window.updateWelcomeCard = async function(sid) {
     rankEl.textContent  = '🎸';
     labelEl.textContent = '';
     badgesEl.innerHTML  = '';
-    checkRepertoireAccess(sid); // grade yok → kilitle
+    checkRepertoireAccess(sid);
     return;
   }
 
@@ -1482,14 +1503,20 @@ window.updateWelcomeCard = async function(sid) {
   rankEl.textContent  = `#${rank}`;
   labelEl.textContent = 'sıra';
 
-  // Badges: Grade + puan
+  // Kategori rozetleri
+  const myCatBadges = CATEGORIES
+    .filter(cat => !!(studentCategories[sid] || {})[cat.id])
+    .map(cat => `<span class="w-badge" style="background:${cat.bg};color:${cat.color};">${cat.emoji} ${cat.label}</span>`)
+    .join('');
+
+  // Badges: Grade + puan + kategoriler
   badgesEl.innerHTML = `
     <span class="w-badge w-badge-grade">Grade ${maxGrade}</span>
     <span class="w-badge w-badge-score">⭐ ${scoreDisplay} puan</span>
     ${rank <= 3 ? '<span class="w-badge w-badge-rank">🏆 İlk 3</span>' : ''}
+    ${myCatBadges}
   `;
 
-  // Eser listesi erişim kontrolü
   checkRepertoireAccess(sid);
 };
 
@@ -1497,6 +1524,108 @@ window.updateWelcomeCard = async function(sid) {
 if (window._pendingAvatarUpdate) {
   window.updateWelcomeCard(window._pendingAvatarUpdate);
   window._pendingAvatarUpdate = null;
+}
+
+// ============================================================
+// ===== KATEGORİ SİSTEMİ =====================================
+// ============================================================
+
+const CATEGORIES = [
+  { id: 'ileri_icra', label: 'İleri İcra Sınıfı',    emoji: '🎓', color: '#6d3baf', bg: '#f0eaf9' },
+  { id: 'b2',         label: 'B2 Sınıfı',             emoji: '🔵', color: '#1a5fa8', bg: '#e8f1fb' },
+  { id: 'a2',         label: 'A2 Sınıfı',             emoji: '🟢', color: '#2d7a3a', bg: '#e8f7ea' },
+  { id: 'a1_a2_hiz',  label: 'A1-A2 Hızlandırılmış',  emoji: '⚡', color: '#b87d0d', bg: '#fdf3e0' },
+];
+
+let studentCategories = {}; // { sid: { ileri_icra: true, b2: true, ... } }
+let catLoaded = false;
+
+async function loadCategories() {
+  if (catLoaded) return;
+  try {
+    const snap = await get(ref(db, 'student_categories'));
+    studentCategories = snap.exists() ? snap.val() : {};
+    catLoaded = true;
+  } catch(e) { console.error('Kategoriler yüklenemedi:', e); }
+}
+
+// Öğretmen: tek tıkla kategori aç/kapat
+window.toggleCategory = async function(sid, catId, btnEl) {
+  studentCategories[sid] = studentCategories[sid] || {};
+  const newVal = !studentCategories[sid][catId];
+  studentCategories[sid][catId] = newVal;
+
+  // Anında görsel güncelle
+  if (btnEl) {
+    const cat = CATEGORIES.find(c => c.id === catId);
+    btnEl.style.cssText = newVal
+      ? `background:${cat.color};color:#fff;border-color:${cat.color}`
+      : `background:transparent;border-color:${cat.color};color:${cat.color}`;
+  }
+
+  try {
+    if (newVal) {
+      await set(ref(db, `student_categories/${sid}/${catId}`), true);
+    } else {
+      await remove(ref(db, `student_categories/${sid}/${catId}`));
+    }
+    showSaveToast();
+  } catch(e) { console.error('Kategori kaydedilemedi:', e); }
+};
+
+// Kategori sekmesine tıklama
+window.selectCategoryTab = function(catId) {
+  repActiveTab = `cat_${catId}`;
+  renderGradeTabs();
+  document.getElementById('rep-grade-view').style.display = 'none';
+  document.getElementById('rep-leaderboard-view').style.display = 'none';
+  document.getElementById('rep-category-view').style.display = '';
+  const cat = CATEGORIES.find(c => c.id === catId);
+  document.getElementById('rep-section-title').textContent = `${cat.emoji} ${cat.label}`;
+  renderCategoryLeaderboard(catId);
+};
+
+// Kategori sıralamasını render et
+function renderCategoryLeaderboard(catId) {
+  const lb  = document.getElementById('cat-leaderboard');
+  const meObj = getMe();
+  const cat = CATEGORIES.find(c => c.id === catId);
+
+  const rows = Object.keys(studentCategories)
+    .filter(sid =>
+      !!studentCategories[sid][catId] &&
+      sid !== TEACHER_ID &&
+      window.STUDENTS.find(s => s.id === sid) &&
+      repProgress[sid] &&
+      Object.keys(repProgress[sid]).length > 0
+    )
+    .map(sid => {
+      const score    = calcWeightedScore(sid);
+      const grades   = Object.keys(repProgress[sid] || {});
+      const maxGrade = grades.length ? Math.max(...grades.map(Number)) : 0;
+      return { sid, score, maxGrade };
+    })
+    .sort((a, b) => b.score - a.score);
+
+  if (!rows.length) {
+    lb.innerHTML = `<p style="color:var(--muted);font-size:.85rem;padding:1rem 0;">Bu kategoriye henüz öğrenci eklenmemiş.</p>`;
+    return;
+  }
+
+  lb.innerHTML = rows.map((r, i) => {
+    const isMe = meObj && r.sid === meObj.id;
+    const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}`;
+    return `<div class="lb-row ${isMe ? 'me' : ''}" id="${isMe ? 'lb-me-cat-row' : ''}">
+      <div class="lb-rank">${medal}</div>
+      <div class="lb-name">${studentName(r.sid)}<span class="lb-grade" style="color:${cat.color};">${cat.emoji} ${cat.label}</span></div>
+      <div class="lb-pct">${(r.score * 100).toFixed(1)} puan</div>
+    </div>`;
+  }).join('');
+
+  setTimeout(() => {
+    const myRow = document.getElementById('lb-me-cat-row');
+    if (myRow) myRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 200);
 }
 </script>
 </body>
