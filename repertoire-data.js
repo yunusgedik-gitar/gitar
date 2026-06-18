@@ -68,7 +68,7 @@ const GRADE_PIECES = {
   "Lindsey-Clark, V. – Montañas Nebulosas",
   "Marsh, S. – Cochise",
   "Sánchez, C. – Andalucian Sunrise",
-  "Anonim – Golden Dreams",
+  "Maroufi, J. – Golden Dreams",
   "Wanders, J. – Campomoro",
   "Anonim – Tarantella Napoletana",
   "Rota, N. – Speak Softly Love"
