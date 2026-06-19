@@ -747,9 +747,9 @@ function endDuel(){
   const myFinal  = myScore_;
   const oppFinal = oppScore_;
   let winBadge, comment;
-  if(myFinal>oppFinal){ winBadge=`🏆 Kazanan: ${myName}`; comment=`${myName} notaları daha hızlı okudu! ${oppName} daha çok çalışmalı 💪`; }
-  else if(oppFinal>myFinal){ winBadge=`🏆 Kazanan: ${oppName}`; comment=`${oppName} bu sefer daha hızlıydı! Bir dahaki sefere ${myName} 🎸`; }
-  else{ winBadge='🤝 Beraberlik!'; comment='İkisi de aynı seviyede! Yunus Hoca ikinizden de memnun 🎵'; }
+  if(myFinal>oppFinal){ winBadge=`🏆 Kazanan: ${myName}`; comment=`${myName} en sevdiğim öğrencim, afferrimmm! ${oppName} git rezil sevmiyoruz seni`; }
+  else if(oppFinal>myFinal){ winBadge=`🏆 Kazanan: ${oppName}`; comment=`${oppName} işte cesaret, işte feraset, işte fazilet, işte fedakarlık, işte mertlik, işte adam gibi adamlık. Elendin knk sori ${myName} 🎸`; }
+  else{ winBadge='🤝 Beraberlik!'; comment='İkisinize de yazıklar olsun..'; }
 
   const mc=myFinal>=oppFinal?'win':'lose', oc=oppFinal>=myFinal?'win':'lose';
   document.getElementById('app').innerHTML=`
