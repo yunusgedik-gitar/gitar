@@ -107,19 +107,6 @@
     .spinner { width: 40px; height: 40px; border: 3px solid #e8e0d5; border-top-color: #7b5ea7; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 1rem; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* Gelen davet — floating overlay */
-    #challenge-incoming {
-      display: none; position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-      width: calc(100% - 32px); max-width: 520px; z-index: 999;
-      background: #fff; border: 2px solid #7b5ea7; border-radius: 20px;
-      padding: 1.2rem 1.2rem 1rem; box-shadow: 0 8px 30px rgba(123,94,167,0.25);
-      animation: slideUp 0.3s ease;
-    }
-    @keyframes slideUp { from { transform: translateX(-50%) translateY(20px); opacity:0; } to { transform: translateX(-50%) translateY(0); opacity:1; } }
-    .incoming-title { font-weight: 700; font-size: 1rem; color: #5a3e2b; margin-bottom: 0.3rem; }
-    .incoming-sub { font-size: 0.85rem; color: #b09070; margin-bottom: 1rem; }
-    .incoming-btns { display: flex; gap: 10px; }
-
     /* Oyun alanı */
     .duel-top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; }
     .duel-round-badge { font-size: 0.85rem; font-weight: 700; color: #7b5ea7; background: #f3eeff; border: 1.5px solid #c8b4f0; padding: 5px 14px; border-radius: 30px; }
@@ -293,16 +280,6 @@
       <button class="ctrl-btn primary" id="next-btn" onclick="manualNext()" disabled>Sonraki Soru →</button>
       <button class="ctrl-btn" onclick="location.href='https://gitar.yunusgedik.com.tr/'">🏠 Başa Dön</button>
     </div>
-  </div>
-</div>
-
-<!-- GELEN DAVET — FLOATING OVERLAY -->
-<div id="challenge-incoming">
-  <div class="incoming-title">⚔️ Düello Daveti!</div>
-  <div class="incoming-sub" id="incoming-sub">Birisi seni düelloya davet etti.</div>
-  <div class="incoming-btns">
-    <button class="app-btn btn-duel" style="flex:1;" onclick="acceptChallenge()">✅ Kabul Et</button>
-    <button class="app-btn" style="flex:1;background:#fdf0f0;border-color:#e24b4a;color:#a32d2d;" onclick="declineChallenge()">❌ Reddet</button>
   </div>
 </div>
 
@@ -562,53 +539,25 @@ window.cancelChallenge = async function(){
 };
 
 /* ═════════════════════════════
-   GELEN DAVET
+   SİTE GENELİ DAVETTEN DEVRALMA
+   (live-bar.js başka bir sayfada daveti
+   kabul ettirip buraya yönlendirdiğinde)
 ═════════════════════════════ */
-let pendingChallenge = null;
-
-// Sayfa açıkken davet dinle
-if(mySid){
-  onValue(ref(db,`duel_challenges/${mySid}`), snap=>{
-    const c = snap.val();
-    if(!c || c.status !== 'pending'){
-      hideChallengeOverlay();
-      return;
-    }
-    pendingChallenge = c;
-    document.getElementById('incoming-sub').textContent = `${c.fromName} seni ${c.totalRounds} turluk düelloya davet etti!`;
-    document.getElementById('challenge-incoming').style.display = 'block';
-  });
-}
-
-window.acceptChallenge = async function(){
-  if(!pendingChallenge) return;
-  const c = pendingChallenge;
-  hideChallengeOverlay();
-
-  myRole   = 'guest';
-  oppSid   = c.fromSid;
-  oppName  = c.fromName;
-  roomCode = c.roomCode;
-  duelStrings = new Set(c.strings);
-  duelRounds  = c.totalRounds;
-
-  await update(ref(db,`duel_challenges/${mySid}`),{status:'accepted'});
-  await update(ref(db,`duel_rooms/${roomCode}`),{guest:{sid:mySid,name:myName}, status:'active'});
-  onDisconnect(ref(db,`duel_rooms/${roomCode}`)).update({status:'abandoned'});
-
-  setTimeout(beginGame, 500);
-};
-
-window.declineChallenge = async function(){
-  if(!pendingChallenge) return;
-  await update(ref(db,`duel_challenges/${mySid}`),{status:'declined'});
-  pendingChallenge = null;
-  hideChallengeOverlay();
-};
-
-function hideChallengeOverlay(){
-  document.getElementById('challenge-incoming').style.display='none';
-  pendingChallenge = null;
+function checkDuelHandoff(){
+  const raw = localStorage.getItem('gitar_duel_handoff');
+  if(!raw) return false;
+  localStorage.removeItem('gitar_duel_handoff');
+  try{
+    const h = JSON.parse(raw);
+    myRole      = 'guest';
+    roomCode    = h.roomCode;
+    oppSid      = h.oppSid;
+    oppName     = h.oppName;
+    duelStrings = new Set(h.strings);
+    duelRounds  = h.totalRounds;
+    beginGame();
+    return true;
+  }catch(e){ return false; }
 }
 
 /* ═════════════════════════════
@@ -631,13 +580,12 @@ function beginGame(){
     document.getElementById('dscore-opp').textContent = oppScore_;
   });
 
-  // Host ilk soruyu açar
-  if(myRole==='host'){
-    get(ref(db,`duel_rooms/${roomCode}`)).then(snap=>{
-      const room=snap.val();
-      advanceRound(room.round, room.config);
-    });
-  }
+  // İlk soru — host VEYA guest, kim önce yetişirse o açar (cihaz arka plana
+  // düşse bile oyun kilitlenmesin diye ikisi de deniyor)
+  get(ref(db,`duel_rooms/${roomCode}`)).then(snap=>{
+    const room=snap.val(); if(!room) return;
+    tryAdvanceRound(0, room.config);
+  });
 
   listenRound();
 }
@@ -647,16 +595,16 @@ function beginGame(){
 ═════════════════════════════ */
 function listenRound(){
   if(roundListener){ roundListener(); }
+
+  // Oyun durumunu dinle (abandoned / finished)
+  onValue(ref(db,`duel_rooms/${roomCode}/status`), snap=>{
+    const s = snap.val();
+    if(s==='abandoned'){ handleAbandoned(); }
+    if(s==='finished') { endDuel(); }
+  });
+
   roundListener = onValue(ref(db,`duel_rooms/${roomCode}/round`), snap=>{
-    const round=snap.val(); if(!round) return;
-
-    // Oda terk edildi
-    get(ref(db,`duel_rooms/${roomCode}/status`)).then(s=>{
-      if(s.val()==='abandoned'){ handleAbandoned(); }
-    });
-
-    if(round.num > duelRounds){ endDuel(); return; }
-    if(round.num===0) return;
+    const round=snap.val(); if(!round||round.num===0) return;
 
     // Aktif soru (henüz kimse cevaplamamış)
     if(!round.winner && !round.hostDone && !round.guestDone){
@@ -682,9 +630,8 @@ function showQuestion(round){
   document.getElementById('duel-feedback').className   = 'duel-feedback';
   document.getElementById('duel-cd-wrap').style.display = 'none';
 
-  // drawNote global fonksiyon
+  // drawNote global fonksiyon (ses yok — karışıklık yapmasın)
   if(window.drawNote) window.drawNote(round.noteKey,'duel-notation');
-  if(window.playNote) window.playNote(round.freq);
 
   const box=document.getElementById('duel-choices');
   box.innerHTML='';
@@ -706,7 +653,6 @@ function duelAnswer(nota,btn){
 
   const correct = nota===currentQ.notaAdi;
   btn.classList.add(correct?'correct':'wrong');
-  if(correct && window.playNote) window.playNote(currentQ.freq);
 
   // Bu cevap hangi tura ait — geç gelen yazmalar yeni turu bozmasın diye sakla
   const roundNumAtAnswer = currentQ.num;
@@ -743,24 +689,36 @@ function showRoundResult(round){
   else                     { fb.textContent='😅 İkisi de yanlış! Puan yok.'; fb.className='duel-feedback nobody'; }
 
   startCountdown(()=>{
-    if(myRole==='host'){
-      get(ref(db,`duel_rooms/${roomCode}`)).then(snap=>{
-        const room=snap.val(); if(!room) return;
-        advanceRound(room.round, room.config);
-      });
-    }
+    // İki taraf da dener — transaction sayesinde sadece biri yazar, diğeri iptal edilir
+    get(ref(db,`duel_rooms/${roomCode}/config`)).then(snap=>{
+      tryAdvanceRound(round.num, snap.val());
+    });
   });
 }
 
 /* ═════════════════════════════
-   HOST: SONRAKI SORU HAZIRLA
+   SONRAKI SORUYU HAZIRLA
+   Transaction kullanıyoruz: her iki
+   taraf da dener, ilk başarılı olan
+   yazar — çift yazma olmaz.
 ═════════════════════════════ */
-function advanceRound(currentRound, config){
-  const nextNum=(currentRound.num||0)+1;
-  if(nextNum>duelRounds){ set(ref(db,`duel_rooms/${roomCode}/round/num`),nextNum); return; }
-  const strings=config?config.strings:[...duelStrings];
-  const q=makeQuestion(strings);
-  set(ref(db,`duel_rooms/${roomCode}/round`),{num:nextNum,...q,hostDone:false,guestDone:false,winner:null});
+function tryAdvanceRound(fromNum, config){
+  const nextNum = fromNum + 1;
+  if(nextNum > duelRounds){
+    // Oyun bitti — sadece bir kere yazılsın diye transaction
+    runTransaction(ref(db,`duel_rooms/${roomCode}/status`), s=>{
+      if(s==='finished') return; // zaten yazılmış
+      return 'finished';
+    });
+    return;
+  }
+  const strings = config ? config.strings : [...duelStrings];
+  const q = makeQuestion(strings);
+  // round.num üzerinde transaction: hâlâ fromNum'daysa yeni soruyu yaz
+  runTransaction(ref(db,`duel_rooms/${roomCode}/round`), r=>{
+    if(!r || r.num !== fromNum) return; // diğer taraf zaten yazdı — iptal
+    return { num:nextNum, ...q, hostDone:false, guestDone:false, winner:null };
+  });
 }
 
 /* ═════════════════════════════
@@ -823,6 +781,9 @@ window.leaveGame = async function(){
   if(roomCode) await update(ref(db,`duel_rooms/${roomCode}`),{status:'abandoned'});
   showArea('setup-area');
 };
+
+/* Sayfa açılır açılmaz: başka sayfadan kabul edilmiş bir davet var mı? */
+checkDuelHandoff();
 </script>
 
 <script>
