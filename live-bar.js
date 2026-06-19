@@ -191,7 +191,7 @@ async function acceptChallenge(c, mySid, myName, expireTimer) {
     totalRounds: c.totalRounds
   }));
 
-  window.location.href = c.redirectTo || '/nota/';
+  window.location.href = '/nota/';
 }
 
 async function declineChallenge(mySid, expireTimer) {
