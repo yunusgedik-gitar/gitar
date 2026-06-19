@@ -492,7 +492,8 @@ window.sendChallenge = async function(toSid, toName){
   await set(ref(db,`duel_challenges/${toSid}`),{
     fromSid: mySid, fromName: myName,
     roomCode, status:'pending',
-    strings: [...duelStrings], totalRounds: duelRounds
+    strings: [...duelStrings], totalRounds: duelRounds,
+    redirectTo: '/nota/'
   });
 
   // Bekleme ekranı
@@ -606,11 +607,13 @@ function listenRound(){
   roundListener = onValue(ref(db,`duel_rooms/${roomCode}/round`), snap=>{
     const round=snap.val(); if(!round||round.num===0) return;
 
-    // Aktif soru (henüz kimse cevaplamamış)
-    if(!round.winner && !round.hostDone && !round.guestDone){
-      showQuestion(round); return;
+    // Yeni tur numarası geldiyse her zaman soruyu göster (race condition önlemi:
+    // rakip çok hızlı cevaplasa bile şıklar önce çizilir, sonra sonuç gelir)
+    if(!currentQ || currentQ.num !== round.num){
+      showQuestion(round);
     }
-    // Tur bitti (kazanan var ya da ikisi de bitirdi)
+
+    // Tur bitti — şıkları kilitle ve sonucu göster
     if(round.winner || (round.hostDone && round.guestDone)){
       showRoundResult(round);
     }
@@ -623,14 +626,12 @@ function listenRound(){
 function showQuestion(round){
   myAnswered = false;
   currentQ   = round;
-  const lbl  = round.num+' / '+duelRounds;
-  document.getElementById('duel-round-label').textContent = 'Tur '+lbl;
+  document.getElementById('duel-round-label').textContent = `Tur ${round.num} / ${duelRounds}`;
   document.getElementById('duel-string-label').textContent = `Bu Nota Hangi Telde? (${round.string}. Tel)`;
   document.getElementById('duel-feedback').textContent = '';
   document.getElementById('duel-feedback').className   = 'duel-feedback';
   document.getElementById('duel-cd-wrap').style.display = 'none';
 
-  // drawNote global fonksiyon (ses yok — karışıklık yapmasın)
   if(window.drawNote) window.drawNote(round.noteKey,'duel-notation');
 
   const box=document.getElementById('duel-choices');
@@ -653,17 +654,11 @@ function duelAnswer(nota,btn){
 
   const correct = nota===currentQ.notaAdi;
   btn.classList.add(correct?'correct':'wrong');
-
-  // Bu cevap hangi tura ait — geç gelen yazmalar yeni turu bozmasın diye sakla
   const roundNumAtAnswer = currentQ.num;
 
-  // Transaction: round.num hâlâ aynıysa yaz, ilerlemişse (yeni soru gelmişse) hiç yazma
   runTransaction(ref(db,`duel_rooms/${roomCode}/round`), r=>{
-    if(!r || r.num!==roundNumAtAnswer) return; // tur değişmiş, bu cevap artık geçersiz — iptal
-    if(correct){
-      if(r.winner) return; // zaten bir kazanan var, dokunma
-      return{...r, winner:myRole, winnerName:myName, [myRole+'Done']:true};
-    }
+    if(!r || r.num!==roundNumAtAnswer) return;
+    if(correct){ if(r.winner) return; return{...r, winner:myRole, winnerName:myName, [myRole+'Done']:true}; }
     return{...r, [myRole+'Done']:true};
   }).then(({committed, snapshot})=>{
     if(committed && correct){
@@ -679,8 +674,9 @@ function duelAnswer(nota,btn){
    TUR SONUCU
 ═════════════════════════════ */
 function showRoundResult(round){
+  // Tüm şıkları kilitle, doğruyu vurgula
   document.querySelectorAll('.dcbtn').forEach(b=>{
-    b.disabled=true;
+    b.disabled=true; b.onclick=null;
     if(b.textContent===round.notaAdi) b.classList.add('correct');
   });
   const fb=document.getElementById('duel-feedback');
@@ -688,8 +684,8 @@ function showRoundResult(round){
   else if(round.winner)    { fb.textContent=`😤 ${round.winnerName} daha hızlıydı!`; fb.className='duel-feedback opwin'; }
   else                     { fb.textContent='😅 İkisi de yanlış! Puan yok.'; fb.className='duel-feedback nobody'; }
 
+  if(document.getElementById('duel-cd-wrap').style.display==='flex') return; // zaten sayıyor
   startCountdown(()=>{
-    // İki taraf da dener — transaction sayesinde sadece biri yazar, diğeri iptal edilir
     get(ref(db,`duel_rooms/${roomCode}/config`)).then(snap=>{
       tryAdvanceRound(round.num, snap.val());
     });
@@ -747,9 +743,9 @@ function endDuel(){
   const myFinal  = myScore_;
   const oppFinal = oppScore_;
   let winBadge, comment;
-  if(myFinal>oppFinal){ winBadge=`🏆 Kazanan: ${myName}`; comment=`${myName} en sevdiğim öğrencim, afferrimmm! ${oppName} git rezil sevmiyoruz seni`; }
-  else if(oppFinal>myFinal){ winBadge=`🏆 Kazanan: ${oppName}`; comment=`${oppName} işte cesaret, işte feraset, işte fazilet, işte fedakarlık, işte mertlik, işte adam gibi adamlık. Elendin knk sori ${myName} 🎸`; }
-  else{ winBadge='🤝 Beraberlik!'; comment='İkisinize de yazıklar olsun..'; }
+  if(myFinal>oppFinal){ winBadge=`🏆 Kazanan: ${myName}`; comment=`${myName} notaları daha hızlı okudu! ${oppName} daha çok çalışmalı 💪`; }
+  else if(oppFinal>myFinal){ winBadge=`🏆 Kazanan: ${oppName}`; comment=`${oppName} bu sefer daha hızlıydı! Bir dahaki sefere ${myName} 🎸`; }
+  else{ winBadge='🤝 Beraberlik!'; comment='İkisi de aynı seviyede! Yunus Hoca ikinizden de memnun 🎵'; }
 
   const mc=myFinal>=oppFinal?'win':'lose', oc=oppFinal>=myFinal?'win':'lose';
   document.getElementById('app').innerHTML=`
