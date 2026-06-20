@@ -1069,9 +1069,9 @@ function beginDuelGame(){
   });
 
   // İki taraf da ilk soruyu açmaya çalışır — transaction biri alır
-get(ref(db, `duel_rooms/${roomCode_}/config`)).then(snap=>{
-  tryAdvance(0, snap.val());   // her iki taraf da dener
-});
+  get(ref(db,`duel_rooms/${roomCode_}/config`)).then(snap=>{
+    tryAdvance(0,snap.val());
+  });
   listenRound();
 }
 
@@ -1157,11 +1157,11 @@ function showRoundResult(round){
   else{msg.textContent='😅 İkisi de yanlış! Puan yok.';msg.className='message nobody';}
 
   if(document.getElementById('duel-cd-wrap').style.display==='flex') return;
-startCd(()=>{
-  get(ref(db, `duel_rooms/${roomCode_}/config`)).then(snap=>{
-    tryAdvance(round.num, snap.val());   // her iki taraf da dener
+  startCd(()=>{
+    get(ref(db,`duel_rooms/${roomCode_}/config`)).then(snap=>{
+      tryAdvance(round.num,snap.val());
+    });
   });
-});
 }
 
 /* ── Sonraki soruya geç (her iki taraf dener, transaction seçer) ── */
