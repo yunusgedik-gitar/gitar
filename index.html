@@ -293,6 +293,17 @@
     .piece-action-btn.decode-action:hover { border-color: var(--orange); background: var(--orange-bg); }
     .piece-action-btn.decode-action.active { background: var(--orange); color: #fff; border-color: var(--orange); }
 
+    /* Eser sürükle-bırak sıralama */
+    .piece-drag-handle {
+      cursor: grab; padding: 4px 8px; margin-right: 2px; color: var(--muted);
+      font-size: 1.05rem; line-height: 1; touch-action: none; flex-shrink: 0;
+      user-select: none; -webkit-user-select: none;
+    }
+    .piece-drag-handle:active { cursor: grabbing; }
+    .piece-row.dragging {
+      opacity: .55; box-shadow: 0 8px 18px rgba(0,0,0,.15); z-index: 5; position: relative;
+    }
+
     .student-select-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px,1fr)); gap: 10px; margin-bottom: 1.4rem; }
     .student-select-card {
       background: #fff; border: 1px solid var(--border); border-radius: 14px;
@@ -425,6 +436,14 @@
           </div>
           <div class="card-footer"><span class="badge badge-active">Aktif</span><span class="arrow">→</span></div>
         </a>
+        <a class="card" id="bass-card" href="https://gitar.yunusgedik.com.tr/bas/">
+          <div class="card-icon">🎸</div>
+          <div>
+            <div class="card-title">Bas Gitar Klavyesi – I. Pozisyon</div>
+            <div class="card-desc">Bas gitarda I. Pozisyondaki tüm perdeleri, telleri ve notaların dizekteki (Fa anahtarı) tam karşılıklarını interaktif olarak deneyimleyin.</div>
+          </div>
+          <div class="card-footer"><span class="badge badge-new">YENİ</span><span class="arrow">→</span></div>
+        </a>
       </div>
     </div>
 
@@ -490,29 +509,6 @@
           <div class="progress-bar-track"><div class="progress-bar-fill" id="progress-bar-fill" style="width:0%"></div></div>
         </div>
         <div class="piece-list" id="piece-list"></div>
-
-        <!-- Eser Taşı Paneli -->
-        <div id="move-piece-panel">
-          <div class="move-panel-title">↗ Eseri Başka Grade'e Taşı</div>
-          <div style="font-size:.8rem;color:var(--muted);margin-bottom:8px;" id="move-piece-name-label"></div>
-          <div class="move-panel-row">
-            <select id="move-target-grade" style="padding:9px 14px; border-radius:10px; border:1px solid var(--border); font-family:inherit; font-size:.85rem;"></select>
-            <button class="back-btn" onclick="confirmMovePiece()" style="background:var(--gold);color:#fff;border-color:var(--gold);">Taşı</button>
-            <button class="back-btn" onclick="closeMovePanel()">Vazgeç</button>
-          </div>
-        </div>
-
-        <!-- Eser Ekleme Paneli -->
-        <div id="add-piece-panel">
-          <div class="progress-summary" style="padding:1rem 1.4rem;">
-            <div style="font-size:.85rem;font-weight:700;color:var(--brown);margin-bottom:8px;">➕ Bu Grade'e Yeni Eser Ekle</div>
-            <div class="add-piece-row">
-              <input type="text" id="new-piece-name" placeholder="Eser adı (ör: Tárrega – Recuerdos)" style="flex:1;min-width:180px;padding:9px 14px;border-radius:10px;border:1px solid var(--border);font-family:inherit;font-size:.85rem;">
-              <button class="back-btn" onclick="addCustomPiece()" style="background:var(--green);color:#fff;border-color:var(--green);">Ekle</button>
-            </div>
-            <div id="add-piece-msg" style="font-size:.78rem;margin-top:6px;"></div>
-          </div>
-        </div>
 
         <div id="add-grade-box" style="margin-top:1rem;"></div>
 
@@ -743,6 +739,7 @@ window.applyPinOverrides = async function() {
 
 async function loadRepProgress() {
   if (repLoaded) return;
+  await loadGradeOrder();
   try {
     const snap = await get(ref(db, 'repertoire'));
     const fromDb = snap.exists() ? snap.val() : {};
@@ -762,6 +759,84 @@ async function loadRepProgress() {
     repProgress = JSON.parse(JSON.stringify(INITIAL_PROGRESS));
   }
 }
+
+// ===== Eser Sıralaması (Grade içindeki gösterim sırası, sürükle-bırak ile değiştirilebilir) =====
+// Not: Bu sıralama sadece GÖRÜNÜM sırasıdır. Öğrencilerin completed/removedIndices dizileri
+// hâlâ GRADE_PIECES'teki ORİJİNAL index'e göre tutulur, böylece sıralamayı değiştirmek
+// hiçbir öğrencinin mevcut tamamlama verisini bozmaz.
+let gradeOrder = {};
+let gradeOrderLoaded = false;
+
+async function loadGradeOrder() {
+  if (gradeOrderLoaded) return;
+  try {
+    const snap = await get(ref(db, 'grade_order'));
+    gradeOrder = snap.exists() ? snap.val() : {};
+    gradeOrderLoaded = true;
+  } catch (e) { console.error('Eser sırası yüklenemedi:', e); }
+}
+
+function getOrderedIndices(grade) {
+  const pieces = GRADE_PIECES[grade] || [];
+  const custom = gradeOrder[grade];
+  if (Array.isArray(custom) && custom.length === pieces.length && new Set(custom).size === pieces.length) {
+    return custom;
+  }
+  return pieces.map((_, i) => i);
+}
+
+// Sürükle-bırak ile eser sırası değiştirme (mouse + dokunmatik, Pointer Events ile)
+let _dragState = null;
+
+window.onPieceDragStart = function(e) {
+  e.preventDefault();
+  const row  = e.currentTarget.closest('.piece-row');
+  const list = document.getElementById('piece-list');
+  if (!row || !list) return;
+
+  row.classList.add('dragging');
+  _dragState = true;
+
+  const onMove = (ev) => {
+    if (!_dragState) return;
+    const y = ev.clientY;
+    const others = Array.from(list.querySelectorAll('.piece-row[data-idx]')).filter(r => r !== row);
+    let inserted = false;
+    for (const r of others) {
+      const rect = r.getBoundingClientRect();
+      const mid = rect.top + rect.height / 2;
+      if (y < mid) {
+        list.insertBefore(row, r);
+        inserted = true;
+        break;
+      }
+    }
+    if (!inserted && others.length) {
+      const last = others[others.length - 1];
+      list.insertBefore(row, last.nextElementSibling);
+    }
+  };
+
+  const onUp = async () => {
+    document.removeEventListener('pointermove', onMove);
+    document.removeEventListener('pointerup', onUp);
+    document.removeEventListener('pointercancel', onUp);
+    row.classList.remove('dragging');
+    _dragState = null;
+
+    const newOrder = Array.from(list.querySelectorAll('.piece-row[data-idx]'))
+      .map(r => parseInt(r.dataset.idx, 10));
+    gradeOrder[repActiveGrade] = newOrder;
+    try {
+      await set(ref(db, `grade_order/${repActiveGrade}`), newOrder);
+      showSaveToast();
+    } catch (err) { console.error('Sıralama kaydedilemedi:', err); }
+  };
+
+  document.addEventListener('pointermove', onMove);
+  document.addEventListener('pointerup', onUp);
+  document.addEventListener('pointercancel', onUp);
+};
 
 // Bir eserin durumunu sayısal değere çevirir: 0 = çalışılmadı, 0.5 = deşifre seviyesi, 1 = tam
 // (eski veride boolean true/false olarak kayıtlıydı; geriye dönük uyumluluk için kontrol ediyoruz)
@@ -1198,6 +1273,35 @@ function checkRepertoireAccess(sid) {
   }
 }
 
+// ===== Bas Gitar Klavyesi kilitli mi kontrolü (öğrenci için) =====
+// Sadece "Bas Gitar" kategorisinde olan öğrenciler erişebilir; öğretmen her zaman erişebilir.
+function checkBassAccess(sid) {
+  const card = document.getElementById('bass-card');
+  if (!card) return;
+  const hasAccess = sid === TEACHER_ID || !!(studentCategories[sid] || {})['bas_gitar'];
+  if (!hasAccess) {
+    card.removeAttribute('href');
+    card.style.pointerEvents = 'none';
+    card.style.cursor = 'default';
+    card.style.filter = 'grayscale(0.3) opacity(0.7)';
+    card.querySelector('.card-icon').textContent = '🔒';
+    const desc = card.querySelector('.card-desc');
+    if (desc) desc.textContent = 'Bu bölüm yalnızca Bas Gitar kategorisindeki öğrencilere açıktır.';
+    const badge = card.querySelector('.badge');
+    if (badge) { badge.textContent = 'Kilitli'; badge.className = 'badge'; badge.style.cssText = 'background:#eee;color:#999;font-size:.7rem;font-weight:600;padding:3px 10px;border-radius:20px;'; }
+  } else {
+    card.setAttribute('href', 'https://gitar.yunusgedik.com.tr/bas/');
+    card.style.pointerEvents = '';
+    card.style.cursor = '';
+    card.style.filter = '';
+    card.querySelector('.card-icon').textContent = '🎸';
+    const desc = card.querySelector('.card-desc');
+    if (desc) desc.textContent = 'Bas gitarda I. Pozisyondaki tüm perdeleri, telleri ve notaların dizekteki (Fa anahtarı) tam karşılıklarını interaktif olarak deneyimleyin.';
+    const badge = card.querySelector('.badge');
+    if (badge) { badge.textContent = 'YENİ'; badge.className = 'badge badge-new'; badge.style.cssText = ''; }
+  }
+}
+
 window.saveNewStudent = async function() {
   const name = document.getElementById('new-student-name').value.trim();
   const pin = document.getElementById('new-student-pin').value.trim();
@@ -1252,14 +1356,17 @@ function renderTeacherPieceList() {
 
   const removed = entry.removedIndices || [];
   const custom  = entry.customPieces  || [];
+  const order   = getOrderedIndices(repActiveGrade);
 
-  // Standart eserler (silinmemiş olanlar)
-  const stdRows = pieces.map((name, i) => {
+  // Standart eserler (silinmemiş olanlar), sürükle-bırak ile belirlenmiş sırada
+  const stdRows = order.map(i => {
     if (removed.includes(i)) return '';
+    const name = pieces[i];
     const status = toStatus(entry.completed && entry.completed[i]);
     const rowClass = status === 1 ? 'done' : (status === 0.5 ? 'decode' : '');
     const check = status === 1 ? '✓' : (status === 0.5 ? '½' : '');
-    return `<div class="piece-row ${rowClass}" onclick="togglePiece(${i})">
+    return `<div class="piece-row ${rowClass}" data-idx="${i}" onclick="togglePiece(${i})">
+      <div class="piece-drag-handle" onpointerdown="onPieceDragStart(event)" onclick="event.stopPropagation()" title="Sürükleyerek sırala">⠿</div>
       <div class="piece-check">${check}</div>
       <div class="piece-name">${name}</div>
       <div class="piece-actions" onclick="event.stopPropagation()">
@@ -1390,8 +1497,9 @@ function renderSelfPieceList() {
     </div>`;
   }
 
-  const stdRows = pieces.map((name, i) => {
+  const stdRows = getOrderedIndices(repActiveGrade).map(i => {
     if (removed.includes(i)) return '';
+    const name = pieces[i];
     const status = toStatus(entry.completed && entry.completed[i]);
     return rowHtml(name, status);
   }).join('');
@@ -1449,6 +1557,7 @@ window.updateWelcomeCard = async function(sid) {
     rankEl.textContent  = '👨‍🏫';
     labelEl.textContent = '';
     badgesEl.innerHTML  = '<span class="w-badge w-badge-grade">Öğretmen Paneli</span>';
+    checkBassAccess(sid);
     return;
   }
 
@@ -1469,6 +1578,7 @@ window.updateWelcomeCard = async function(sid) {
     labelEl.textContent = '';
     badgesEl.innerHTML  = '';
     checkRepertoireAccess(sid);
+    checkBassAccess(sid);
     return;
   }
 
@@ -1488,6 +1598,7 @@ window.updateWelcomeCard = async function(sid) {
   `;
 
   checkRepertoireAccess(sid);
+  checkBassAccess(sid);
 };
 
 // Modül yüklenirken bekleyen avatar güncellemesini tetikle
@@ -1507,6 +1618,8 @@ const CATEGORIES = [
   { id: 'a1_a2_hiz',  label: 'A1-A2 Hızlandırılmış',  emoji: '⚡', color: '#b87d0d', bg: '#fdf3e0' },
   { id: 'ozel',       label: 'Özel',                  emoji: '⭐', color: '#9a2d2d', bg: '#fdf0f0' },
   { id: 'emekli',     label: 'Emekli Öğrenci',        emoji: '🏅', color: '#5a5a5a', bg: '#f2f2f2' },
+  { id: 'bas_gitar',     label: 'Bas Gitar',     emoji: '🎸', color: '#0e7c66', bg: '#e3f5f1' },
+  { id: 'elektro_gitar', label: 'Elektro Gitar', emoji: '🔌', color: '#2c4a6e', bg: '#e8eef5' },
 ];
 
 let studentCategories = {};

@@ -1,696 +1,118 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
-  <title>Bas Gitar Klavyesi – I. Pozisyon</title>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Lato:wght@300;400;700&display=swap');
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body { font-family: 'Lato', sans-serif; background: #faf6ed; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 1.2rem 1rem 2rem; color: #5a3e2b; }
-    header { text-align: center; margin-bottom: 0.5rem; }
-    header h1 { font-family: 'Playfair Display', serif; font-size: 1.35rem; font-weight: 600; color: #5a3e2b; }
-    #app-wrap { width: 100%; max-width: 600px; }
-
-    /* ── 🎸 TEL SEÇİM PANELİ STİLLERİ ── */
-    .filter-card {
-      background: #fff;
-      border: 1.5px solid #e8e0d5;
-      border-radius: 20px;
-      padding: 1rem;
-      margin-bottom: 1rem;
-      box-shadow: 0 4px 20px rgba(90,62,43,0.04);
-      text-align: center;
-    }
-    .filter-title {
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: #b09070;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 0.75rem;
-    }
-    .string-buttons {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-bottom: 0.85rem;
-    }
-    .string-btn {
-      width: 42px;
-      height: 42px;
-      border-radius: 50%;
-      border: 1.5px solid #d4c4b0;
-      background: #fff;
-      color: #5a3e2b;
-      font-size: 1.1rem;
-      font-weight: 700;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.15s ease;
-    }
-    .string-btn.all-btn {
-      width: auto;
-      height: 42px;
-      padding: 0 16px;
-      border-radius: 20px;
-      font-size: 0.9rem;
-    }
-    .string-btn.active {
-      background: #5a3e2b;
-      border-color: #5a3e2b;
-      color: #fff;
-      box-shadow: 0 4px 10px rgba(90,62,43,0.2);
-    }
-    .action-buttons-wrap {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .start-exercise-btn {
-      width: 100%;
-      padding: 10px;
-      font-size: 0.95rem;
-      font-weight: 700;
-      border-radius: 12px;
-      border: 1.5px solid #d4a373;
-      background: #f5e6d3;
-      color: #5a3e2b;
-      cursor: pointer;
-      transition: all 0.12s;
-    }
-    .start-race-btn {
-      border: 1.5px solid #e24b4a;
-      background: #fdf0f0;
-      color: #a32d2d;
-    }
-    .start-exercise-btn:disabled {
-      background: #f5f5f5;
-      border-color: #ddd;
-      color: #aaa;
-      cursor: not-allowed;
-    }
-    .back-to-menu-btn {
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: #b09070;
-      background: #fff;
-      border: 1.5px solid #e8e0d5;
-      padding: 6px 14px;
-      border-radius: 30px;
-      cursor: pointer;
-      font-family: inherit;
-      transition: all 0.12s;
-      box-shadow: 0 2px 8px rgba(90,62,43,0.02);
-      margin-bottom: 0.85rem;
-      display: inline-block;
-    }
-    .timer-badge.race-mode { background: #fdf0f0; border: 1.5px solid #f9d5d5; color: #e24b4a; }
-    @media (hover: hover) {
-      .start-exercise-btn:hover:not(:disabled) { background: #ebd3b8; }
-      .start-race-btn:hover:not(:disabled) { background: #f9d5d5; }
-      .back-to-menu-btn:hover { background: #f5e6d3; border-color: #d4c4b0; color: #5a3e2b; }
-    }
-
-    .card { background: #fff; border: 1.5px solid #e8e0d5; border-radius: 20px; padding: 1.1rem 1.1rem 0.9rem; margin-bottom: 0.85rem; box-shadow: 0 4px 20px rgba(90,62,43,0.04); }
-    .card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
-
-    #listen-btn { display: flex; align-items: center; gap: 5px; font-size: 0.8rem; padding: 6px 14px; border-radius: 20px; border: 1.5px solid #d4a373; background: #fff; color: #8b5a2b; cursor: pointer; font-family: inherit; font-weight: 600; transition: all 0.2s; }
-    #listen-btn.playing { background: #eaf3de; border-color: #6b8c42; color: #3b6d11; }
-    @media (hover: hover) {
-      #listen-btn:hover { background: #f5e6d3; }
-      .ctrl-btn:hover { background: #f5e6d3; border-color: #c4a88a; }
-      .ctrl-btn.primary:hover { background: #ebd3b8; }
-    }
-
-    .timer-badge { font-size: 0.85rem; font-weight: 700; color: #8b5a2b; background: #f5e6d3; padding: 5px 12px; border-radius: 12px; border: 1px solid #e8d5c0; }
-
-    .q-title { text-align: center; font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; color: #5a3e2b; }
-
-    .hint-box { text-align: center; font-size: 1.15rem; font-weight: 700; color: #5a3e2b; margin-bottom: 1rem; display: flex; align-items: center; justify-content: center; gap: 8px; background: #fdfaf4; padding: 8px 12px; border-radius: 12px; border: 1px dashed #d4c4b0; }
-    .hint-string-badge { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: #8b5a2b; color: #fff; border-radius: 50%; font-size: 0.95rem; font-weight: 700; }
-    .hint-fret-text { color: #b37d4e; background: #f5e6d3; padding: 2px 10px; border-radius: 6px; }
-
-    .guitar-wrap { width: 100%; display: flex; justify-content: center; align-items: center; margin: 0 auto 0.5rem; }
-    .guitar-wrap svg { display: block; width: 100%; max-width: 440px; height: auto; }
-
-    .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1rem; }
-    .choice-card { background: #fff; border: 2px solid #e8e0d5; border-radius: 16px; padding: 8px 10px 6px; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; position: relative; box-shadow: 0 2px 8px rgba(90,62,43,0.03); overflow: visible; -webkit-tap-highlight-color: transparent; outline: none; }
-    @media (hover: hover) {
-      .choice-card:hover:not(.disabled):not(.correct):not(.wrong) { border-color: #d4a373; transform: translateY(-3px); box-shadow: 0 8px 20px rgba(90,62,43,0.1); }
-    }
-    .choice-card:active:not(.disabled) { transform: scale(0.98); }
-    .choice-staff { width: 110px; height: 115px; margin: 4px 0 0; overflow: visible; }
-    .choice-staff svg { max-width: 100%; height: auto; overflow: visible; }
-    .choice-card.correct { background: #eaf3de; border-color: #6b8c42; }
-    .choice-card.wrong { background: #fdf0f0; border-color: #c75b39; }
-    .choice-card.disabled { cursor: default; opacity: 0.92; }
-
-    .message { text-align: center; font-size: 0.9rem; font-weight: 700; color: #8b6b4e; margin-bottom: 0.65rem; min-height: 22px; }
-
-    #auto-bar-wrap { height: 3px; background: #e0ddd6; border-radius: 2px; margin-bottom: 0.65rem; overflow: hidden; display: none; }
-    #auto-bar { height: 100%; width: 100%; background: #6b8c42; border-radius: 2px; transition: width 2s linear; }
-
-    .progress-area { display: flex; align-items: center; margin-bottom: 1.2rem; }
-    .progress-track { flex: 1; height: 10px; background: #ede6d8; border-radius: 5px; overflow: hidden; border: 1px solid #e0d8c8; }
-    .progress-fill { height: 100%; width: 0%; background: #8cb85f; border-radius: 5px; transition: width 0.4s ease; }
-
-    .controls { display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 8px; }
-    .ctrl-btn { padding: 11px; font-size: 0.85rem; font-weight: 700; border-radius: 12px; border: 1.5px solid #d4c4b0; background: #fff; color: #5a3e2b; cursor: pointer; font-family: inherit; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 5px; }
-    .ctrl-btn.primary { background: #f5e6d3; border-color: #d4a373; }
-    .ctrl-btn:disabled { opacity: 0.45; cursor: not-allowed; }
-
-    .result-screen { display: none; text-align: center; padding: 1.5rem 1rem; }
-    .result-title { font-family: 'Playfair Display', serif; font-size: 1.8rem; color: #6b8c42; margin-bottom: 1rem; }
-    .result-stats { background: #fdfaf4; border: 1.5px dashed #d4c4b0; border-radius: 16px; padding: 1.2rem; margin-bottom: 1.5rem; text-align: left; }
-    .stat-row { display: flex; justify-content: space-between; font-size: 1.1rem; padding: 8px 0; border-bottom: 1px dashed #e8e0d5; color: #5a3e2b; }
-    .stat-row:last-child { border-bottom: none; }
-    .stat-val { font-weight: 700; color: #8b5a2b; }
-    .stat-val.correct-val { color: #6b8c42; }
-    .stat-val.wrong-val { color: #c75b39; }
-
-    footer { margin-top: 1.5rem; font-size: 0.75rem; color: #c4b5a0; text-align: center; }
-
-    @media (max-width: 420px) {
-      .choices { gap: 8px; }
-      .choice-card { padding: 10px 6px; }
-      .choice-staff { width: 90px; height: 100px; }
-      .choice-name { font-size: 1rem; margin-top: 6px; }
-      .controls { grid-template-columns: 1fr; }
-      .ctrl-btn.primary { order: -1; }
-    }
-	.site-footer {
-  display: flex;
-  justify-content: center;
-  gap: 22px;
-  margin-top: 2.5rem;
-}
-
-.site-footer a {
-  color: #b0a392;
-  font-size: 2.2rem;
-  transition: all .2s ease;
-}
-
-.site-footer a:hover {
-  color: var(--gold);
-  transform: translateY(-2px);
-}
-  </style>
+<meta charset="UTF-8" />
+<title>Düzeltme Aracı — Fatih / Maroufi</title>
+<style>
+  body { font-family: -apple-system, 'DM Sans', sans-serif; background:#f7f4ef; color:#2c1f14; max-width:640px; margin:40px auto; padding:0 20px; line-height:1.5; }
+  h1 { font-size:1.25rem; }
+  button { font-family:inherit; font-size:1rem; font-weight:700; padding:12px 22px; border-radius:12px; border:none; background:#b8892a; color:#fff; cursor:pointer; margin:14px 0; }
+  button:disabled { background:#ccc; cursor:default; }
+  pre { background:#fff; border:1px solid #e2d9cc; border-radius:10px; padding:14px; white-space:pre-wrap; word-break:break-word; font-size:.82rem; }
+  .ok   { color:#3b6d11; font-weight:700; }
+  .warn { color:#c9650f; font-weight:700; }
+  .err  { color:#a32d2d; font-weight:700; }
+</style>
+<!-- Sitedeki canlı eser listesini yüklüyoruz, böylece "Maroufi" eserinin Grade 3 listesindeki
+     gerçek sırasını (index) sabit kodlamak yerine doğrudan oradan hesaplıyoruz. -->
+<script src="https://gitar.yunusgedik.com.tr/repertoire-data.js"></script>
 </head>
 <body>
+  <h1>🔧 Tek Seferlik Düzeltme: Fatih ÖZDÖŞEMECİ — "Maroufi, J. – Golden Dreams"</h1>
+  <p>Bu araç, Fatih'in Grade 3 listesinden daha önce silinen "Maroufi, J. – Golden Dreams" eserini, sadece <strong>Fatih için</strong> tekrar görünür hale getirir. Başka hiçbir öğrencinin veya eserin verisine dokunmaz.</p>
+  <button id="run-btn" onclick="runFix()">Düzeltmeyi Çalıştır</button>
+  <pre id="log">Hazır. Butona basınca işlem başlayacak.</pre>
 
-<header>
-  <h1>🎸 Bas Gitar Klavyesi – I. Pozisyon</h1>
-</header>
+<script type="module">
+import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js";
 
-<div id="app-wrap">
+const firebaseConfig = {
+  apiKey: "AIzaSyBkEd729B65y-NZIQ-sxScCgaEvlX-q7yA",
+  authDomain: "gitar-yunus.firebaseapp.com",
+  databaseURL: "https://gitar-yunus-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "gitar-yunus",
+  storageBucket: "gitar-yunus.firebasestorage.app",
+  messagingSenderId: "184803778782",
+  appId: "1:184803778782:web:8f9fbeb4fe625eb386e24f"
+};
+const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+const db = getDatabase(app);
 
-  <!-- ── GİRİŞ EKRANI ── -->
-  <div id="setup-area" class="filter-card">
-    <div style="display:flex; justify-content:flex-end; margin-bottom:0.5rem;">
-      <button class="back-to-menu-btn" style="margin-bottom:0;" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Başa Dön</button>
-    </div>
-    <div class="filter-title">Çalışılacak Telleri Seçin</div>
-    <div class="string-buttons">
-      <button id="btn-all" class="string-btn all-btn active" onclick="toggleAllStrings()">Hepsi</button>
-      <button class="string-btn active string-num-btn" data-string="1" onclick="toggleString(1)">①</button>
-      <button class="string-btn active string-num-btn" data-string="2" onclick="toggleString(2)">②</button>
-      <button class="string-btn active string-num-btn" data-string="3" onclick="toggleString(3)">③</button>
-      <button class="string-btn active string-num-btn" data-string="4" onclick="toggleString(4)">④</button>
-    </div>
-    <div class="action-buttons-wrap">
-      <button id="start-btn" class="start-exercise-btn" onclick="startExercise('practice')">Egzersize Başla (Zamansız) 🎯</button>
-      <button id="race-btn" class="start-exercise-btn start-race-btn" onclick="startExercise('race')">Yarışmaya Başla (40 Saniye) 🏆</button>
-    </div>
-  </div>
-
-  <!-- ── EGZERSIZ ALANI ── -->
-  <div id="quiz-zone" style="display:none;">
-    <div style="display:flex; justify-content:flex-start; align-items:center; margin-bottom:0.85rem;">
-      <button class="back-to-menu-btn" style="margin-bottom:0;" onclick="goBackToMenu()">← Menüye Dön</button>
-    </div>
-
-    <div class="card">
-      <div class="card-top">
-        <button id="listen-btn" onclick="replay()">🔊 Dinle</button>
-        <div class="timer-badge" id="timer-display" style="display:none;">Kalan Süre: 40</div>
-      </div>
-      
-      <div class="hint-box" id="hint-text">
-        💡 <span class="hint-string-badge">1</span> . Tel – <span class="hint-fret-text">I. Perde</span>
-      </div>
-
-      <div class="guitar-wrap">
-        <svg id="guitar-svg" viewBox="60 0 350 210" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
-          <defs>
-            <linearGradient id="fbGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#2a1a0e"/>
-              <stop offset="100%" stop-color="#1a0f06"/>
-            </linearGradient>
-            <linearGradient id="nutGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#f0e0b0"/>
-              <stop offset="100%" stop-color="#c8a050"/>
-            </linearGradient>
-            <filter id="dotGlow" x="-80%" y="-80%" width="260%" height="260%">
-              <feGaussianBlur stdDeviation="3.5" result="blur"/>
-              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-            </filter>
-          </defs>
-
-          <rect x="62" y="32" width="338" height="148" rx="5" fill="url(#fbGrad)" stroke="#3a2010" stroke-width="1.5"/>
-          <rect x="62" y="32" width="338" height="3" rx="1" fill="#c8a050" opacity="0.5"/>
-          <rect x="62" y="177" width="338" height="3" rx="1" fill="#c8a050" opacity="0.5"/>
-          <rect x="112" y="30" width="8" height="152" rx="2" fill="url(#nutGrad)" stroke="#c0a040" stroke-width="0.8"/>
-          <rect x="198" y="32" width="4" height="148" rx="1" fill="#b0b8b0" opacity="0.85"/>
-          <rect x="285" y="32" width="4" height="148" rx="1" fill="#b0b8b0" opacity="0.85"/>
-          <rect x="370" y="32" width="4" height="148" rx="1" fill="#b0b8b0" opacity="0.85"/>
-
-          <text x="155" y="24" text-anchor="middle" fill="#8b6b4e" font-size="12" font-weight="700" font-family="Lato,sans-serif">I</text>
-          <text x="243" y="24" text-anchor="middle" fill="#8b6b4e" font-size="12" font-weight="700" font-family="Lato,sans-serif">II</text>
-          <text x="328" y="24" text-anchor="middle" fill="#8b6b4e" font-size="12" font-weight="700" font-family="Lato,sans-serif">III</text>
-
-          <line x1="70" y1="55"  x2="400" y2="55"  stroke="#e8d09a" stroke-width="1.3" opacity="0.95"/>
-          <line x1="70" y1="91"  x2="400" y2="91"  stroke="#d8bc6a" stroke-width="1.9" opacity="0.95"/>
-          <line x1="70" y1="127" x2="400" y2="127" stroke="#c8a84a" stroke-width="2.5" opacity="0.95"/>
-          <line x1="70" y1="163" x2="400" y2="163" stroke="#a87820" stroke-width="3.1" opacity="0.95"/>
-
-          <circle cx="93" cy="55"  r="10" fill="#fff8ef" stroke="#d4a373" stroke-width="1.2"/>
-          <text   x="93" y="59"  text-anchor="middle" fill="#5a3e2b" font-size="10" font-weight="700" font-family="Lato,sans-serif">1</text>
-          <circle cx="93" cy="91"  r="10" fill="#fff8ef" stroke="#d4a373" stroke-width="1.2"/>
-          <text   x="93" y="95"  text-anchor="middle" fill="#5a3e2b" font-size="10" font-weight="700" font-family="Lato,sans-serif">2</text>
-          <circle cx="93" cy="127" r="10" fill="#fff8ef" stroke="#d4a373" stroke-width="1.2"/>
-          <text   x="93" y="131" text-anchor="middle" fill="#5a3e2b" font-size="10" font-weight="700" font-family="Lato,sans-serif">3</text>
-          <circle cx="93" cy="163" r="10" fill="#fff8ef" stroke="#d4a373" stroke-width="1.2"/>
-          <text   x="93" y="167" text-anchor="middle" fill="#5a3e2b" font-size="10" font-weight="700" font-family="Lato,sans-serif">4</text>
-
-          <circle id="fret-highlight" cx="0" cy="0" r="14" fill="#f4d03f" stroke="#d4ac0d" stroke-width="2.5" filter="url(#dotGlow)" opacity="0.95" style="display:none;pointer-events:none;"/>
-          <text id="fret-highlight-q" x="0" y="0" text-anchor="middle" dominant-baseline="central" fill="#5a3000" font-size="11" font-weight="700" font-family="Lato,sans-serif" style="display:none;pointer-events:none;">?</text>
-        </svg>
-      </div>
-    </div>
-
-    <div class="choices" id="choices"></div>
-    <div class="message" id="message">🎵 Doğru cevabı seç ve öğrenmeye devam et!</div>
-    <div id="auto-bar-wrap"><div id="auto-bar"></div></div>
-
-    <div class="progress-area">
-      <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
-    </div>
-
-    <div class="controls">
-      <button class="ctrl-btn" onclick="resetQuiz(false)">↻ Tekrar</button>
-      <button class="ctrl-btn primary" id="next-btn" onclick="manualNext()" disabled>Sonraki Soru →</button>
-      <button class="ctrl-btn" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
-    </div>
-  </div>
-
-  <div id="result-zone" class="result-screen">
-    <h2 class="result-title">🎉 Test Tamamlandı!</h2>
-    <div class="result-stats">
-      <div class="stat-row"><span>Toplam Süre:</span><span class="stat-val" id="res-time">00:00</span></div>
-      <div class="stat-row"><span>Doğru Cevap:</span><span class="stat-val correct-val" id="res-correct">0</span></div>
-      <div class="stat-row"><span>Yanlış Cevap:</span><span class="stat-val wrong-val" id="res-wrong">0</span></div>
-    </div>
-    <p style="color:#8b6b4e; font-weight:700; margin-bottom:1.5rem;">Bravo! Ekran görüntüsü al ve grupta paylaş 🎸</p>
-  </div>
-</div>
-
-<footer class="site-footer">
-  <a href="https://www.instagram.com/yunusgedik_/" target="_blank" aria-label="Instagram">
-    <i class="fa-brands fa-instagram"></i>
-  </a>
-
-  <a href="https://x.com/yunusgedik_" target="_blank" aria-label="X">
-    <i class="fa-brands fa-x-twitter"></i>
-  </a>
-
-  <a href="https://www.youtube.com/yunusgedik" target="_blank" aria-label="YouTube">
-    <i class="fa-brands fa-youtube"></i>
-  </a>
-</footer>
-
-<script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.2/build/cjs/vexflow.js"></script>
-<script>
-(function() {
-  const sid = localStorage.getItem('gitar_session');
-  if (!sid) window.location.href = 'https://gitar.yunusgedik.com.tr/';
-})();
-
-const NOTES = [
-  { string:1, fret:0, name:'Sol', freq:98.00,  key:'g/3' },
-  { string:1, fret:2, name:'La',  freq:110.00, key:'a/3' },
-  { string:2, fret:0, name:'Re',  freq:73.42,  key:'d/3' },
-  { string:2, fret:2, name:'Mi',  freq:82.41,  key:'e/3' },
-  { string:2, fret:3, name:'Fa',  freq:87.31,  key:'f/3' },
-  { string:3, fret:0, name:'La',  freq:55.00,  key:'a/2' },
-  { string:3, fret:2, name:'Si',  freq:61.74,  key:'b/2' },
-  { string:3, fret:3, name:'Do',  freq:65.41,  key:'c/3' },
-  { string:4, fret:0, name:'Mi',  freq:41.20,  key:'e/2' },
-  { string:4, fret:1, name:'Fa',  freq:43.65,  key:'f/2' },
-  { string:4, fret:3, name:'Sol', freq:49.00,  key:'g/2' }
-];
-
-const ROMAN_FRETS = { 0:'Boş Tel', 1:'I. Perde', 2:'II. Perde', 3:'III. Perde' };
-const ERR = [
-      "Yazıklar olsun!",
-      "Kulaklarımız kanadı...",
-      "Sende hiç utanma yok mu yaa",
-      "Instagram'dan ekle beni seni engellim",
-      "Tüm başarılar Yunus Hocadan, bunun gibi hatalar ise senden..",
-      "Yunus Hoca bunu görmemiş olsun...",
-      "Gitarı yavaşça yere bırak...",
-      "Sen daha iyi enstrümanlara layıksın",
-      "Aynen knk aynen sensin",
-      "Iyyy yine mi hata",
-      "Ağır popçusun belli knk",
-      "Lâ havle..",
-      "Sen en iyisi flüt çal knk",
-      "Tekrar deneme, yeter.",
-      "Bir yerde bırakmak lazım sanki",
-      "Bir durun olsun beea",
-      "Sen öyle bil aynen",
-      "En sevmediğim öğrencim naber",
-      "Ex'den Next olur senden öğrenci olmaz :D"
-	];
-
-const FRET_CX = { 0:116, 1:155, 2:243, 3:328 };
-const STRING_CY = { 1:55, 2:91, 3:127, 4:163 };
-const TOTAL_QUESTIONS_COUNT = 12;
-
-let selectedStrings = new Set([1, 2, 3, 4]);
-let filteredNotes = [...NOTES];
-let currentMode = 'practice';
-let gameTimer = null;
-let timeLeft = 40;
-
-let audioCtx=null, questions=[], currentIndex=0, current=null, answered=false, interacted=false, autoTimer=null;
-let correctCount=0, wrongCount=0, startTime=null, timerInterval=null;
-
-function toggleAllStrings() {
-  const allBtn = document.getElementById('btn-all');
-  const numBtns = document.querySelectorAll('.string-num-btn');
-  if (selectedStrings.size === 4) {
-    selectedStrings.clear();
-    allBtn.classList.remove('active');
-    numBtns.forEach(b => b.classList.remove('active'));
-  } else {
-    selectedStrings = new Set([1,2,3,4]);
-    allBtn.classList.add('active');
-    numBtns.forEach(b => b.classList.add('active'));
-  }
-  checkStartButton();
+const logEl = document.getElementById('log');
+const btn   = document.getElementById('run-btn');
+function log(msg, cls) {
+  const line = document.createElement('div');
+  if (cls) line.className = cls;
+  line.textContent = msg;
+  logEl.appendChild(line);
 }
 
-function toggleString(num) {
-  const btn = document.querySelector(`.string-num-btn[data-string="${num}"]`);
-  const allBtn = document.getElementById('btn-all');
-  if (selectedStrings.has(num)) {
-    selectedStrings.delete(num);
-    btn.classList.remove('active');
-  } else {
-    selectedStrings.add(num);
-    btn.classList.add('active');
-  }
-  allBtn.classList.toggle('active', selectedStrings.size === 4);
-  checkStartButton();
-}
+window.runFix = async function() {
+  btn.disabled = true;
+  logEl.innerHTML = '';
 
-function checkStartButton() {
-  const isZero = selectedStrings.size === 0;
-  document.getElementById('start-btn').disabled = isZero;
-  document.getElementById('race-btn').disabled = isZero;
-}
-
-function startExercise(mode) {
-  filteredNotes = NOTES.filter(n => selectedStrings.has(n.string));
-  if (filteredNotes.length === 0) return;
-
-  currentMode = mode;
-  document.getElementById('setup-area').style.display = 'none';
-  document.getElementById('quiz-zone').style.display = 'block';
-
-  resetQuiz(false);
-}
-
-function goBackToMenu() {
-  if (gameTimer) { clearInterval(gameTimer); gameTimer = null; }
-  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
-  clearAutoTimer();
-  document.getElementById('quiz-zone').style.display = 'none';
-  document.getElementById('result-zone').style.display = 'none';
-  document.getElementById('setup-area').style.display = 'block';
-}
-
-function startGameTimer() {
-  if (gameTimer) clearInterval(gameTimer);
-  gameTimer = setInterval(() => {
-    timeLeft--;
-    if (timeLeft <= 0) {
-      document.getElementById('timer-display').textContent = 'Süre Bitti!';
-      clearInterval(gameTimer);
-      showFinalResults();
-    } else {
-      document.getElementById('timer-display').textContent = 'Kalan Süre: ' + timeLeft;
-    }
-  }, 1000);
-}
-
-function shuffle(a) { return [...a].sort(() => Math.random() - 0.5); }
-function generateRandomQuizSet(pool, count) {
-  return Array.from({ length: count }, () => pool[Math.floor(Math.random() * pool.length)]);
-}
-
-function getAudio() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  return audioCtx;
-}
-
-function playGuitar(freq) {
-  try {
-    const ctx = getAudio();
-    if (ctx.state === 'suspended') ctx.resume();
-    const now = ctx.currentTime;
-    const master = ctx.createGain();
-    master.connect(ctx.destination);
-
-    const filter = ctx.createBiquadFilter();
-    filter.type = 'lowpass'; filter.frequency.value = freq * 2.8; filter.Q.value = 0.7;
-    filter.connect(master);
-
-    const osc = ctx.createOscillator(); osc.type = 'triangle'; osc.frequency.value = freq;
-    const og = ctx.createGain();
-    og.gain.setValueAtTime(0, now); og.gain.linearRampToValueAtTime(0.45, now + 0.006); og.gain.exponentialRampToValueAtTime(0.001, now + 2.2);
-    osc.connect(og); og.connect(filter); osc.start(now); osc.stop(now + 2.2);
-
-    const sine = ctx.createOscillator(); sine.type = 'sine'; sine.frequency.value = freq;
-    const sg = ctx.createGain();
-    sg.gain.setValueAtTime(0, now); sg.gain.linearRampToValueAtTime(0.25, now + 0.006); sg.gain.exponentialRampToValueAtTime(0.001, now + 1.8);
-    sine.connect(sg); sg.connect(filter); sine.start(now); sine.stop(now + 1.8);
-
-    [2, 3, 4].forEach(h => {
-      const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = freq * h;
-      const g = ctx.createGain();
-      g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(0.1 / h, now + 0.005); g.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
-      o.connect(g); g.connect(filter); o.start(now); o.stop(now + 1.2);
-    });
-
-    const bufSize = ctx.sampleRate * 0.04;
-    const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
-    const d = buf.getChannelData(0);
-    for (let i = 0; i < bufSize; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / bufSize);
-    const noise = ctx.createBufferSource(); noise.buffer = buf;
-    const nf = ctx.createBiquadFilter(); nf.type = 'bandpass'; nf.frequency.value = freq; nf.Q.value = 0.8;
-    const ng = ctx.createGain(); ng.gain.setValueAtTime(0.2, now); ng.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
-    noise.connect(nf); nf.connect(master); noise.start(now);
-
-    master.gain.setValueAtTime(0.75, now); master.gain.exponentialRampToValueAtTime(0.001, now + 2.5);
-    const btn = document.getElementById('listen-btn');
-    btn.classList.add('playing'); setTimeout(() => btn.classList.remove('playing'), 700);
-  } catch(e) {}
-}
-
-function replay() { interacted = true; if (current) playGuitar(current.freq); }
-
-function moveHighlight(stringN, fretN) {
-  const cx = FRET_CX[fretN], cy = STRING_CY[stringN];
-  const dot = document.getElementById('fret-highlight');
-  const qtxt = document.getElementById('fret-highlight-q');
-  dot.setAttribute('cx', cx); dot.setAttribute('cy', cy);
-  qtxt.setAttribute('x', cx); qtxt.setAttribute('y', cy);
-  dot.style.display = ''; qtxt.style.display = '';
-}
-
-function drawMiniStaff(div, noteObj) {
-  div.innerHTML = '';
-  try {
-    const { Renderer, Stave, StaveNote, Voice, Formatter } = Vex.Flow;
-    const renderer = new Renderer(div, Renderer.Backends.SVG);
-    renderer.resize(110, 115);
-    const ctx = renderer.getContext();
-    const stave = new Stave(0, -10, 110);
-    stave.addClef('bass').setContext(ctx).draw();
-    const note = new StaveNote({ keys: [noteObj.key], duration: 'w', clef: 'bass' });
-    const voice = new Voice({ num_beats: 4, beat_value: 4 });
-    voice.addTickables([note]);
-    new Formatter().joinVoices([voice]).format([voice], 85);
-    voice.draw(ctx, stave);
-    const s = div.querySelector('svg');
-    if (s) { s.style.width = '100%'; s.style.height = 'auto'; }
-  } catch(e) { console.log(e); }
-}
-
-function startTimer() {
-  startTime = Date.now();
-  if (timerInterval) clearInterval(timerInterval);
-  const timerEl = document.getElementById('timer-display');
-  timerEl.style.display = 'inline-block';
-  timerEl.classList.remove('race-mode');
-  timerEl.textContent = 'Süre: 00:00';
-  timerInterval = setInterval(() => {
-    const s = Math.floor((Date.now() - startTime) / 1000);
-    timerEl.textContent = 'Süre: ' + String(Math.floor(s / 60)).padStart(2,'0') + ':' + String(s % 60).padStart(2,'0');
-  }, 1000);
-}
-
-function clearAutoTimer() {
-  if (autoTimer) { clearTimeout(autoTimer); autoTimer = null; }
-  document.getElementById('auto-bar-wrap').style.display = 'none';
-}
-
-function startAutoAdvance() {
-  const wrap = document.getElementById('auto-bar-wrap'), bar = document.getElementById('auto-bar');
-  wrap.style.display = 'block'; bar.style.width = '100%'; bar.style.transition = 'none';
-  requestAnimationFrame(() => requestAnimationFrame(() => {
-    bar.style.transition = 'width 1s linear'; bar.style.width = '0%';
-  }));
-  autoTimer = setTimeout(() => { clearAutoTimer(); nextQuestion(); }, 1000);
-}
-
-function manualNext() { clearAutoTimer(); nextQuestion(); }
-
-function showFinalResults() {
-  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
-  if (gameTimer) { clearInterval(gameTimer); gameTimer = null; }
-  clearAutoTimer();
-  document.getElementById('quiz-zone').style.display = 'none';
-  document.getElementById('result-zone').style.display = 'block';
-  if (currentMode === 'race') {
-    document.getElementById('res-time').textContent = (40 - timeLeft) + ' sn';
-  } else {
-    const s = Math.floor((Date.now() - startTime) / 1000);
-    const mins = Math.floor(s / 60), secs = s % 60;
-    document.getElementById('res-time').textContent = mins > 0 ? `${mins} dk ${secs} sn` : `${secs} sn`;
-  }
-  document.getElementById('res-correct').textContent = correctCount;
-  document.getElementById('res-wrong').textContent = wrongCount;
-}
-
-function nextQuestion() {
-  clearAutoTimer(); answered = false;
-  if (document.activeElement) document.activeElement.blur();
-  document.getElementById('message').textContent = '🎵 Doğru cevabı seç ve öğrenmeye devam et!';
-  document.getElementById('message').style.color = '#8b6b4e';
-  document.getElementById('next-btn').disabled = true;
-
-  if (currentMode !== 'race' && currentIndex >= TOTAL_QUESTIONS_COUNT) { showFinalResults(); return; }
-
-  if (currentMode === 'race') {
-    const pool = filteredNotes.length > 0 ? filteredNotes : NOTES;
-    current = pool[Math.floor(Math.random() * pool.length)];
-  } else {
-    current = questions[currentIndex];
-  }
-
-  moveHighlight(current.string, current.fret);
-  document.getElementById('hint-text').innerHTML = `💡 <span class="hint-string-badge">${current.string}</span> . Tel – <span class="hint-fret-text">${ROMAN_FRETS[current.fret]}</span>`;
-
-  const allNames = ['Mi','Fa','Sol','La','Si','Do','Re'];
-  const wrongs = shuffle(allNames.filter(n => n !== current.name)).slice(0, 3);
-  const wrongNotes = wrongs.map(n => NOTES.find(note => note.name === n) || NOTES.find(note => note.name !== current.name));
-  const choices = shuffle([current, ...wrongNotes]);
-  const box = document.getElementById('choices');
-  box.innerHTML = '';
-
-  choices.forEach(noteObj => {
-    const card = document.createElement('div');
-    card.className = 'choice-card'; card.dataset.choice = noteObj.name;
-    card.onclick = () => selectChoice(card, noteObj.name);
-    const staffDiv = document.createElement('div'); staffDiv.className = 'choice-staff';
-    card.appendChild(staffDiv);
-    box.appendChild(card);
-    drawMiniStaff(staffDiv, noteObj);
-  });
-
-  if (currentMode !== 'race') {
-    document.getElementById('progress-fill').style.width = (currentIndex / TOTAL_QUESTIONS_COUNT * 100) + '%';
-  }
-  if (interacted) setTimeout(() => playGuitar(current.freq), 300);
-}
-
-function selectChoice(card, name) {
-  if (answered) return;
-  answered = true; interacted = true;
-  document.querySelectorAll('.choice-card').forEach(c => { c.classList.add('disabled'); c.onclick = null; });
-  const msg = document.getElementById('message');
-
-  if (name === current.name) {
-    card.classList.add('correct');
-    card.blur();
-    msg.textContent = '✓ Doğru! İyi iş çıkardın, devam et!'; msg.style.color = '#6b8c42';
-    playGuitar(current.freq);
-    correctCount++;
-    document.getElementById('next-btn').disabled = false;
-    startAutoAdvance();
-  } else {
-    card.classList.add('wrong');
-    msg.textContent = '✗ ' + ERR[Math.floor(Math.random() * ERR.length)] + ' — Doğrusu: ' + current.name;
-    msg.style.color = '#c75b39';
-    wrongCount++;
-    document.querySelectorAll('.choice-card').forEach(c => { if (c.dataset.choice === current.name) c.classList.add('correct'); });
-    document.getElementById('next-btn').disabled = false;
-  }
-  if (currentMode !== 'race') currentIndex++;
-}
-
-function resetQuiz(showSetup = true) {
-  clearAutoTimer();
-  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
-  if (gameTimer) { clearInterval(gameTimer); gameTimer = null; }
-
-  if (showSetup) {
-    goBackToMenu();
+  if (typeof GRADE_PIECES === 'undefined') {
+    log('❌ Hata: repertoire-data.js yüklenemedi, eser listesine erişilemedi.', 'err');
+    btn.disabled = false;
     return;
   }
 
-  document.getElementById('quiz-zone').style.display = 'block';
-  document.getElementById('result-zone').style.display = 'none';
-  correctCount = 0; wrongCount = 0; currentIndex = 0; answered = false; interacted = false;
-  const pool = filteredNotes.length > 0 ? filteredNotes : NOTES;
-  questions = generateRandomQuizSet(pool, TOTAL_QUESTIONS_COUNT);
-  document.getElementById('hint-text').innerHTML = '💡 Soruyu incele ve doğru notayı seç';
-  if (currentMode === 'race') {
-    timeLeft = 40;
-    const timerEl = document.getElementById('timer-display');
-    timerEl.textContent = 'Kalan Süre: 40';
-    timerEl.style.display = 'inline-block';
-    timerEl.classList.add('race-mode');
-    startGameTimer();
-  } else {
-    startTimer();
+  const PIECE_NAME = 'Maroufi, J. – Golden Dreams';
+  const GRADE = '3';
+  const SID = 's07';
+
+  const pieces = GRADE_PIECES[GRADE] || [];
+  const idx = pieces.indexOf(PIECE_NAME);
+  if (idx === -1) {
+    log(`❌ "${PIECE_NAME}" eseri Grade ${GRADE} ana listesinde bulunamadı. İsim farklı yazılmış olabilir.`, 'err');
+    btn.disabled = false;
+    return;
   }
-  nextQuestion();
-}
+  log(`✓ "${PIECE_NAME}" ana listede ${idx}. sırada bulundu.`);
 
+  const path = `repertoire/${SID}/${GRADE}`;
+  log(`Firebase'den okunuyor: ${path} ...`);
+  let snap;
+  try {
+    snap = await get(ref(db, path));
+  } catch (e) {
+    log('❌ Firebase okuma hatası: ' + e.message, 'err');
+    btn.disabled = false;
+    return;
+  }
+
+  if (!snap.exists()) {
+    log('ℹ️ Bu öğrenci/grade için Firebase kaydı yok, dolayısıyla engelleyen bir veri de yok. Sorun başka bir yerde olabilir.', 'warn');
+    btn.disabled = false;
+    return;
+  }
+
+  const entry = snap.val();
+  log('Mevcut kayıt: ' + JSON.stringify(entry, null, 2));
+
+  const removed = entry.removedIndices || [];
+  if (!removed.includes(idx)) {
+    log(`ℹ️ removedIndices içinde ${idx} zaten yok. Eser zaten engellenmiyor — başka bir sorun olabilir (örn. eser ana listede yokmuş gibi görünüyordu ama artık var).`, 'warn');
+    btn.disabled = false;
+    return;
+  }
+
+  entry.removedIndices = removed.filter(i => i !== idx);
+  log(`"${idx}" indeksi removedIndices'ten çıkarılıyor...`);
+
+  try {
+    await set(ref(db, path), entry);
+  } catch (e) {
+    log('❌ Firebase yazma hatası: ' + e.message, 'err');
+    btn.disabled = false;
+    return;
+  }
+
+  log('✅ Tamamlandı! Yeni kayıt: ' + JSON.stringify(entry, null, 2), 'ok');
+  log('✅ Fatih artık Maroufi, J. – Golden Dreams eserini Grade 3 listesinde görebilir. Bu sayfayı kapatabilirsiniz.', 'ok');
+  btn.disabled = false;
+};
 </script>
-
-<script type="module" src="/live-bar.js"></script>
 </body>
 </html>
