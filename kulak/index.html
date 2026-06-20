@@ -794,7 +794,8 @@
       } else {
         wrong++;
         card.classList.add('wrong');
-        document.querySelector(`[data-note="${q.correctNote}"]`).classList.add('correct');
+        const correctCard = document.querySelector(`#choices [data-note="${q.correctNote}"]`);
+        if (correctCard) correctCard.classList.add('correct');
         document.getElementById('message').textContent = '❌ Yanlış!';
         document.getElementById('message').style.color = '#a32d2d';
       }
