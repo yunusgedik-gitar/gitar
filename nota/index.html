@@ -64,21 +64,17 @@
     #progress-bar-wrap { height: 5px; background: #ede6d8; border-radius: 3px; margin-bottom: 0.8rem; overflow: hidden; display: none; }
     #progress-bar { height: 100%; width: 100%; background: linear-gradient(90deg,#8cb85f,#52a050); border-radius: 3px; transition: width 0.5s linear; }
     .controls { display: flex; gap: 10px; margin-top: 0.85rem; }
-    .ctrl-btn { flex: 1; padding: 12px; font-size: 0.9rem; font-weight: 700; border-radius: 12px; border: 1.5px solid #d4c4b0; background: #fff; color: #5a3e2b; cursor: pointer; font-family: inherit; transition: all 0.12s; }
-    .ctrl-btn.primary { background: #f5e6d3; border-color: #d4a373; }
-    .ctrl-btn:disabled { background: #f5f5f5; border-color: #e0e0e0; color: #b0b0b0; cursor: not-allowed; }
+    .controls-btn { flex: 1; padding: 12px; font-size: 0.9rem; font-weight: 700; border-radius: 12px; border: 1.5px solid #d4c4b0; background: #fff; color: #5a3e2b; cursor: pointer; font-family: inherit; transition: all 0.12s; }
+    .controls-btn.primary { background: #f5e6d3; border-color: #d4a373; }
+    .controls-btn:disabled { background: #f5f5f5; border-color: #e0e0e0; color: #b0b0b0; cursor: not-allowed; }
     .result-card { background: #fff; border: 2px solid #d4a373; border-radius: 20px; padding: 2.2rem 1.5rem; text-align: center; }
     .result-card h2 { font-family:'Playfair Display',serif; font-size: 1.6rem; color: #5a3e2b; margin-bottom: 0.5rem; }
     .result-rank { font-size: 1.25rem; font-weight: 700; color: #d4a373; background: #faf6ed; display: inline-block; padding: 6px 18px; border-radius: 30px; margin-top: 0.5rem; }
     .result-score { font-size: 3.5rem; font-weight: 700; color: #6b8c42; margin: 0.8rem 0; }
     .result-text { font-size: 0.95rem; color: #5a3e2b; margin-bottom: 1.5rem; font-style: italic; line-height: 1.4rem; padding: 0 10px; }
 
-    /* ══════════════════════════════
-       DÜELLO STİLLERİ
-    ══════════════════════════════ */
+    /* DÜELLO STİLLERİ */
     #duel-setup-area, #duel-waiting-area, #duel-game-area { display: none; }
-
-    /* Online oyuncular listesi */
     .online-players-list { margin-bottom: 1rem; }
     .online-player-row {
       display: flex; align-items: center; justify-content: space-between;
@@ -94,20 +90,14 @@
     }
     .challenge-btn:hover { background: #e8deff; }
     .no-players-msg { color: #b09070; font-size: 0.9rem; font-style: italic; padding: 1rem 0; }
-
-    /* Tur ayarları */
     .round-row { display: flex; gap: 8px; justify-content: center; margin-bottom: 1rem; }
     .round-btn { padding: 7px 18px; border-radius: 20px; border: 1.5px solid #d4c4b0; background: #fff; color: #5a3e2b; font-size: 0.88rem; font-weight: 700; cursor: pointer; font-family: inherit; }
     .round-btn.active { background: #7b5ea7; border-color: #7b5ea7; color: #fff; }
-
-    /* Bekleme ekranı */
     .waiting-card { background: #fff; border: 2px solid #7b5ea7; border-radius: 20px; padding: 2rem 1.5rem; text-align: center; margin-bottom: 1rem; }
     .waiting-name { font-family: 'Playfair Display', serif; font-size: 1.4rem; color: #5a3e2b; margin-bottom: 0.5rem; }
     .waiting-sub { font-size: 0.9rem; color: #b09070; margin-bottom: 1.5rem; }
     .spinner { width: 40px; height: 40px; border: 3px solid #e8e0d5; border-top-color: #7b5ea7; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 1rem; }
     @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* Oyun alanı */
     .duel-top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; }
     .duel-round-badge { font-size: 0.85rem; font-weight: 700; color: #7b5ea7; background: #f3eeff; border: 1.5px solid #c8b4f0; padding: 5px 14px; border-radius: 30px; }
     .duel-scores { display: flex; gap: 10px; margin-bottom: 0.6rem; }
@@ -130,8 +120,6 @@
     .duel-countdown-wrap { display: none; justify-content: center; padding: 0.4rem 0; }
     .duel-cd { width: 52px; height: 52px; border-radius: 50%; border: 3px solid #7b5ea7; background: #f3eeff; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: 700; color: #7b5ea7; animation: cdPop 0.3s ease; }
     @keyframes cdPop { 0%{transform:scale(1.4);opacity:0.5} 100%{transform:scale(1);opacity:1} }
-
-    /* Sonuç */
     .duel-result { background: #fff; border: 2px solid #7b5ea7; border-radius: 20px; padding: 2rem 1.5rem; text-align: center; box-shadow: 0 8px 30px rgba(123,94,167,0.12); }
     .duel-result h2 { font-family:'Playfair Display',serif; font-size: 1.5rem; color: #5a3e2b; margin-bottom: 0.6rem; }
     .winner-badge { font-size: 1.1rem; font-weight: 700; color: #fff; background: linear-gradient(135deg,#7b5ea7,#5a3e8a); display: inline-block; padding: 8px 24px; border-radius: 30px; margin-bottom: 1rem; }
@@ -143,7 +131,6 @@
     .fsc-vs    { font-size: 1rem; font-weight: 700; color: #d4c4b0; }
     .duel-comment { font-size: 0.9rem; color: #5a3e2b; font-style: italic; margin-bottom: 1.5rem; line-height: 1.5; padding: 0 8px; }
     .result-btns { display: flex; gap: 10px; }
-
     @media (max-width:400px) { .cbtn{font-size:1.6rem;padding:12px 6px;} .controls{flex-direction:column;gap:8px;} }
     .site-footer { display:flex; justify-content:center; gap:22px; margin-top:2.5rem; }
     .site-footer a { color:#b0a392; font-size:2.2rem; transition:all .2s ease; }
@@ -158,8 +145,6 @@
 </header>
 
 <div id="app">
-
-  <!-- ANA MENÜ -->
   <div id="setup-area" class="filter-card">
     <div style="display:flex;justify-content:flex-end;margin-bottom:.5rem;">
       <button class="back-btn" onclick="location.href='https://gitar.yunusgedik.com.tr/'">🏠 Başa Dön</button>
@@ -181,25 +166,21 @@
     </div>
   </div>
 
-  <!-- DÜELLO KURULUM -->
   <div id="duel-setup-area" class="filter-card">
     <div class="top-bar" style="margin-bottom:.8rem;">
       <h2 style="font-family:'Playfair Display',serif;font-size:1.1rem;">⚔️ Online Düello</h2>
       <button class="back-btn" onclick="showArea('setup-area')">← Geri</button>
     </div>
-
     <div class="filter-title">Online Oyuncular</div>
     <div id="online-players-list" class="online-players-list">
       <div class="no-players-msg">Yükleniyor...</div>
     </div>
-
     <div class="filter-title">Tur Sayısı</div>
     <div class="round-row">
       <button class="round-btn active" data-rounds="5"  onclick="selectRounds(5)">5 Tur</button>
       <button class="round-btn"        data-rounds="10" onclick="selectRounds(10)">10 Tur</button>
       <button class="round-btn"        data-rounds="15" onclick="selectRounds(15)">15 Tur</button>
     </div>
-
     <div class="filter-title">Çalışılacak Teller</div>
     <div class="string-buttons" style="margin-bottom:0;">
       <button id="d-btn-all" class="string-btn all-btn active" onclick="dToggleAll()">Hepsi</button>
@@ -212,7 +193,6 @@
     </div>
   </div>
 
-  <!-- DAVET GÖNDERİLDİ — BEKLEME -->
   <div id="duel-waiting-area" class="filter-card">
     <div class="top-bar" style="margin-bottom:.8rem;">
       <h2 style="font-family:'Playfair Display',serif;font-size:1.1rem;">⚔️ Davet Gönderildi</h2>
@@ -226,7 +206,6 @@
     <p style="font-size:.8rem;color:#b09070;text-align:center;">Rakibiniz daveti reddederse veya 30 saniye içinde cevap vermezse otomatik iptal olur.</p>
   </div>
 
-  <!-- OYUN ALANI -->
   <div id="duel-game-area">
     <div class="duel-top-bar">
       <button class="back-btn" onclick="leaveGame()">← Çık</button>
@@ -254,10 +233,8 @@
       <div class="duel-cd" id="duel-cd-num">3</div>
     </div>
   </div>
+</div>
 
-</div><!-- /#app -->
-
-<!-- EGZERSİZ ALANI -->
 <div id="exercise-wrap" style="width:100%;max-width:550px;display:none;">
   <div id="exercise-area" style="display:block;">
     <div class="top-bar">
@@ -276,9 +253,9 @@
     <div id="feedback"></div>
     <div id="progress-bar-wrap"><div id="progress-bar"></div></div>
     <div class="controls">
-      <button class="ctrl-btn" onclick="resetQuiz()">↻ Tekrar</button>
-      <button class="ctrl-btn primary" id="next-btn" onclick="manualNext()" disabled>Sonraki Soru →</button>
-      <button class="ctrl-btn" onclick="location.href='https://gitar.yunusgedik.com.tr/'">🏠 Başa Dön</button>
+      <button class="controls-btn" onclick="resetQuiz()">↻ Tekrar</button>
+      <button class="controls-btn primary" id="next-btn" onclick="manualNext()" disabled>Sonraki Soru →</button>
+      <button class="controls-btn" onclick="location.href='https://gitar.yunusgedik.com.tr/'">🏠 Başa Dön</button>
     </div>
   </div>
 </div>
@@ -289,9 +266,6 @@
   <a href="https://www.youtube.com/yunusgedik" target="_blank"><i class="fa-brands fa-youtube"></i></a>
 </footer>
 
-<!-- ══════════════════════════════════
-     NORMAL EGZERSİZ KODU
-══════════════════════════════════ -->
 <script>
 const NOTES=[
   {key:'e/3',freq:164.81,nota:'Mi', string:6},{key:'f/3',freq:174.61,nota:'Fa', string:6},{key:'g/3',freq:196.00,nota:'Sol',string:6},
@@ -349,14 +323,11 @@ function replay(){interacted=true;document.getElementById('hint').style.display=
 function answer(n,btn){if(answered)return;if(currentMode==='race'&&timeLeft<=0)return;answered=true;interacted=true;document.getElementById('hint').style.display='none';document.querySelectorAll('.cbtn').forEach(b=>b.disabled=true);const fb=document.getElementById('feedback');document.getElementById('next-btn').disabled=false;if(n===current.nota){if(currentMode==='race')correctCount++;btn.className='cbtn correct';btn.blur();fb.textContent='✓ Doğru!';fb.className='ok';playNote(current.freq);startAutoAdvance();}else{btn.className='cbtn wrong';fb.textContent='✗ '+ERRORS[Math.floor(Math.random()*ERRORS.length)]+' — Doğrusu: '+current.nota;fb.className='no';document.querySelectorAll('.cbtn').forEach(b=>{if(b.textContent===current.nota)b.className='cbtn correct';});}}
 </script>
 
-<!-- ══════════════════════════════════
-     DÜELLO MODU — Firebase Modular SDK
-══════════════════════════════════ -->
 <script type="module">
 import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js';
 import {
   getDatabase, ref, set, get, update, remove,
-  onValue, onDisconnect, serverTimestamp, runTransaction
+  onValue, onDisconnect, runTransaction
 } from 'https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js';
 
 const FIREBASE_CONFIG = {
@@ -369,22 +340,18 @@ const FIREBASE_CONFIG = {
   appId: "1:184803778782:web:8f9fbeb4fe625eb386e24f"
 };
 
-// Mevcut Firebase uygulamasını al ya da yenisini oluştur
 const fbApp = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
 const db = getDatabase(fbApp);
 
-/* ── Kullanıcı Bilgileri ── */
 const mySid  = localStorage.getItem('gitar_session');
 const myName = localStorage.getItem('gitar_student_name') || 'Öğrenci';
 
-/* ── Düello Durum Değişkenleri ── */
 let duelStrings     = new Set([1,2,3,4,5,6]);
 let duelRounds      = 5;
-let myRole          = '';   // 'host' | 'guest'
+let myRole          = '';   
 let oppSid          = '';
 let oppName         = '';
 let roomCode        = '';
-let roomRef_        = null;
 let onlineListener  = null;
 let roundListener   = null;
 let challengeExpiry = null;
@@ -392,11 +359,9 @@ let myAnswered      = false;
 let myScore_        = 0;
 let oppScore_       = 0;
 let cdTimer         = null;
-let currentQ        = null;
+let currentRoundNum = 0;
+let currentQuestionData = null;
 
-/* ═════════════════════════════
-   YARDIMCI
-═════════════════════════════ */
 function rndCode(){ return Math.floor(100000+Math.random()*900000).toString(); }
 const ALL_NOTES = ['Do','Re','Mi','Fa','Sol','La','Si'];
 const NOTES = [
@@ -408,17 +373,27 @@ const NOTES = [
   {key:'e/5',freq:659.25,nota:'Mi', string:1},{key:'f/5',freq:698.46,nota:'Fa', string:1},{key:'g/5',freq:783.99,nota:'Sol',string:1},
   {key:'a/5',freq:880.00,nota:'La', string:1},{key:'b/5',freq:987.77,nota:'Si', string:1},
 ];
+
 function shuf(a){return[...a].sort(()=>Math.random()-.5);}
-function makeQuestion(strings){
-  const pool=NOTES.filter(n=>strings.includes(n.string));
-  const note=pool[Math.floor(Math.random()*pool.length)];
-  const wrong=shuf(ALL_NOTES.filter(n=>n!==note.nota)).slice(0,3);
-  return{noteKey:note.key,notaAdi:note.nota,freq:note.freq,string:note.string,choices:shuf([note.nota,...wrong])};
+
+// HOSTUN TÜM SORULARI EN BAŞTA TEK SEFERDE ÜRETMESİ İÇİN FONKSİYON
+function buildQuestionDeck(strings, totalRounds) {
+  const deck = {};
+  const pool = NOTES.filter(n => strings.includes(n.string));
+  for (let i = 1; i <= totalRounds; i++) {
+    const note = pool[Math.floor(Math.random() * pool.length)];
+    const wrong = shuf(ALL_NOTES.filter(n => n !== note.nota)).slice(0, 3);
+    deck[i] = {
+      noteKey: note.key,
+      notaAdi: note.nota,
+      freq: note.freq,
+      string: note.string,
+      choices: shuf([note.nota, ...wrong])
+    };
+  }
+  return deck;
 }
 
-/* ═════════════════════════════
-   DÜELLO TEL SEÇİMİ
-═════════════════════════════ */
 window.dToggleAll = function(){
   const a=document.getElementById('d-btn-all'),n=document.querySelectorAll('.d-str-btn');
   if(duelStrings.size===6){duelStrings.clear();a.classList.remove('active');n.forEach(b=>b.classList.remove('active'));}
@@ -435,9 +410,6 @@ window.selectRounds = function(n){
   document.querySelectorAll('.round-btn').forEach(b=>b.classList.toggle('active',parseInt(b.dataset.rounds)===n));
 };
 
-/* ═════════════════════════════
-   DÜELLO KURULUM EKRANI
-═════════════════════════════ */
 window.showDuelSetup = function(){
   showArea('duel-setup-area');
   loadOnlinePlayers();
@@ -446,7 +418,6 @@ window.showDuelSetup = function(){
 function loadOnlinePlayers(){
   const listEl = document.getElementById('online-players-list');
   if(onlineListener){ onlineListener(); onlineListener=null; }
-
   onlineListener = onValue(ref(db,'online_users'), snap=>{
     const users = snap.val() || {};
     const others = Object.entries(users).filter(([sid])=>sid!==mySid);
@@ -462,13 +433,8 @@ function loadOnlinePlayers(){
   });
 }
 
-/* ═════════════════════════════
-   DAVET GÖNDERME
-═════════════════════════════ */
 window.sendChallenge = async function(toSid, toName){
   if(duelStrings.size===0){ alert('En az bir tel seçin.'); return; }
-
-  // Önceki dinleyiciyi kapat
   if(onlineListener){ onlineListener(); onlineListener=null; }
 
   myRole   = 'host';
@@ -476,19 +442,20 @@ window.sendChallenge = async function(toSid, toName){
   oppName  = toName;
   roomCode = rndCode();
 
-  // Oyunu hazırla
-  const firstQ = makeQuestion([...duelStrings]);
+  // Host tüm turların sorularını hazırlar
+  const questionDeck = buildQuestionDeck([...duelStrings], duelRounds);
+
   await set(ref(db,`duel_rooms/${roomCode}`),{
     host:   {sid:mySid, name:myName},
     guest:  null,
     status: 'waiting',
-    config: {totalRounds:duelRounds, strings:[...duelStrings]},
+    config: {totalRounds: duelRounds, strings: [...duelStrings], questions: questionDeck},
     scores: {host:0, guest:0},
-    round:  {num:0, ...firstQ, hostDone:false, guestDone:false, winner:null}
+    currentRoundNum: 1,
+    roundState: { hostDone: false, guestDone: false, winner: null }
   });
   onDisconnect(ref(db,`duel_rooms/${roomCode}`)).update({status:'abandoned'});
 
-  // Rakibe davet yaz
   await set(ref(db,`duel_challenges/${toSid}`),{
     fromSid: mySid, fromName: myName,
     roomCode, status:'pending',
@@ -496,11 +463,9 @@ window.sendChallenge = async function(toSid, toName){
     redirectTo: '/nota/'
   });
 
-  // Bekleme ekranı
   document.getElementById('waiting-opp-name').textContent = toName;
   showArea('duel-waiting-area');
 
-  // Cevap dinle
   const challengeRef = ref(db,`duel_challenges/${toSid}`);
   const unsub = onValue(challengeRef, snap=>{
     const c = snap.val();
@@ -520,7 +485,6 @@ window.sendChallenge = async function(toSid, toName){
     }
   });
 
-  // 30s içinde kabul edilmezse iptal
   challengeExpiry = setTimeout(async ()=>{
     unsub();
     await remove(ref(db,`duel_challenges/${toSid}`));
@@ -539,11 +503,6 @@ window.cancelChallenge = async function(){
   loadOnlinePlayers();
 };
 
-/* ═════════════════════════════
-   SİTE GENELİ DAVETTEN DEVRALMA
-   (live-bar.js başka bir sayfada daveti
-   kabul ettirip buraya yönlendirdiğinde)
-═════════════════════════════ */
 function checkDuelHandoff(){
   const raw = localStorage.getItem('gitar_duel_handoff');
   if(!raw) return false;
@@ -561,9 +520,6 @@ function checkDuelHandoff(){
   }catch(e){ return false; }
 }
 
-/* ═════════════════════════════
-   OYUN BAŞLAT
-═════════════════════════════ */
 function beginGame(){
   myScore_ = 0; oppScore_ = 0;
   document.getElementById('dscore-me-name').textContent  = myName;
@@ -572,7 +528,6 @@ function beginGame(){
   document.getElementById('dscore-opp').textContent = '0';
   showArea('duel-game-area');
 
-  // Skoru dinle
   onValue(ref(db,`duel_rooms/${roomCode}/scores`), snap=>{
     const s = snap.val(); if(!s) return;
     myScore_  = myRole==='host' ? s.host  : s.guest;
@@ -581,145 +536,124 @@ function beginGame(){
     document.getElementById('dscore-opp').textContent = oppScore_;
   });
 
-  // İlk soru — host VEYA guest, kim önce yetişirse o açar (cihaz arka plana
-  // düşse bile oyun kilitlenmesin diye ikisi de deniyor)
-  get(ref(db,`duel_rooms/${roomCode}`)).then(snap=>{
-    const room=snap.val(); if(!room) return;
-    tryAdvanceRound(0, room.config);
-  });
-
   listenRound();
 }
 
-/* ═════════════════════════════
-   TUR DİNLEYİCİSİ
-═════════════════════════════ */
 function listenRound(){
   if(roundListener){ roundListener(); }
 
-  // Oyun durumunu dinle (abandoned / finished)
   onValue(ref(db,`duel_rooms/${roomCode}/status`), snap=>{
     const s = snap.val();
     if(s==='abandoned'){ handleAbandoned(); }
     if(s==='finished') { endDuel(); }
   });
 
-  roundListener = onValue(ref(db,`duel_rooms/${roomCode}/round`), snap=>{
-    const round=snap.val(); if(!round||round.num===0) return;
+  // Oda verisinin tamamını dinleyerek senkronize kalıyoruz
+  roundListener = onValue(ref(db,`duel_rooms/${roomCode}`), snap=>{
+    const room = snap.val();
+    if(!room || room.status === 'waiting') return;
 
-    // Yeni tur numarası geldiyse her zaman soruyu göster (race condition önlemi:
-    // rakip çok hızlı cevaplasa bile şıklar önce çizilir, sonra sonuç gelir)
-    if(!currentQ || currentQ.num !== round.num){
-      showQuestion(round);
+    const rNum = room.currentRoundNum;
+    const rState = room.roundState;
+    const questions = room.config.questions;
+
+    if (!questions || !questions[rNum]) return;
+
+    // Eğer yeni bir tura geçildiyse arayüzü sıfırla ve soruyu bas
+    if(currentRoundNum !== rNum){
+      currentRoundNum = rNum;
+      currentQuestionData = questions[rNum];
+      showQuestion(rNum, currentQuestionData);
     }
 
-    // Tur bitti — şıkları kilitle ve sonucu göster
-    if(round.winner || (round.hostDone && round.guestDone)){
-      showRoundResult(round);
+    // İki taraf da cevap verdiğinde veya bir kazanan çıktığında sonuç ekranını göster
+    if(rState && (rState.winner || (rState.hostDone && rState.guestDone))){
+      showRoundResult(rState, currentQuestionData);
     }
   });
 }
 
-/* ═════════════════════════════
-   SORU GÖSTER
-═════════════════════════════ */
-function showQuestion(round){
+function showQuestion(rNum, qData){
   myAnswered = false;
-  currentQ   = round;
-  document.getElementById('duel-round-label').textContent = `Tur ${round.num} / ${duelRounds}`;
-  document.getElementById('duel-string-label').textContent = `Bu Nota Hangi Telde? (${round.string}. Tel)`;
+  document.getElementById('duel-round-label').textContent = `Tur ${rNum} / ${duelRounds}`;
+  document.getElementById('duel-string-label').textContent = `Bu Nota Hangi Telde? (${qData.string}. Tel)`;
   document.getElementById('duel-feedback').textContent = '';
   document.getElementById('duel-feedback').className   = 'duel-feedback';
   document.getElementById('duel-cd-wrap').style.display = 'none';
 
-  if(window.drawNote) window.drawNote(round.noteKey,'duel-notation');
+  if(window.drawNote) window.drawNote(qData.noteKey,'duel-notation');
 
   const box=document.getElementById('duel-choices');
   box.innerHTML='';
-  round.choices.forEach(nota=>{
+  qData.choices.forEach(nota=>{
     const b=document.createElement('button');
     b.className='dcbtn'; b.textContent=nota;
-    b.onclick=()=>duelAnswer(nota,b);
+    b.onclick=()=>duelAnswer(nota,b, rNum);
     box.appendChild(b);
   });
 }
 
-/* ═════════════════════════════
-   CEVAP VER
-═════════════════════════════ */
-function duelAnswer(nota,btn){
-  if(myAnswered||!currentQ) return;
+function duelAnswer(nota, btn, rNum){
+  if(myAnswered) return;
   myAnswered=true;
   document.querySelectorAll('.dcbtn').forEach(b=>b.disabled=true);
 
-  const correct = nota===currentQ.notaAdi;
+  const correct = nota === currentQuestionData.notaAdi;
   btn.classList.add(correct?'correct':'wrong');
-  const roundNumAtAnswer = currentQ.num;
 
-  runTransaction(ref(db,`duel_rooms/${roomCode}/round`), r=>{
-    if(!r || r.num!==roundNumAtAnswer) return;
-    if(correct){ if(r.winner) return; return{...r, winner:myRole, winnerName:myName, [myRole+'Done']:true}; }
-    return{...r, [myRole+'Done']:true};
-  }).then(({committed, snapshot})=>{
-    if(committed && correct){
-      const val = snapshot.val();
-      if(val && val.winner===myRole){
-        runTransaction(ref(db,`duel_rooms/${roomCode}/scores/${myRole}`), s=>(s||0)+1);
-      }
+  runTransaction(ref(db,`duel_rooms/${roomCode}`), room => {
+    if(!room) return room;
+    if(room.currentRoundNum !== rNum) return room; // Oyuncu geride kalmışsa işlemi pas geç
+    
+    if(!room.roundState) room.roundState = { hostDone: false, guestDone: false, winner: null };
+
+    // Kendi durumunu güncelle
+    room.roundState[myRole + 'Done'] = true;
+
+    // Doğru bildiyse ve henüz o turun kazananı yoksa puanı kapar
+    if(correct && !room.roundState.winner){
+      room.roundState.winner = myRole;
+      room.roundState.winnerName = myName;
+      if(!room.scores) room.scores = {host:0, guest:0};
+      room.scores[myRole] = (room.scores[myRole] || 0) + 1;
+    }
+    return room;
+  });
+}
+
+function showRoundResult(rState, qData){
+  document.querySelectorAll('.dcbtn').forEach(b=>{
+    b.disabled=true; b.onclick=null;
+    if(b.textContent===qData.notaAdi) b.classList.add('correct');
+  });
+  
+  const fb=document.getElementById('duel-feedback');
+  if(rState.winner===myRole){ fb.textContent='🏅 Sen kazandın!'; fb.className='duel-feedback iwin'; }
+  else if(rState.winner)    { fb.textContent=`😤 ${rState.winnerName} daha hızlıydı!`; fb.className='duel-feedback opwin'; }
+  else                     { fb.textContent='😅 İkisi de yanlış! Puan yok.'; fb.className='duel-feedback nobody'; }
+
+  if(document.getElementById('duel-cd-wrap').style.display==='flex') return; 
+  
+  startCountdown(()=>{
+    // Sadece Host bir sonraki tura geçişi tetikler (Çift tetiklenme / yarış engellenir)
+    if(myRole === 'host'){
+      const nextNum = currentRoundNum + 1;
+      runTransaction(ref(db,`duel_rooms/${roomCode}`), room => {
+        if(!room) return room;
+        if(room.currentRoundNum !== currentRoundNum) return room; // Zaten güncellenmişse dokunma
+        
+        if(nextNum > duelRounds){
+          room.status = 'finished';
+        } else {
+          room.currentRoundNum = nextNum;
+          room.roundState = { hostDone: false, guestDone: false, winner: null };
+        }
+        return room;
+      });
     }
   });
 }
 
-/* ═════════════════════════════
-   TUR SONUCU
-═════════════════════════════ */
-function showRoundResult(round){
-  // Tüm şıkları kilitle, doğruyu vurgula
-  document.querySelectorAll('.dcbtn').forEach(b=>{
-    b.disabled=true; b.onclick=null;
-    if(b.textContent===round.notaAdi) b.classList.add('correct');
-  });
-  const fb=document.getElementById('duel-feedback');
-  if(round.winner===myRole){ fb.textContent='🏅 Sen kazandın!'; fb.className='duel-feedback iwin'; }
-  else if(round.winner)    { fb.textContent=`😤 ${round.winnerName} daha hızlıydı!`; fb.className='duel-feedback opwin'; }
-  else                     { fb.textContent='😅 İkisi de yanlış! Puan yok.'; fb.className='duel-feedback nobody'; }
-
-  if(document.getElementById('duel-cd-wrap').style.display==='flex') return; // zaten sayıyor
-  startCountdown(()=>{
-    get(ref(db,`duel_rooms/${roomCode}/config`)).then(snap=>{
-      tryAdvanceRound(round.num, snap.val());
-    });
-  });
-}
-
-/* ═════════════════════════════
-   SONRAKI SORUYU HAZIRLA
-   Transaction kullanıyoruz: her iki
-   taraf da dener, ilk başarılı olan
-   yazar — çift yazma olmaz.
-═════════════════════════════ */
-function tryAdvanceRound(fromNum, config){
-  const nextNum = fromNum + 1;
-  if(nextNum > duelRounds){
-    // Oyun bitti — sadece bir kere yazılsın diye transaction
-    runTransaction(ref(db,`duel_rooms/${roomCode}/status`), s=>{
-      if(s==='finished') return; // zaten yazılmış
-      return 'finished';
-    });
-    return;
-  }
-  const strings = config ? config.strings : [...duelStrings];
-  const q = makeQuestion(strings);
-  // round.num üzerinde transaction: hâlâ fromNum'daysa yeni soruyu yaz
-  runTransaction(ref(db,`duel_rooms/${roomCode}/round`), r=>{
-    if(!r || r.num !== fromNum) return; // diğer taraf zaten yazdı — iptal
-    return { num:nextNum, ...q, hostDone:false, guestDone:false, winner:null };
-  });
-}
-
-/* ═════════════════════════════
-   3-2-1 GERİ SAYIM
-═════════════════════════════ */
 function startCountdown(onDone){
   if(cdTimer) clearInterval(cdTimer);
   let n=3;
@@ -733,9 +667,6 @@ function startCountdown(onDone){
 }
 function setCd(el,n){el.textContent=n;el.classList.remove('duel-cd');void el.offsetWidth;el.classList.add('duel-cd');}
 
-/* ═════════════════════════════
-   OYUN BİTİŞİ
-═════════════════════════════ */
 function endDuel(){
   if(cdTimer) clearInterval(cdTimer);
   if(roundListener){ roundListener(); roundListener=null; }
@@ -760,7 +691,7 @@ function endDuel(){
       <p class="duel-comment">"${comment}"</p>
       <div class="result-btns">
         <button class="app-btn btn-duel" onclick="location.reload()">🔄 Tekrar Oyna</button>
-        <button class="app-btn" onclick="location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
+        <button class="app-btn" onclick="https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
       </div>
     </div>`;
 }
@@ -778,12 +709,10 @@ window.leaveGame = async function(){
   showArea('setup-area');
 };
 
-/* Sayfa açılır açılmaz: başka sayfadan kabul edilmiş bir davet var mı? */
 checkDuelHandoff();
 </script>
 
 <script>
-/* Giriş kontrolü */
 (function(){
   const sid=localStorage.getItem('gitar_session');
   if(!sid){ location.href='https://gitar.yunusgedik.com.tr/'; return; }
