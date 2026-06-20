@@ -408,34 +408,12 @@ const NOTES = [
   {key:'e/5',freq:659.25,nota:'Mi', string:1},{key:'f/5',freq:698.46,nota:'Fa', string:1},{key:'g/5',freq:783.99,nota:'Sol',string:1},
   {key:'a/5',freq:880.00,nota:'La', string:1},{key:'b/5',freq:987.77,nota:'Si', string:1},
 ];
-/* Seed tabanlı RNG — her iki cihaz aynı seed'den aynı soruyu üretir */
-function seededRNG(seed){
-  let s=seed|0;
-  return ()=>{
-    s=(s+0x6D2B79F5)|0;
-    let t=Math.imul(s^(s>>>15),1|s);
-    t=t+Math.imul(t^(t>>>7),61|t)^t;
-    return((t^(t>>>14))>>>0)/4294967296;
-  };
-}
-function hashStr(s){
-  let h=5381;
-  for(let i=0;i<s.length;i++) h=((h<<5)+h)+s.charCodeAt(i)|0;
-  return Math.abs(h);
-}
-function seededShuffle(arr,rng){
-  const a=[...arr];
-  for(let i=a.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
-  return a;
-}
-/* Tur no + oda kodu → her cihazda aynı soru */
-function makeDeterministicQ(roundNum, rc, strings){
-  const rng=seededRNG(hashStr(rc+':'+roundNum));
+function shuf(a){return[...a].sort(()=>Math.random()-.5);}
+function makeQuestion(strings){
   const pool=NOTES.filter(n=>strings.includes(n.string));
-  const note=pool[Math.floor(rng()*pool.length)];
-  const wrong=seededShuffle(ALL_NOTES.filter(n=>n!==note.nota),rng).slice(0,3);
-  const choices=seededShuffle([note.nota,...wrong],rng);
-  return{noteKey:note.key,notaAdi:note.nota,freq:note.freq,string:note.string,choices};
+  const note=pool[Math.floor(Math.random()*pool.length)];
+  const wrong=shuf(ALL_NOTES.filter(n=>n!==note.nota)).slice(0,3);
+  return{noteKey:note.key,notaAdi:note.nota,freq:note.freq,string:note.string,choices:shuf([note.nota,...wrong])};
 }
 
 /* ═════════════════════════════
@@ -498,14 +476,15 @@ window.sendChallenge = async function(toSid, toName){
   oppName  = toName;
   roomCode = rndCode();
 
-  // Oyunu hazırla — soru verisi Firebase'e yazılmıyor, her cihaz seed'den üretiyor
+  // Oyunu hazırla
+  const firstQ = makeQuestion([...duelStrings]);
   await set(ref(db,`duel_rooms/${roomCode}`),{
     host:   {sid:mySid, name:myName},
     guest:  null,
     status: 'waiting',
     config: {totalRounds:duelRounds, strings:[...duelStrings]},
     scores: {host:0, guest:0},
-    round:  {num:0, hostDone:false, guestDone:false, winner:null}
+    round:  {num:0, ...firstQ, hostDone:false, guestDone:false, winner:null}
   });
   onDisconnect(ref(db,`duel_rooms/${roomCode}`)).update({status:'abandoned'});
 
@@ -593,6 +572,7 @@ function beginGame(){
   document.getElementById('dscore-opp').textContent = '0';
   showArea('duel-game-area');
 
+  // Skoru dinle
   onValue(ref(db,`duel_rooms/${roomCode}/scores`), snap=>{
     const s = snap.val(); if(!s) return;
     myScore_  = myRole==='host' ? s.host  : s.guest;
@@ -601,8 +581,13 @@ function beginGame(){
     document.getElementById('dscore-opp').textContent = oppScore_;
   });
 
-  // duelStrings zaten her iki tarafta mevcut — async config okumasına gerek yok
-  tryAdvanceRound(0);
+  // İlk soru — host VEYA guest, kim önce yetişirse o açar (cihaz arka plana
+  // düşse bile oyun kilitlenmesin diye ikisi de deniyor)
+  get(ref(db,`duel_rooms/${roomCode}`)).then(snap=>{
+    const room=snap.val(); if(!room) return;
+    tryAdvanceRound(0, room.config);
+  });
+
   listenRound();
 }
 
@@ -635,26 +620,23 @@ function listenRound(){
   });
 }
 
-let currentConfig = null; // artık kullanılmıyor ama var olan referanslar için
-
 /* ═════════════════════════════
    SORU GÖSTER
 ═════════════════════════════ */
 function showQuestion(round){
   myAnswered = false;
   currentQ   = round;
-  const q = makeDeterministicQ(round.num, roomCode, [...duelStrings]);
   document.getElementById('duel-round-label').textContent = `Tur ${round.num} / ${duelRounds}`;
-  document.getElementById('duel-string-label').textContent = `Bu Nota Hangi Telde? (${q.string}. Tel)`;
+  document.getElementById('duel-string-label').textContent = `Bu Nota Hangi Telde? (${round.string}. Tel)`;
   document.getElementById('duel-feedback').textContent = '';
   document.getElementById('duel-feedback').className   = 'duel-feedback';
   document.getElementById('duel-cd-wrap').style.display = 'none';
 
-  if(window.drawNote) window.drawNote(q.noteKey,'duel-notation');
+  if(window.drawNote) window.drawNote(round.noteKey,'duel-notation');
 
   const box=document.getElementById('duel-choices');
   box.innerHTML='';
-  q.choices.forEach(nota=>{
+  round.choices.forEach(nota=>{
     const b=document.createElement('button');
     b.className='dcbtn'; b.textContent=nota;
     b.onclick=()=>duelAnswer(nota,b);
@@ -670,8 +652,7 @@ function duelAnswer(nota,btn){
   myAnswered=true;
   document.querySelectorAll('.dcbtn').forEach(b=>b.disabled=true);
 
-  const q=makeDeterministicQ(currentQ.num,roomCode,[...duelStrings]);
-  const correct = nota===q.notaAdi;
+  const correct = nota===currentQ.notaAdi;
   btn.classList.add(correct?'correct':'wrong');
   const roundNumAtAnswer = currentQ.num;
 
@@ -693,38 +674,46 @@ function duelAnswer(nota,btn){
    TUR SONUCU
 ═════════════════════════════ */
 function showRoundResult(round){
-  const q=makeDeterministicQ(round.num,roomCode,[...duelStrings]);
+  // Tüm şıkları kilitle, doğruyu vurgula
   document.querySelectorAll('.dcbtn').forEach(b=>{
     b.disabled=true; b.onclick=null;
-    if(b.textContent===q.notaAdi) b.classList.add('correct');
+    if(b.textContent===round.notaAdi) b.classList.add('correct');
   });
   const fb=document.getElementById('duel-feedback');
   if(round.winner===myRole){ fb.textContent='🏅 Sen kazandın!'; fb.className='duel-feedback iwin'; }
   else if(round.winner)    { fb.textContent=`😤 ${round.winnerName} daha hızlıydı!`; fb.className='duel-feedback opwin'; }
   else                     { fb.textContent='😅 İkisi de yanlış! Puan yok.'; fb.className='duel-feedback nobody'; }
 
-  if(document.getElementById('duel-cd-wrap').style.display==='flex') return;
-  startCountdown(()=>{ tryAdvanceRound(round.num); });
+  if(document.getElementById('duel-cd-wrap').style.display==='flex') return; // zaten sayıyor
+  startCountdown(()=>{
+    get(ref(db,`duel_rooms/${roomCode}/config`)).then(snap=>{
+      tryAdvanceRound(round.num, snap.val());
+    });
+  });
 }
 
 /* ═════════════════════════════
-   SONRAKI TURU YAZ
-   Sadece durum bilgisi — soru yok.
-   Her cihaz kendi seed'inden üretir.
+   SONRAKI SORUYU HAZIRLA
+   Transaction kullanıyoruz: her iki
+   taraf da dener, ilk başarılı olan
+   yazar — çift yazma olmaz.
 ═════════════════════════════ */
-function tryAdvanceRound(fromNum){
+function tryAdvanceRound(fromNum, config){
   const nextNum = fromNum + 1;
   if(nextNum > duelRounds){
+    // Oyun bitti — sadece bir kere yazılsın diye transaction
     runTransaction(ref(db,`duel_rooms/${roomCode}/status`), s=>{
-      if(s==='finished') return;
+      if(s==='finished') return; // zaten yazılmış
       return 'finished';
     });
     return;
   }
-  // Sadece tur numarası ve durum yazılıyor — soru yok, optimistic conflict yok
+  const strings = config ? config.strings : [...duelStrings];
+  const q = makeQuestion(strings);
+  // round.num üzerinde transaction: hâlâ fromNum'daysa yeni soruyu yaz
   runTransaction(ref(db,`duel_rooms/${roomCode}/round`), r=>{
-    if(!r || r.num !== fromNum) return;
-    return { num:nextNum, hostDone:false, guestDone:false, winner:null };
+    if(!r || r.num !== fromNum) return; // diğer taraf zaten yazdı — iptal
+    return { num:nextNum, ...q, hostDone:false, guestDone:false, winner:null };
   });
 }
 
