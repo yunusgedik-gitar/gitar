@@ -404,6 +404,14 @@
           </div>
           <div class="card-footer"><span class="badge badge-new">YENİ</span><span class="arrow">→</span></div>
         </a>
+        <a class="card" id="kulak-card" href="https://gitar.yunusgedik.com.tr/kulak">
+          <div class="card-icon">🎧</div>
+          <div>
+            <div class="card-title">Kulak Eğitimi</div>
+            <div class="card-desc">Duyduğun sesin hangi notaya ait olduğunu tanı, kulağını geliştir.</div>
+          </div>
+          <div class="card-footer"><span class="badge badge-new">YENİ</span><span class="arrow">→</span></div>
+        </a>
         <a class="card" href="/klavye/">
           <div class="card-icon">🎛️</div>
           <div>
@@ -444,7 +452,7 @@
           </div>
           <div class="card-footer"><span class="badge badge-new">YENİ</span><span class="arrow">→</span></div>
         </a>
-		        <a class="card" id="bass-card" href="https://gitar.yunusgedik.com.tr/basv2/">
+		        <a class="card" id="bassv2-card" href="https://gitar.yunusgedik.com.tr/basv2/">
           <div class="card-icon">🎸</div>
           <div>
             <div class="card-title">Bas Gitar - Notadan Klavyeye (I. Pozisyon)</div>
@@ -1308,7 +1316,68 @@ function checkBassAccess(sid) {
     const badge = card.querySelector('.badge');
     if (badge) { badge.textContent = 'YENİ'; badge.className = 'badge badge-new'; badge.style.cssText = ''; }
   }
+}
 
+// ===== Bas Gitar V2 (Notadan Klavyeye) kilitli mi kontrolü (öğrenci için) =====
+// Sadece "Bas Gitar" kategorisinde olan öğrenciler erişebilir; öğretmen her zaman erişebilir.
+function checkBassV2Access(sid) {
+  const card = document.getElementById('bassv2-card');
+  if (!card) return;
+  const hasAccess = sid === TEACHER_ID || !!(studentCategories[sid] || {})['bas_gitar'];
+  if (!hasAccess) {
+    card.removeAttribute('href');
+    card.style.pointerEvents = 'none';
+    card.style.cursor = 'default';
+    card.style.filter = 'grayscale(0.3) opacity(0.7)';
+    card.querySelector('.card-icon').textContent = '🔒';
+    const desc = card.querySelector('.card-desc');
+    if (desc) desc.textContent = 'Bu bölüm yalnızca Bas Gitar kategorisindeki öğrencilere açıktır.';
+    const badge = card.querySelector('.badge');
+    if (badge) { badge.textContent = 'Kilitli'; badge.className = 'badge'; badge.style.cssText = 'background:#eee;color:#999;font-size:.7rem;font-weight:600;padding:3px 10px;border-radius:20px;'; }
+  } else {
+    card.setAttribute('href', 'https://gitar.yunusgedik.com.tr/basv2/');
+    card.style.pointerEvents = '';
+    card.style.cursor = '';
+    card.style.filter = '';
+    card.querySelector('.card-icon').textContent = '🎸';
+    const desc = card.querySelector('.card-desc');
+    if (desc) desc.textContent = 'Bas gitarda I. Pozisyondaki tüm perdeleri, telleri ve notaların dizekteki (Fa anahtarı) tam karşılıklarını interaktif olarak deneyimleyin.';
+    const badge = card.querySelector('.badge');
+    if (badge) { badge.textContent = 'YENİ'; badge.className = 'badge badge-new'; badge.style.cssText = ''; }
+  }
+}
+
+// ===== Kulak Eğitimi kilitli mi kontrolü (öğrenci için) =====
+// Sadece Grade'e geçmiş VE (Bas Gitar veya Elektro Gitar) kategorisindeki öğrenciler erişebilir; öğretmen her zaman erişebilir.
+function checkKulakAccess(sid) {
+  const card = document.getElementById('kulak-card');
+  if (!card) return;
+  const hasGrade = Object.keys(repProgress[sid] || {}).length > 0;
+  const cats = studentCategories[sid] || {};
+  const hasInstrument = !!cats['bas_gitar'] || !!cats['elektro_gitar'];
+  const hasAccess = sid === TEACHER_ID || (hasGrade && hasInstrument);
+  if (!hasAccess) {
+    card.removeAttribute('href');
+    card.style.pointerEvents = 'none';
+    card.style.cursor = 'default';
+    card.style.filter = 'grayscale(0.3) opacity(0.7)';
+    card.querySelector('.card-icon').textContent = '🔒';
+    const desc = card.querySelector('.card-desc');
+    if (desc) desc.textContent = 'Bu bölüm yalnızca Grade\'e geçmiş Bas Gitar veya Elektro Gitar öğrencilerine açıktır.';
+    const badge = card.querySelector('.badge');
+    if (badge) { badge.textContent = 'Kilitli'; badge.className = 'badge'; badge.style.cssText = 'background:#eee;color:#999;font-size:.7rem;font-weight:600;padding:3px 10px;border-radius:20px;'; }
+  } else {
+    card.setAttribute('href', 'https://gitar.yunusgedik.com.tr/kulak');
+    card.style.pointerEvents = '';
+    card.style.cursor = '';
+    card.style.filter = '';
+    card.querySelector('.card-icon').textContent = '🎧';
+    const desc = card.querySelector('.card-desc');
+    if (desc) desc.textContent = 'Duyduğun sesin hangi notaya ait olduğunu tanı, kulağını geliştir.';
+    const badge = card.querySelector('.badge');
+    if (badge) { badge.textContent = 'YENİ'; badge.className = 'badge badge-new'; badge.style.cssText = ''; }
+  }
+}
 window.saveNewStudent = async function() {
   const name = document.getElementById('new-student-name').value.trim();
   const pin = document.getElementById('new-student-pin').value.trim();
@@ -1565,6 +1634,8 @@ window.updateWelcomeCard = async function(sid) {
     labelEl.textContent = '';
     badgesEl.innerHTML  = '<span class="w-badge w-badge-grade">Öğretmen Paneli</span>';
     checkBassAccess(sid);
+    checkBassV2Access(sid);
+    checkKulakAccess(sid);
     return;
   }
 
@@ -1586,6 +1657,8 @@ window.updateWelcomeCard = async function(sid) {
     badgesEl.innerHTML  = '';
     checkRepertoireAccess(sid);
     checkBassAccess(sid);
+    checkBassV2Access(sid);
+    checkKulakAccess(sid);
     return;
   }
 
@@ -1606,6 +1679,8 @@ window.updateWelcomeCard = async function(sid) {
 
   checkRepertoireAccess(sid);
   checkBassAccess(sid);
+  checkBassV2Access(sid);
+  checkKulakAccess(sid);
 };
 
 // Modül yüklenirken bekleyen avatar güncellemesini tetikle
