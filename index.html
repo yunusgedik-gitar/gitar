@@ -289,24 +289,9 @@
       background: #fff; color: var(--muted); cursor: pointer; font-family: inherit;
       transition: all .15s; white-space: nowrap; font-weight: 600;
     }
-    .piece-action-btn:hover { border-color: var(--gold); color: var(--brown); background: #fff8ec; }
-    .piece-action-btn.danger:hover { border-color: #e3b3ab; color: #c0392b; background: var(--red-bg); }
     .piece-action-btn.decode-action { border-color: var(--orange-border); color: var(--orange); }
     .piece-action-btn.decode-action:hover { border-color: var(--orange); background: var(--orange-bg); }
     .piece-action-btn.decode-action.active { background: var(--orange); color: #fff; border-color: var(--orange); }
-
-    /* Taşı paneli */
-    #move-piece-panel {
-      background: #fff8ec; border: 1px solid #e8c97a; border-radius: 16px;
-      padding: 14px 16px; margin-top: 10px; display: none;
-    }
-    #move-piece-panel.open { display: block; }
-    .move-panel-title { font-size: .82rem; font-weight: 700; color: var(--brown); margin-bottom: 10px; }
-    .move-panel-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-
-    /* Eser ekleme paneli */
-    #add-piece-panel { margin-top: 12px; }
-    .add-piece-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
 
     .student-select-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px,1fr)); gap: 10px; margin-bottom: 1.4rem; }
     .student-select-card {
@@ -1252,8 +1237,6 @@ function renderTeacherPieceList() {
   const entry  = repProgress[repActiveStudentId] && repProgress[repActiveStudentId][repActiveGrade];
   const pieces = (GRADE_PIECES[repActiveGrade] || []);
 
-  closeMovePanel();
-
   if (!entry) {
     list.innerHTML = '<p style="color:var(--muted);font-size:.85rem;">Bu grade için kayıt bulunamadı.</p>';
     summaryTitle.textContent = `${studentName(repActiveStudentId)} — Grade ${repActiveGrade}`;
@@ -1276,15 +1259,11 @@ function renderTeacherPieceList() {
     const status = toStatus(entry.completed && entry.completed[i]);
     const rowClass = status === 1 ? 'done' : (status === 0.5 ? 'decode' : '');
     const check = status === 1 ? '✓' : (status === 0.5 ? '½' : '');
-    const escName = name.replace(/`/g,"'");
     return `<div class="piece-row ${rowClass}" onclick="togglePiece(${i})">
       <div class="piece-check">${check}</div>
       <div class="piece-name">${name}</div>
       <div class="piece-actions" onclick="event.stopPropagation()">
-        <button class="piece-action-btn" onclick="renamePiece(${i}, false)">✎ Değiştir</button>
         <button class="piece-action-btn decode-action ${status === 0.5 ? 'active' : ''}" onclick="toggleDecodePiece(${i})">🟠 Deşifre Çalım</button>
-        <button class="piece-action-btn" onclick="openMovePiece(${i}, false, \`${escName}\`)">↗ Taşı</button>
-        <button class="piece-action-btn danger" onclick="deletePiece(${i}, false)">✕ Sil</button>
       </div>
     </div>`;
   }).join('');
@@ -1294,15 +1273,11 @@ function renderTeacherPieceList() {
     const status = customStatus(p);
     const rowClass = status === 1 ? 'done' : (status === 0.5 ? 'decode' : '');
     const check = status === 1 ? '✓' : (status === 0.5 ? '½' : '');
-    const escName = p.name.replace(/`/g,"'");
     return `<div class="piece-row ${rowClass}" onclick="toggleCustomPiece(${ci})">
       <div class="piece-check">${check}</div>
       <div class="piece-name">${p.name} <span style="font-size:.68rem;color:var(--gold);margin-left:4px;">● özel</span></div>
       <div class="piece-actions" onclick="event.stopPropagation()">
-        <button class="piece-action-btn" onclick="renamePiece(${ci}, true)">✎ Değiştir</button>
         <button class="piece-action-btn decode-action ${status === 0.5 ? 'active' : ''}" onclick="toggleCustomDecodePiece(${ci})">🟠 Deşifre Çalım</button>
-        <button class="piece-action-btn" onclick="openMovePiece(${ci}, true, \`${escName}\`)">↗ Taşı</button>
-        <button class="piece-action-btn danger" onclick="deletePiece(${ci}, true)">✕ Sil</button>
       </div>
     </div>`;
   }).join('');
@@ -1361,142 +1336,6 @@ window.toggleCustomDecodePiece = async function(ci) {
     await set(ref(db, `repertoire/${repActiveStudentId}/${repActiveGrade}`), entry);
     showSaveToast();
   } catch (e) { console.error('Kaydedilemedi:', e); }
-};
-
-// Eser adını değiştir. Standart eser değiştirilirse, bu öğrenciye özel olarak
-// (durumu korunarak) özel eser haline getirilir; standart liste diğer öğrenciler için aynı kalır.
-window.renamePiece = async function(idx, isCustom) {
-  const entry = repProgress[repActiveStudentId][repActiveGrade];
-  if (isCustom) {
-    const cp = (entry.customPieces || [])[idx];
-    if (!cp) return;
-    const newName = prompt('Yeni eser adı:', cp.name);
-    if (newName === null) return;
-    const trimmed = newName.trim();
-    if (!trimmed) { alert('Eser adı boş olamaz.'); return; }
-    cp.name = trimmed;
-  } else {
-    const pieces = GRADE_PIECES[repActiveGrade] || [];
-    const oldName = pieces[idx];
-    const newName = prompt('Yeni eser adı:', oldName);
-    if (newName === null) return;
-    const trimmed = newName.trim();
-    if (!trimmed) { alert('Eser adı boş olamaz.'); return; }
-    const status = toStatus(entry.completed && entry.completed[idx]);
-    entry.removedIndices = [...(entry.removedIndices || []), idx];
-    entry.customPieces = entry.customPieces || [];
-    entry.customPieces.push({ name: trimmed, status });
-  }
-  renderTeacherPieceList();
-  try {
-    await set(ref(db, `repertoire/${repActiveStudentId}/${repActiveGrade}`), entry);
-    showSaveToast();
-  } catch (e) { console.error('Değiştirilemedi:', e); }
-};
-
-// Eser sil
-window.deletePiece = async function(idx, isCustom) {
-  const entry = repProgress[repActiveStudentId][repActiveGrade];
-  if (isCustom) {
-    if (!confirm('Bu özel eseri listeden kaldırmak istiyor musunuz?')) return;
-    entry.customPieces = (entry.customPieces || []).filter((_, ci) => ci !== idx);
-  } else {
-    if (!confirm('Bu eseri bu öğrencinin listesinden kaldırmak istiyor musunuz?')) return;
-    entry.removedIndices = [...(entry.removedIndices || []), idx];
-  }
-  renderTeacherPieceList();
-  try {
-    await set(ref(db, `repertoire/${repActiveStudentId}/${repActiveGrade}`), entry);
-    showSaveToast();
-  } catch (e) { console.error('Silinemedi:', e); }
-};
-
-// Taşı: paneli aç
-let _movePieceIdx = null;
-let _movePieceIsCustom = false;
-
-window.openMovePiece = function(idx, isCustom, name) {
-  _movePieceIdx = idx;
-  _movePieceIsCustom = isCustom;
-  const panel = document.getElementById('move-piece-panel');
-  document.getElementById('move-piece-name-label').textContent = `"${name}"`;
-  const allGrades = Object.keys(GRADE_PIECES).sort((a,b) => +a - +b);
-  const select = document.getElementById('move-target-grade');
-  select.innerHTML = allGrades
-    .filter(g => g !== repActiveGrade)
-    .map(g => `<option value="${g}">Grade ${g}</option>`).join('');
-  panel.classList.add('open');
-};
-
-window.closeMovePanel = function() {
-  const panel = document.getElementById('move-piece-panel');
-  if (panel) panel.classList.remove('open');
-  _movePieceIdx = null;
-};
-
-window.confirmMovePiece = async function() {
-  const toGrade = document.getElementById('move-target-grade').value;
-  const sid = repActiveStudentId;
-  const fromGrade = repActiveGrade;
-  const fromEntry = repProgress[sid][fromGrade];
-  if (!fromEntry || _movePieceIdx === null) return;
-
-  // Kaynak eserin adını ve durumunu al
-  let pieceName, pieceStatus;
-  if (_movePieceIsCustom) {
-    const cp = (fromEntry.customPieces || [])[_movePieceIdx];
-    if (!cp) return;
-    pieceName = cp.name;
-    pieceStatus = customStatus(cp);
-    fromEntry.customPieces = fromEntry.customPieces.filter((_, ci) => ci !== _movePieceIdx);
-  } else {
-    const pieces = GRADE_PIECES[fromGrade] || [];
-    pieceName = pieces[_movePieceIdx];
-    pieceStatus = toStatus(fromEntry.completed && fromEntry.completed[_movePieceIdx]);
-    fromEntry.removedIndices = [...(fromEntry.removedIndices || []), _movePieceIdx];
-  }
-
-  // Hedef grade'e ekle (yoksa oluştur)
-  repProgress[sid][toGrade] = repProgress[sid][toGrade] || {
-    completed: (GRADE_PIECES[toGrade] || []).map(() => false)
-  };
-  const toEntry = repProgress[sid][toGrade];
-  toEntry.customPieces = toEntry.customPieces || [];
-  toEntry.customPieces.push({ name: pieceName, status: pieceStatus });
-
-  closeMovePanel();
-  renderTeacherPieceList();
-  renderAddGradeBox();
-  renderGradeTabs();
-
-  try {
-    await set(ref(db, `repertoire/${sid}/${fromGrade}`), fromEntry);
-    await set(ref(db, `repertoire/${sid}/${toGrade}`), repProgress[sid][toGrade]);
-    showSaveToast();
-  } catch (e) { console.error('Taşıma hatası:', e); }
-};
-
-// Özel eser ekle
-window.addCustomPiece = async function() {
-  const nameEl = document.getElementById('new-piece-name');
-  const msgEl  = document.getElementById('add-piece-msg');
-  const name   = nameEl.value.trim();
-  if (!name) { msgEl.innerHTML = '<span style="color:#c0392b;">Eser adı boş olamaz.</span>'; return; }
-
-  const entry = repProgress[repActiveStudentId][repActiveGrade];
-  if (!entry) { msgEl.innerHTML = '<span style="color:#c0392b;">Grade kaydı bulunamadı.</span>'; return; }
-  entry.customPieces = entry.customPieces || [];
-  entry.customPieces.push({ name, status: 0 });
-
-  nameEl.value = '';
-  msgEl.innerHTML = '<span style="color:var(--green);">✅ Eser eklendi.</span>';
-  setTimeout(() => { msgEl.innerHTML = ''; }, 2000);
-
-  renderTeacherPieceList();
-  try {
-    await set(ref(db, `repertoire/${repActiveStudentId}/${repActiveGrade}`), entry);
-    showSaveToast();
-  } catch (e) { console.error('Eser eklenemedi:', e); }
 };
 
 // ===== Öğrenci: kendi checklist'i (salt okunur) =====
