@@ -608,7 +608,7 @@ function drawQuestionStaff(noteObj) {
     ctx.scale(1.8, 1.8); 
     
     // DEĞİŞİKLİK: Notanın yukarısındaki inatçı boşluğu sıfırlamak için 2. parametre (Y konumu) 0 yerine -5 yapıldı
-    const stave = new Stave(10, -15, 140);
+    const stave = new Stave(10, -20, 140);
     stave.addClef('bass').setContext(ctx).draw();
     
     const note = new StaveNote({ keys: [noteObj.key], clef: 'bass', duration: 'w' });
