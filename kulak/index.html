@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+  <title>Kulak Eğitimi – Nota Dinleme</title>
+  <script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.2/build/cjs/vexflow.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Lato:wght@300;400;700&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Lato', sans-serif;
+      background: #faf6ed;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1.2rem 1rem 2rem;
+      color: #5a3e2b;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 0.5rem;
+    }
+
+    header h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.35rem;
+      font-weight: 600;
+      color: #5a3e2b;
+    }
+
+    header p {
+      font-size: 0.8rem;
+      color: #b09070;
+      margin-top: 0.3rem;
+      font-style: italic;
+    }
+
+    #app-wrap {
+      width: 100%;
+      max-width: 600px;
+    }
+
+    /* ── SETUP AREA STİLLERİ ── */
+    .filter-card {
+      background: #fff;
+      border: 1.5px solid #e8e0d5;
+      border-radius: 20px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 4px 20px rgba(90,62,43,0.04);
+      text-align: center;
+    }
+
+    .filter-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #b09070;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.75rem;
+    }
+
+    .string-buttons {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 0.85rem;
+    }
+
+    .string-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: 1.5px solid #d4c4b0;
+      background: #fff;
+      color: #5a3e2b;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+    }
+
+    .string-btn.all-btn {
+      width: auto;
+      height: 42px;
+      padding: 0 16px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+    }
+
+    .string-btn.active {
+      background: #5a3e2b;
+      border-color: #5a3e2b;
+      color: #fff;
+      box-shadow: 0 4px 10px rgba(90,62,43,0.2);
+    }
+
+    .action-buttons-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .start-exercise-btn {
+      width: 100%;
+      padding: 10px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      border-radius: 12px;
+      border: 1.5px solid #d4a373;
+      background: #f5e6d3;
+      color: #5a3e2b;
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+
+    .start-exercise-btn:disabled {
+      background: #f5f5f5;
+      border-color: #ddd;
+      color: #aaa;
+      cursor: not-allowed;
+    }
+
+    .back-to-menu-btn {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #b09070;
+      background: #fff;
+      border: 1.5px solid #e8e0d5;
+      padding: 6px 14px;
+      border-radius: 30px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.12s;
+      box-shadow: 0 2px 8px rgba(90,62,43,0.02);
+      margin-bottom: 0.85rem;
+      display: inline-block;
+    }
+
+    @media (hover: hover) {
+      .start-exercise-btn:hover:not(:disabled) { background: #ebd3b8; }
+      .back-to-menu-btn:hover { background: #f5e6d3; border-color: #d4c4b0; color: #5a3e2b; }
+    }
+
+    /* ── EXERCISE AREA STİLLERİ ── */
+    #setup-area { display: block; }
+    #exercise-area { display: none; }
+
+    .card {
+      background: #fff;
+      border: 1.5px solid #e8e0d5;
+      border-radius: 20px;
+      padding: 1.1rem 1.1rem 0.9rem;
+      margin-bottom: 0.85rem;
+      box-shadow: 0 4px 20px rgba(90,62,43,0.04);
+    }
+
+    .speaker-wrap {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0 auto 0.5rem;
+    }
+
+    .speaker-wrap svg {
+      display: block;
+      width: 100%;
+      max-width: 440px;
+      height: auto;
+      cursor: pointer;
+    }
+
+    #speaker-group {
+      transition: transform 0.15s ease;
+    }
+
+    #speaker-group:active {
+      transform: scale(0.96);
+    }
+
+    .sound-wave {
+      opacity: 0;
+      transform-origin: 230px 106px;
+    }
+
+    .speaker-wrap.playing .sound-wave-1 {
+      animation: waveOut 1s ease-out infinite;
+    }
+    .speaker-wrap.playing .sound-wave-2 {
+      animation: waveOut 1s ease-out 0.2s infinite;
+    }
+    .speaker-wrap.playing .sound-wave-3 {
+      animation: waveOut 1s ease-out 0.4s infinite;
+    }
+
+    @keyframes waveOut {
+      0%   { opacity: 0;   transform: scale(0.85); }
+      25%  { opacity: 0.9; }
+      100% { opacity: 0;   transform: scale(1.15); }
+    }
+
+    .speaker-wrap.playing #speaker-cone {
+      animation: speakerPulse 0.3s ease-in-out infinite alternate;
+    }
+
+    @keyframes speakerPulse {
+      0%   { transform: translateX(0); }
+      100% { transform: translateX(3px); }
+    }
+
+    .timer-badge {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #8b5a2b;
+      background: #f5e6d3;
+      padding: 5px 12px;
+      border-radius: 12px;
+      border: 1px solid #e8d5c0;
+    }
+
+    .q-title {
+      text-align: center;
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: #5a3e2b;
+    }
+
+    .choices {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 1rem;
+    }
+
+    .choice-card {
+      background: #fff;
+      border: 2px solid #e8e0d5;
+      border-radius: 16px;
+      padding: 8px 10px 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      box-shadow: 0 2px 8px rgba(90,62,43,0.03);
+      overflow: visible;
+      -webkit-tap-highlight-color: transparent;
+      outline: none;
+    }
+
+    .choice-staff {
+      width: 110px;
+      height: 115px;
+      margin: 4px 0 0;
+      overflow: visible;
+    }
+
+    .choice-staff svg {
+      max-width: 100%;
+      height: auto;
+      overflow: visible;
+    }
+
+    @media (hover: hover) {
+      .choice-card:hover:not(.disabled):not(.correct):not(.wrong) {
+        border-color: #d4a373;
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(90,62,43,0.1);
+      }
+    }
+
+    .choice-card:active:not(.disabled) {
+      transform: scale(0.98);
+    }
+
+    .choice-card.correct {
+      background: #eaf3de;
+      border-color: #6b8c42;
+      color: #3b6d11;
+    }
+
+    .choice-card.wrong {
+      background: #fdf0f0;
+      border-color: #c75b39;
+      color: #a32d2d;
+    }
+
+    .choice-card.disabled {
+      cursor: default;
+      opacity: 0.92;
+    }
+
+    @media (max-width: 420px) {
+      .choices { gap: 8px; }
+      .choice-card { padding: 10px 6px; }
+      .choice-staff { width: 90px; height: 100px; }
+    }
+
+    .message {
+      text-align: center;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #8b6b4e;
+      margin-bottom: 0.65rem;
+      min-height: 22px;
+    }
+
+    #auto-bar-wrap {
+      height: 3px;
+      background: #e0ddd6;
+      border-radius: 2px;
+      margin-bottom: 0.65rem;
+      overflow: hidden;
+      display: none;
+    }
+
+    #auto-bar {
+      height: 100%;
+      width: 100%;
+      background: #6b8c42;
+      border-radius: 2px;
+      transition: width 1.4s linear;
+    }
+
+    .progress-area {
+      display: flex;
+      align-items: center;
+      margin-bottom: 1.2rem;
+    }
+
+    .progress-track {
+      flex: 1;
+      height: 10px;
+      background: #ede6d8;
+      border-radius: 5px;
+      overflow: hidden;
+      border: 1px solid #e0d8c8;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: #8cb85f;
+      border-radius: 5px;
+      transition: width 0.4s ease;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 2fr 1fr;
+      gap: 8px;
+    }
+
+    .ctrl-btn {
+      padding: 11px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      border-radius: 12px;
+      border: 1.5px solid #d4c4b0;
+      background: #fff;
+      color: #5a3e2b;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+
+    .ctrl-btn.primary {
+      background: #f5e6d3;
+      border-color: #d4a373;
+    }
+
+    .ctrl-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .result-screen {
+      display: none;
+      text-align: center;
+      padding: 1.5rem 1rem;
+    }
+
+    .result-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.8rem;
+      color: #6b8c42;
+      margin-bottom: 1rem;
+    }
+
+    .result-stats {
+      background: #fdfaf4;
+      border: 1.5px dashed #d4c4b0;
+      border-radius: 16px;
+      padding: 1.2rem;
+      margin-bottom: 1.5rem;
+      text-align: left;
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 1.1rem;
+      padding: 8px 0;
+      border-bottom: 1px dashed #e8e0d5;
+      color: #5a3e2b;
+    }
+
+    .stat-row:last-child {
+      border-bottom: none;
+    }
+
+    .stat-val {
+      font-weight: 700;
+      color: #8b5a2b;
+    }
+
+    .stat-val.correct-val {
+      color: #6b8c42;
+    }
+
+    .stat-val.wrong-val {
+      color: #c75b39;
+    }
+
+    .result-screen .controls {
+      display: flex;
+      gap: 8px;
+    }
+
+    .site-footer {
+      display: flex;
+      justify-content: center;
+      gap: 22px;
+      margin-top: 2.5rem;
+    }
+
+    .site-footer a {
+      color: #b0a392;
+      font-size: 2.2rem;
+      transition: all .2s ease;
+    }
+
+    @media (hover: hover) {
+      .site-footer a:hover { color: #d4a373; transform: translateY(-2px); }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🎵 Kulak Eğitimi</h1>
+    <p>Duyduğunuz sesi tanıyın</p>
+  </header>
+
+  <div id="app-wrap">
+    <!-- Setup Area -->
+    <div id="setup-area" class="filter-card">
+      <div style="display:flex; justify-content:flex-end; margin-bottom:0.5rem;">
+        <button class="back-to-menu-btn" style="margin-bottom:0;" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Başa Dön</button>
+      </div>
+      <div class="filter-title">Çalışılacak Notaları Seçin</div>
+      <div class="string-buttons">
+        <button id="btn-all" class="string-btn all-btn active" onclick="toggleAll()">Hepsi</button>
+      </div>
+      <div class="string-buttons" id="note-buttons"></div>
+      <div class="action-buttons-wrap">
+        <button class="start-exercise-btn" id="startBtn" onclick="startExercise()">Egzersize Başla 🎧</button>
+      </div>
+    </div>
+
+    <!-- Exercise Area -->
+    <div id="exercise-area">
+      <div style="display:flex; justify-content:flex-start; align-items:center; margin-bottom:0.85rem;">
+        <button class="back-to-menu-btn" style="margin-bottom:0;" onclick="backToMenu()">← Menüye Dön</button>
+      </div>
+
+      <div class="card">
+        <div class="q-title">Bu duyduğunuz ses hangi notaya ait?</div>
+
+        <div class="speaker-wrap" id="speaker-wrap" onclick="playSound()">
+          <svg viewBox="60 0 400 210" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+            <defs>
+              <linearGradient id="spGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#2a1a0e"/>
+                <stop offset="100%" stop-color="#1a0f06"/>
+              </linearGradient>
+              <filter id="waveGlow" x="-80%" y="-80%" width="260%" height="260%">
+                <feGaussianBlur stdDeviation="2.5" result="blur"/>
+                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+            </defs>
+
+            <rect x="62" y="32" width="392" height="148" rx="5" fill="url(#spGrad)" stroke="#3a2010" stroke-width="1.5"/>
+            <rect x="62" y="32" width="392" height="3" rx="1" fill="#c8a050" opacity="0.5"/>
+            <rect x="62" y="177" width="392" height="3" rx="1" fill="#c8a050" opacity="0.5"/>
+
+            <g id="speaker-group">
+              <g id="speaker-cone">
+                <rect x="140" y="76" width="24" height="50" fill="#f0e0b0" stroke="#c0a040" stroke-width="1.5"/>
+                <polygon points="164,76 210,46 210,156 164,126" fill="#f0e0b0" stroke="#c0a040" stroke-width="1.5" stroke-linejoin="round"/>
+              </g>
+              <path class="sound-wave sound-wave-1" d="M 232 76 A 50 50 0 0 1 232 136" fill="none" stroke="#f4d03f" stroke-width="4" stroke-linecap="round" filter="url(#waveGlow)"/>
+              <path class="sound-wave sound-wave-2" d="M 255 60 A 72 72 0 0 1 255 152" fill="none" stroke="#f4d03f" stroke-width="4" stroke-linecap="round" filter="url(#waveGlow)"/>
+              <path class="sound-wave sound-wave-3" d="M 278 44 A 95 95 0 0 1 278 168" fill="none" stroke="#f4d03f" stroke-width="4" stroke-linecap="round" filter="url(#waveGlow)"/>
+            </g>
+
+            <text x="258" y="200" text-anchor="middle" fill="#8b6b4e" font-size="13" font-weight="700" font-family="Lato,sans-serif">Dinlemek için dokun</text>
+          </svg>
+        </div>
+
+        <div class="message" id="message"></div>
+
+        <div id="auto-bar-wrap"><div id="auto-bar"></div></div>
+
+        <div class="choices" id="choices"></div>
+
+        <div class="progress-area">
+          <div class="progress-track">
+            <div class="progress-fill" id="progress-fill"></div>
+          </div>
+          <span class="timer-badge" id="timer-badge">1/10</span>
+        </div>
+
+        <div class="controls">
+          <button class="ctrl-btn" id="prevBtn" onclick="previousQ()">← Önceki</button>
+          <button class="ctrl-btn primary" id="listenAgainBtn" onclick="playSound()">🔊 Tekrar Dinle</button>
+          <button class="ctrl-btn" id="nextBtn" onclick="nextQ()">Sonraki →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Result Screen -->
+    <div class="result-screen" id="result-screen">
+      <h2 class="result-title">🎉 Test Tamamlandı!</h2>
+      <div class="result-stats" id="result-stats"></div>
+      <p style="color:#8b6b4e; font-weight:700; margin-bottom:1.5rem; text-align:center;" id="result-comment"></p>
+      <div class="controls">
+        <button class="ctrl-btn" onclick="backToMenu()">🏠 Menüye Dön</button>
+        <button class="ctrl-btn primary" onclick="restartExercise()">🔄 Tekrar Başla</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <a href="https://www.instagram.com/yunusgedik_/" target="_blank" aria-label="Instagram">
+      <i class="fa-brands fa-instagram"></i>
+    </a>
+    <a href="https://x.com/yunusgedik_" target="_blank" aria-label="X">
+      <i class="fa-brands fa-x-twitter"></i>
+    </a>
+    <a href="https://www.youtube.com/yunusgedik" target="_blank" aria-label="YouTube">
+      <i class="fa-brands fa-youtube"></i>
+    </a>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/js/all.min.js"></script>
+  <script>
+    // NOTALAR — frekans + VexFlow gösterimi için key/line bilgisi
+    const NOTES = {
+      'C4': { freq: 261.63, key: 'c/4', line: -1 },
+      'E4': { freq: 329.63, key: 'e/4', line: 0 },
+      'F4': { freq: 349.23, key: 'f/4', line: 0.5 },
+      'G4': { freq: 392.00, key: 'g/4', line: 1 },
+      'A4': { freq: 440.00, key: 'a/4', line: 1.5 },
+      'B4': { freq: 493.88, key: 'b/4', line: 2 }
+    };
+
+    const NOTE_NAMES = ['C4', 'E4', 'F4', 'G4', 'A4', 'B4'];
+    const NOTE_LABELS = ['Do', 'Mi', 'Fa', 'Sol', 'La', 'Si'];
+
+    let selectedNotes = [...NOTE_NAMES];
+    let currentQuestions = [];
+    let currentQIndex = 0;
+    let correct = 0;
+    let wrong = 0;
+    let answered = false;
+    let audioContext;
+
+    // Setup Panel Initialization
+    function initSetupPanel() {
+      const btnContainer = document.getElementById('note-buttons');
+      btnContainer.innerHTML = '';
+
+      NOTE_NAMES.forEach((note, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'string-btn active';
+        btn.textContent = NOTE_LABELS[idx];
+        btn.dataset.note = note;
+        btn.onclick = (e) => toggleNote(note, btn, e);
+        btnContainer.appendChild(btn);
+      });
+    }
+
+    // VexFlow ile mini porte üzerinde nota çizimi
+    function drawMiniStaff(div, noteName) {
+      div.innerHTML = '';
+      try {
+        const noteData = NOTES[noteName];
+        const { Renderer, Stave, StaveNote, Voice, Formatter } = Vex.Flow;
+        const renderer = new Renderer(div, Renderer.Backends.SVG);
+        renderer.resize(110, 115);
+        const ctx = renderer.getContext();
+        const stave = new Stave(0, -10, 110);
+        stave.addClef('treble').setContext(ctx).draw();
+        const note = new StaveNote({ keys: [noteData.key], duration: 'w' });
+        if (note.keyProps && note.keyProps[0]) {
+          note.keyProps[0].line = noteData.line;
+          note.keyProps[0].clef = 'treble';
+        }
+        const voice = new Voice({ num_beats: 4, beat_value: 4 });
+        voice.addTickables([note]);
+        new Formatter().joinVoices([voice]).format([voice], 85);
+        voice.draw(ctx, stave);
+        const s = div.querySelector('svg');
+        if (s) { s.style.width = '100%'; s.style.height = 'auto'; }
+      } catch (e) { console.log(e); }
+    }
+
+    function toggleAll() {
+      selectedNotes = [...NOTE_NAMES];
+      document.querySelectorAll('.string-btn[data-note]').forEach(btn => {
+        btn.classList.add('active');
+      });
+      document.querySelector('.all-btn').classList.add('active');
+    }
+
+    function toggleNote(note, btn, e) {
+      e.preventDefault();
+      if (selectedNotes.includes(note)) {
+        selectedNotes = selectedNotes.filter(n => n !== note);
+        btn.classList.remove('active');
+      } else {
+        selectedNotes.push(note);
+        btn.classList.add('active');
+      }
+
+      document.querySelector('.all-btn').classList.toggle('active', selectedNotes.length === NOTE_NAMES.length);
+    }
+
+    function startExercise() {
+      if (selectedNotes.length === 0) {
+        alert('Lütfen en az bir nota seçin!');
+        return;
+      }
+
+      // 10 soru oluştur
+      currentQuestions = [];
+      for (let i = 0; i < 10; i++) {
+        const correctNote = selectedNotes[Math.floor(Math.random() * selectedNotes.length)];
+        const choices = [correctNote];
+
+        // 3 farklı yanlış seçenek ekle
+        let wrongChoices = NOTE_NAMES.filter(n => n !== correctNote);
+        wrongChoices = wrongChoices.sort(() => Math.random() - 0.5).slice(0, 3);
+        choices.push(...wrongChoices);
+        choices.sort(() => Math.random() - 0.5);
+
+        currentQuestions.push({
+          correctNote,
+          choices
+        });
+      }
+
+      currentQIndex = 0;
+      correct = 0;
+      wrong = 0;
+      document.getElementById('setup-area').style.display = 'none';
+      document.getElementById('exercise-area').style.display = 'block';
+      document.getElementById('result-screen').style.display = 'none';
+      showQuestion();
+    }
+
+    function showQuestion() {
+      clearAutoTimer();
+      answered = false;
+      const q = currentQuestions[currentQIndex];
+
+      // Progress güncelle
+      const progress = ((currentQIndex + 1) / currentQuestions.length) * 100;
+      document.getElementById('progress-fill').style.width = progress + '%';
+      document.getElementById('timer-badge').textContent = `${currentQIndex + 1}/${currentQuestions.length}`;
+
+      // Şıkları oluştur — sadece VexFlow notası, yazı yok
+      const choicesDiv = document.getElementById('choices');
+      choicesDiv.innerHTML = '';
+      q.choices.forEach(note => {
+        const card = document.createElement('div');
+        card.className = 'choice-card';
+        card.dataset.note = note;
+        card.onclick = () => answerQuestion(note, card);
+        const staffDiv = document.createElement('div');
+        staffDiv.className = 'choice-staff';
+        card.appendChild(staffDiv);
+        choicesDiv.appendChild(card);
+        drawMiniStaff(staffDiv, note);
+      });
+
+      // Mesajı temizle
+      document.getElementById('message').textContent = '';
+
+      // Otomatik kontrol butonları
+      updateControls();
+
+      // Auto-play sesin ilk kez
+      setTimeout(() => playSound(), 300);
+    }
+
+    function playSound() {
+      const q = currentQuestions[currentQIndex];
+      const frequency = NOTES[q.correctNote].freq;
+
+      if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      }
+
+      const ctx = audioContext;
+      const now = ctx.currentTime;
+      const duration = 1;
+
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.frequency.value = frequency;
+      osc.type = 'sine';
+
+      // Fade in/out
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(0.3, now + 0.05);
+      gain.gain.linearRampToValueAtTime(0, now + duration - 0.05);
+
+      osc.start(now);
+      osc.stop(now + duration);
+
+      // Hoparlör animasyonu
+      const wrap = document.getElementById('speaker-wrap');
+      wrap.classList.add('playing');
+      setTimeout(() => {
+        wrap.classList.remove('playing');
+      }, duration * 1000);
+    }
+
+    let autoTimer = null;
+
+    function clearAutoTimer() {
+      if (autoTimer) { clearTimeout(autoTimer); autoTimer = null; }
+      const wrap = document.getElementById('auto-bar-wrap');
+      wrap.style.display = 'none';
+    }
+
+    function startAutoAdvance() {
+      const wrap = document.getElementById('auto-bar-wrap'), bar = document.getElementById('auto-bar');
+      wrap.style.display = 'block';
+      bar.style.transition = 'none';
+      bar.style.width = '100%';
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        bar.style.transition = 'width 1.4s linear';
+        bar.style.width = '0%';
+      }));
+      autoTimer = setTimeout(() => { clearAutoTimer(); nextQ(); }, 1400);
+    }
+
+    function answerQuestion(note, card) {
+      if (answered) return;
+
+      answered = true;
+      const q = currentQuestions[currentQIndex];
+      const isCorrect = note === q.correctNote;
+
+      if (isCorrect) {
+        correct++;
+        card.classList.add('correct');
+        document.getElementById('message').textContent = '✅ Doğru!';
+        document.getElementById('message').style.color = '#3b6d11';
+      } else {
+        wrong++;
+        card.classList.add('wrong');
+        document.querySelector(`[data-note="${q.correctNote}"]`).classList.add('correct');
+        document.getElementById('message').textContent = '❌ Yanlış!';
+        document.getElementById('message').style.color = '#a32d2d';
+      }
+
+      // Tüm şıkları devre dışı bırak
+      document.querySelectorAll('.choice-card').forEach(c => {
+        c.classList.add('disabled');
+        c.onclick = null;
+      });
+
+      updateControls();
+
+      // Doğru cevapta otomatik ilerle; yanlışta kullanıcı doğruyu görüp "Sonraki"ye kendi bassın
+      if (isCorrect && currentQIndex < currentQuestions.length - 1) {
+        startAutoAdvance();
+      } else if (isCorrect) {
+        // son soruysa kısa gecikmeyle sonucu göster
+        autoTimer = setTimeout(() => { showResults(); }, 700);
+      }
+    }
+
+    function updateControls() {
+      const isPrevDisabled = currentQIndex === 0;
+      const isNextDisabled = currentQIndex === currentQuestions.length - 1;
+
+      document.getElementById('prevBtn').disabled = isPrevDisabled;
+      document.getElementById('nextBtn').disabled = isNextDisabled || !answered;
+      document.getElementById('listenAgainBtn').disabled = false;
+    }
+
+    function previousQ() {
+      if (currentQIndex > 0) {
+        clearAutoTimer();
+        currentQIndex--;
+        showQuestion();
+      }
+    }
+
+    function nextQ() {
+      clearAutoTimer();
+      if (currentQIndex < currentQuestions.length - 1) {
+        currentQIndex++;
+        showQuestion();
+      } else {
+        showResults();
+      }
+    }
+
+    function showResults() {
+      document.getElementById('exercise-area').style.display = 'none';
+      document.getElementById('result-screen').style.display = 'block';
+
+      const total = currentQuestions.length;
+      const accuracy = Math.round((correct / total) * 100);
+      let rank = '';
+
+      if (accuracy === 100) rank = '🌟 Mükemmel!';
+      else if (accuracy >= 80) rank = '⭐ Çok İyi!';
+      else if (accuracy >= 60) rank = '👍 İyi!';
+      else if (accuracy >= 40) rank = '💪 Daha Çalış!';
+      else rank = '📚 Tekrar Başla!';
+
+      document.getElementById('result-comment').textContent = 'Bravo! Kulağını geliştirmeye devam et 🎵';
+
+      const statsDiv = document.getElementById('result-stats');
+      statsDiv.innerHTML = `
+        <div class="stat-row">
+          <span>Toplam Soru:</span>
+          <span class="stat-val">${total}</span>
+        </div>
+        <div class="stat-row">
+          <span>Doğru:</span>
+          <span class="stat-val correct-val">${correct}</span>
+        </div>
+        <div class="stat-row">
+          <span>Yanlış:</span>
+          <span class="stat-val wrong-val">${wrong}</span>
+        </div>
+        <div class="stat-row">
+          <span>Başarı Oranı:</span>
+          <span class="stat-val">${accuracy}%</span>
+        </div>
+        <div class="stat-row">
+          <span>Derece:</span>
+          <span class="stat-val">${rank}</span>
+        </div>
+      `;
+    }
+
+    function restartExercise() {
+      document.getElementById('setup-area').style.display = 'block';
+      document.getElementById('result-screen').style.display = 'none';
+      initSetupPanel();
+    }
+
+    function backToMenu() {
+      clearAutoTimer();
+      document.getElementById('setup-area').style.display = 'block';
+      document.getElementById('exercise-area').style.display = 'none';
+      document.getElementById('result-screen').style.display = 'none';
+      initSetupPanel();
+    }
+
+    // İlk load
+    initSetupPanel();
+  </script>
+</body>
+</html>
