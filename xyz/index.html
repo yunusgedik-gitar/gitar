@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+  <title>Kulak Alıştırması – Klasik Gitar</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Lato:wght@300;400;700&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Lato', sans-serif; background: #faf6ed; min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 1.4rem 1rem 2.5rem; color: #5a3e2b; overflow-x: hidden;
+    }
+    header { text-align: center; margin-bottom: 1.2rem; }
+    header h1 { font-family: 'Playfair Display', serif; font-size: 1.45rem; font-weight: 600; color: #5a3e2b; }
+    header p  { font-size: 0.8rem; color: #b09070; margin-top: 0.3rem; font-style: italic; }
+    #app-wrap { width: 100%; max-width: 550px; }
+
+    /* ── 🎵 NOTA SEÇİM PANELİ STİLLERİ ── */
+    .filter-card {
+      background: #fff; border: 1.5px solid #e8e0d5; border-radius: 20px;
+      padding: 1.5rem; margin-bottom: 1rem; box-shadow: 0 4px 20px rgba(90,62,43,0.04); text-align: center;
+    }
+    .filter-title {
+      font-size: 0.85rem; font-weight: 700; color: #b09070;
+      text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1rem;
+    }
+    .string-buttons {
+      display: flex; justify-content: center; align-items: center;
+      gap: 10px; flex-wrap: wrap; margin-bottom: 1.25rem;
+    }
+    .string-btn {
+      width: 46px; height: 46px; border-radius: 50%;
+      border: 1.5px solid #d4c4b0; background: #fff; color: #5a3e2b;
+      font-size: 1rem; font-weight: 700; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s ease;
+    }
+    .string-btn.all-btn { width: auto; height: 46px; padding: 0 18px; border-radius: 23px; font-size: 0.9rem; }
+    .string-btn.active {
+      background: #5a3e2b; border-color: #5a3e2b; color: #fff;
+      box-shadow: 0 4px 10px rgba(90,62,43,0.2);
+    }
+    .start-exercise-btn {
+      width: 100%; padding: 12px; font-size: 0.95rem; font-weight: 700;
+      border-radius: 12px; border: 1.5px solid #d4a373; background: #f5e6d3;
+      color: #5a3e2b; cursor: pointer; transition: all 0.12s;
+    }
+    .start-exercise-btn:disabled { background: #f5f5f5; border-color: #ddd; color: #aaa; cursor: not-allowed; }
+    
+    .back-to-menu-btn {
+      font-size: 0.85rem; font-weight: 700; color: #b09070; background: #fff;
+      border: 1.5px solid #e8e0d5; padding: 6px 14px; border-radius: 30px;
+      cursor: pointer; font-family: inherit; transition: all 0.12s;
+      box-shadow: 0 2px 8px rgba(90,62,43,0.02); margin-bottom: 0.85rem; display: inline-block;
+    }
+    @media (hover: hover) {
+      .start-exercise-btn:hover:not(:disabled) { background: #ebd3b8; }
+      .back-to-menu-btn:hover { background: #f5e6d3; border-color: #d4c4b0; color: #5a3e2b; }
+    }
+
+    /* ── 🎯 SORU VE CEVAP ALANI STİLLERİ ── */
+    #exercise-area { display: none; }
+    .card {
+      background: #fff; border: 1.5px solid #e8e0d5; border-radius: 20px;
+      padding: 1.25rem; margin-bottom: 0.85rem; box-shadow: 0 4px 20px rgba(90,62,43,0.04);
+    }
+    .card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; }
+    .timer-badge { font-size: 0.85rem; font-weight: 700; color: #8b5a2b; background: #f5e6d3; padding: 5px 12px; border-radius: 12px; border: 1px solid #e8d5c0; }
+
+    /* Büyük Ses Dinle Butonu */
+    .sound-container {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; padding: 1.5rem 0; margin-bottom: 1rem;
+    }
+    #listen-btn {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      width: 140px; height: 140px; border-radius: 50%;
+      border: 3px solid #d4a373; background: #fff; color: #8b5a2b;
+      cursor: pointer; font-family: inherit; transition: all 0.2s ease;
+      box-shadow: 0 6px 15px rgba(212, 163, 115, 0.15);
+    }
+    #listen-btn i { font-size: 2.5rem; margin-bottom: 6px; }
+    #listen-btn span { font-size: 0.95rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+    #listen-btn.playing { background: #eaf3de; border-color: #6b8c42; color: #3b6d11; box-shadow: 0 6px 15px rgba(107, 140, 66, 0.2); }
+    @media (hover: hover) { #listen-btn:hover { transform: scale(1.04); background: #fdfaf4; } #listen-btn.playing:hover { background: #eaf3de; } }
+    
+    .q-title { text-align: center; font-size: 1.15rem; font-weight: 700; margin-bottom: 1.5rem; color: #5a3e2b; }
+
+    /* Cevap Seçenekleri Kart Modeli */
+    .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1rem; }
+    .choice-card {
+      background: #fff; border: 2px solid #e8e0d5; border-radius: 16px;
+      padding: 16px 12px; cursor: pointer; transition: all 0.2s;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      box-shadow: 0 2px 8px rgba(90,62,43,0.03); overflow: visible;
+      -webkit-tap-highlight-color: transparent; outline: none;
+    }
+    .choice-name { font-size: 1.8rem; font-weight: 700; color: #5a3e2b; }
+    .choice-syllable { font-size: 0.85rem; font-weight: 600; color: #b09070; margin-top: 2px; }
+    
+    @media (hover: hover) {
+      .choice-card:hover:not(.disabled):not(.correct):not(.wrong) { border-color: #d4a373; transform: translateY(-3px); box-shadow: 0 8px 20px rgba(90,62,43,0.1); }
+    }
+    .choice-card:active:not(.disabled) { transform: scale(0.98); }
+    .choice-card.correct { background: #eaf3de; border-color: #6b8c42; }
+    .choice-card.correct .choice-name, .choice-card.correct .choice-syllable { color: #3b6d11; }
+    .choice-card.wrong { background: #fdf0f0; border-color: #c75b39; }
+    .choice-card.wrong .choice-name, .choice-card.wrong .choice-syllable { color: #a32d2d; }
+    .choice-card.disabled { cursor: default; opacity: 0.85; }
+
+    .message { text-align: center; font-size: 0.95rem; font-weight: 700; color: #8b6b4e; margin-bottom: 0.85rem; min-height: 22px; }
+    .message.ok { color: #3b6d11; } .message.no { color: #a32d2d; }
+
+    /* İlerleme Çubuğu */
+    .progress-area { display: flex; align-items: center; margin-bottom: 1.2rem; padding: 0 4px; }
+    .progress-track { flex: 1; height: 10px; background: #ede6d8; border-radius: 5px; overflow: hidden; border: 1px solid #e0d8c8; }
+    .progress-fill { height: 100%; width: 0%; background: #8cb85f; border-radius: 5px; transition: width 0.4s ease; }
+
+    /* Kontrol Butonları */
+    .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .ctrl-btn {
+      padding: 12px; font-size: 0.85rem; font-weight: 700; border-radius: 12px;
+      border: 1.5px solid #d4c4b0; background: #fff; color: #5a3e2b;
+      cursor: pointer; font-family: inherit; transition: all 0.15s;
+      display: flex; align-items: center; justify-content: center; gap: 5px;
+    }
+    .ctrl-btn.primary { background: #f5e6d3; border-color: #d4a373; }
+    .ctrl-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    @media (hover: hover) {
+      .ctrl-btn:hover:not(:disabled) { background: #f5e6d3; border-color: #c4a88a; }
+      .ctrl-btn.primary:hover:not(:disabled) { background: #ebd3b8; }
+    }
+
+    /* ── 🏆 SONUÇ EKRANI ── */
+    .result-screen { display: none; text-align: center; padding: 1.5rem 1rem; }
+    .result-title { font-family: 'Playfair Display', serif; font-size: 1.8rem; color: #6b8c42; margin-bottom: 1rem; }
+    .result-stats { background: #fdfaf4; border: 1.5px dashed #d4c4b0; border-radius: 16px; padding: 1.2rem; margin-bottom: 1.5rem; text-align: left; }
+    .stat-row { display: flex; justify-content: space-between; font-size: 1.1rem; padding: 8px 0; border-bottom: 1px dashed #e8e0d5; color: #5a3e2b; }
+    .stat-row:last-child { border-bottom: none; }
+    .stat-val { font-weight: 700; color: #8b5a2b; }
+    .stat-val.correct-val { color: #6b8c42; }
+    .stat-val.wrong-val { color: #c75b39; }
+
+    footer { margin-top: 2rem; font-size: 0.75rem; color: #c4b5a0; text-align: center; }
+    
+    @media (max-width: 440px) {
+      .choices { gap: 10px; }
+      .choice-card { padding: 12px 8px; }
+      .choice-name { font-size: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🎸 Kulak Alıştırması</h1>
+  <p>Duyduğun Sesi Tahmin Et</p>
+</header>
+
+<div id="app-wrap">
+
+  <div id="setup-area" class="filter-card">
+    <div style="display:flex; justify-content:flex-end; margin-bottom:0.5rem;">
+      <button class="back-to-menu-btn" style="margin-bottom:0;" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
+    </div>
+    <div class="filter-title">Çalışılacak Notaları Seçin</div>
+    
+    <div class="string-buttons">
+      <button id="btn-all" class="string-btn all-btn active" onclick="toggleAllNotes()">Hepsi</button>
+      <button class="string-btn active note-toggle-btn" data-note="C4" onclick="toggleNote('C4')">Do</button>
+      <button class="string-btn active note-toggle-btn" data-note="D4" onclick="toggleNote('D4')">Re</button>
+      <button class="string-btn active note-toggle-btn" data-note="E4" onclick="toggleNote('E4')">Mi</button>
+      <button class="string-btn active note-toggle-btn" data-note="F4" onclick="toggleNote('F4')">Fa</button>
+      <button class="string-btn active note-toggle-btn" data-note="G4" onclick="toggleNote('G4')">Sol</button>
+      <button class="string-btn active note-toggle-btn" data-note="A4" onclick="toggleNote('A4')">La</button>
+      <button class="string-btn active note-toggle-btn" data-note="B4" onclick="toggleNote('B4')">Si</button>
+    </div>
+
+    <div class="action-buttons-wrap">
+      <button id="start-btn" class="start-exercise-btn" onclick="startExercise()">Egzersize Başla 🎯</button>
+    </div>
+  </div>
+
+  <div id="exercise-area">
+    <div class="top-bar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem;">
+      <button class="back-to-menu-btn" style="margin-bottom:0;" onclick="exitExercise()">← Vazgeç</button>
+      <div id="question-counter" class="timer-badge">Soru: 1 / 10</div>
+    </div>
+
+    <div class="card">
+      <div class="card-top">
+        <span class="timer-badge" style="background:#fffaf3; border-color:#e8d5c0;"><i class="fa-solid fa-ear-listen"></i> Kulak Testi</span>
+      </div>
+
+      <div class="sound-container">
+        <button id="listen-btn" onclick="playCurrentNote()">
+          <i class="fa-solid fa-volume-high"></i>
+          <span>Ses Dinle</span>
+        </button>
+      </div>
+
+      <div class="q-title">Bu duyduğunuz ses hangi notaya ait?</div>
+
+      <div class="choices" id="choices-container">
+        </div>
+
+      <div id="feedback-message" class="message"></div>
+      
+      <div class="progress-area">
+        <div class="progress-track">
+          <div id="progress-bar-fill" class="progress-fill"></div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button id="re-listen-btn" class="ctrl-btn" onclick="playCurrentNote()"><i class="fa-solid fa-rotate-right"></i> Tekrar Dinle</button>
+        <button id="next-btn" class="ctrl-btn primary" onclick="nextQuestion()" disabled>Sonraki Soru <i class="fa-solid fa-arrow-right"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <div id="result-area" class="result-screen">
+    <div class="duel-result-wrap">
+      <h2 class="result-title">🎯 Alıştırma Bitti!</h2>
+      <div class="duel-winner-badge" id="result-badge">Tebrikler!</div>
+      
+      <div class="result-stats">
+        <div class="stat-row">
+          <span>Toplam Soru</span>
+          <span class="stat-val" id="stat-total">10</span>
+        </div>
+        <div class="stat-row">
+          <span>Doğru Cevap</span>
+          <span class="stat-val correct-val" id="stat-correct">0</span>
+        </div>
+        <div class="stat-row">
+          <span>Yanlış Cevap</span>
+          <span class="stat-val wrong-val" id="stat-wrong">0</span>
+        </div>
+        <div class="stat-row">
+          <span>Başarı Oranı</span>
+          <span class="stat-val" id="stat-ratio">%0</span>
+        </div>
+      </div>
+      
+      <p class="duel-comment" id="result-comment">"Harika bir gelişim! Yunus Hoca kulak hassasiyetinizden memnun 🎵"</p>
+      
+      <div style="display:flex; gap:10px; justify-content:center;">
+        <button class="start-exercise-btn" style="flex:1;" onclick="restartSetup()">🔄 Yeniden Oyna</button>
+        <button class="start-exercise-btn" style="flex:1; background:#fff; border-color:#e8e0d5;" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <p>© 2026 Yunus Gedik – Klasik Gitar Eğitim Araçları</p>
+</footer>
+
+<script>
+  // 7 Temel Nota Bilgisi (C4 - B4 Arası Frekans ve Türkçe İsim Eşleşmeleri)
+  const ALL_NOTES = {
+    'C4': { name: 'Do', freq: 261.63, full: 'C4 (Do)' },
+    'D4': { name: 'Re', freq: 293.66, full: 'D4 (Re)' },
+    'E4': { name: 'Mi', freq: 329.63, full: 'E4 (Mi)' },
+    'F4': { name: 'Fa', freq: 349.23, full: 'F4 (Fa)' },
+    'G4': { name: 'Sol', freq: 392.00, full: 'G4 (Sol)' },
+    'A4': { name: 'La', freq: 440.00, full: 'A4 (La)' },
+    'B4': { name: 'Si', freq: 493.88, full: 'B4 (Si)' }
+  };
+
+  let selectedNotes = ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4'];
+  let currentQuestionIndex = 0;
+  const totalQuestions = 10;
+  let correctCount = 0;
+  let wrongCount = 0;
+  let currentNoteKey = '';
+  let hasAnswered = false;
+  
+  let audioCtx = null;
+
+  // Ses Çalma Fonksiyonu (Web Audio API)
+  function playNoteAudio(frequency) {
+    try {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+
+      const osc = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+
+      // Gitara yakın daha tatlı bir tını için sine yerine triangle dalga boyu
+      osc.type = 'triangle'; 
+      osc.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+
+      // Çıtlamayı önlemek ve sustain hissi için yumuşak ses zarfı (Envelope)
+      gainNode.gain.setValueAtTime(0.4, audioCtx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.2);
+
+      osc.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+
+      osc.start();
+      osc.stop(audioCtx.currentTime + 1.2);
+
+      // Buton görsel animasyon tetikleyicisi
+      const listenBtn = document.getElementById('listen-btn');
+      listenBtn.classList.add('playing');
+      setTimeout(() => listenBtn.classList.remove('playing'), 1000);
+
+    } catch (e) {
+      console.error("Ses çalınamadı:", e);
+    }
+  }
+
+  // Giriş Ekranı Nota Seçim mantığı
+  function toggleNote(noteKey) {
+    const btn = document.querySelector(`.note-toggle-btn[data-note="${noteKey}"]`);
+    if (selectedNotes.includes(noteKey)) {
+      if (selectedNotes.length === 1) {
+        alert("En az bir nota seçili olmalıdır!");
+        return;
+      }
+      selectedNotes = selectedNotes.filter(n => n !== noteKey);
+      btn.classList.remove('active');
+    } else {
+      selectedNotes.push(noteKey);
+      btn.classList.add('active');
+    }
+    checkAllBtnStatus();
+  }
+
+  function toggleAllNotes() {
+    const allBtn = document.getElementById('btn-all');
+    const noteBtns = document.querySelectorAll('.note-toggle-btn');
+    
+    if (selectedNotes.length === 7) {
+      selectedNotes = ['C4']; // Varsayılan tek bırak
+      noteBtns.forEach(btn => {
+        if(btn.getAttribute('data-note') !== 'C4') btn.classList.remove('active');
+      });
+    } else {
+      selectedNotes = ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4'];
+      noteBtns.forEach(btn => btn.classList.add('active'));
+    }
+    checkAllBtnStatus();
+  }
+
+  function checkAllBtnStatus() {
+    const allBtn = document.getElementById('btn-all');
+    if (selectedNotes.length === 7) {
+      allBtn.classList.add('active');
+    } else {
+      allBtn.classList.remove('active');
+    }
+    document.getElementById('start-btn').disabled = selectedNotes.length === 0;
+  }
+
+  // Egzersizi Başlatma
+  function startExercise() {
+    if (selectedNotes.length === 0) return;
+    
+    document.getElementById('setup-area').style.display = 'none';
+    document.getElementById('exercise-area').style.display = 'block';
+    document.getElementById('result-area').style.display = 'none';
+    
+    currentQuestionIndex = 0;
+    correctCount = 0;
+    wrongCount = 0;
+    
+    loadQuestion();
+  }
+
+  // Yeni Soru Yükleme
+  function loadQuestion() {
+    hasAnswered = false;
+    document.getElementById('next-btn').disabled = true;
+    document.getElementById('feedback-message').className = 'message';
+    document.getElementById('feedback-message').innerText = '';
+    
+    // Soru sayacı ve İlerleme Çubuğu güncelleme
+    document.getElementById('question-counter').innerText = `Soru: ${currentQuestionIndex + 1} / ${totalQuestions}`;
+    const progressPercent = (currentQuestionIndex / totalQuestions) * 100;
+    document.getElementById('progress-bar-fill').style.width = `${progressPercent}%`;
+
+    // Seçilen notalar arasından rastgele bir hedef nota belirleme
+    const randomIndex = Math.floor(Math.random() * selectedNotes.length);
+    currentNoteKey = selectedNotes[randomIndex];
+
+    // Şıkları oluşturma: Her zaman hedef nota dahil toplam 4 benzersiz rastgele şık listele
+    let choicePool = ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4'];
+    let choices = [currentNoteKey];
+    
+    choicePool = choicePool.filter(n => n !== currentNoteKey);
+    while (choices.length < 4 && choicePool.length > 0) {
+      const rIdx = Math.floor(Math.random() * choicePool.length);
+      choices.push(choicePool[rIdx]);
+      choicePool.splice(rIdx, 1);
+    }
+    
+    // Şıkları kendi içinde karıştır (Randomize)
+    choices.sort(() => Math.random() - 0.5);
+
+    // Seçenek kartlarını HTML olarak basma (klavye-index kart yapısı)
+    const container = document.getElementById('choices-container');
+    container.innerHTML = '';
+    
+    choices.forEach(noteKey => {
+      const card = document.createElement('div');
+      card.className = 'choice-card';
+      card.setAttribute('data-note', noteKey);
+      card.onclick = () => handleChoiceSelection(card, noteKey);
+      
+      card.innerHTML = `
+        <div class="choice-name">${ALL_NOTES[noteKey].name}</div>
+        <div class="choice-syllable">${noteKey}</div>
+      `;
+      container.appendChild(card);
+    });
+
+    // Soru gelir gelmez sesi otomatik çaldırıyoruz
+    setTimeout(() => {
+      playCurrentNote();
+    }, 400);
+  }
+
+  function playCurrentNote() {
+    if (!currentNoteKey) return;
+    playNoteAudio(ALL_NOTES[currentNoteKey].freq);
+  }
+
+  // Kullanıcı Şık Seçim Algoritması (`klavye-index` birebir yapısı)
+  function handleChoiceSelection(selectedCard, chosenNoteKey) {
+    if (hasAnswered) return;
+    hasAnswered = true;
+
+    const cards = document.querySelectorAll('.choice-card');
+    const feedback = document.getElementById('feedback-message');
+
+    if (chosenNoteKey === currentNoteKey) {
+      // Doğru Seçim
+      selectedCard.classList.add('correct');
+      feedback.className = 'message ok';
+      feedback.innerHTML = `<i class="fa-solid fa-circle-check"></i> Doğru! Harika bir kulak.`;
+      correctCount++;
+    } else {
+      // Yanlış Seçim
+      selectedCard.classList.add('wrong');
+      feedback.className = 'message no';
+      feedback.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Yanlış! Doğru cevap: <strong>${ALL_NOTES[currentNoteKey].name}</strong> olmalıydı.`;
+      wrongCount++;
+
+      // Doğru olan kartı da yeşil yakarak göster
+      cards.forEach(card => {
+        if (card.getAttribute('data-note') === currentNoteKey) {
+          card.classList.add('correct');
+        }
+      });
+    }
+
+    // Diğer kartları devre dışı bırak
+    cards.forEach(card => card.classList.add('disabled'));
+    document.getElementById('next-btn').disabled = false;
+  }
+
+  // Sonraki Soru veya Bitirme
+  function nextQuestion() {
+    currentQuestionIndex++;
+    if (currentQuestionIndex < totalQuestions) {
+      loadQuestion();
+    } else {
+      showResults();
+    }
+  }
+
+  // Birebir Düello/Klavye Yapısında Sonuç Ekranı
+  function showResults() {
+    document.getElementById('exercise-area').style.display = 'none';
+    document.getElementById('result-area').style.display = 'block';
+
+    document.getElementById('stat-total').innerText = totalQuestions;
+    document.getElementById('stat-correct').innerText = correctCount;
+    document.getElementById('stat-wrong').innerText = wrongCount;
+    
+    const ratio = Math.round((correctCount / totalQuestions) * 100);
+    document.getElementById('stat-ratio').innerText = `%${ratio}`;
+
+    // Dinamik Koçluk Mesajı ve Rozet Ayarları
+    const badge = document.getElementById('result-badge');
+    const comment = document.getElementById('result-comment');
+
+    if (ratio >= 80) {
+      badge.innerText = "🏆 Mükemmel Kulak!";
+      comment.innerText = `"Harika bir duyum seviyesi! İleri düzey solfej ve eşlik çalışmalarına tamamen hazırsınız. Yunus Hoca bu başarıdan gurur duyuyor! 🎵"`;
+    } else if (ratio >= 50) {
+      badge.innerText = "🤝 İyi Gelişim!";
+      comment.innerText = `"Güzel sonuç, kulak hafızanız oturmaya başlamış. Birkaç pratikle hatasız bir seviyeye ulaşabilirsiniz. Çalışmaya devam! 🎸"`;
+    } else {
+      badge.innerText = "💪 Daha Çok Pratik!";
+      comment.innerText = `"Notalar arasındaki frekans farklarına biraz daha odaklanarak tekrar deneyebilirsiniz. Her gün 5 dakika dinlemek algınızı uçuracaktır!"`;
+    }
+  }
+
+  function exitExercise() {
+    if (confirm("Alıştırmadan çıkmak istediğinize emin misiniz? İlerlemeniz kaybolacaktır.")) {
+      restartSetup();
+    }
+  }
+
+  function restartSetup() {
+    document.getElementById('setup-area').style.display = 'block';
+    document.getElementById('exercise-area').style.display = 'none';
+    document.getElementById('result-area').style.display = 'none';
+  }
+</script>
+
+</body>
+</html>
