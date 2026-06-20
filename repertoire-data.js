@@ -98,7 +98,7 @@ const GRADE_PIECES = {
   "Giuliani, M. – Allegro Op. 40 No. 6",
   "Sor, F. – Op. 6 No. 11",
   "Carcassi, M. – Andantino Op. 60 No. 3",
-  "Anonim – Grosienne No. 1",
+  "Satie, E. – Grosienne No. 1",
   "Lauro, A. – Vals Venezolano No. 2",
   "Handel, G. F. – Passacaglia",
   "Lauro, A. – La Gatica"
