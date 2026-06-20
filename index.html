@@ -1309,34 +1309,6 @@ function checkBassAccess(sid) {
     if (badge) { badge.textContent = 'YENİ'; badge.className = 'badge badge-new'; badge.style.cssText = ''; }
   }
 
-// Sadece "Bas Gitar" kategorisinde olan öğrenciler erişebilir; öğretmen her zaman erişebilir.
-function checkBassAccess(sid) {
-  const card = document.getElementById('bass-card');
-  if (!card) return;
-  const hasAccess = sid === TEACHER_ID || !!(studentCategories[sid] || {})['bas_gitar'];
-  if (!hasAccess) {
-    card.removeAttribute('href');
-    card.style.pointerEvents = 'none';
-    card.style.cursor = 'default';
-    card.style.filter = 'grayscale(0.3) opacity(0.7)';
-    card.querySelector('.card-icon').textContent = '🔒';
-    const desc = card.querySelector('.card-desc');
-    if (desc) desc.textContent = 'Bu bölüm yalnızca Bas Gitar kategorisindeki öğrencilere açıktır.';
-    const badge = card.querySelector('.badge');
-    if (badge) { badge.textContent = 'Kilitli'; badge.className = 'badge'; badge.style.cssText = 'background:#eee;color:#999;font-size:.7rem;font-weight:600;padding:3px 10px;border-radius:20px;'; }
-  } else {
-    card.setAttribute('href', 'https://gitar.yunusgedik.com.tr/basv2/');
-    card.style.pointerEvents = '';
-    card.style.cursor = '';
-    card.style.filter = '';
-    card.querySelector('.card-icon').textContent = '🎸';
-    const desc = card.querySelector('.card-desc');
-    if (desc) desc.textContent = 'Bas gitarda I. Pozisyondaki tüm perdeleri, telleri ve notaların dizekteki (Fa anahtarı) tam karşılıklarını interaktif olarak deneyimleyin.';
-    const badge = card.querySelector('.badge');
-    if (badge) { badge.textContent = 'YENİ'; badge.className = 'badge badge-new'; badge.style.cssText = ''; }
-  }
-}
-
 window.saveNewStudent = async function() {
   const name = document.getElementById('new-student-name').value.trim();
   const pin = document.getElementById('new-student-pin').value.trim();
