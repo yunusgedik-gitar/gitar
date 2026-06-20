@@ -1070,9 +1070,7 @@ function beginDuelGame(){
 
   // İki taraf da ilk soruyu açmaya çalışır — transaction biri alır
 get(ref(db, `duel_rooms/${roomCode_}/config`)).then(snap=>{
-  if (myRole === 'host') {
-    tryAdvance(0, snap.val());
-  }
+  tryAdvance(0, snap.val());   // her iki taraf da dener
 });
   listenRound();
 }
@@ -1160,12 +1158,9 @@ function showRoundResult(round){
 
   if(document.getElementById('duel-cd-wrap').style.display==='flex') return;
 startCd(()=>{
-  if (myRole === 'host') {
-    get(ref(db, `duel_rooms/${roomCode_}/config`)).then(snap=>{
-      tryAdvance(round.num, snap.val());
-    });
-  }
-  // Guest burada hiçbir şey yapmaz, sadece listenRound ile gelen veriyi bekler.
+  get(ref(db, `duel_rooms/${roomCode_}/config`)).then(snap=>{
+    tryAdvance(round.num, snap.val());   // her iki taraf da dener
+  });
 });
 }
 
