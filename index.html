@@ -1536,14 +1536,22 @@ function checkBassV2Access(sid) {
 
 // ===== Kulak Eğitimi kilitli mi kontrolü (öğrenci için) =====
 // Taban kural: Grade'e geçmiş VE (Bas Gitar veya Elektro Gitar) kategorisinde olmalı.
-// Üstüne öğretmenin "Bölümler" panelinden belirlediği ek Grade/kategori sınırı (varsa) uygulanır.
+// VEYA öğretmenin "Bölümler" panelinden belirlediği minGrade/kategori koşulunu sağlıyorsa da açılır.
 function checkKulakAccess(sid) {
   const card = document.getElementById('kulak-card');
   if (!card) return;
   const hasGrade = Object.keys(repProgress[sid] || {}).length > 0;
   const cats = studentCategories[sid] || {};
   const hasInstrument = !!cats['bas_gitar'] || !!cats['elektro_gitar'];
-  const hasBaseAccess = sid === TEACHER_ID || (hasGrade && hasInstrument);
+
+  // Bölümler panelinden ayarlanmış grade veya kategori koşulunu da kontrol et
+  const conf = sectionAccessConfig['kulak'];
+  const hasMinGrade = conf && conf.minGrade != null && conf.minGrade !== '';
+  const gradeAllowed = hasMinGrade && studentMaxGrade(sid) >= Number(conf.minGrade);
+  const selectedCats = (conf && conf.cats) ? Object.keys(conf.cats).filter(c => conf.cats[c]) : [];
+  const catAllowed = selectedCats.length > 0 && selectedCats.some(c => !!cats[c]);
+
+  const hasBaseAccess = sid === TEACHER_ID || (hasGrade && hasInstrument) || gradeAllowed || catAllowed;
   if (!hasBaseAccess) {
     lockCard(card, { lockedDesc: 'Bu bölüm yalnızca Grade\'e geçmiş Bas Gitar veya Elektro Gitar öğrencilerine açıktır.' });
     return;
