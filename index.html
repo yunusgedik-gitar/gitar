@@ -1535,34 +1535,63 @@ function checkBassV2Access(sid) {
 }
 
 // ===== Kulak Eğitimi kilitli mi kontrolü (öğrenci için) =====
-// Taban kural: Grade'e geçmiş VE (Bas Gitar veya Elektro Gitar) kategorisinde olmalı.
-// VEYA öğretmenin "Bölümler" panelinden belirlediği minGrade/kategori koşulunu sağlıyorsa da açılır.
+// Öncelik: Bölümler panelindeki section_config ayarı (diğer bölümlerle aynı mantık).
+// Config boşsa (hiç kısıtlama yok) → herkese açık.
+// Config varsa → grade ve/veya kategori koşulunu sağlayanlar girer.
+// Config hiç ayarlanmamışsa ve boşsa → yine herkese açık (öğretmen temizledi = açık).
+// Ek olarak, section config'de hiçbir ayar yoksa varsayılan olarak
+// Bas Gitar / Elektro Gitar kategorisindeki öğrenciler de girebilir.
 function checkKulakAccess(sid) {
   const card = document.getElementById('kulak-card');
   if (!card) return;
-  const hasGrade = Object.keys(repProgress[sid] || {}).length > 0;
-  const cats = studentCategories[sid] || {};
-  const hasInstrument = !!cats['bas_gitar'] || !!cats['elektro_gitar'];
 
-  // Bölümler panelinden ayarlanmış grade veya kategori koşulunu da kontrol et
-  const conf = sectionAccessConfig['kulak'];
-  const hasMinGrade = conf && conf.minGrade != null && conf.minGrade !== '';
-  const gradeAllowed = hasMinGrade && studentMaxGrade(sid) >= Number(conf.minGrade);
-  const selectedCats = (conf && conf.cats) ? Object.keys(conf.cats).filter(c => conf.cats[c]) : [];
-  const catAllowed = selectedCats.length > 0 && selectedCats.some(c => !!cats[c]);
-
-  const hasBaseAccess = sid === TEACHER_ID || (hasGrade && hasInstrument) || gradeAllowed || catAllowed;
-  if (!hasBaseAccess) {
-    lockCard(card, { lockedDesc: 'Bu bölüm yalnızca Grade\'e geçmiş Bas Gitar veya Elektro Gitar öğrencilerine açıktır.' });
+  // Öğretmen her zaman açık
+  if (sid === TEACHER_ID) {
+    unlockCard(card, {
+      href: 'https://gitar.yunusgedik.com.tr/kulak',
+      icon: '🎧',
+      unlockedDesc: 'Duyduğun sesin hangi notaya ait olduğunu tanı, kulağını geliştir.',
+      badgeText: 'YENİ'
+    });
     return;
   }
-  checkSectionAccess('kulak', 'kulak-card', sid, {
-    href: 'https://gitar.yunusgedik.com.tr/kulak',
-    icon: '🎧',
-    unlockedDesc: 'Duyduğun sesin hangi notaya ait olduğunu tanı, kulağını geliştir.',
-    badgeText: 'YENİ',
-    lockedDesc: 'Bu bölüm henüz erişiminize açılmamış.'
-  });
+
+  const conf = sectionAccessConfig['kulak'];
+  const hasMinGrade = conf && conf.minGrade != null && conf.minGrade !== '';
+  const selectedCats = (conf && conf.cats) ? Object.keys(conf.cats).filter(c => conf.cats[c]) : [];
+
+  // Hiç kısıtlama yoksa → herkese açık (enstrüman şartı da aranmaz)
+  if (!hasMinGrade && selectedCats.length === 0) {
+    unlockCard(card, {
+      href: 'https://gitar.yunusgedik.com.tr/kulak',
+      icon: '🎧',
+      unlockedDesc: 'Duyduğun sesin hangi notaya ait olduğunu tanı, kulağını geliştir.',
+      badgeText: 'YENİ'
+    });
+    return;
+  }
+
+  // Kısıtlama varsa: grade ve/veya kategori koşulunu kontrol et
+  const cats = studentCategories[sid] || {};
+  let allowed = false;
+  if (hasMinGrade && studentMaxGrade(sid) >= Number(conf.minGrade)) allowed = true;
+  if (!allowed && selectedCats.some(c => !!cats[c])) allowed = true;
+  // Varsayılan enstrüman kontrolü (section config ayarı varsa ama öğrenci geçemediyse son şans)
+  if (!allowed) {
+    const hasGrade = Object.keys(repProgress[sid] || {}).length > 0;
+    if (hasGrade && (!!cats['bas_gitar'] || !!cats['elektro_gitar'])) allowed = true;
+  }
+
+  if (allowed) {
+    unlockCard(card, {
+      href: 'https://gitar.yunusgedik.com.tr/kulak',
+      icon: '🎧',
+      unlockedDesc: 'Duyduğun sesin hangi notaya ait olduğunu tanı, kulağını geliştir.',
+      badgeText: 'YENİ'
+    });
+  } else {
+    lockCard(card, { lockedDesc: 'Bu bölüm henüz erişiminize açılmamış.' });
+  }
 }
 
 // ===== Klavye / Nota / Tel / Deneysel: yalnızca "Bölümler" panelinden ayar yapılmışsa kısıtlanır =====
@@ -1841,6 +1870,7 @@ function renderLeaderboard() {
 window.updateWelcomeCard = async function(sid) {
   await loadRepProgress();
   await loadCategories();
+  await loadSectionAccessConfig();
 
   const rankEl   = document.getElementById('avatar-rank');
   const labelEl  = document.getElementById('avatar-label');
