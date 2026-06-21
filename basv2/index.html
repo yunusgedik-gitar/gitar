@@ -335,17 +335,17 @@
 })();
 
 const NOTES = [
-  { string:1, fret:0, name:'Sol', freq:98.00,  key:'g/3' },
-  { string:1, fret:2, name:'La',  freq:110.00, key:'a/3' },
-  { string:2, fret:0, name:'Re',  freq:73.42,  key:'d/3' },
-  { string:2, fret:2, name:'Mi',  freq:82.41,  key:'e/3' },
-  { string:2, fret:3, name:'Fa',  freq:87.31,  key:'f/3' },
-  { string:3, fret:0, name:'La',  freq:55.00,  key:'a/2' },
-  { string:3, fret:2, name:'Si',  freq:61.74,  key:'b/2' },
-  { string:3, fret:3, name:'Do',  freq:65.41,  key:'c/3' },
-  { string:4, fret:0, name:'Mi',  freq:41.20,  key:'e/2' },
-  { string:4, fret:1, name:'Fa',  freq:43.65,  key:'f/2' },
-  { string:4, fret:3, name:'Sol', freq:49.00,  key:'g/2' }
+  { id:'s1f0', string:1, fret:0, name:'Sol', freq:98.00,  key:'g/3' },
+  { id:'s1f2', string:1, fret:2, name:'La',  freq:110.00, key:'a/3' },
+  { id:'s2f0', string:2, fret:0, name:'Re',  freq:73.42,  key:'d/3' },
+  { id:'s2f2', string:2, fret:2, name:'Mi',  freq:82.41,  key:'e/3' },
+  { id:'s2f3', string:2, fret:3, name:'Fa',  freq:87.31,  key:'f/3' },
+  { id:'s3f0', string:3, fret:0, name:'La',  freq:55.00,  key:'a/2' },
+  { id:'s3f2', string:3, fret:2, name:'Si',  freq:61.74,  key:'b/2' },
+  { id:'s3f3', string:3, fret:3, name:'Do',  freq:65.41,  key:'c/3' },
+  { id:'s4f0', string:4, fret:0, name:'Mi',  freq:41.20,  key:'e/2' },
+  { id:'s4f1', string:4, fret:1, name:'Fa',  freq:43.65,  key:'f/2' },
+  { id:'s4f3', string:4, fret:3, name:'Sol', freq:49.00,  key:'g/2' }
 ];
 
 const ROMAN_FRETS = { 0:'Boş Tel', 1:'I. Perde', 2:'II. Perde', 3:'III. Perde', 4:'IV. Perde' };
@@ -394,6 +394,31 @@ const ALL_FRETS_MAP = [
 
 function shuffle(a) { return [...a].sort(() => Math.random() - 0.5); }
 
+// Pozisyon bazlı yanlış sayacı — soru seçiminde ağırlık olarak kullanılır
+let missCounts = {};
+let prevPositionId = null;
+
+// Bir sonraki soru pozisyonunu seçer:
+// 1) Bir önceki soruyla aynı pozisyon (tel+perde) ASLA peş peşe gelmez (havuzda başka seçenek varsa).
+//    Not: Aynı isimli farklı pozisyonlar (örn. Sol③ ve Sol①) ardışık SAYILMAZ, sadece tıpatıp aynı pozisyon sayılır.
+// 2) Daha önce yanlış yapılmış pozisyonlar, doğru yapılanlara göre 7 kat daha sık çıkar.
+function pickNextQuestionPosition(pool) {
+  let candidates = pool;
+  if (prevPositionId && pool.length > 1) {
+    candidates = pool.filter(n => n.id !== prevPositionId);
+  }
+  if (candidates.length === 0) candidates = pool;
+
+  const weights = candidates.map(n => 1 + 6 * (missCounts[n.id] || 0)); // yanlış başına +6 -> doğruya göre 7 kat
+  const total = weights.reduce((a, b) => a + b, 0);
+  let r = Math.random() * total;
+  for (let i = 0; i < candidates.length; i++) {
+    r -= weights[i];
+    if (r <= 0) return candidates[i];
+  }
+  return candidates[candidates.length - 1];
+}
+
 function toggleAllStrings() {
   const allBtn = document.getElementById('btn-all');
   const numBtns = document.querySelectorAll('.string-num-btn');
@@ -440,6 +465,7 @@ function startExercise(mode) {
   if (filteredNotes.length === 0) return;
 
   currentMode = mode;
+  prevPositionId = null;
   document.getElementById('setup-area').style.display = 'none';
   document.getElementById('quiz-zone').style.display = 'block';
   document.getElementById('result-zone').style.display = 'none';
@@ -721,7 +747,8 @@ function nextQuestion() {
 
   if (currentMode === 'practice' && currentIndex >= TOTAL_QUESTIONS_COUNT) { showFinalResults(); return; }
 
-  current = filteredNotes[Math.floor(Math.random() * filteredNotes.length)];
+  current = pickNextQuestionPosition(filteredNotes);
+  prevPositionId = current.id;
   
   drawQuestionStaff(current);
 
@@ -766,6 +793,7 @@ function handleFretClick(element, stringNum, fretNum) {
     document.getElementById('next-btn').disabled = false;
     startAutoAdvance();
   } else {
+    missCounts[current.id] = (missCounts[current.id] || 0) + 1;
     createFeedbackCircle(element, cx, cy, '#6b8c42'); 
     msg.textContent = '✗ ' + ERR[Math.floor(Math.random() * ERR.length)] + ' — Doğrusu: ' + current.string + '. Tel - ' + ROMAN_FRETS[current.fret] + ` (${current.name})`;
     msg.style.color = '#c75b39';
