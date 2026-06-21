@@ -866,7 +866,7 @@
       
       document.getElementById('card-question-title').textContent = `"${current.name}" Notası Hangi Telde?`;
 
-      const choices = shuffle(pickAdjacentSolBlock(current.sol));
+      const choices = pickAdjacentSolBlock(current.sol);
 
       drawNote(current.key);
       if(interacted) setTimeout(()=>playNote(current.freq), 280);
@@ -1071,7 +1071,7 @@
       prevSol = chosenSol;
       const notePool = pool.filter(n => n.sol === chosenSol);
       const note = notePool[Math.floor(Math.random()*notePool.length)];
-      const choices = shuf(pickAdjacentDuelSolBlock(chosenSol));
+      const choices = pickAdjacentDuelSolBlock(chosenSol);
       deck[i] = {
         noteKey: note.key,
         notaAdi: note.sol,
