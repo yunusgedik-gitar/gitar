@@ -286,6 +286,7 @@ function showArea(id){
 }
 let selectedStrings=new Set([1,2,3,4,5,6]),filteredNotes=[];
 let current=null,answered=false,interacted=false,autoTimer=null,currentMode='practice',gameTimer=null,timeLeft=40,correctCount=0;
+let missCounts={}; // notaKey'e göre yanlış sayısı — ağırlıklı rastgele seçim için
 let audioCtx=null;
 function getAudio(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();return audioCtx;}
 function playNote(freq){
@@ -318,9 +319,29 @@ function endGame(){clearAutoTimer();const app=document.getElementById('exercise-
 function clearAutoTimer(){if(autoTimer){clearTimeout(autoTimer);autoTimer=null;}document.getElementById('progress-bar-wrap').style.display='none';}
 function startAutoAdvance(){const w=document.getElementById('progress-bar-wrap'),b=document.getElementById('progress-bar');w.style.display='block';b.style.width='100%';b.style.transition='none';requestAnimationFrame(()=>requestAnimationFrame(()=>{b.style.transition='width 1s linear';b.style.width='0%';}));autoTimer=setTimeout(()=>{clearAutoTimer();nextCard();},1000);}
 function manualNext(){if(currentMode==='race'&&timeLeft<=0)return;clearAutoTimer();nextCard();}
-function nextCard(){if(currentMode==='race'&&timeLeft<=0)return;answered=false;if(document.activeElement)document.activeElement.blur();document.getElementById('feedback').textContent='';document.getElementById('feedback').className='';document.getElementById('next-btn').disabled=true;clearAutoTimer();current=filteredNotes[Math.floor(Math.random()*filteredNotes.length)];document.getElementById('current-string-label').textContent=`Bu Nota Hangi Telde? (${current.string}. Tel Egzersizi)`;const w=shuffle(ALL_NOTES.filter(n=>n!==current.nota)).slice(0,3),ch=shuffle([current.nota,...w]);drawNote(current.key,'notation');if(interacted)setTimeout(()=>playNote(current.freq),280);const box=document.getElementById('choices');box.innerHTML='';ch.forEach(n=>{const b=document.createElement('button');b.className='cbtn';b.textContent=n;b.onclick=()=>answer(n,b);box.appendChild(b);});}
+
+// Bir sonraki notayı seçer:
+// 1) Az önceki soruyla (current) aynı nota ASLA peş peşe gelmez (havuzda başka seçenek varsa).
+// 2) Daha önce yanlış yapılmış notalar, ağırlıklı rastgelelikle daha sık çıkar.
+function pickNextNote(){
+  let pool=filteredNotes;
+  if(current && pool.length>1){
+    pool=pool.filter(n=>n.key!==current.key);
+  }
+  if(pool.length===0) pool=filteredNotes;
+  const weights=pool.map(n=>1+2*(missCounts[n.key]||0));
+  const total=weights.reduce((a,b)=>a+b,0);
+  let r=Math.random()*total;
+  for(let i=0;i<pool.length;i++){
+    r-=weights[i];
+    if(r<=0) return pool[i];
+  }
+  return pool[pool.length-1];
+}
+
+function nextCard(){if(currentMode==='race'&&timeLeft<=0)return;answered=false;if(document.activeElement)document.activeElement.blur();document.getElementById('feedback').textContent='';document.getElementById('feedback').className='';document.getElementById('next-btn').disabled=true;clearAutoTimer();current=pickNextNote();document.getElementById('current-string-label').textContent=`Bu Nota Hangi Telde? (${current.string}. Tel Egzersizi)`;const w=shuffle(ALL_NOTES.filter(n=>n!==current.nota)).slice(0,3),ch=shuffle([current.nota,...w]);drawNote(current.key,'notation');if(interacted)setTimeout(()=>playNote(current.freq),280);const box=document.getElementById('choices');box.innerHTML='';ch.forEach(n=>{const b=document.createElement('button');b.className='cbtn';b.textContent=n;b.onclick=()=>answer(n,b);box.appendChild(b);});}
 function replay(){interacted=true;document.getElementById('hint').style.display='none';if(current)playNote(current.freq);}
-function answer(n,btn){if(answered)return;if(currentMode==='race'&&timeLeft<=0)return;answered=true;interacted=true;document.getElementById('hint').style.display='none';document.querySelectorAll('.cbtn').forEach(b=>b.disabled=true);const fb=document.getElementById('feedback');document.getElementById('next-btn').disabled=false;if(n===current.nota){if(currentMode==='race')correctCount++;btn.className='cbtn correct';btn.blur();fb.textContent='✓ Doğru!';fb.className='ok';playNote(current.freq);startAutoAdvance();}else{btn.className='cbtn wrong';fb.textContent='✗ '+ERRORS[Math.floor(Math.random()*ERRORS.length)]+' — Doğrusu: '+current.nota;fb.className='no';document.querySelectorAll('.cbtn').forEach(b=>{if(b.textContent===current.nota)b.className='cbtn correct';});}}
+function answer(n,btn){if(answered)return;if(currentMode==='race'&&timeLeft<=0)return;answered=true;interacted=true;document.getElementById('hint').style.display='none';document.querySelectorAll('.cbtn').forEach(b=>b.disabled=true);const fb=document.getElementById('feedback');document.getElementById('next-btn').disabled=false;if(n===current.nota){if(currentMode==='race')correctCount++;btn.className='cbtn correct';btn.blur();fb.textContent='✓ Doğru!';fb.className='ok';playNote(current.freq);startAutoAdvance();}else{missCounts[current.key]=(missCounts[current.key]||0)+1;btn.className='cbtn wrong';fb.textContent='✗ '+ERRORS[Math.floor(Math.random()*ERRORS.length)]+' — Doğrusu: '+current.nota;fb.className='no';document.querySelectorAll('.cbtn').forEach(b=>{if(b.textContent===current.nota)b.className='cbtn correct';});}}
 </script>
 
 <script type="module">
