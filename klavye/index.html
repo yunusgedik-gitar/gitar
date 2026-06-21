@@ -212,10 +212,7 @@
 
 <div id="app-wrap">
 
-  <!-- ── GİRİŞ EKRANI ── -->
   <div id="setup-area">
-
-    <!-- MOD SEÇİMİ -->
     <div class="mode-cards">
       <div class="mode-card selected" id="mode-card-ftn" onclick="selectQuizMode('ftn')">
         <div class="mode-card-icon">🎸</div>
@@ -231,7 +228,6 @@
       </div>
     </div>
 
-    <!-- TEL SEÇİMİ + BAŞLAT -->
     <div class="filter-card">
       <div class="filter-title">Çalışılacak Telleri Seçin</div>
       <div class="string-buttons">
@@ -251,12 +247,7 @@
     </div>
   </div>
 
-  <!-- ══════════════════════════════════════
-       QUIZ ALANI
-  ══════════════════════════════════════ -->
   <div id="quiz-zone" style="display:none;">
-
-    <!-- ── FTN: Klavyeden Notaya ── -->
     <div id="ftn-quiz" style="display:none;">
       <div class="card">
         <div class="card-top">
@@ -318,7 +309,6 @@
       <div class="choices" id="choices-ftn"></div>
     </div>
 
-    <!-- ── NTF: Notadan Klavyeye ── -->
     <div id="ntf-quiz" style="display:none;">
       <div class="question-staff-card">
         <div class="card-top" style="width:100%;">
@@ -350,926 +340,836 @@
             <rect x="285" y="32" width="4" height="148" rx="1" fill="#b0b8b0" opacity="0.85"/>
             <rect x="370" y="32" width="4" height="148" rx="1" fill="#b0b8b0" opacity="0.85"/>
             <rect x="450" y="32" width="4" height="148" rx="1" fill="#b0b8b0" opacity="0.85"/>
-            <text x="155" y="22" text-anchor="middle" fill="#8b6b4e" font-size="12" font-weight="700" font-family="Lato,sans-serif">I</text>
-            <text x="243" y="22" text-anchor="middle" fill="#8b6b4e" font-size="12" font-weight="700" font-family="Lato,sans-serif">II</text>
-            <text x="328" y="22" text-anchor="middle" fill="#8b6b4e" font-size="12" font-weight="700" font-family="Lato,sans-serif">III</text>
-            <text x="412" y="22" text-anchor="middle" fill="#8b6b4e" font-size="12" font-weight="700" font-family="Lato,sans-serif">IV</text>
+            <text x="155" y="24" text-anchor="middle" fill="#8b6b4e" font-size="12" font-weight="700" font-family="Lato,sans-serif">I</text>
+            <text x="243" y="24" text-anchor="middle" fill="#8b6b4e" font-size="12" font-weight="700" font-family="Lato,sans-serif">II</text>
+            <text x="328" y="24" text-anchor="middle" fill="#8b6b4e" font-size="12" font-weight="700" font-family="Lato,sans-serif">III</text>
+            <text x="412" y="24" text-anchor="middle" fill="#8b6b4e" font-size="12" font-weight="700" font-family="Lato,sans-serif">IV</text>
             <line x1="70" y1="50"  x2="454" y2="50"  stroke="#e8d09a" stroke-width="0.9" opacity="0.95"/>
             <line x1="70" y1="74"  x2="454" y2="74"  stroke="#e0c880" stroke-width="1.2" opacity="0.95"/>
             <line x1="70" y1="98"  x2="454" y2="98"  stroke="#d8bc6a" stroke-width="1.5" opacity="0.95"/>
             <line x1="70" y1="122" x2="454" y2="122" stroke="#c8a84a" stroke-width="1.9" opacity="0.95"/>
             <line x1="70" y1="146" x2="454" y2="146" stroke="#b89030" stroke-width="2.3" opacity="0.95"/>
             <line x1="70" y1="170" x2="454" y2="170" stroke="#a87820" stroke-width="2.8" opacity="0.95"/>
-            <g id="fret-buttons-group"></g>
-            <circle id="fret-highlight-ntf" cx="0" cy="0" r="16" fill="#f4d03f" stroke="#d4ac0d" stroke-width="2.5" filter="url(#dotGlow3)" opacity="0.95" style="display:none;pointer-events:none;"/>
-            <text id="fret-hl-q-ntf" x="0" y="0" text-anchor="middle" dominant-baseline="central" fill="#5a3000" font-size="12" font-weight="700" font-family="Lato,sans-serif" style="display:none;pointer-events:none;">✓</text>
+            <g id="fret-buttons-layer"></g>
           </svg>
         </div>
       </div>
     </div>
 
-    <!-- ORTAK: mesaj, progress, sonraki -->
-    <div class="message" id="message">🎵 Soruyu incele!</div>
+    <div class="message" id="msg-text"></div>
     <div id="auto-bar-wrap"><div id="auto-bar"></div></div>
     <div class="progress-area">
-      <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+      <div class="progress-track"><div class="progress-fill" id="p-fill"></div></div>
     </div>
-    <div class="controls" style="grid-template-columns:1fr 2fr;">
-      <button class="ctrl-btn" onclick="goBackToMenu()">🏠 Ana Sayfa</button>
-      <button class="ctrl-btn primary" id="next-btn" onclick="manualNext()" disabled>Sonraki Soru →</button>
+    <div class="controls">
+      <button class="ctrl-btn primary" id="next-btn" onclick="nextQuestion()" disabled>Sonraki Soru ➔</button>
+      <button class="back-to-menu-btn" onclick="quitExercise()" style="align-self:center; margin-top:8px;">Egzersizi Bitir ve Menüye Dön</button>
     </div>
   </div>
 
-  <!-- ── SONUÇ ── -->
-  <div id="result-zone" class="result-screen">
-    <h2 class="result-title" id="result-title">🎉 Test Tamamlandı!</h2>
-    <div class="result-stats" id="result-stats"></div>
-    <p id="result-comment" style="color:#8b6b4e;font-weight:700;margin-bottom:1.5rem;"></p>
-    <button class="start-exercise-btn" onclick="goBackToMenu()">🏠 Ana Sayfaya Dön</button>
+  <div id="result-area" class="result-screen">
+    <h2 class="result-title" id="res-title">Egzersiz Tamamlandı!</h2>
+    <div class="result-stats">
+      <div class="stat-row"><span>Çalışma Modu:</span><br><span class="stat-val" id="res-mode">-</span></div>
+      <div class="stat-row"><span>Çalışılan Teller:</span><br><span class="stat-val" id="res-strings">-</span></div>
+      <div class="stat-row"><span>Doğru Cevap:</span><span class="stat-val correct-val" id="res-correct">0</span></div>
+      <div class="stat-row"><span>Yanlış Cevap:</span><span class="stat-val wrong-val" id="res-wrong">0</span></div>
+      <div class="stat-row"><span>Başarı Oranı:</span><span class="stat-val" id="res-ratio">%0</span></div>
+      <div class="stat-row" id="res-time-row"><span>Toplam Süre:</span><span class="stat-val" id="res-time">0 sn</span></div>
+    </div>
+    <button class="start-exercise-btn" onclick="backToSetup()">Yeniden Çalış 🔄</button>
   </div>
 
-  <!-- ── DÜELLO: Kurulum ── -->
-  <div id="duel-setup-area" class="filter-card">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem;">
-      <h2 style="font-family:'Playfair Display',serif;font-size:1.1rem;">⚔️ Online Düello</h2>
-      <button class="back-to-menu-btn" onclick="showArea('setup-area')">← Geri</button>
+  <div id="duel-setup-area" class="filter-card" style="border-color:#7b5ea7;">
+    <div class="filter-title" style="color:#7b5ea7;">⚔️ Online Düello Lobisi</div>
+    <div style="margin-bottom:12px; font-size:0.88rem; color:#666;">Aktif oyuncular listesinden birine meydan okuyun:</div>
+    <div class="online-players-list" id="duel-players-container">
+      <div class="no-players-msg">Oyuncular yükleniyor...</div>
     </div>
-    <div class="filter-title">Online Oyuncular</div>
-    <div id="online-players-list" class="online-players-list">
-      <div class="no-players-msg">Yükleniyor...</div>
-    </div>
-    <div class="filter-title">Tur Sayısı</div>
+    <div class="filter-title" style="color:#7b5ea7; margin-top:15px; margin-bottom:8px; font-size:0.8rem;">Soru Sayısı Seçimi</div>
     <div class="round-row">
-      <button class="round-btn active" data-rounds="5"  onclick="selectRounds(5)">5 Tur</button>
-      <button class="round-btn"        data-rounds="10" onclick="selectRounds(10)">10 Tur</button>
-      <button class="round-btn"        data-rounds="15" onclick="selectRounds(15)">15 Tur</button>
+      <button class="round-btn active" data-rounds="5" onclick="setDuelRounds(5)">5 Soru</button>
+      <button class="round-btn" data-rounds="10" onclick="setDuelRounds(10)">10 Soru</button>
+      <button class="round-btn" data-rounds="20" onclick="setDuelRounds(20)">20 Soru</button>
     </div>
-    <div class="filter-title">Çalışılacak Teller</div>
-    <div class="string-buttons" style="margin-bottom:0;">
-      <button id="d-btn-all" class="string-btn all-btn active" onclick="dToggleAll()">Hepsi</button>
-      <button class="string-btn active d-str-btn" data-string="1" onclick="dToggleStr(1)">①</button>
-      <button class="string-btn active d-str-btn" data-string="2" onclick="dToggleStr(2)">②</button>
-      <button class="string-btn active d-str-btn" data-string="3" onclick="dToggleStr(3)">③</button>
-      <button class="string-btn active d-str-btn" data-string="4" onclick="dToggleStr(4)">④</button>
-      <button class="string-btn active d-str-btn" data-string="5" onclick="dToggleStr(5)">⑤</button>
-      <button class="string-btn active d-str-btn" data-string="6" onclick="dToggleStr(6)">⑥</button>
-    </div>
+    <button class="ctrl-btn" onclick="backToSetup()" style="margin-top:10px;">🏠 Ana Menüye Dön</button>
   </div>
 
-  <!-- ── DÜELLO: Bekleme ── -->
-  <div id="duel-waiting-area" class="filter-card">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem;">
-      <h2 style="font-family:'Playfair Display',serif;font-size:1.1rem;">⚔️ Davet Gönderildi</h2>
-      <button class="back-to-menu-btn" onclick="cancelChallenge()">✕ İptal</button>
-    </div>
+  <div id="duel-waiting-area">
     <div class="waiting-card">
       <div class="spinner"></div>
-      <div class="waiting-name" id="waiting-opp-name">Rakip</div>
-      <div class="waiting-sub">daveti kabul etmesi bekleniyor...</div>
+      <div class="waiting-name" id="duel-waiting-title">Meydan Okunuyor...</div>
+      <div class="waiting-sub" id="duel-waiting-sub">Rakibin yanıtı bekleniyor.</div>
+      <button class="start-exercise-btn start-race-btn" onclick="cancelChallenge()">İptal Et</button>
     </div>
-    <p style="font-size:.8rem;color:#b09070;text-align:center;">Rakibiniz daveti reddederse veya 30 saniye içinde cevap vermezse otomatik iptal olur.</p>
   </div>
 
-  <!-- ── DÜELLO: Oyun ── -->
-  <div id="duel-game-area" style="display:none;">
+  <div id="duel-game-area">
     <div class="duel-top-bar">
-      <button class="back-to-menu-btn" onclick="leaveGame()">← Çık</button>
-      <div class="duel-round-badge" id="duel-round-label">Tur 1 / 5</div>
+      <div class="duel-round-badge" id="duel-round-txt">Soru: 1 / 5</div>
+      <div class="timer-badge" style="background:#f3eeff; border-color:#c8b4f0; color:#7b5ea7;" id="duel-timer-txt">Süre: 15</div>
     </div>
     <div class="duel-scores">
       <div class="duel-score-box me">
-        <span class="dscore-name" id="dscore-me-name">Sen</span>
-        <span class="dscore-num"  id="dscore-me">0</span>
+        <div class="dscore-name" id="dname-me">Siz</div>
+        <div class="dscore-num" id="dscore-me">0</div>
       </div>
       <div class="duel-score-box opp">
-        <span class="dscore-name" id="dscore-opp-name">Rakip</span>
-        <span class="dscore-num"  id="dscore-opp">0</span>
+        <div class="dscore-name" id="dname-opp">Rakip</div>
+        <div class="dscore-num" id="dscore-opp">0</div>
       </div>
     </div>
     <div class="card duel-note-card">
-      <div class="card-top" style="margin-bottom:0.5rem;">
-        <span style="font-size:0.8rem;color:#b09070;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;" id="duel-string-label">Bu Hangi Nota?</span>
-      </div>
       <div id="duel-notation"></div>
     </div>
-    <div class="duel-choices" id="duel-choices"></div>
-    <div class="duel-feedback" id="duel-feedback"></div>
+    <div class="duel-choices" id="duel-choices-box"></div>
+    <div class="duel-feedback" id="duel-feedback-txt"></div>
     <div class="duel-countdown-wrap" id="duel-cd-wrap">
-      <div class="duel-cd" id="duel-cd-num">3</div>
+      <div class="duel-cd" id="duel-cd-box">3</div>
     </div>
   </div>
 
-</div><!-- #app-wrap -->
+</div>
 
 <footer class="site-footer">
-  <a href="https://www.instagram.com/yunusgedik_/" target="_blank"><i class="fa-brands fa-instagram"></i></a>
-  <a href="https://x.com/yunusgedik_" target="_blank"><i class="fa-brands fa-x-twitter"></i></a>
-  <a href="https://www.youtube.com/yunusgedik" target="_blank"><i class="fa-brands fa-youtube"></i></a>
+  <a href="https://github.com/yunusgedik" target="_blank" title="GitHub"><i class="fab fa-github"></i></a>
+  <a href="https://www.youtube.com/@YunusGedik" target="_blank" title="YouTube"><i class="fab fa-youtube"></i></a>
 </footer>
 
-<script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.2/build/cjs/vexflow.js"></script>
 <script>
-
-// ══════════════════════════════════════════
-//  ALAN YÖNETİMİ (düello dahil)
-// ══════════════════════════════════════════
-function showArea(id) {
-  ['setup-area','quiz-zone','result-zone','duel-setup-area','duel-waiting-area','duel-game-area'].forEach(x => {
-    const el = document.getElementById(x);
-    if (el) el.style.display = 'none';
-  });
-  // controls div quiz-zone içinde olduğu için otomatik gizlenir
-  const target = document.getElementById(id);
-  if (target) { target.style.display = 'block'; target.scrollIntoView({behavior:'smooth',block:'start'}); }
-}
-
-// Düello modu için nota çizim fonksiyonu (global erişim)
-window.drawNote = function(noteKey, containerId) {
-  const { Renderer, Stave, StaveNote, Voice, Formatter } = Vex.Flow;
-  const c = document.getElementById(containerId);
-  if (!c) return;
-  c.innerHTML = '';
-  const cw = c.offsetWidth || 400, H = 160;
-  const r = new Renderer(c, Renderer.Backends.SVG); r.resize(cw, H);
-  const ctx = r.getContext(); ctx.scale(1.45, 1.45);
-  const sw = cw/1.45, stW = Math.min(180, sw-40), stX = (sw-stW)/2;
-  const st = new Stave(stX, -10, stW); st.addClef('treble'); st.setContext(ctx).draw();
-  const sn = new StaveNote({keys:[noteKey], duration:'w'}); sn.setXShift(30);
-  const v = new Voice({num_beats:4, beat_value:4}); v.addTickables([sn]);
-  new Formatter().joinVoices([v]).format([v], stW-45); v.draw(ctx, st);
-};
-
-// ══════════════════════════════════════════
-//  VERİ
-// ══════════════════════════════════════════
-const NOTES = [
-  { string:1, fret:0, name:'Mi',  freq:329.63, key:'e/5', line:4.0 },
-  { string:1, fret:1, name:'Fa',  freq:349.23, key:'f/5', line:4.5 },
-  { string:1, fret:3, name:'Sol', freq:392.00, key:'g/5', line:5.0 },
-  { string:2, fret:0, name:'Si',  freq:246.94, key:'b/4', line:2.0 },
-  { string:2, fret:1, name:'Do',  freq:261.63, key:'c/5', line:2.5 },
-  { string:2, fret:3, name:'Re',  freq:293.66, key:'d/5', line:3.0 },
-  { string:3, fret:0, name:'Sol', freq:196.00, key:'g/4', line:1.0 },
-  { string:3, fret:2, name:'La',  freq:220.00, key:'a/4', line:1.5 },
-  { string:4, fret:0, name:'Re',  freq:146.83, key:'d/4', line:-0.5 },
-  { string:4, fret:2, name:'Mi',  freq:164.81, key:'e/4', line:0.0 },
-  { string:4, fret:3, name:'Fa',  freq:174.61, key:'f/4', line:0.5 },
-  { string:5, fret:0, name:'La',  freq:110.00, key:'a/3', line:-1.5 },
-  { string:5, fret:2, name:'Si',  freq:123.47, key:'b/3', line:-1.0 },
-  { string:5, fret:3, name:'Do',  freq:130.81, key:'c/4', line:-0.5 },
-  { string:6, fret:0, name:'Mi',  freq:82.41,  key:'e/3', line:-3.0 },
-  { string:6, fret:1, name:'Fa',  freq:87.31,  key:'f/3', line:-2.5 },
-  { string:6, fret:3, name:'Sol', freq:98.00,  key:'g/3', line:-2.0 }
-];
-
-const ROMAN_FRETS = { 0:'Boş Tel', 1:'I. Perde', 2:'II. Perde', 3:'III. Perde', 4:'IV. Perde' };
-const FRET_CX = { 0:93, 1:157, 2:243, 3:328, 4:412 };
-const STRING_CY = { 1:50, 2:74, 3:98, 4:122, 5:146, 6:170 };
-const TOTAL_QUESTIONS_COUNT = 12;
-const ALL_NOTE_NAMES = ['Mi','Fa','Sol','La','Si','Do','Re'];
-
-// Tüm perde kombinasyonları (NTF modu için)
-const ALL_FRETS_MAP = [];
-for (let s=1; s<=6; s++) for (let f=0; f<=4; f++) ALL_FRETS_MAP.push({string:s, fret:f});
-
-const ERR = [
-  "Yazıklar olsun!","Kulaklarımız kanadı...","Sende hiç utanma yok mu yaa",
-  "Instagram'dan ekle beni seni engellim","Tüm başarılar Yunus Hocadan, bunun gibi hatalar ise senden..",
-  "Yunus Hoca bunu görmemiş olsun...","Gitarı yavaşça yere bırak...","Sen daha iyi enstrümanlara layıksın",
-  "Aynen knk aynen sensin","Iyyy yine mi hata","Ağır popçusun belli knk","Lâ havle..",
-  "Sen en iyisi flüt çal knk","Tekrar deneme, yeter.","Bir yerde bırakmak lazım sanki",
-  "Bir durun olsun beea","Sen öyle bil aynen","En sevmediğim öğrencim naber",
-  "Ex'den Next olur senden öğrenci olmaz :D"
-];
-
-// ══════════════════════════════════════════
-//  DURUM
-// ══════════════════════════════════════════
-let quizMode     = 'ftn';   // 'ftn' = Klavyeden Notaya | 'ntf' = Notadan Klavyeye
-let currentMode  = 'practice';
-let selectedStrings = new Set([1,2,3,4,5,6]);
-let filteredNotes = [];
-let current = null;
-let answered = false;
-let interacted = false;
-let autoTimer = null;
-let correctCount = 0;
-let wrongCount = 0;
-let currentIndex = 0;
-let startTime = null;
-let timerInterval = null;
-let gameTimer = null;
-let timeLeft = 40;
-let audioCtx = null;
-
-// Ağırlık sistemi
-const noteWeights = {};
-NOTES.forEach(n => { noteWeights[nk(n)] = 1; });
-let lastNoteKey = null;
-function nk(n) { return `${n.string}-${n.fret}`; }
-
-function pickWeightedNote(pool) {
-  const candidates = pool.filter(n => nk(n) !== lastNoteKey);
-  const eligible = candidates.length > 0 ? candidates : pool;
-  const weights = eligible.map(n => noteWeights[nk(n)]);
-  const total = weights.reduce((a,b)=>a+b, 0);
-  let r = Math.random() * total;
-  for (let i=0; i<eligible.length; i++) { r -= weights[i]; if (r<=0) return eligible[i]; }
-  return eligible[eligible.length-1];
-}
-function onCorrect(note) { noteWeights[nk(note)] = Math.max(1, noteWeights[nk(note)] * 0.7); }
-function onWrong(note)   { noteWeights[nk(note)] = Math.min(12, noteWeights[nk(note)] * 2.2); }
-
-// ══════════════════════════════════════════
-//  MOD SEÇİMİ
-// ══════════════════════════════════════════
-function selectQuizMode(mode) {
-  quizMode = mode;
-  document.getElementById('mode-card-ftn').classList.toggle('selected', mode==='ftn');
-  document.getElementById('mode-card-ntf').classList.toggle('selected', mode==='ntf');
-}
-
-// ══════════════════════════════════════════
-//  TEL SEÇİMİ
-// ══════════════════════════════════════════
-function toggleAllStrings() {
-  const allBtn = document.getElementById('btn-all');
-  const numBtns = document.querySelectorAll('.string-num-btn');
-  if (selectedStrings.size===6) {
-    selectedStrings.clear(); allBtn.classList.remove('active'); numBtns.forEach(b=>b.classList.remove('active'));
-  } else {
-    selectedStrings=new Set([1,2,3,4,5,6]); allBtn.classList.add('active'); numBtns.forEach(b=>b.classList.add('active'));
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const noteFreqs = {
+    "E2": 82.41, "F2": 87.31, "F#2": 92.50, "G2": 98.00, "G#2": 103.83, "A2": 110.00, "A#2": 116.54, "B2": 123.47,
+    "C3": 130.81, "C#3": 138.59, "D3": 146.83, "D#3": 155.56, "E3": 164.81, "F3": 174.61, "F#3": 185.00, "G3": 196.00,
+    "G#3": 207.65, "A3": 220.00, "A#3": 233.08, "B3": 246.94, "C4": 261.63, "C#4": 277.18, "D4": 293.66, "D#4": 311.13,
+    "E4": 329.63, "F4": 349.23, "F#4": 369.99, "G4": 392.00, "G#4": 415.30, "A4": 440.00
+  };
+  function playGuitarTone(freq, duration = 1.2) {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const osc = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(freq * 0.99, audioCtx.currentTime + duration);
+    gainNode.gain.setValueAtTime(0.4, audioCtx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+    osc.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + duration);
   }
-  checkStartButton();
-}
-function toggleString(num) {
-  const btn=document.querySelector(`.string-num-btn[data-string="${num}"]`);
-  const allBtn=document.getElementById('btn-all');
-  if (selectedStrings.has(num)){ selectedStrings.delete(num); btn.classList.remove('active'); }
-  else { selectedStrings.add(num); btn.classList.add('active'); }
-  allBtn.classList.toggle('active', selectedStrings.size===6);
-  checkStartButton();
-}
-function checkStartButton() {
-  const z = selectedStrings.size===0;
-  document.getElementById('start-btn').disabled=z;
-  document.getElementById('race-btn').disabled=z;
-}
-
-// ══════════════════════════════════════════
-//  SES
-// ══════════════════════════════════════════
-function getAudio() {
-  if (!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
-  return audioCtx;
-}
-function playGuitar(freq) {
-  try {
-    const ctx=getAudio(); if(ctx.state==='suspended') ctx.resume();
-    const now=ctx.currentTime;
-    const master=ctx.createGain(); master.connect(ctx.destination);
-    const filter=ctx.createBiquadFilter(); filter.type='lowpass'; filter.frequency.value=freq*2.8; filter.Q.value=0.7; filter.connect(master);
-    const osc=ctx.createOscillator(); osc.type='triangle'; osc.frequency.value=freq;
-    const og=ctx.createGain(); og.gain.setValueAtTime(0,now); og.gain.linearRampToValueAtTime(0.45,now+0.006); og.gain.exponentialRampToValueAtTime(0.001,now+2.2);
-    osc.connect(og); og.connect(filter); osc.start(now); osc.stop(now+2.2);
-    const sine=ctx.createOscillator(); sine.type='sine'; sine.frequency.value=freq;
-    const sg=ctx.createGain(); sg.gain.setValueAtTime(0,now); sg.gain.linearRampToValueAtTime(0.25,now+0.006); sg.gain.exponentialRampToValueAtTime(0.001,now+1.8);
-    sine.connect(sg); sg.connect(filter); sine.start(now); sine.stop(now+1.8);
-    [2,3,4].forEach(h=>{ const o=ctx.createOscillator(); o.type='sine'; o.frequency.value=freq*h; const g=ctx.createGain(); g.gain.setValueAtTime(0,now); g.gain.linearRampToValueAtTime(0.1/h,now+0.005); g.gain.exponentialRampToValueAtTime(0.001,now+1.2); o.connect(g); g.connect(filter); o.start(now); o.stop(now+1.2); });
-    master.gain.setValueAtTime(0.75,now); master.gain.exponentialRampToValueAtTime(0.001,now+2.5);
-    const listenId = quizMode==='ftn'?'listen-btn-ftn':'listen-btn-ntf';
-    const btn=document.getElementById(listenId); btn.classList.add('playing'); setTimeout(()=>btn.classList.remove('playing'),700);
-  } catch(e){}
-}
-function replay() { interacted=true; if(current) playGuitar(current.freq); }
-
-// ══════════════════════════════════════════
-//  FTN – Klavyeden Notaya
-// ══════════════════════════════════════════
-function ftn_moveHighlight(stringN, fretN) {
-  const cx=FRET_CX[fretN], cy=STRING_CY[stringN];
-  const dot=document.getElementById('fret-highlight-ftn');
-  const qtxt=document.getElementById('fret-hl-q-ftn');
-  dot.setAttribute('cx',cx); dot.setAttribute('cy',cy);
-  qtxt.setAttribute('x',cx); qtxt.setAttribute('y',cy);
-  dot.style.display=''; qtxt.style.display='';
-}
-
-function drawMiniStaff(div, noteObj) {
-  div.innerHTML='';
-  try {
-    const {Renderer,Stave,StaveNote,Voice,Formatter}=Vex.Flow;
-    const renderer=new Renderer(div, Renderer.Backends.SVG);
-    renderer.resize(110,115);
-    const ctx=renderer.getContext();
-    const stave=new Stave(0,-10,110);
-    stave.addClef('treble').setContext(ctx).draw();
-    const note=new StaveNote({keys:[noteObj.key],duration:'w'});
-    if(note.keyProps&&note.keyProps[0]){ note.keyProps[0].line=noteObj.line; note.keyProps[0].clef='treble'; }
-    const voice=new Voice({num_beats:4,beat_value:4});
-    voice.addTickables([note]);
-    new Formatter().joinVoices([voice]).format([voice],85);
-    voice.draw(ctx,stave);
-    const s=div.querySelector('svg'); if(s){s.style.width='100%';s.style.height='auto';}
-  } catch(e){}
-}
-
-function ftn_showQuestion() {
-  ftn_moveHighlight(current.string, current.fret);
-  document.getElementById('hint-text').innerHTML =
-    `💡 <span class="hint-string-badge">${current.string}</span>. Tel – <span class="hint-fret-text">${ROMAN_FRETS[current.fret]}</span>`;
-
-  const allNames=ALL_NOTE_NAMES;
-  const wrongs=[...allNames.filter(n=>n!==current.name)].sort(()=>Math.random()-0.5).slice(0,3);
-  const wrongNotes=wrongs.map(n=>NOTES.find(x=>x.name===n)||NOTES.find(x=>x.name!==current.name));
-  const choices=[current,...wrongNotes].sort(()=>Math.random()-0.5);
-  const box=document.getElementById('choices-ftn'); box.innerHTML='';
-  choices.forEach(noteObj=>{
-    const card=document.createElement('div'); card.className='choice-card'; card.dataset.choice=noteObj.name;
-    card.onclick=()=>ftn_selectChoice(card, noteObj.name);
-    const staffDiv=document.createElement('div'); staffDiv.className='choice-staff';
-    card.appendChild(staffDiv); box.appendChild(card);
-    drawMiniStaff(staffDiv, noteObj);
-  });
-}
-
-function ftn_selectChoice(card, name) {
-  if (answered) return;
-  answered=true; interacted=true;
-  document.querySelectorAll('#choices-ftn .choice-card').forEach(c=>{c.classList.add('disabled');c.onclick=null;});
-  const msg=document.getElementById('message');
-  if (name===current.name) {
-    card.classList.add('correct');
-    msg.textContent='✓ Doğru! İyi iş çıkardın, devam et!'; msg.style.color='#6b8c42';
-    playGuitar(current.freq); correctCount++;
-    onCorrect(current);
-    document.getElementById('next-btn').disabled=false;
-    startAutoAdvance();
-  } else {
-    card.classList.add('wrong');
-    msg.textContent='✗ '+ERR[Math.floor(Math.random()*ERR.length)]+' — Doğrusu: '+current.name; msg.style.color='#c75b39';
-    wrongCount++; onWrong(current);
-    document.querySelectorAll('#choices-ftn .choice-card').forEach(c=>{ if(c.dataset.choice===current.name) c.classList.add('correct'); });
-    document.getElementById('next-btn').disabled=false;
-  }
-  if (currentMode!=='race') currentIndex++;
-}
-
-// ══════════════════════════════════════════
-//  NTF – Notadan Klavyeye
-// ══════════════════════════════════════════
-function drawQuestionStaff(noteObj) {
-  const div=document.getElementById('question-staff'); div.innerHTML='';
-  try {
-    const {Renderer,Stave,StaveNote,Voice,Formatter}=Vex.Flow;
-    const renderer=new Renderer(div, Renderer.Backends.SVG);
-    renderer.resize(300,130);
-    const ctx=renderer.getContext();
-    ctx.scale(1.8,1.8);
-    const stave=new Stave(10,-20,140);
-    stave.addClef('treble').setContext(ctx).draw();
-    const note=new StaveNote({keys:[noteObj.key],duration:'w'});
-    if(note.keyProps&&note.keyProps[0]){ note.keyProps[0].line=noteObj.line; note.keyProps[0].clef='treble'; }
-    const voice=new Voice({num_beats:4,beat_value:4});
-    voice.addTickables([note]);
-    new Formatter().joinVoices([voice]).format([voice],80);
-    voice.draw(ctx,stave);
-  } catch(e){ console.error(e); }
-}
-
-function ntf_getCx(fret) {
-  const d={0:{x:116,w:0},1:{x:116,w:82},2:{x:198,w:87},3:{x:285,w:85},4:{x:370,w:80}};
-  return fret===0 ? 93 : d[fret].x + d[fret].w/2;
-}
-
-function buildGuitarInteraction() {
-  const group=document.getElementById('fret-buttons-group'); group.innerHTML='';
-  ALL_FRETS_MAP.forEach(item=>{
-    if (!selectedStrings.has(item.string)) return;
-    const g=document.createElementNS("http://www.w3.org/2000/svg","g");
-    g.setAttribute("class","fret-btn");
-    g.setAttribute("data-string",item.string);
-    g.setAttribute("data-fret",item.fret);
-    const cy=STRING_CY[item.string];
-    if (item.fret===0) {
-      const circle=document.createElementNS("http://www.w3.org/2000/svg","circle");
-      circle.setAttribute("cx",93); circle.setAttribute("cy",cy); circle.setAttribute("r",12);
-      circle.setAttribute("fill","#fff8ef"); circle.setAttribute("stroke","#d4a373"); circle.setAttribute("stroke-width","1.5");
-      const txt=document.createElementNS("http://www.w3.org/2000/svg","text");
-      txt.setAttribute("x",93); txt.setAttribute("y",cy+4); txt.setAttribute("text-anchor","middle");
-      txt.setAttribute("fill","#5a3e2b"); txt.setAttribute("font-size","11"); txt.setAttribute("font-weight","700");
-      txt.setAttribute("font-family","Lato,sans-serif"); txt.textContent=item.string; txt.style.pointerEvents='none';
-      g.appendChild(circle); g.appendChild(txt);
-    } else {
-      let x=0,width=0;
-      if(item.fret===1){x=116;width=82;} else if(item.fret===2){x=198;width=87;}
-      else if(item.fret===3){x=285;width=85;} else if(item.fret===4){x=370;width=80;}
-      const rect=document.createElementNS("http://www.w3.org/2000/svg","rect");
-      rect.setAttribute("x",x); rect.setAttribute("y",cy-14); rect.setAttribute("width",width); rect.setAttribute("height",28);
-      rect.setAttribute("fill","transparent");
-      const cx2=x+width/2;
-      const dot=document.createElementNS("http://www.w3.org/2000/svg","circle");
-      dot.setAttribute("cx",cx2); dot.setAttribute("cy",cy); dot.setAttribute("r",4);
-      dot.setAttribute("fill","#b0b8b0"); dot.setAttribute("opacity","0.35"); dot.style.pointerEvents='none';
-      g.appendChild(rect); g.appendChild(dot);
-    }
-    g.onclick=()=>ntf_handleFretClick(g,item.string,item.fret);
-    group.appendChild(g);
-  });
-}
-
-function ntf_createFeedback(parentG,cx,cy,color) {
-  const c=document.createElementNS("http://www.w3.org/2000/svg","circle");
-  c.setAttribute("class","fret-feedback"); c.setAttribute("cx",cx); c.setAttribute("cy",cy);
-  c.setAttribute("r",14); c.setAttribute("fill",color); c.setAttribute("opacity","0.92");
-  c.setAttribute("filter","url(#dotGlow3)"); c.style.pointerEvents='none';
-  parentG.appendChild(c);
-}
-
-function ntf_showCorrectTarget() {
-  const cx=ntf_getCx(current.fret), cy=STRING_CY[current.string];
-  const dot=document.getElementById('fret-highlight-ntf');
-  const txt=document.getElementById('fret-hl-q-ntf');
-  dot.setAttribute('cx',cx); dot.setAttribute('cy',cy);
-  txt.setAttribute('x',cx); txt.setAttribute('y',cy);
-  dot.style.display=''; txt.style.display='';
-}
-
-function ntf_handleFretClick(element, stringNum, fretNum) {
-  if (answered) return;
-  answered=true; interacted=true;
-  document.querySelectorAll('.fret-btn').forEach(g=>g.classList.add('disabled'));
-  const msg=document.getElementById('message');
-  const cx=ntf_getCx(fretNum), cy=STRING_CY[stringNum];
-  const clickedNote=NOTES.find(n=>n.string===stringNum&&n.fret===fretNum);
-  const isCorrect=clickedNote&&clickedNote.name===current.name;
-  if (isCorrect) {
-    ntf_createFeedback(element,cx,cy,'#6b8c42');
-    msg.textContent=`✓ Doğru! ${current.name} — ${stringNum}. Tel, ${ROMAN_FRETS[fretNum]}`; msg.style.color='#6b8c42';
-    playGuitar(current.freq); correctCount++; onCorrect(current);
-    document.getElementById('next-btn').disabled=false;
-    startAutoAdvance();
-  } else {
-    ntf_createFeedback(element,cx,cy,'#c75b39');
-    msg.textContent='✗ '+ERR[Math.floor(Math.random()*ERR.length)]+' — Doğrusu: '+current.string+'. Tel, '+ROMAN_FRETS[current.fret]+` (${current.name})`; msg.style.color='#c75b39';
-    wrongCount++; onWrong(current);
-    ntf_showCorrectTarget();
-    document.getElementById('next-btn').disabled=false;
-  }
-  if (currentMode!=='race') currentIndex++;
-}
-
-// ══════════════════════════════════════════
-//  ORTAK SORU AKIŞI
-// ══════════════════════════════════════════
-function nextQuestion() {
-  if (currentMode==='race'&&timeLeft<=0) return;
-  clearAutoTimer(); answered=false;
-  if (document.activeElement) document.activeElement.blur();
-  document.getElementById('message').textContent='🎵 Soruyu incele!'; document.getElementById('message').style.color='#8b6b4e';
-  document.getElementById('next-btn').disabled=true;
-
-  if (quizMode==='ntf') {
-    document.querySelectorAll('.fret-btn').forEach(g=>{ g.classList.remove('disabled'); g.querySelectorAll('.fret-feedback').forEach(f=>f.remove()); });
-    document.getElementById('fret-highlight-ntf').style.display='none';
-    document.getElementById('fret-hl-q-ntf').style.display='none';
-  } else {
-    document.getElementById('fret-highlight-ftn').style.display='none';
-    document.getElementById('fret-hl-q-ftn').style.display='none';
-  }
-
-  if (currentMode==='practice'&&currentIndex>=TOTAL_QUESTIONS_COUNT) { showFinalResults(); return; }
-
-  current=pickWeightedNote(filteredNotes);
-  lastNoteKey=nk(current);
-
-  if (quizMode==='ftn') { ftn_showQuestion(); }
-  else                  { drawQuestionStaff(current); }
-
-  if (currentMode!=='race') {
-    document.getElementById('progress-fill').parentElement.parentElement.style.display='flex';
-    document.getElementById('progress-fill').style.width=(currentIndex/TOTAL_QUESTIONS_COUNT*100)+'%';
-  } else {
-    document.getElementById('progress-fill').parentElement.parentElement.style.display='none';
-  }
-  if (interacted) setTimeout(()=>playGuitar(current.freq),300);
-}
-
-function manualNext() {
-  if (currentMode==='race'&&timeLeft<=0) return;
-  clearAutoTimer(); nextQuestion();
-}
-
-// ══════════════════════════════════════════
-//  OTOMATİK GEÇİŞ
-// ══════════════════════════════════════════
-function startAutoAdvance() {
-  const wrap=document.getElementById('auto-bar-wrap'), bar=document.getElementById('auto-bar');
-  wrap.style.display='block'; bar.style.width='100%'; bar.style.transition='none';
-  requestAnimationFrame(()=>requestAnimationFrame(()=>{ bar.style.transition='width 1s linear'; bar.style.width='0%'; }));
-  autoTimer=setTimeout(()=>{ clearAutoTimer(); nextQuestion(); },1000);
-}
-function clearAutoTimer() {
-  if(autoTimer){clearTimeout(autoTimer);autoTimer=null;}
-  document.getElementById('auto-bar-wrap').style.display='none';
-}
-
-// ══════════════════════════════════════════
-//  ZAMANLAYICILAR
-// ══════════════════════════════════════════
-function startTimer() {
-  startTime=Date.now(); if(timerInterval) clearInterval(timerInterval);
-  const timerId=quizMode==='ftn'?'timer-ftn':'timer-ntf';
-  timerInterval=setInterval(()=>{
-    const s=Math.floor((Date.now()-startTime)/1000);
-    document.getElementById(timerId).textContent='Süre: '+String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
-  },1000);
-}
-function startGameTimer() {
-  if(gameTimer) clearInterval(gameTimer);
-  const timerId=quizMode==='ftn'?'timer-ftn':'timer-ntf';
-  gameTimer=setInterval(()=>{
-    timeLeft--;
-    if(timeLeft<=0){ document.getElementById(timerId).textContent='Süre Bitti!'; clearInterval(gameTimer); showFinalResults(); }
-    else { document.getElementById(timerId).textContent='Kalan Süre: '+timeLeft; }
-  },1000);
-}
-
-// ══════════════════════════════════════════
-//  OYUN YÖNETİMİ
-// ══════════════════════════════════════════
-function startExercise(mode) {
-  filteredNotes=NOTES.filter(n=>selectedStrings.has(n.string));
-  if(filteredNotes.length===0) return;
-  currentMode=mode; correctCount=0; wrongCount=0; currentIndex=0; answered=false; interacted=false; lastNoteKey=null;
-
-  showArea('quiz-zone');
-
-  // Mod'a göre doğru quiz bölümünü göster
-  document.getElementById('ftn-quiz').style.display = quizMode==='ftn' ? 'block':'none';
-  document.getElementById('ntf-quiz').style.display = quizMode==='ntf' ? 'block':'none';
-
-  // Timer sıfırla
-  const timerId=quizMode==='ftn'?'timer-ftn':'timer-ntf';
-  if (currentMode==='race') {
-    timeLeft=40;
-    document.getElementById(timerId).textContent='Kalan Süre: 40';
-    document.getElementById(timerId).classList.add('race-mode');
-    startGameTimer();
-  } else {
-    document.getElementById(timerId).textContent='Süre: 00:00';
-    document.getElementById(timerId).classList.remove('race-mode');
-    startTimer();
-  }
-
-  if (quizMode==='ntf') buildGuitarInteraction();
-
-  nextQuestion();
-}
-
-function goBackToMenu() {
-  if(timerInterval) clearInterval(timerInterval);
-  if(gameTimer) clearInterval(gameTimer);
-  clearAutoTimer();
-  showArea('setup-area');
-  document.getElementById('next-btn').disabled=true;
-}
-
-function showFinalResults() {
-  if(timerInterval) clearInterval(timerInterval);
-  if(gameTimer) clearInterval(gameTimer);
-  clearAutoTimer();
-  showArea('result-zone');
-  const statsBox=document.getElementById('result-stats');
-  const commentTxt=document.getElementById('result-comment');
-  const titleEl=document.getElementById('result-title');
-  if (currentMode==='race') {
-    titleEl.textContent='Yarışma Tamamlandı! 🏁';
-    let rank,comment;
-    if(correctCount>=18){rank='🏆 Gitar Virtüözü!';comment='İnanılmaz! Parmaklar ve kulak uçuyor! Yunus Hoca seni ayakta alkışlıyor! 🎸';}
-    else if(correctCount>=14){rank='🔥 Sahne Sanatçısı';comment='Notalar tıkır tıkır! Kulis kartını hak ettin kanka.';}
-    else if(correctCount>=10){rank='⚡ Groove Gitarist';comment='İyi gidiyorsun! Bir tık daha hızlansan solist seni fark edecek.';}
-    else if(correctCount>=5){rank='🎸 Sahildeki Akustikçi';comment='Bir umut var ama biraz daha çalışman lazım kanka!';}
-    else{rank='🐢 Kaplumbağa Gitarist';comment='Gitarı yavaşça yere bırak kanka...';}
-    statsBox.innerHTML=`<div class="stat-row"><span>Unvan:</span><span class="stat-val" style="color:#d4a373">${rank}</span></div><div class="stat-row"><span>Doğru:</span><span class="stat-val correct-val">${correctCount} Doğru</span></div>`;
-    commentTxt.innerHTML=`"${comment}"`;
-  } else {
-    titleEl.textContent='🎉 Test Tamamlandı!';
-    const s=Math.floor((Date.now()-startTime)/1000);
-    const mins=Math.floor(s/60),secs=s%60;
-    statsBox.innerHTML=`
-      <div class="stat-row"><span>Toplam Süre:</span><span class="stat-val">${mins>0?mins+' dk '+secs+' sn':secs+' sn'}</span></div>
-      <div class="stat-row"><span>Doğru:</span><span class="stat-val correct-val">${correctCount}</span></div>
-      <div class="stat-row"><span>Yanlış:</span><span class="stat-val wrong-val">${wrongCount}</span></div>`;
-    commentTxt.textContent='Bravo! Ekran görüntüsü al ve grupta paylaş 🎸';
-  }
-}
-
 </script>
 
-<script type="module">
-import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js';
-import { getDatabase, ref, set, get, update, remove, onValue, onDisconnect, runTransaction } from 'https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js';
+<script>
+  const ALL_ITEMS = [
+    { string: 1, fret: 0, note: "E4", name: "Mi", alter: "" },
+    { string: 1, fret: 1, note: "F4", name: "Fa", alter: "" },
+    { string: 1, fret: 2, note: "F#4", name: "Fa#", alter: "sharp" },
+    { string: 1, fret: 3, note: "G4", name: "Sol", alter: "" },
+    { string: 1, fret: 4, note: "G#4", name: "Sol#", alter: "sharp" },
+    { string: 2, fret: 0, note: "B3", name: "Si", alter: "" },
+    { string: 2, fret: 1, note: "C4", name: "Do", alter: "" },
+    { string: 2, fret: 2, note: "C#4", name: "Do#", alter: "sharp" },
+    { string: 2, fret: 3, note: "D4", name: "Re", alter: "" },
+    { string: 2, fret: 4, note: "D#4", name: "Re#", alter: "sharp" },
+    { string: 3, fret: 0, note: "G3", name: "Sol", alter: "" },
+    { string: 3, fret: 1, note: "G#3", name: "Sol#", alter: "sharp" },
+    { string: 3, fret: 2, note: "A3", name: "La", alter: "" },
+    { string: 3, fret: 3, note: "A#3", name: "La#", alter: "sharp" },
+    { string: 3, fret: 4, note: "B3", name: "Si", alter: "" },
+    { string: 4, fret: 0, note: "D3", name: "Re", alter: "" },
+    { string: 4, fret: 1, note: "D#3", name: "Re#", alter: "sharp" },
+    { string: 4, fret: 2, note: "A3", name: "La", alter: "" }, 
+    { string: 4, fret: 2, note: "E3", name: "Mi", alter: "", correctFix: true },
+    { string: 4, fret: 3, note: "F3", name: "Fa", alter: "" },
+    { string: 4, fret: 4, note: "F#3", name: "Fa#", alter: "sharp" },
+    { string: 5, fret: 0, note: "A2", name: "La", alter: "" },
+    { string: 5, fret: 1, note: "A#2", name: "La#", alter: "sharp" },
+    { string: 5, fret: 2, note: "B2", name: "Si", alter: "" },
+    { string: 5, fret: 3, note: "C3", name: "Do", alter: "" },
+    { string: 5, fret: 4, note: "C#3", name: "Do#", alter: "sharp" },
+    { string: 6, fret: 0, note: "E2", name: "Mi", alter: "" },
+    { string: 6, fret: 1, note: "F2", name: "Fa", alter: "" },
+    { string: 6, fret: 2, note: "F#2", name: "Fa#", alter: "sharp" },
+    { string: 6, fret: 3, note: "G2", name: "Sol", alter: "" },
+    { string: 6, fret: 4, note: "G#2", name: "Sol#", alter: "sharp" }
+  ];
+  const ITEMS = ALL_ITEMS.filter(i => !(i.string===4 && i.fret===2 && i.note==="A3"));
 
-const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyBkEd729B65y-NZIQ-sxScCgaEvlX-q7yA",
-  authDomain: "gitar-yunus.firebaseapp.com",
-  databaseURL: "https://gitar-yunus-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "gitar-yunus",
-  storageBucket: "gitar-yunus.firebasestorage.app",
-  messagingSenderId: "184803778782",
-  appId: "1:184803778782:web:8f9fbeb4fe625eb386e24f"
-};
+  const fFretX  = [155, 243, 328, 412];
+  const fStringY = [50, 74, 98, 122, 146, 170];
+</script>
 
-const fbApp = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
-const db = getDatabase(fbApp);
+<script>
+  function generateStaffSVG(noteRef, showClef=true, width=130, height=120) {
+    const stepY = 7;
+    const centerY = height / 2 + 10;
+    const map = {
+      "A4":-4,"G4":-3,"F4":-2,"E4":-1,"D4":0,"B3":1,"C4":2,"A3":3,"G3":4,"F3":5,"E3":6,"D3":7,"B2":8,"C3":9,"A2":10,"G2":11,"F2":12,"E2":13
+    };
+    if(noteRef==="C4") map["C4"]=2;
+    if(noteRef==="B3") map["B3"]=1;
+    let val = map[noteRef.replace("#","")];
+    if(val===undefined) val=0;
+    const noteY = centerY + val * stepY;
 
-const mySid  = localStorage.getItem('gitar_session') || ('guest_' + Math.random().toString(36).slice(2,8));
-const myName = localStorage.getItem('gitar_student_name') || 'Öğrenci';
+    let linesHTML = '';
+    for(let i=-2; i<=2; i++) {
+      let y = centerY + i * 2 * stepY;
+      linesHTML += `<line x1="5" y1="${y}" x2="${width-5}" y2="${y}" stroke="#5a3e2b" stroke-width="1.2"/>`;
+    }
 
-// Çevrimiçi olarak kayıt
-set(ref(db, `online_users/${mySid}`), { name: myName, ts: Date.now() });
-onDisconnect(ref(db, `online_users/${mySid}`)).remove();
+    let clefHTML = '';
+    if(showClef) {
+      clefHTML = `
+        <g transform="translate(10, ${centerY-28}) scale(0.6)" opacity="0.85">
+          <path d="M16.5 46.5c-1.2-1.8-1.5-4.2-.7-6.2.8-2 2.5-3.5 4.7-3.8 2.9-.4 5.7 1.4 6.5 4.2.6 2.2-.2 4.6-1.9 6.1-1.2 1-2.9 1.4-4.5 1.1l-1.3 5.3c3.4.4 6.8-.9 8.8-3.7 2.3-3.1 2.8-7.3 1.3-10.9-1.4-3.5-4.8-5.9-8.6-6.1-4.2-.2-8.1 2.2-9.9 6-1.7 3.6-1.4 8 1 11.1 2.1 2.7 5.5 4 8.9 3.5l-2.3 9.4c-2.4 1.3-4.2 3.5-4.9 6.1-.9 3.3.1 6.9 2.7 9 2.5 2 6.1 2.3 9 .8 2.7-1.4 4.5-4.2 4.6-7.3.1-3.6-2.2-6.9-5.6-7.9l2.8-11.4c1.1-4.7 2.2-9.4 3.2-14.1l1.5-6.5c.3-1.4.6-2.9.8-4.4.6-4.5 1-9.1 1.1-13.6.1-3.6-.6-7.3-2.3-10.5-1.5-2.8-4.1-4.9-7.2-5.5-3.6-.7-7.4.3-10.2 2.7-2.9 2.4-4.6 6.1-4.6 10 0 3.3 1.2 6.5 3.4 9 2.4 2.6 5.8 4 9.3 3.7 3-.3 5.8-2 7.3-4.6 1.1-1.9 1.5-4.2 1.1-6.4l-1.1 4.7c-.5 2.1-2 3.8-4 4.4-2.2.6-4.6-.2-6-1.9-1.3-1.6-1.7-3.9-.9-5.9.8-2 2.7-3.3 4.9-3.3 2.5 0 4.7 1.7 5.3 4.1.4 1.7.1 3.5-.8 5l-1.4 5.9c-.8 3.5-1.7 7-2.5 10.5l-2 8.4c-.6 2.5-1.2 5.1-1.8 7.6z" fill="#5a3e2b"/>
+        </g>`;
+    }
 
-let duelStrings    = new Set([1,2,3,4,5,6]);
-let duelRounds     = 5;
-let myRole         = '';
-let oppSid         = '';
-let oppName        = '';
-let roomCode       = '';
-let onlineListener = null;
-let roundListener  = null;
-let challengeExpiry= null;
-let myAnswered     = false;
-let myScore_       = 0;
-let oppScore_      = 0;
-let cdTimer        = null;
-let currentRoundNum     = 0;
-let currentQuestionData = null;
+    let extraLines = '';
+    const checkExtra = (v, y) => {
+      if(v <= -4) {
+        for(let cy = centerY - 4*stepY; cy >= y; cy -= 2*stepY) {
+          extraLines += `<line x1="${width/2-16}" y1="${cy}" x2="${width/2+16}" y2="${cy}" stroke="#5a3e2b" stroke-width="1.3"/>`;
+        }
+      } else if(v >= 4) {
+        for(let cy = centerY + 4*stepY; cy <= y; cy += 2*stepY) {
+          extraLines += `<line x1="${width/2-16}" y1="${cy}" x2="${width/2+16}" y2="${cy}" stroke="#5a3e2b" stroke-width="1.3"/>`;
+        }
+      }
+    };
+    checkExtra(val, noteY);
 
-const DUEL_NOTES = [
-  {key:'e/3',freq:164.81,nota:'Mi',string:6},{key:'f/3',freq:174.61,nota:'Fa',string:6},{key:'g/3',freq:196.00,nota:'Sol',string:6},
-  {key:'a/3',freq:220.00,nota:'La',string:5},{key:'b/3',freq:246.94,nota:'Si',string:5},{key:'c/4',freq:261.63,nota:'Do',string:5},
-  {key:'d/4',freq:293.66,nota:'Re',string:4},{key:'e/4',freq:329.63,nota:'Mi',string:4},{key:'f/4',freq:349.23,nota:'Fa',string:4},
-  {key:'g/4',freq:392.00,nota:'Sol',string:3},{key:'a/4',freq:440.00,nota:'La',string:3},
-  {key:'b/4',freq:493.88,nota:'Si',string:2},{key:'c/5',freq:523.25,nota:'Do',string:2},{key:'d/5',freq:587.33,nota:'Re',string:2},
-  {key:'e/5',freq:659.25,nota:'Mi',string:1},{key:'f/5',freq:698.46,nota:'Fa',string:1},{key:'g/5',freq:783.99,nota:'Sol',string:1},
-];
-const DUEL_ALL_NOTES = ['Do','Re','Mi','Fa','Sol','La','Si'];
-function shuf(a){return[...a].sort(()=>Math.random()-.5);}
-function rndCode(){ return Math.floor(100000+Math.random()*900000).toString(); }
+    let sharpHTML = '';
+    if(noteRef.includes("#")) {
+      sharpHTML = `
+        <g transform="translate(${width/2 - 25}, ${noteY - 9}) scale(0.75)">
+          <path d="M8 2v12h4v-12h1v12h4v1h-4v6h4v1h-4v12h-1v-12h-4v12h-1v-12h-4v-1h4v-6h-4v-1h4v-12h1zm1 13v6h4v-6z" fill="#5a3e2b" font-weight="bold"/>
+        </g>`;
+    }
 
-function buildQuestionDeck(strings, totalRounds) {
-  const deck = {};
-  const pool = DUEL_NOTES.filter(n => strings.includes(n.string));
-  for (let i=1; i<=totalRounds; i++) {
-    const note = pool[Math.floor(Math.random()*pool.length)];
-    const wrong = shuf(DUEL_ALL_NOTES.filter(n=>n!==note.nota)).slice(0,3);
-    deck[i] = { noteKey:note.key, notaAdi:note.nota, freq:note.freq, string:note.string, choices:shuf([note.nota,...wrong]) };
+    let noteColor = "#5a3e2b";
+    let headHTML = `<ellipse cx="${width/2}" cy="${noteY}" rx="6.5" ry="4.5" transform="rotate(-20 ${width/2} ${noteY})" fill="${noteColor}"/>`;
+
+    return `
+      <svg class="staff-svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
+        ${linesHTML}
+        ${clefHTML}
+        ${extraLines}
+        ${sharpHTML}
+        ${headHTML}
+      </svg>
+    `;
   }
-  return deck;
-}
+</script>
 
-window.dToggleAll = function(){
-  const a=document.getElementById('d-btn-all'),n=document.querySelectorAll('.d-str-btn');
-  if(duelStrings.size===6){duelStrings.clear();a.classList.remove('active');n.forEach(b=>b.classList.remove('active'));}
-  else{duelStrings=new Set([1,2,3,4,5,6]);a.classList.add('active');n.forEach(b=>b.classList.add('active'));}
-};
-window.dToggleStr = function(num){
-  const b=document.querySelector(`.d-str-btn[data-string="${num}"]`),a=document.getElementById('d-btn-all');
-  if(duelStrings.has(num)){duelStrings.delete(num);b.classList.remove('active');}
-  else{duelStrings.add(num);b.classList.add('active');}
-  duelStrings.size===6?a.classList.add('active'):a.classList.remove('active');
-};
-window.selectRounds = function(n){
-  duelRounds=n;
-  document.querySelectorAll('.round-btn').forEach(b=>b.classList.toggle('active',parseInt(b.dataset.rounds)===n));
-};
+<script>
+  let currentMode = 'ftn';
+  let activeStrings = [1,2,3,4,5,6];
+  let exerciseType = 'practice';
+  let filteredPool = [];
+  let currentIndex = 0;
+  let scoreCorrect = 0;
+  let scoreWrong = 0;
+  let startTime = 0;
+  let timerInterval = null;
+  let currentQuestionItem = null;
+  let hasAnswered = false;
 
-window.showDuelSetup = function(){
-  showArea('duel-setup-area');
-  loadOnlinePlayers();
-};
+  function selectQuizMode(mode) {
+    currentMode = mode;
+    document.getElementById('mode-card-ftn').classList.toggle('selected', mode==='ftn');
+    document.getElementById('mode-card-ntf').classList.toggle('selected', mode==='ntf');
+  }
 
-function loadOnlinePlayers(){
-  const listEl=document.getElementById('online-players-list');
-  if(onlineListener){onlineListener();onlineListener=null;}
-  onlineListener=onValue(ref(db,'online_users'),snap=>{
-    const users=snap.val()||{};
-    const others=Object.entries(users).filter(([sid])=>sid!==mySid);
-    if(!others.length){listEl.innerHTML='<div class="no-players-msg">Şu an başka online oyuncu yok. Birinin giriş yapmasını bekleyin.</div>';return;}
-    listEl.innerHTML=others.map(([sid,u])=>`
-      <div class="online-player-row">
-        <span><span class="online-dot"></span><span class="online-player-name">${u.name}</span></span>
-        <button class="challenge-btn" onclick="window.sendChallenge('${sid}','${u.name.replace(/'/g,"\\'")}')">⚔️ Meydan Oku</button>
-      </div>`).join('');
-  });
-}
-
-window.sendChallenge = async function(toSid, toName){
-  if(duelStrings.size===0){alert('En az bir tel seçin.');return;}
-  if(onlineListener){onlineListener();onlineListener=null;}
-  myRole='host'; oppSid=toSid; oppName=toName; roomCode=rndCode();
-  const questionDeck=buildQuestionDeck([...duelStrings],duelRounds);
-  await set(ref(db,`duel_rooms/${roomCode}`),{
-    host:{sid:mySid,name:myName}, guest:null, status:'waiting',
-    config:{totalRounds:duelRounds,strings:[...duelStrings],questions:questionDeck},
-    scores:{host:0,guest:0}, currentRoundNum:1,
-    roundState:{hostDone:false,guestDone:false,winner:null}
-  });
-  onDisconnect(ref(db,`duel_rooms/${roomCode}`)).update({status:'abandoned'});
-  await set(ref(db,`duel_challenges/${toSid}`),{
-    fromSid:mySid, fromName:myName, roomCode, status:'pending',
-    strings:[...duelStrings], totalRounds:duelRounds, redirectTo:'/nota/'
-  });
-  document.getElementById('waiting-opp-name').textContent=toName;
-  showArea('duel-waiting-area');
-  const challengeRef=ref(db,`duel_challenges/${toSid}`);
-  const unsub=onValue(challengeRef,snap=>{
-    const c=snap.val(); if(!c) return;
-    if(c.status==='accepted'){unsub();clearTimeout(challengeExpiry);oppName=toName;beginGame();}
-    else if(c.status==='declined'){unsub();clearTimeout(challengeExpiry);remove(ref(db,`duel_rooms/${roomCode}`));alert(`${toName} daveti reddetti.`);showArea('duel-setup-area');loadOnlinePlayers();}
-  });
-  challengeExpiry=setTimeout(async()=>{
-    unsub();
-    await remove(ref(db,`duel_challenges/${toSid}`));
-    await remove(ref(db,`duel_rooms/${roomCode}`));
-    showArea('duel-setup-area'); alert('Süre doldu, davet iptal edildi.'); loadOnlinePlayers();
-  },30000);
-};
-
-window.cancelChallenge = async function(){
-  clearTimeout(challengeExpiry);
-  if(oppSid) await remove(ref(db,`duel_challenges/${oppSid}`));
-  if(roomCode) await remove(ref(db,`duel_rooms/${roomCode}`));
-  showArea('duel-setup-area'); loadOnlinePlayers();
-};
-
-function checkDuelHandoff(){
-  const raw=localStorage.getItem('gitar_duel_handoff');
-  if(!raw) return false;
-  localStorage.removeItem('gitar_duel_handoff');
-  try{
-    const h=JSON.parse(raw);
-    myRole='guest'; roomCode=h.roomCode; oppSid=h.oppSid; oppName=h.oppName;
-    duelStrings=new Set(h.strings); duelRounds=h.totalRounds;
-    beginGame(); return true;
-  }catch(e){return false;}
-}
-
-function beginGame(){
-  myScore_=0; oppScore_=0;
-  document.getElementById('dscore-me-name').textContent=myName;
-  document.getElementById('dscore-opp-name').textContent=oppName;
-  document.getElementById('dscore-me').textContent='0';
-  document.getElementById('dscore-opp').textContent='0';
-  showArea('duel-game-area');
-  onValue(ref(db,`duel_rooms/${roomCode}/scores`),snap=>{
-    const s=snap.val(); if(!s) return;
-    myScore_=myRole==='host'?s.host:s.guest;
-    oppScore_=myRole==='host'?s.guest:s.host;
-    document.getElementById('dscore-me').textContent=myScore_;
-    document.getElementById('dscore-opp').textContent=oppScore_;
-  });
-  listenRound();
-}
-
-function listenRound(){
-  if(roundListener){roundListener();}
-  onValue(ref(db,`duel_rooms/${roomCode}/status`),snap=>{
-    const s=snap.val();
-    if(s==='abandoned'){handleAbandoned();}
-    if(s==='finished'){endDuel();}
-  });
-  roundListener=onValue(ref(db,`duel_rooms/${roomCode}`),snap=>{
-    const room=snap.val();
-    if(!room||room.status==='waiting') return;
-    const rNum=room.currentRoundNum;
-    const rState=room.roundState;
-    const questions=room.config.questions;
-    if(!questions||!questions[rNum]) return;
-    if(currentRoundNum!==rNum){
-      currentRoundNum=rNum; currentQuestionData=questions[rNum];
-      showDuelQuestion(rNum,currentQuestionData);
+  function toggleAllStrings() {
+    const btnAll = document.getElementById('btn-all');
+    const numBtns = document.querySelectorAll('.string-num-btn');
+    if(btnAll.classList.contains('active')) {
+      btnAll.classList.remove('active');
+      numBtns.forEach(b => b.classList.remove('active'));
+      activeStrings = [];
+    } else {
+      btnAll.classList.add('active');
+      numBtns.forEach(b => b.classList.add('active'));
+      activeStrings = [1,2,3,4,5,6];
     }
-    if(rState&&(rState.winner||(rState.hostDone&&rState.guestDone))){
-      showRoundResult(rState,currentQuestionData);
+    checkStartBtn();
+  }
+
+  function toggleString(num) {
+    const btn = document.querySelector(`.string-num-btn[data-string="${num}"]`);
+    if(btn.classList.contains('active')) {
+      btn.classList.remove('active');
+      activeStrings = activeStrings.filter(s => s !== num);
+    } else {
+      btn.classList.add('active');
+      activeStrings.push(num);
     }
-  });
-}
+    const btnAll = document.getElementById('btn-all');
+    if(activeStrings.length === 6) btnAll.classList.add('active');
+    else btnAll.classList.remove('active');
+    checkStartBtn();
+  }
 
-function showDuelQuestion(rNum,qData){
-  myAnswered=false;
-  document.getElementById('duel-round-label').textContent=`Tur ${rNum} / ${duelRounds}`;
-  document.getElementById('duel-string-label').textContent=`${qData.string}. Tel – Bu Hangi Nota?`;
-  document.getElementById('duel-feedback').textContent='';
-  document.getElementById('duel-feedback').className='duel-feedback';
-  document.getElementById('duel-cd-wrap').style.display='none';
-  if(window.drawNote) window.drawNote(qData.noteKey,'duel-notation');
-  const box=document.getElementById('duel-choices'); box.innerHTML='';
-  qData.choices.forEach(nota=>{
-    const b=document.createElement('button'); b.className='dcbtn'; b.textContent=nota;
-    b.onclick=()=>duelAnswer(nota,b,rNum); box.appendChild(b);
-  });
-}
+  function checkStartBtn() {
+    const dis = activeStrings.length === 0;
+    document.getElementById('start-btn').disabled = dis;
+    document.getElementById('race-btn').disabled = dis;
+  }
 
-function duelAnswer(nota,btn,rNum){
-  if(myAnswered) return;
-  myAnswered=true;
-  document.querySelectorAll('.dcbtn').forEach(b=>b.disabled=true);
-  const correct=nota===currentQuestionData.notaAdi;
-  btn.classList.add(correct?'correct':'wrong');
-  runTransaction(ref(db,`duel_rooms/${roomCode}`),room=>{
-    if(!room) return room;
-    if(room.currentRoundNum!==rNum) return room;
-    if(!room.roundState) room.roundState={hostDone:false,guestDone:false,winner:null};
-    room.roundState[myRole+'Done']=true;
-    if(correct&&!room.roundState.winner){
-      room.roundState.winner=myRole; room.roundState.winnerName=myName;
-      if(!room.scores) room.scores={host:0,guest:0};
-      room.scores[myRole]=(room.scores[myRole]||0)+1;
+  function startExercise(type) {
+    exerciseType = type;
+    filteredPool = ITEMS.filter(item => activeStrings.includes(item.string));
+    if(filteredPool.length === 0) return;
+    
+    shuffleArray(filteredPool);
+    if(exerciseType === 'race') {
+      if(filteredPool.length > 25) filteredPool = filteredPool.slice(0, 25);
+    } else {
+      if(filteredPool.length > 15) filteredPool = filteredPool.slice(0, 15);
     }
-    return room;
-  });
-}
 
-function showRoundResult(rState,qData){
-  document.querySelectorAll('.dcbtn').forEach(b=>{
-    b.disabled=true; b.onclick=null;
-    if(b.textContent===qData.notaAdi) b.classList.add('correct');
-  });
-  const fb=document.getElementById('duel-feedback');
-  if(rState.winner===myRole){fb.textContent='🏅 Sen kazandın!';fb.className='duel-feedback iwin';}
-  else if(rState.winner){fb.textContent=`😤 ${rState.winnerName} daha hızlıydı!`;fb.className='duel-feedback opwin';}
-  else{fb.textContent='😅 İkisi de yanlış! Puan yok.';fb.className='duel-feedback nobody';}
-  if(document.getElementById('duel-cd-wrap').style.display==='flex') return;
-  startCountdown(()=>{
-    if(myRole==='host'){
-      const nextNum=currentRoundNum+1;
-      runTransaction(ref(db,`duel_rooms/${roomCode}`),room=>{
-        if(!room) return room;
-        if(room.currentRoundNum!==currentRoundNum) return room;
-        if(nextNum>duelRounds){room.status='finished';}
-        else{room.currentRoundNum=nextNum;room.roundState={hostDone:false,guestDone:false,winner:null};}
-        return room;
+    currentIndex = 0;
+    scoreCorrect = 0;
+    scoreWrong = 0;
+    document.getElementById('setup-area').style.display = 'none';
+    document.getElementById('quiz-zone').style.display = 'block';
+    document.getElementById('result-area').style.display = 'none';
+
+    startTime = Date.now();
+    if(exerciseType === 'race') {
+      let timeLeft = 40;
+      updateTimerDisplay(timeLeft);
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        if(timeLeft <= 0) {
+          timeLeft = 0;
+          updateTimerDisplay(timeLeft);
+          finishExercise();
+        } else {
+          updateTimerDisplay(timeLeft);
+        }
+      }, 1000);
+    } else {
+      updateTimerDisplay(0);
+      timerInterval = setInterval(() => {
+        let elapsed = Math.floor((Date.now() - startTime)/1000);
+        updateTimerDisplay(elapsed);
+      }, 1000);
+    }
+
+    showQuestion();
+  }
+
+  function updateTimerDisplay(sec) {
+    let tStr = "";
+    if(exerciseType === 'race') {
+      tStr = `Kalan Süre: ${sec} sn`;
+      const badges = document.querySelectorAll('.timer-badge');
+      badges.forEach(b => { b.classList.add('race-mode'); b.innerText = tStr; });
+    } else {
+      let m = Math.floor(sec/60).toString().padStart(2,'0');
+      let s = (sec%60).toString().padStart(2,'0');
+      tStr = `Süre: ${m}:${s}`;
+      const badges = document.querySelectorAll('.timer-badge');
+      badges.forEach(b => { b.classList.remove('race-mode'); b.innerText = tStr; });
+    }
+  }
+
+  function shuffleArray(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+  }
+
+  function showQuestion() {
+    hasAnswered = false;
+    document.getElementById('next-btn').disabled = true;
+    document.getElementById('msg-text').innerText = "";
+    document.getElementById('msg-text').style.color = "#8b6b4e";
+
+    let pct = (currentIndex / filteredPool.length) * 100;
+    document.getElementById('p-fill').style.width = `${pct}%`;
+
+    currentQuestionItem = filteredPool[currentIndex];
+    playGuitarTone(noteFreqs[currentQuestionItem.note]);
+
+    if(currentMode === 'ftn') {
+      document.getElementById('ftn-quiz').style.display = 'block';
+      document.getElementById('ntf-quiz').style.display = 'none';
+      setupFTNQuestion();
+    } else {
+      document.getElementById('ftn-quiz').style.display = 'none';
+      document.getElementById('ntf-quiz').style.display = 'block';
+      setupNTFQuestion();
+    }
+  }
+
+  function replay() {
+    if(currentQuestionItem) playGuitarTone(noteFreqs[currentQuestionItem.note]);
+  }
+
+  function setupFTNQuestion() {
+    const item = currentQuestionItem;
+    const rom = ["0","I","II","III","IV"];
+    const pText = item.fret === 0 ? "Boş Tel" : `${rom[item.fret]}. Perde`;
+    document.getElementById('hint-text').innerHTML = `💡 <span class="hint-string-badge">${item.string}</span>. Tel – <span class="hint-fret-text">${pText}</span>`;
+
+    const hl = document.getElementById('fret-highlight-ftn');
+    const hlt = document.getElementById('fret-hl-q-ftn');
+    if(item.fret === 0) {
+      hl.setAttribute('cx', 93);
+      hl.setAttribute('cy', fStringY[item.string-1]);
+      hlt.setAttribute('x', 93);
+      hlt.setAttribute('y', fStringY[item.string-1]);
+    } else {
+      hl.setAttribute('cx', fFretX[item.fret-1]);
+      hl.setAttribute('cy', fStringY[item.string-1]);
+      hlt.setAttribute('x', fFretX[item.fret-1]);
+      hlt.setAttribute('y', fStringY[item.string-1]);
+    }
+    hl.style.display = 'block';
+    hlt.style.display = 'block';
+
+    let wrongs = ITEMS.filter(i => i.name !== item.name);
+    let wrongNames = [...new Set(wrongs.map(i => i.name))];
+    shuffleArray(wrongNames);
+    let choiceNames = [item.name, wrongNames[0], wrongNames[1], wrongNames[2]];
+    shuffleArray(choiceNames);
+
+    const container = document.getElementById('choices-ftn');
+    container.innerHTML = "";
+    choiceNames.forEach(name => {
+      let sampleItem = ITEMS.find(i => i.name === name);
+      let card = document.createElement('div');
+      card.className = "choice-card";
+      card.setAttribute('tabindex', '0');
+      card.onclick = () => handleFTNAnswer(name, card);
+      
+      let staffWrap = document.createElement('div');
+      staffWrap.className = "choice-staff";
+      staffWrap.innerHTML = generateStaffSVG(sampleItem.note, true, 110, 115);
+      
+      let nameLabel = document.createElement('div');
+      nameLabel.style.fontWeight = '700';
+      nameLabel.style.marginTop = '2px';
+      nameLabel.style.fontSize = '1.05rem';
+      nameLabel.innerText = name;
+
+      card.appendChild(staffWrap);
+      card.appendChild(nameLabel);
+      container.appendChild(card);
+    });
+  }
+
+  function handleFTNAnswer(chosenName, cardEl) {
+    if(hasAnswered) return;
+    hasAnswered = true;
+    const item = currentQuestionItem;
+    const cards = document.querySelectorAll('#choices-ftn .choice-card');
+    cards.forEach(c => c.classList.add('disabled'));
+
+    if(chosenName === item.name) {
+      scoreCorrect++;
+      cardEl.classList.add('correct');
+      document.getElementById('msg-text').innerText = "Tebrikler! Doğru Cevap. 🎉";
+      document.getElementById('msg-text').style.color = "#6b8c42";
+    } else {
+      scoreWrong++;
+      cardEl.classList.add('wrong');
+      document.getElementById('msg-text').innerText = `Yanlış! Doğru cevap: ${item.name}`;
+      document.getElementById('msg-text').style.color = "#c75b39";
+      cards.forEach(c => {
+        if(c.innerText.trim() === item.name) c.classList.add('correct');
       });
     }
-  });
-}
+    document.getElementById('next-btn').disabled = false;
+  }
 
-function startCountdown(onDone){
-  if(cdTimer) clearInterval(cdTimer);
-  let n=3;
-  const wrap=document.getElementById('duel-cd-wrap'),el=document.getElementById('duel-cd-num');
-  wrap.style.display='flex'; setCd(el,n);
-  cdTimer=setInterval(()=>{
-    n--; if(n<=0){clearInterval(cdTimer);wrap.style.display='none';if(onDone)onDone();}
-    else setCd(el,n);
-  },1000);
-}
-function setCd(el,n){el.textContent=n;el.classList.remove('duel-cd');void el.offsetWidth;el.classList.add('duel-cd');}
+  function setupNTFQuestion() {
+    const item = currentQuestionItem;
+    document.getElementById('question-staff').innerHTML = generateStaffSVG(item.note, true, 300, 120);
 
-function endDuel(){
-  if(cdTimer) clearInterval(cdTimer);
-  if(roundListener){roundListener();roundListener=null;}
-  const myFinal=myScore_,oppFinal=oppScore_;
-  let winBadge,comment;
-  if(myFinal>oppFinal){winBadge=`🏆 Kazanan: ${myName}`;comment=`${myName} notaları daha hızlı okudu! ${oppName} daha çok çalışmalı 💪`;}
-  else if(oppFinal>myFinal){winBadge=`🏆 Kazanan: ${oppName}`;comment=`${oppName} bu sefer daha hızlıydı! Bir dahaki sefere ${myName} 🎸`;}
-  else{winBadge='🤝 Beraberlik!';comment='İkisi de aynı seviyede! Yunus Hoca ikinizden de memnun 🎵';}
-  const mc=myFinal>=oppFinal?'win':'lose',oc=oppFinal>=myFinal?'win':'lose';
-  showArea('duel-game-area');
-  document.getElementById('duel-game-area').innerHTML=`
-    <div class="duel-result">
-      <h2>⚔️ Düello Bitti!</h2>
-      <div class="winner-badge">${winBadge}</div>
-      <div class="final-scores">
-        <div class="fsc-player"><div class="fsc-name">${myName}</div><div class="fsc-num ${mc}">${myFinal}</div></div>
-        <div class="fsc-vs">VS</div>
-        <div class="fsc-player"><div class="fsc-name">${oppName}</div><div class="fsc-num ${oc}">${oppFinal}</div></div>
-      </div>
-      <p class="duel-comment">"${comment}"</p>
-      <div class="result-btns">
-        <button class="start-exercise-btn btn-duel" onclick="location.reload()">🔄 Tekrar Oyna</button>
-        <button class="start-exercise-btn" onclick="showArea('setup-area')">🏠 Ana Sayfa</button>
-      </div>
-    </div>`;
-}
+    const layer = document.getElementById('fret-buttons-layer');
+    layer.innerHTML = "";
 
-function handleAbandoned(){
-  if(cdTimer) clearInterval(cdTimer);
-  alert('Rakibiniz oyundan ayrıldı.');
-  showArea('setup-area');
-}
+    for(let s=1; s<=6; s++) {
+      for(let f=0; f<=4; f++) {
+        let cx = f===0 ? 93 : fFretX[f-1];
+        let cy = fStringY[s-1];
+        let r = f===0 ? 11 : 13;
 
-window.leaveGame = async function(){
-  if(cdTimer) clearInterval(cdTimer);
-  if(roundListener&&roomCode){roundListener();roundListener=null;}
-  if(roomCode) await update(ref(db,`duel_rooms/${roomCode}`),{status:'abandoned'});
-  showArea('setup-area');
-};
+        let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        g.setAttribute('class', 'fret-btn');
+        g.onclick = () => handleNTFAnswer(s, f, g);
 
-checkDuelHandoff();
+        let circ = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        circ.setAttribute('cx', cx);
+        circ.setAttribute('cy', cy);
+        circ.setAttribute('r', r);
+        circ.setAttribute('fill', 'transparent');
+        circ.setAttribute('stroke', 'transparent');
+        circ.setAttribute('stroke-width', '2');
+
+        g.appendChild(circ);
+        layer.appendChild(g);
+      }
+    }
+  }
+
+  function handleNTFAnswer(s, f, groupEl) {
+    if(hasAnswered) return;
+    hasAnswered = true;
+
+    const item = currentQuestionItem;
+    const targetCircle = groupEl.querySelector('circle');
+    const groups = document.querySelectorAll('#fret-buttons-layer .fret-btn');
+    groups.forEach(g => g.classList.add('disabled'));
+
+    if(s === item.string && f === item.fret) {
+      scoreCorrect++;
+      targetCircle.setAttribute('fill', '#6b8c42');
+      targetCircle.setAttribute('stroke', '#3b6d11');
+      document.getElementById('msg-text').innerText = "Harika! Doğru koordinat. 🌟";
+      document.getElementById('msg-text').style.color = "#6b8c42";
+    } else {
+      scoreWrong++;
+      targetCircle.setAttribute('fill', '#c75b39');
+      targetCircle.setAttribute('stroke', '#922b21');
+      document.getElementById('msg-text').innerText = `Yanlış! Doğru yer: ${item.string}. Tel, Fret: ${f===0?'Boş':f}`;
+      document.getElementById('msg-text').style.color = "#c75b39";
+
+      let correctCx = item.fret===0 ? 93 : fFretX[item.fret-1];
+      let correctCy = fStringY[item.string-1];
+      
+      let flashCirc = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      flashCirc.setAttribute('cx', correctCx);
+      flashCirc.setAttribute('cy', correctCy);
+      flashCirc.setAttribute('r', item.fret===0?11:13);
+      flashCirc.setAttribute('fill', '#f4d03f');
+      flashCirc.setAttribute('stroke', '#d4ac0d');
+      flashCirc.setAttribute('stroke-width', '2.5');
+      document.getElementById('fret-buttons-layer').appendChild(flashCirc);
+    }
+    document.getElementById('next-btn').disabled = false;
+  }
+
+  function nextQuestion() {
+    currentIndex++;
+    if(currentIndex >= filteredPool.length) {
+      finishExercise();
+    } else {
+      showQuestion();
+    }
+  }
+
+  function finishExercise() {
+    if(timerInterval) clearInterval(timerInterval);
+    document.getElementById('quiz-zone').style.display = 'none';
+    document.getElementById('result-area').style.display = 'block';
+
+    document.getElementById('res-mode').innerText = currentMode==='ftn' ? "Klavyeden Notaya" : "Notadan Klavyeye";
+    document.getElementById('res-strings').innerText = activeStrings.sort().map(s=>` ${s}.Tel`).join(',');
+    document.getElementById('res-correct').innerText = scoreCorrect;
+    document.getElementById('res-wrong').innerText = scoreWrong;
+    
+    let total = scoreCorrect + scoreWrong;
+    let ratio = total > 0 ? Math.round((scoreCorrect / total)*100) : 0;
+    document.getElementById('res-ratio').innerText = `%${ratio}`;
+
+    let elapsed = Math.floor((Date.now() - startTime)/1000);
+    if(exerciseType==='race') {
+      document.getElementById('res-time-row').style.display = 'none';
+    } else {
+      document.getElementById('res-time-row').style.display = 'flex';
+      document.getElementById('res-time').innerText = `${elapsed} sn`;
+    }
+  }
+
+  function quitExercise() {
+    if(confirm('Egzersizi sonlandırmak istediğinize emin misiniz?')) {
+      if(timerInterval) clearInterval(timerInterval);
+      backToSetup();
+    }
+  }
+
+  function backToSetup() {
+    document.getElementById('result-area').style.display = 'none';
+    document.getElementById('quiz-zone').style.display = 'none';
+    document.getElementById('setup-area').style.display = 'block';
+  }
+  function backToSetupDirect() { backToSetup(); }
 </script>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  let socket;
+  let myName = "Oyuncu";
+  let totalDuelRounds = 5;
+  let currentDuelRound = 0;
+  let duelQuestions = [];
+  let currentDuelItem = null;
+  let myDuelScore = 0;
+  let oppDuelScore = 0;
+  let hasAnsweredDuel = false;
+  let duelTimerInterval = null;
+  let cdTimer = null;
+
+  // Rastgele isim ata veya prompt ile sor
+  window.addEventListener('DOMContentLoaded', () => {
+    const names = ["Yunus Hoca", "Gitarist", "KlasikGitar", "FretMaster", "Virtüöz", "Arpej", "Akort", "Allegro"];
+    myName = names[Math.floor(Math.random() * names.length)] + "_" + Math.floor(Math.random() * 900 + 100);
+    
+    // Soket sunucusuna bağlan
+    socket = io();
+    
+    socket.on('connect', () => {
+      socket.emit('registerPlayer', myName);
+    });
+
+    // Aktif online kullanıcı listesini güncelle
+    socket.on('updatePlayers', (players) => {
+      const container = document.getElementById('duel-players-container');
+      if (!container) return;
+      container.innerHTML = "";
+      
+      const otherPlayers = players.filter(p => p.id !== socket.id);
+      if (otherPlayers.length === 0) {
+        container.innerHTML = '<div class="no-players-msg">Şu an aktif başka oyuncu yok. Farklı bir tarayıcı sekmesinden bağlanarak test edebilirsiniz.</div>';
+        return;
+      }
+
+      otherPlayers.forEach(p => {
+        const row = document.createElement('div');
+        row.className = "online-player-row";
+        row.innerHTML = `
+          <div><span class="online-dot"></span><span class="online-player-name">${p.name}</span></div>
+          <button class="challenge-btn" onclick="sendChallenge('${p.id}', '${p.name}')">⚔️ Meydan Oku</button>
+        `;
+        container.appendChild(row);
+      });
+    });
+
+    // Meydan okuma teklifi geldiğinde
+    socket.on('challengeReceived', (data) => {
+      let accept = confirm(`${data.fromName} size meydan okuyor! (${data.rounds} Soru) Kabul ediyor musunuz?`);
+      if (accept) {
+        socket.emit('challengeResponse', { challengerId: data.fromId, accepted: true, rounds: data.rounds });
+      } else {
+        socket.emit('challengeResponse', { challengerId: data.fromId, accepted: false });
+      }
+    });
+
+    // Meydan okuma reddedildiğinde
+    socket.on('challengeRejected', () => {
+      alert('Meydan okuma isteği reddedildi.');
+      showArea('duel-setup-area');
+    });
+
+    // Düello başladığında (Her iki tarafa senkronize sorular ve şık havuzu gelir)
+    socket.on('duelStarted', (data) => {
+      duelQuestions = data.questions;
+      totalDuelRounds = data.rounds;
+      currentDuelRound = 0;
+      myDuelScore = 0;
+      oppDuelScore = 0;
+      
+      document.getElementById('dname-me').innerText = myName;
+      document.getElementById('dname-opp').innerText = data.opponentName;
+      document.getElementById('dscore-me').innerText = "0";
+      document.getElementById('dscore-opp').innerText = "0";
+      
+      showArea('duel-game-area');
+      startDuelRound();
+    });
+
+    // Rakibin cevabı veya tur sonuçları senkronize edildiğinde
+    socket.on('roundResult', (data) => {
+      // Skorları senkronize güncelle
+      myDuelScore = data.scores[socket.id];
+      const oppId = Object.keys(data.scores).find(id => id !== socket.id);
+      oppDuelScore = data.scores[oppId] || 0;
+
+      document.getElementById('dscore-me').innerText = myDuelScore;
+      document.getElementById('dscore-opp').innerText = oppDuelScore;
+
+      // Kim kazandı feedback ver
+      const fb = document.getElementById('duel-feedback-txt');
+      if (data.winner === 'nobody') {
+        fb.className = "duel-feedback nobody";
+        fb.innerText = data.reason === 'timeout' ? "⏱️ Süre Bitti! İki oyuncu da cevaplayamadı." : "Nobody got it right!";
+      } else if (data.winner === socket.id) {
+        fb.className = "duel-feedback iwin";
+        fb.innerText = `🌟 Bu turu siz kazandınız! (+${data.points} Puan)`;
+      } else {
+        fb.className = "duel-feedback opwin";
+        fb.innerText = `🔴 Bu turu rakip kazandı! (+${data.points} Puan)`;
+      }
+
+      // Şıkları kilitle ve doğru olanı göster
+      const btns = document.querySelectorAll('#duel-choices-box .dcbtn');
+      btns.forEach(b => {
+        b.disabled = true;
+        if (b.innerText === currentDuelItem.name) b.classList.add('correct');
+      });
+
+      // Kısa bir süre sonra sonraki tura geç veya bitir
+      setTimeout(() => {
+        currentDuelRound++;
+        if (currentDuelRound >= totalDuelRounds) {
+          endDuelGame(data.opponentName);
+        } else {
+          startDuelRound();
+        }
+      }, 3500);
+    });
+
+    // Rakip oyundan ayrılırsa
+    socket.on('opponentAbandoned', () => {
+      handleAbandoned();
+    });
+  });
+
+  function showArea(id) {
+    document.getElementById('setup-area').style.display = id === 'setup-area' ? 'block' : 'none';
+    document.getElementById('quiz-zone').style.display = id === 'quiz-zone' ? 'block' : 'none';
+    document.getElementById('result-area').style.display = id === 'result-area' ? 'block' : 'none';
+    document.getElementById('duel-setup-area').style.display = id === 'duel-setup-area' ? 'block' : 'none';
+    document.getElementById('duel-waiting-area').style.display = id === 'duel-waiting-area' ? 'block' : 'none';
+    document.getElementById('duel-game-area').style.display = id === 'duel-game-area' ? 'block' : 'none';
+  }
+
+  function showDuelSetup() {
+    showArea('duel-setup-area');
+  }
+
+  function setDuelRounds(num) {
+    totalDuelRounds = num;
+    document.querySelectorAll('.round-btn').forEach(b => {
+      b.classList.toggle('active', parseInt(b.getAttribute('data-rounds')) === num);
+    });
+  }
+
+  function sendChallenge(targetId, targetName) {
+    document.getElementById('duel-waiting-title').innerText = `${targetName} Bekleniyor...`;
+    document.getElementById('duel-waiting-sub').innerText = "Meydan okuma isteği gönderildi, yanıt bekleniyor.";
+    showArea('duel-waiting-area');
+    socket.emit('sendChallenge', { targetId, rounds: totalDuelRounds });
+  }
+
+  function cancelChallenge() {
+    socket.emit('cancelChallenge');
+    showArea('duel-setup-area');
+  }
+
+  function startDuelRound() {
+    hasAnsweredDuel = false;
+    document.getElementById('duel-feedback-txt').innerText = "";
+    document.getElementById('duel-round-txt').innerText = `Soru: ${currentDuelRound + 1} / ${totalDuelRounds}`;
+    
+    // Senkronize soru verisini yükle
+    const qData = duelQuestions[currentDuelRound];
+    currentDuelItem = ITEMS.find(i => i.string === qData.string && i.fret === qData.fret && i.note === qData.note);
+    
+    // Sesi çal
+    playGuitarTone(noteFreqs[currentDuelItem.note]);
+
+    // Düello için notasyonu oluştur (Klavyeden Notaya mantığında)
+    document.getElementById('duel-notation').innerHTML = generateStaffSVG(currentDuelItem.note, true, 180, 120);
+
+    // Senkronize gelen şıkları oluştur
+    const box = document.getElementById('duel-choices-box');
+    box.innerHTML = "";
+    qData.choices.forEach(name => {
+      const btn = document.createElement('button');
+      btn.className = "dcbtn";
+      btn.innerText = name;
+      btn.onclick = () => submitDuelAnswer(name, btn);
+      box.appendChild(btn);
+    });
+
+    // Geri sayım sayacını başlat (Sunucu 15 saniye bekler)
+    let timeLeft = 15;
+    document.getElementById('duel-timer-txt').innerText = `Süre: ${timeLeft}`;
+    if (duelTimerInterval) clearInterval(duelTimerInterval);
+    
+    duelTimerInterval = setInterval(() => {
+      timeLeft--;
+      document.getElementById('duel-timer-txt').innerText = `Süre: ${timeLeft}`;
+      if (timeLeft <= 0) {
+        clearInterval(duelTimerInterval);
+      }
+    }, 1000);
+  }
+
+  function submitDuelAnswer(chosenName, btnEl) {
+    if (hasAnsweredDuel) return;
+    hasAnsweredDuel = true;
+
+    // Diğer butonları opaklaştır
+    const btns = document.querySelectorAll('#duel-choices-box .dcbtn');
+    btns.forEach(b => b.disabled = true);
+
+    const isCorrect = (chosenName === currentDuelItem.name);
+    if (isCorrect) {
+      btnEl.classList.add('correct');
+      document.getElementById('duel-feedback-txt').innerText = "Cevabınız kaydedildi! Rakip bekleniyor...";
+    } else {
+      btnEl.classList.add('wrong');
+      document.getElementById('duel-feedback-txt').innerText = "Yanlış cevap! Rakip bekleniyor...";
+    }
+
+    // Sunucuya cevabı ilet
+    socket.emit('submitAnswer', { isCorrect });
+  }
+
+  function endDuelGame(oppName) {
+    if (duelTimerInterval) clearInterval(duelTimerInterval);
+    
+    let winBadge = "";
+    let comment = "";
+    if (myDuelScore > oppDuelScore) {
+      winBadge = '🏆 Kazanan Sizsiniz!';
+      comment = `Harika bir performans! ${oppName} karşısında tam bir galibiyet elde ettiniz. 🎸`;
+    } else if (oppDuelScore > myDuelScore) {
+      winBadge = `🏆 Kazanan: ${oppName}`;
+      comment = `${oppName} bu sefer daha hızlıydı! Bir dahaki sefere daha odaklanmış bir şekilde deneyin. 💪`;
+    } else {
+      winBadge = '🤝 Beraberlik!';
+      comment = 'İki oyuncu da aynı seviyede! Yunus Hoca ikinizin performansından da son derece memnun. 🎵';
+    }
+
+    const mc = myDuelScore >= oppDuelScore ? 'win' : 'lose';
+    const oc = oppDuelScore >= myDuelScore ? 'win' : 'lose';
+
+    showArea('duel-game-area');
+    document.getElementById('duel-game-area').innerHTML = `
+      <div class="duel-result">
+        <h2>⚔️ Düello Bitti!</h2>
+        <div class="winner-badge">${winBadge}</div>
+        <div class="final-scores">
+          <div class="fsc-player"><div class="fsc-name">${myName}</div><div class="fsc-num ${mc}">${myDuelScore}</div></div>
+          <div class="fsc-vs">VS</div>
+          <div class="fsc-player"><div class="fsc-name">${oppName}</div><div class="fsc-num ${oc}">${oppDuelScore}</div></div>
+        </div>
+        <p class="duel-comment">"${comment}"</p>
+        <div class="result-btns">
+          <button class="start-exercise-btn btn-duel" onclick="location.reload()">🔄 Tekrar Oyna</button>
+          <button class="start-exercise-btn" onclick="location.reload()">🏠 Ana Sayfa</button>
+        </div>
+      </div>`;
+  }
+
+  function handleAbandoned() {
+    if (duelTimerInterval) clearInterval(duelTimerInterval);
+    if (cdTimer) clearInterval(cdTimer);
+    alert('Rakibiniz oyundan ayrıldı veya bağlantısı koptu.');
+    location.reload();
+  }
+</script>
+
 </body>
 </html>
