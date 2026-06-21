@@ -412,7 +412,7 @@
           </div>
           <div class="card-footer"><span class="badge badge-new">YENİ</span><span class="arrow">→</span></div>
         </a>
-        <a class="card" href="/klavye/">
+        <a class="card" id="klavye-card" href="/klavye/">
           <div class="card-icon">🎛️</div>
           <div>
             <div class="card-title">Klavye Alıştırması</div>
@@ -420,7 +420,7 @@
           </div>
           <div class="card-footer"><span class="badge badge-new">YENİ</span><span class="arrow">→</span></div>
         </a>
-        <a class="card" href="/nota/">
+        <a class="card" id="nota-card" href="/nota/">
           <div class="card-icon">🎵</div>
           <div>
             <div class="card-title">Nota Okuma</div>
@@ -428,7 +428,7 @@
           </div>
           <div class="card-footer"><span class="badge badge-active">Aktif</span><span class="arrow">→</span></div>
         </a>
-        <a class="card" href="/tel/">
+        <a class="card" id="tel-card" href="/tel/">
           <div class="card-icon">🎸</div>
           <div>
             <div class="card-title">Tel Egzersizi</div>
@@ -436,7 +436,7 @@
           </div>
           <div class="card-footer"><span class="badge badge-active">Aktif</span><span class="arrow">→</span></div>
         </a>
-        <a class="card" href="/deneysel/">
+        <a class="card" id="deneysel-card" href="/deneysel/">
           <div class="card-icon">🧪</div>
           <div>
             <div class="card-title">Deneysel</div>
@@ -484,6 +484,7 @@
         <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:1rem;">
           <button class="back-btn" onclick="openAddStudentForm()">+ Yeni Öğrenci Ekle</button>
           <button class="back-btn" onclick="openAllStudentsView()">👥 Tüm Öğrenciler</button>
+          <button class="back-btn" onclick="openSectionsView()">📦 Bölümler</button>
         </div>
         <div class="leaderboard" id="grade-leaderboard"></div>
       </div>
@@ -493,6 +494,13 @@
         <button class="back-btn" style="margin-bottom:1rem;" onclick="closeAllStudentsView()">← Sıralamaya Dön</button>
         <p style="font-size:.8rem; color:var(--muted); margin-bottom:1rem;">🔑 simgesi = eser listesine henüz eklenmemiş öğrenciler</p>
         <div class="student-select-grid" id="all-students-grid"></div>
+      </div>
+
+      <!-- Öğretmen modu: bölümler erişim yönetimi -->
+      <div id="sections-view" style="display:none;">
+        <button class="back-btn" style="margin-bottom:1rem;" onclick="closeSectionsView()">← Sıralamaya Dön</button>
+        <p style="font-size:.8rem; color:var(--muted); margin-bottom:1.2rem;">Bir bölümün altında bir Grade'e tıklarsan, o Grade ve üzerindeki tüm öğrenciler o bölüme erişebilir. Bir kategoriye tıklarsan, o kategorideki öğrenciler de (grade'inden bağımsız) erişebilir. Hiçbir seçim yapılmazsa bölüm herkese açık kalır.</p>
+        <div id="sections-list"></div>
       </div>
 
       <!-- Öğretmen modu: yeni öğrenci ekleme formu -->
@@ -1004,7 +1012,7 @@ function renderGradeTabs() {
 }
 
 function showOnly(viewId) {
-  ['teacher-grade-ranking','add-student-form','teacher-student-detail','student-self-view','all-students-view'].forEach(id => {
+  ['teacher-grade-ranking','add-student-form','teacher-student-detail','student-self-view','all-students-view','sections-view'].forEach(id => {
     document.getElementById(id).style.display = (id === viewId) ? '' : 'none';
   });
 }
@@ -1265,6 +1273,199 @@ window.closeAllStudentsView = function() {
   renderGradeRanking();
 };
 
+// ============================================================
+// ===== BÖLÜMLER ERİŞİM YÖNETİMİ ==============================
+// ============================================================
+// section_config/<sectionId> = { minGrade: number|null, cats: { catId: true, ... } }
+// Erişim kuralı: sid === TEACHER_ID  →  her zaman erişir
+//                aksi halde: (öğrencinin maxGrade'i >= minGrade)  VEYA  (öğrenci seçilen kategorilerden en az birinde ise)
+//                minGrade null/yok VE hiç kategori seçili değilse → bölüm herkese açık
+
+const ALL_GRADES_FOR_SECTIONS = [1,2,3,4,5,6,7,8];
+
+const SECTION_DEFS = [
+  { id: 'repertoire', cardId: 'repertoire-card', label: 'Eser Listesi',  emoji: '📜' },
+  { id: 'kulak',      cardId: 'kulak-card',       label: 'Kulak Eğitimi', emoji: '🎧' },
+  { id: 'klavye',     cardId: 'klavye-card',      label: 'Klavye Alıştırması', emoji: '🎛️' },
+  { id: 'nota',       cardId: 'nota-card',        label: 'Nota Okuma',   emoji: '🎵' },
+  { id: 'tel',        cardId: 'tel-card',         label: 'Tel Egzersizi', emoji: '🎸' },
+  { id: 'deneysel',   cardId: 'deneysel-card',    label: 'Deneysel',     emoji: '🧪' },
+  { id: 'bass',       cardId: 'bass-card',        label: 'Bas Gitar - Klavyeden Notaya', emoji: '🎸' },
+  { id: 'bassv2',     cardId: 'bassv2-card',      label: 'Bas Gitar - Notadan Klavyeye', emoji: '🎸' },
+];
+
+let sectionAccessConfig = {};
+let sectionConfigLoaded = false;
+
+async function loadSectionAccessConfig() {
+  if (sectionConfigLoaded) return;
+  try {
+    const snap = await get(ref(db, 'section_config'));
+    sectionAccessConfig = snap.exists() ? snap.val() : {};
+    sectionConfigLoaded = true;
+  } catch (e) {
+    console.error('Bölüm erişim ayarları yüklenemedi:', e);
+    sectionAccessConfig = {};
+  }
+}
+
+function studentMaxGrade(sid) {
+  const grades = Object.keys(repProgress[sid] || {});
+  if (!grades.length) return 0;
+  return Math.max(...grades.map(Number));
+}
+
+// Genel erişim kontrolü: section tanımına göre kart açık mı kapalı mı belirler ve günceller.
+function checkSectionAccess(sectionId, cardId, sid, opts) {
+  const card = document.getElementById(cardId);
+  if (!card) return;
+  opts = opts || {};
+
+  if (sid === TEACHER_ID) {
+    unlockCard(card, opts);
+    return;
+  }
+
+  const conf = sectionAccessConfig[sectionId];
+  const hasMinGrade = conf && conf.minGrade != null && conf.minGrade !== '';
+  const selectedCats = (conf && conf.cats) ? Object.keys(conf.cats).filter(c => conf.cats[c]) : [];
+
+  // Hiç kısıtlama yoksa → herkese açık
+  if (!hasMinGrade && selectedCats.length === 0) {
+    unlockCard(card, opts);
+    return;
+  }
+
+  let allowed = false;
+  if (hasMinGrade && studentMaxGrade(sid) >= Number(conf.minGrade)) allowed = true;
+  if (!allowed && selectedCats.length) {
+    const cats = studentCategories[sid] || {};
+    allowed = selectedCats.some(c => !!cats[c]);
+  }
+
+  if (allowed) {
+    unlockCard(card, opts);
+  } else {
+    lockCard(card, opts);
+  }
+}
+
+function lockCard(card, opts) {
+  card.removeAttribute('href');
+  card.style.pointerEvents = 'none';
+  card.style.cursor = 'default';
+  card.style.filter = 'grayscale(0.3) opacity(0.7)';
+  const icon = card.querySelector('.card-icon');
+  if (icon) icon.textContent = '🔒';
+  const desc = card.querySelector('.card-desc');
+  if (desc) desc.textContent = opts.lockedDesc || 'Bu bölüm henüz erişiminize açılmamış.';
+  const badge = card.querySelector('.badge');
+  if (badge) { badge.textContent = 'Kilitli'; badge.className = 'badge'; badge.style.cssText = 'background:#eee;color:#999;font-size:.7rem;font-weight:600;padding:3px 10px;border-radius:20px;'; }
+}
+
+function unlockCard(card, opts) {
+  if (opts.href) card.setAttribute('href', opts.href);
+  card.style.pointerEvents = '';
+  card.style.cursor = '';
+  card.style.filter = '';
+  if (opts.icon) {
+    const icon = card.querySelector('.card-icon');
+    if (icon) icon.textContent = opts.icon;
+  }
+  if (opts.unlockedDesc) {
+    const desc = card.querySelector('.card-desc');
+    if (desc) desc.textContent = opts.unlockedDesc;
+  }
+  const badge = card.querySelector('.badge');
+  if (badge && opts.badgeText) {
+    badge.textContent = opts.badgeText;
+    badge.className = opts.badgeClass || 'badge badge-new';
+    badge.style.cssText = '';
+  }
+}
+
+window.openSectionsView = async function() {
+  showOnly('sections-view');
+  await loadCategories();
+  await loadSectionAccessConfig();
+  renderSectionsList();
+};
+
+window.closeSectionsView = function() {
+  showOnly('teacher-grade-ranking');
+  renderGradeRanking();
+};
+
+function renderSectionsList() {
+  const wrap = document.getElementById('sections-list');
+  wrap.innerHTML = SECTION_DEFS.map(sec => {
+    const conf = sectionAccessConfig[sec.id] || { minGrade: null, cats: {} };
+    const gradeChips = ALL_GRADES_FOR_SECTIONS.map(g => {
+      const active = conf.minGrade != null && Number(conf.minGrade) === g;
+      return `<button class="cat-chip" style="${active ? 'background:var(--brown);color:#fff;border-color:var(--brown)' : 'background:transparent;border-color:var(--border);color:var(--muted)'}" onclick="setSectionMinGrade('${sec.id}', ${g})">Grade ${g}</button>`;
+    }).join('');
+    const catChips = CATEGORIES.map(cat => {
+      const on = !!(conf.cats && conf.cats[cat.id]);
+      const style = on
+        ? `background:${cat.color};color:#fff;border-color:${cat.color}`
+        : `background:transparent;border-color:${cat.color};color:${cat.color}`;
+      return `<button class="cat-chip" style="${style}" onclick="toggleSectionCategory('${sec.id}','${cat.id}',this)">${cat.emoji} ${cat.label}</button>`;
+    }).join('');
+    const clearBtn = `<button class="cat-chip" style="background:transparent;border-color:var(--red);color:var(--red);" onclick="clearSectionGrade('${sec.id}')">✕ Sınırı Kaldır</button>`;
+
+    return `<div class="student-all-card" style="margin-bottom:10px;">
+      <div style="font-weight:700; font-size:.95rem; display:flex; align-items:center; gap:6px;">
+        <span>${sec.emoji}</span><span>${sec.label}</span>
+      </div>
+      <div class="cat-chips-row">${gradeChips}${clearBtn}</div>
+      <div class="cat-chips-row">${catChips}</div>
+    </div>`;
+  }).join('');
+}
+
+window.setSectionMinGrade = async function(sectionId, grade) {
+  sectionAccessConfig[sectionId] = sectionAccessConfig[sectionId] || { minGrade: null, cats: {} };
+  sectionAccessConfig[sectionId].minGrade = grade;
+  try {
+    await set(ref(db, `section_config/${sectionId}/minGrade`), grade);
+    showSaveToast();
+  } catch (e) { console.error('Bölüm grade ayarı kaydedilemedi:', e); }
+  renderSectionsList();
+};
+
+window.clearSectionGrade = async function(sectionId) {
+  sectionAccessConfig[sectionId] = sectionAccessConfig[sectionId] || { minGrade: null, cats: {} };
+  sectionAccessConfig[sectionId].minGrade = null;
+  try {
+    await remove(ref(db, `section_config/${sectionId}/minGrade`));
+    showSaveToast();
+  } catch (e) { console.error('Bölüm grade ayarı silinemedi:', e); }
+  renderSectionsList();
+};
+
+window.toggleSectionCategory = async function(sectionId, catId, btnEl) {
+  sectionAccessConfig[sectionId] = sectionAccessConfig[sectionId] || { minGrade: null, cats: {} };
+  sectionAccessConfig[sectionId].cats = sectionAccessConfig[sectionId].cats || {};
+  const newVal = !sectionAccessConfig[sectionId].cats[catId];
+  sectionAccessConfig[sectionId].cats[catId] = newVal;
+
+  if (btnEl) {
+    const cat = CATEGORIES.find(c => c.id === catId);
+    btnEl.style.cssText = newVal
+      ? `background:${cat.color};color:#fff;border-color:${cat.color}`
+      : `background:transparent;border-color:${cat.color};color:${cat.color}`;
+  }
+
+  try {
+    if (newVal) {
+      await set(ref(db, `section_config/${sectionId}/cats/${catId}`), true);
+    } else {
+      await remove(ref(db, `section_config/${sectionId}/cats/${catId}`));
+    }
+    showSaveToast();
+  } catch (e) { console.error('Bölüm kategori ayarı kaydedilemedi:', e); }
+};
+
 window.openStudentDetailFromAll = function(sid) {
   repProgress[sid] = repProgress[sid] || {};
   const grades = Object.keys(repProgress[sid]).sort((a,b) => +a - +b);
@@ -1274,110 +1475,118 @@ window.openStudentDetailFromAll = function(sid) {
 };
 
 // ===== Eser Listesi kilitli mi kontrolü (öğrenci için) =====
+// Taban kural: en az 1 grade'i olmalı. Üstüne, öğretmenin "Bölümler" panelinden
+// belirlediği ek Grade/kategori sınırı (varsa) uygulanır.
 function checkRepertoireAccess(sid) {
   const card = document.getElementById('repertoire-card');
   if (!card) return;
   const grades = Object.keys(repProgress[sid] || {});
-  if (grades.length === 0) {
-    card.style.pointerEvents = 'none';
-    card.style.filter = 'grayscale(0.3) opacity(0.7)';
-    card.querySelector('.card-icon').textContent = '🔑';
-    const desc = card.querySelector('.card-desc');
-    if (desc) desc.textContent = 'Grade fakiri olduğunuzdan eser listesine erişiminiz henüz açılmamış. Çok çalışırsanız bir gün bu bölüme girebilirsin.';
-    const badge = card.querySelector('.badge');
-    if (badge) { badge.textContent = 'Kilitli'; badge.className = 'badge'; badge.style.cssText = 'background:#eee;color:#999;font-size:.7rem;font-weight:600;padding:3px 10px;border-radius:20px;'; }
+  if (sid !== TEACHER_ID && grades.length === 0) {
+    lockCard(card, { lockedDesc: 'Grade fakiri olduğunuzdan eser listesine erişiminiz henüz açılmamış. Çok çalışırsanız bir gün bu bölüme girebilirsin.' });
+    return;
   }
+  checkSectionAccess('repertoire', 'repertoire-card', sid, {
+    href: '#',
+    icon: '📜',
+    unlockedDesc: "Grade'ine göre çalman gereken eserleri gör, ne kadar tamamladığını ve genel sıralamadaki yerini takip et.",
+    badgeText: 'YENİ',
+    lockedDesc: 'Bu bölüm henüz erişiminize açılmamış.'
+  });
 }
 
 // ===== Bas Gitar Klavyesi kilitli mi kontrolü (öğrenci için) =====
-// Sadece "Bas Gitar" kategorisinde olan öğrenciler erişebilir; öğretmen her zaman erişebilir.
+// Taban kural: "Bas Gitar" kategorisinde olmalı. Üstüne öğretmenin "Bölümler"
+// panelinden belirlediği ek Grade/kategori sınırı (varsa) uygulanır.
 function checkBassAccess(sid) {
   const card = document.getElementById('bass-card');
   if (!card) return;
-  const hasAccess = sid === TEACHER_ID || !!(studentCategories[sid] || {})['bas_gitar'];
-  if (!hasAccess) {
-    card.removeAttribute('href');
-    card.style.pointerEvents = 'none';
-    card.style.cursor = 'default';
-    card.style.filter = 'grayscale(0.3) opacity(0.7)';
-    card.querySelector('.card-icon').textContent = '🔒';
-    const desc = card.querySelector('.card-desc');
-    if (desc) desc.textContent = 'Bu bölüm yalnızca Bas Gitar kategorisindeki öğrencilere açıktır.';
-    const badge = card.querySelector('.badge');
-    if (badge) { badge.textContent = 'Kilitli'; badge.className = 'badge'; badge.style.cssText = 'background:#eee;color:#999;font-size:.7rem;font-weight:600;padding:3px 10px;border-radius:20px;'; }
-  } else {
-    card.setAttribute('href', 'https://gitar.yunusgedik.com.tr/bas/');
-    card.style.pointerEvents = '';
-    card.style.cursor = '';
-    card.style.filter = '';
-    card.querySelector('.card-icon').textContent = '🎸';
-    const desc = card.querySelector('.card-desc');
-    if (desc) desc.textContent = 'Bas gitarda I. Pozisyondaki tüm perdeleri, telleri ve notaların dizekteki (Fa anahtarı) tam karşılıklarını interaktif olarak deneyimleyin.';
-    const badge = card.querySelector('.badge');
-    if (badge) { badge.textContent = 'YENİ'; badge.className = 'badge badge-new'; badge.style.cssText = ''; }
+  const hasBaseAccess = sid === TEACHER_ID || !!(studentCategories[sid] || {})['bas_gitar'];
+  if (!hasBaseAccess) {
+    lockCard(card, { lockedDesc: 'Bu bölüm yalnızca Bas Gitar kategorisindeki öğrencilere açıktır.' });
+    return;
   }
+  checkSectionAccess('bass', 'bass-card', sid, {
+    href: 'https://gitar.yunusgedik.com.tr/bas/',
+    icon: '🎸',
+    unlockedDesc: 'Bas gitarda I. Pozisyondaki tüm perdeleri, telleri ve notaların dizekteki (Fa anahtarı) tam karşılıklarını interaktif olarak deneyimleyin.',
+    badgeText: 'YENİ',
+    lockedDesc: 'Bu bölüm henüz erişiminize açılmamış.'
+  });
 }
 
 // ===== Bas Gitar V2 (Notadan Klavyeye) kilitli mi kontrolü (öğrenci için) =====
-// Sadece "Bas Gitar" kategorisinde olan öğrenciler erişebilir; öğretmen her zaman erişebilir.
+// Taban kural: "Bas Gitar" kategorisinde olmalı. Üstüne öğretmenin "Bölümler"
+// panelinden belirlediği ek Grade/kategori sınırı (varsa) uygulanır.
 function checkBassV2Access(sid) {
   const card = document.getElementById('bassv2-card');
   if (!card) return;
-  const hasAccess = sid === TEACHER_ID || !!(studentCategories[sid] || {})['bas_gitar'];
-  if (!hasAccess) {
-    card.removeAttribute('href');
-    card.style.pointerEvents = 'none';
-    card.style.cursor = 'default';
-    card.style.filter = 'grayscale(0.3) opacity(0.7)';
-    card.querySelector('.card-icon').textContent = '🔒';
-    const desc = card.querySelector('.card-desc');
-    if (desc) desc.textContent = 'Bu bölüm yalnızca Bas Gitar kategorisindeki öğrencilere açıktır.';
-    const badge = card.querySelector('.badge');
-    if (badge) { badge.textContent = 'Kilitli'; badge.className = 'badge'; badge.style.cssText = 'background:#eee;color:#999;font-size:.7rem;font-weight:600;padding:3px 10px;border-radius:20px;'; }
-  } else {
-    card.setAttribute('href', 'https://gitar.yunusgedik.com.tr/basv2/');
-    card.style.pointerEvents = '';
-    card.style.cursor = '';
-    card.style.filter = '';
-    card.querySelector('.card-icon').textContent = '🎸';
-    const desc = card.querySelector('.card-desc');
-    if (desc) desc.textContent = 'Bas gitarda I. Pozisyondaki tüm perdeleri, telleri ve notaların dizekteki (Fa anahtarı) tam karşılıklarını interaktif olarak deneyimleyin.';
-    const badge = card.querySelector('.badge');
-    if (badge) { badge.textContent = 'YENİ'; badge.className = 'badge badge-new'; badge.style.cssText = ''; }
+  const hasBaseAccess = sid === TEACHER_ID || !!(studentCategories[sid] || {})['bas_gitar'];
+  if (!hasBaseAccess) {
+    lockCard(card, { lockedDesc: 'Bu bölüm yalnızca Bas Gitar kategorisindeki öğrencilere açıktır.' });
+    return;
   }
+  checkSectionAccess('bassv2', 'bassv2-card', sid, {
+    href: 'https://gitar.yunusgedik.com.tr/basv2/',
+    icon: '🎸',
+    unlockedDesc: 'Bas gitarda I. Pozisyondaki tüm perdeleri, telleri ve notaların dizekteki (Fa anahtarı) tam karşılıklarını interaktif olarak deneyimleyin.',
+    badgeText: 'YENİ',
+    lockedDesc: 'Bu bölüm henüz erişiminize açılmamış.'
+  });
 }
 
 // ===== Kulak Eğitimi kilitli mi kontrolü (öğrenci için) =====
-// Sadece Grade'e geçmiş VE (Bas Gitar veya Elektro Gitar) kategorisindeki öğrenciler erişebilir; öğretmen her zaman erişebilir.
+// Taban kural: Grade'e geçmiş VE (Bas Gitar veya Elektro Gitar) kategorisinde olmalı.
+// Üstüne öğretmenin "Bölümler" panelinden belirlediği ek Grade/kategori sınırı (varsa) uygulanır.
 function checkKulakAccess(sid) {
   const card = document.getElementById('kulak-card');
   if (!card) return;
   const hasGrade = Object.keys(repProgress[sid] || {}).length > 0;
   const cats = studentCategories[sid] || {};
   const hasInstrument = !!cats['bas_gitar'] || !!cats['elektro_gitar'];
-  const hasAccess = sid === TEACHER_ID || (hasGrade && hasInstrument);
-  if (!hasAccess) {
-    card.removeAttribute('href');
-    card.style.pointerEvents = 'none';
-    card.style.cursor = 'default';
-    card.style.filter = 'grayscale(0.3) opacity(0.7)';
-    card.querySelector('.card-icon').textContent = '🔒';
-    const desc = card.querySelector('.card-desc');
-    if (desc) desc.textContent = 'Bu bölüm yalnızca Grade\'e geçmiş Bas Gitar veya Elektro Gitar öğrencilerine açıktır.';
-    const badge = card.querySelector('.badge');
-    if (badge) { badge.textContent = 'Kilitli'; badge.className = 'badge'; badge.style.cssText = 'background:#eee;color:#999;font-size:.7rem;font-weight:600;padding:3px 10px;border-radius:20px;'; }
-  } else {
-    card.setAttribute('href', 'https://gitar.yunusgedik.com.tr/kulak');
-    card.style.pointerEvents = '';
-    card.style.cursor = '';
-    card.style.filter = '';
-    card.querySelector('.card-icon').textContent = '🎧';
-    const desc = card.querySelector('.card-desc');
-    if (desc) desc.textContent = 'Duyduğun sesin hangi notaya ait olduğunu tanı, kulağını geliştir.';
-    const badge = card.querySelector('.badge');
-    if (badge) { badge.textContent = 'YENİ'; badge.className = 'badge badge-new'; badge.style.cssText = ''; }
+  const hasBaseAccess = sid === TEACHER_ID || (hasGrade && hasInstrument);
+  if (!hasBaseAccess) {
+    lockCard(card, { lockedDesc: 'Bu bölüm yalnızca Grade\'e geçmiş Bas Gitar veya Elektro Gitar öğrencilerine açıktır.' });
+    return;
   }
+  checkSectionAccess('kulak', 'kulak-card', sid, {
+    href: 'https://gitar.yunusgedik.com.tr/kulak',
+    icon: '🎧',
+    unlockedDesc: 'Duyduğun sesin hangi notaya ait olduğunu tanı, kulağını geliştir.',
+    badgeText: 'YENİ',
+    lockedDesc: 'Bu bölüm henüz erişiminize açılmamış.'
+  });
 }
+
+// ===== Klavye / Nota / Tel / Deneysel: yalnızca "Bölümler" panelinden ayar yapılmışsa kısıtlanır =====
+function checkKlavyeAccess(sid) {
+  checkSectionAccess('klavye', 'klavye-card', sid, {
+    href: '/klavye/', icon: '🎛️',
+    unlockedDesc: 'I. Pozisyondaki tüm perdeleri, telleri ve notaların dizekteki tam karşılıklarını interaktif olarak deneyimleyin.',
+    badgeText: 'YENİ'
+  });
+}
+function checkNotaAccess(sid) {
+  checkSectionAccess('nota', 'nota-card', sid, {
+    href: '/nota/', icon: '🎵',
+    unlockedDesc: 'Portenin üzerindeki notayı tanı. Sol anahtarı, E3–E5 arası tüm notalar.',
+    badgeText: 'Aktif', badgeClass: 'badge badge-active'
+  });
+}
+function checkTelAccess(sid) {
+  checkSectionAccess('tel', 'tel-card', sid, {
+    href: '/tel/', icon: '🎸',
+    unlockedDesc: 'Gitarın tellerini ve perdelerini tanımak için alıştırmalar.',
+    badgeText: 'Aktif', badgeClass: 'badge badge-active'
+  });
+}
+function checkDeneyselAccess(sid) {
+  checkSectionAccess('deneysel', 'deneysel-card', sid, {
+    href: '/deneysel/', icon: '🧪',
+    unlockedDesc: 'Yeni eklenen deneysel alıştırma ve içerikler burada yer alır.',
+    badgeText: 'Aktif', badgeClass: 'badge badge-active'
+  });
+}
+
 window.saveNewStudent = async function() {
   const name = document.getElementById('new-student-name').value.trim();
   const pin = document.getElementById('new-student-pin').value.trim();
@@ -1636,6 +1845,10 @@ window.updateWelcomeCard = async function(sid) {
     checkBassAccess(sid);
     checkBassV2Access(sid);
     checkKulakAccess(sid);
+    checkKlavyeAccess(sid);
+    checkNotaAccess(sid);
+    checkTelAccess(sid);
+    checkDeneyselAccess(sid);
     return;
   }
 
@@ -1659,6 +1872,10 @@ window.updateWelcomeCard = async function(sid) {
     checkBassAccess(sid);
     checkBassV2Access(sid);
     checkKulakAccess(sid);
+    checkKlavyeAccess(sid);
+    checkNotaAccess(sid);
+    checkTelAccess(sid);
+    checkDeneyselAccess(sid);
     return;
   }
 
@@ -1681,6 +1898,10 @@ window.updateWelcomeCard = async function(sid) {
   checkBassAccess(sid);
   checkBassV2Access(sid);
   checkKulakAccess(sid);
+  checkKlavyeAccess(sid);
+  checkNotaAccess(sid);
+  checkTelAccess(sid);
+  checkDeneyselAccess(sid);
 };
 
 // Modül yüklenirken bekleyen avatar güncellemesini tetikle
