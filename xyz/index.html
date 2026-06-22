@@ -1332,7 +1332,7 @@ function nextQuestion() {
 
 <script type="module">
 import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js';
-import { getDatabase, ref, set, update, remove, onValue, onDisconnect, runTransaction }
+import { getDatabase, ref, get, set, update, remove, onValue, onDisconnect, runTransaction }
   from 'https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js';
 
 const FIREBASE_CONFIG = {
@@ -1599,20 +1599,42 @@ window.cancelChallenge = async function(){
 };
 
 // ── HANDOFF (guest yönlendirmesi) ──
-function checkDuelHandoff(){
+// async: Firebase'den oda config'ini okuyarak doğru duelMode'u garanti altına alır
+async function checkDuelHandoff(){
   const raw = localStorage.getItem('gitar_duel_handoff');
   if(!raw) return false;
   localStorage.removeItem('gitar_duel_handoff');
   try{
     const h = JSON.parse(raw);
-    myRole     = 'guest';
-    roomCode   = h.roomCode;
-    oppSid     = h.oppSid;
-    oppName    = h.oppName;
-    duelStrings= new Set(h.strings);
-    duelRounds = h.totalRounds || 0;
-    duelSecs   = h.totalSecs   || 0;
-    duelMode   = h.mode || 'notadan-klavyeye';
+    myRole   = 'guest';
+    roomCode = h.roomCode;
+    // live-bar.js alan adları farklı olabilir — her ikisini dene
+    oppSid   = h.oppSid  || h.fromSid  || '';
+    oppName  = h.oppName || h.fromName || '?';
+
+    // Firebase'den oda config'ini doğrudan oku (en güvenilir kaynak)
+    try {
+      const snap = await get(ref(db, `duel_rooms/${roomCode}`));
+      const room = snap.val();
+      if(room && room.config){
+        duelMode    = room.config.mode        || h.mode || 'notadan-klavyeye';
+        duelStrings = new Set(room.config.strings || h.strings || [1,2,3,4]);
+        duelRounds  = room.config.totalRounds != null ? room.config.totalRounds : (h.totalRounds || 0);
+        duelSecs    = room.config.totalSecs   != null ? room.config.totalSecs   : (h.totalSecs   || 0);
+        if(room.host && room.host.name) oppName = room.host.name;
+      } else {
+        duelMode    = h.mode || 'notadan-klavyeye';
+        duelStrings = new Set(h.strings || [1,2,3,4]);
+        duelRounds  = h.totalRounds || 0;
+        duelSecs    = h.totalSecs   || 0;
+      }
+    } catch(e){
+      duelMode    = h.mode || 'notadan-klavyeye';
+      duelStrings = new Set(h.strings || [1,2,3,4]);
+      duelRounds  = h.totalRounds || 0;
+      duelSecs    = h.totalSecs   || 0;
+    }
+
     beginGame();
     return true;
   }catch(e){ return false; }
@@ -1672,6 +1694,14 @@ function listenRound(){
     const rState = room.roundState;
     const questions = room.config && room.config.questions;
     if(!rNum || !questions || !questions[rNum]) return;
+
+    // Mod tutarsızlığı varsa (guest ilk bağlantıda) UI'yi düzelt
+    if(room.config && room.config.mode && room.config.mode !== duelMode){
+      duelMode = room.config.mode;
+      document.getElementById('duel-view-k2n').style.display = duelMode==='klavyeden-notaya'  ? 'block' : 'none';
+      document.getElementById('duel-view-n2k').style.display = duelMode==='notadan-klavyeye' ? 'block' : 'none';
+      if(duelMode==='notadan-klavyeye') buildDuelGuitarInteraction();
+    }
 
     if(currentRoundNum !== rNum){
       currentRoundNum = rNum;
