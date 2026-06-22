@@ -383,11 +383,16 @@
         <span class="mode-label">Klavyeden Notayı<br>Bul</span>
       </div>
     </div>
-    <div class="filter-title">Tur Sayısı</div>
-    <div class="round-row">
-      <button class="round-btn active" data-rounds="5"  onclick="selectRounds(5)">5 Tur</button>
-      <button class="round-btn"        data-rounds="10" onclick="selectRounds(10)">10 Tur</button>
-      <button class="round-btn"        data-rounds="15" onclick="selectRounds(15)">15 Tur</button>
+    <div class="filter-title">Oyun Modu</div>
+    <div class="round-row" style="flex-wrap:wrap;">
+      <button class="round-btn active" data-rounds="5"   data-secs="0"  onclick="selectRounds(5,0)">5 Tur</button>
+      <button class="round-btn"        data-rounds="10"  data-secs="0"  onclick="selectRounds(10,0)">10 Tur</button>
+      <button class="round-btn"        data-rounds="15"  data-secs="0"  onclick="selectRounds(15,0)">15 Tur</button>
+    </div>
+    <div class="round-row" style="flex-wrap:wrap; margin-top:-4px;">
+      <button class="round-btn"        data-rounds="0"   data-secs="40" onclick="selectRounds(0,40)">⏱ 40sn</button>
+      <button class="round-btn"        data-rounds="0"   data-secs="50" onclick="selectRounds(0,50)">⏱ 50sn</button>
+      <button class="round-btn"        data-rounds="0"   data-secs="60" onclick="selectRounds(0,60)">⏱ 60sn</button>
     </div>
     <div class="filter-title">Çalışılacak Teller</div>
     <div class="string-buttons" style="margin-bottom:0;">
@@ -1388,6 +1393,7 @@ const D_ROMAN_FRETS = { 0:'Boş Tel', 1:'I. Perde', 2:'II. Perde', 3:'III. Perde
 
 let duelStrings     = new Set([1,2,3,4]);
 let duelRounds      = 5;
+let duelSecs        = 0; // 0 = tur bazlı; 40/50/60 = süre bazlı düello
 let duelMode        = 'notadan-klavyeye'; // 'notadan-klavyeye' | 'klavyeden-notaya'
 let myRole          = '';
 let oppSid          = '';
@@ -1437,9 +1443,13 @@ window.dToggleStr = function(num){
   else{ duelStrings.add(num); b.classList.add('active'); }
   a.classList.toggle('active', duelStrings.size===4);
 };
-window.selectRounds = function(n){
+window.selectRounds = function(n, secs){
   duelRounds = n;
-  document.querySelectorAll('.round-btn').forEach(b=>b.classList.toggle('active', parseInt(b.dataset.rounds)===n));
+  duelSecs   = secs || 0;
+  document.querySelectorAll('.round-btn').forEach(b=>{
+    const br=parseInt(b.dataset.rounds||0), bs=parseInt(b.dataset.secs||0);
+    b.classList.toggle('active', br===n && bs===duelSecs);
+  });
 };
 window.showDuelSetup = function(){
   showArea('duel-setup-area');
@@ -1518,16 +1528,18 @@ function pickAdjacentDuelBlock(correctId, pool){
 function buildQuestionDeck(strings, totalRounds, mode){
   const deck = {};
   const pool = D_NOTES.filter(n=>strings.includes(n.string));
+  // Süre modunda yeterli soru önceden üretilir (her 2sn'de 1 soru max ~60/2=30)
+  const count = totalRounds > 0 ? totalRounds : 60;
   let prevId = null;
-  for(let i=1;i<=totalRounds;i++){
+  for(let i=1;i<=count;i++){
     const note = pickNextDuelPos(pool, prevId);
     prevId = note.id;
     const choices = (mode === 'klavyeden-notaya')
       ? pickAdjacentDuelBlock(note.id, pool).map(n=>n.name)
-      : null; // notadan-klavyeye: cevap klavyede tıklama, şık yok
+      : null;
     deck[i] = {
-      posId: note.id, name: note.name, freq: note.freq,
-      key: note.key, string: note.string, fret: note.fret,
+      posId:note.id, name:note.name, freq:note.freq,
+      key:note.key, string:note.string, fret:note.fret,
       choices
     };
   }
@@ -1544,13 +1556,13 @@ window.sendChallenge = async function(toSid, toName){
   oppName  = toName;
   roomCode = rndCode();
 
-  const questionDeck = buildQuestionDeck([...duelStrings], duelRounds, duelMode);
+  const questionDeck = buildQuestionDeck([...duelStrings], duelRounds || 60, duelMode);
 
   await set(ref(db,`duel_rooms/${roomCode}`),{
     host:   {sid:mySid, name:myName},
     guest:  null,
     status: 'waiting',
-    config: { totalRounds:duelRounds, strings:[...duelStrings], mode:duelMode, questions:questionDeck },
+    config: { totalRounds:duelRounds, totalSecs:duelSecs, strings:[...duelStrings], mode:duelMode, questions:questionDeck },
     scores: {host:0, guest:0},
     currentRoundNum: 1,
     roundState: { hostDone:false, guestDone:false, winner:null }
@@ -1560,7 +1572,7 @@ window.sendChallenge = async function(toSid, toName){
   await set(ref(db,`duel_challenges/${toSid}`),{
     fromSid:mySid, fromName:myName,
     roomCode, status:'pending',
-    strings:[...duelStrings], totalRounds:duelRounds, mode:duelMode,
+    strings:[...duelStrings], totalRounds:duelRounds, totalSecs:duelSecs, mode:duelMode,
     redirectTo:'/bas/'
   });
 
@@ -1609,7 +1621,8 @@ function checkDuelHandoff(){
     oppSid     = h.oppSid;
     oppName    = h.oppName;
     duelStrings= new Set(h.strings);
-    duelRounds = h.totalRounds;
+    duelRounds = h.totalRounds || 0;
+    duelSecs   = h.totalSecs   || 0;
     duelMode   = h.mode || 'notadan-klavyeye';
     beginGame();
     return true;
@@ -1626,11 +1639,20 @@ function beginGame(){
 
   showArea('duel-game-area');
 
-  // Moda göre görünümü ayarla
+  // Moda göre görünümü ayarla — showArea'dan SONRA yapılmalı ki DOM görünür olsun
   document.getElementById('duel-view-k2n').style.display = duelMode==='klavyeden-notaya' ? 'block' : 'none';
   document.getElementById('duel-view-n2k').style.display = duelMode==='notadan-klavyeye' ? 'block' : 'none';
 
+  // Notadan-klavyeye modunda klavye tıklama düğmelerini oluştur
   if(duelMode==='notadan-klavyeye') buildDuelGuitarInteraction();
+
+  // Süre bazlı modda her iki tarafta geri sayım başlar
+  if(duelSecs > 0) startDuelTimer();
+
+  // Guest ise odayı 'playing' yap — böylece listenRound'daki 'waiting' guard takılmaz
+  if(myRole==='guest'){
+    update(ref(db,`duel_rooms/${roomCode}`),{status:'playing'});
+  }
 
   onValue(ref(db,`duel_rooms/${roomCode}/scores`), snap=>{
     const s = snap.val(); if(!s) return;
@@ -1653,11 +1675,14 @@ function listenRound(){
   });
   roundListener = onValue(ref(db,`duel_rooms/${roomCode}`), snap=>{
     const room = snap.val();
-    if(!room || room.status==='waiting') return;
+    if(!room) return;
+    // Sadece waiting+host kombinasyonunda bekle (guest kabul edince playing yapıyor)
+    if(room.status==='waiting' && myRole==='host') return;
+    if(room.status==='abandoned' || room.status==='finished') return;
     const rNum = room.currentRoundNum;
     const rState = room.roundState;
-    const questions = room.config.questions;
-    if(!questions || !questions[rNum]) return;
+    const questions = room.config && room.config.questions;
+    if(!rNum || !questions || !questions[rNum]) return;
 
     if(currentRoundNum !== rNum){
       currentRoundNum = rNum;
@@ -1690,10 +1715,39 @@ function duelPlayNote(freq){
   }catch(e){}
 }
 
+// ── SÜRE BAZLI DÜELLO ZAMANLAYICI ──
+let duelTimerInterval = null;
+let duelTimeLeft = 0;
+
+function startDuelTimer(){
+  duelTimeLeft = duelSecs;
+  if(duelTimerInterval) clearInterval(duelTimerInterval);
+  updateDuelTimerBadge();
+  duelTimerInterval = setInterval(()=>{
+    duelTimeLeft--;
+    updateDuelTimerBadge();
+    if(duelTimeLeft <= 0){
+      clearInterval(duelTimerInterval);
+      // Host süre bitince oyunu bitir
+      if(myRole==='host'){
+        update(ref(db,`duel_rooms/${roomCode}`),{status:'finished'});
+      }
+    }
+  }, 1000);
+}
+
+function updateDuelTimerBadge(){
+  const badge = document.getElementById('duel-round-label');
+  if(badge) badge.textContent = `⏱ ${duelTimeLeft}sn`;
+}
+
 // ── SORU GÖSTER ──
 function showDuelQuestion(rNum, qData){
   myAnswered = false;
-  document.getElementById('duel-round-label').textContent = `Tur ${rNum} / ${duelRounds}`;
+  if(duelSecs === 0){
+    document.getElementById('duel-round-label').textContent = `Tur ${rNum} / ${duelRounds}`;
+  }
+  // Süre modunda tur etiketi timer tarafından güncelleniyor, burada dokunmuyoruz
   document.getElementById('duel-feedback').textContent = '';
   document.getElementById('duel-feedback').className   = 'duel-feedback';
   document.getElementById('duel-cd-wrap').style.display = 'none';
@@ -1714,7 +1768,10 @@ function showDuelQuestion(rNum, qData){
     });
   } else {
     // Notadan-klavyeye: porte + tıklanabilir klavye
-    duelDrawQuestionStaff(qData);
+    // DOM görünür olduktan sonra render et (VexFlow display:none'da çalışmaz)
+    requestAnimationFrame(()=>{
+      duelDrawQuestionStaff(qData);
+    });
     document.querySelectorAll('#duel-fret-buttons-group g').forEach(g=>{
       g.classList.remove('disabled');
       const fc = g.querySelector('.duel-fret-feedback');
@@ -1891,7 +1948,9 @@ function showRoundResult(rState, qData){
       runTransaction(ref(db,`duel_rooms/${roomCode}`), room=>{
         if(!room) return room;
         if(room.currentRoundNum !== currentRoundNum) return room;
-        if(nextNum>duelRounds){ room.status='finished'; }
+        // Tur bazlı modda tur sayısına göre bitir; süre bazlı modda timer bitirir
+        const maxRounds = room.config.totalSecs > 0 ? 9999 : (room.config.totalRounds || 9999);
+        if(nextNum > maxRounds){ room.status='finished'; }
         else{ room.currentRoundNum=nextNum; room.roundState={hostDone:false,guestDone:false,winner:null}; }
         return room;
       });
@@ -1915,6 +1974,7 @@ function setCd(el,n){ el.textContent=n; el.classList.remove('duel-cd'); void el.
 // ── DÜELLO BİTİŞ ──
 function endDuel(){
   if(cdTimer) clearInterval(cdTimer);
+  if(duelTimerInterval) clearInterval(duelTimerInterval);
   if(roundListener){ roundListener(); roundListener=null; }
 
   const myF=myScore_, oppF=oppScore_;
@@ -1925,11 +1985,12 @@ function endDuel(){
 
   const mc=myF>=oppF?'win':'lose', oc=oppF>=myF?'win':'lose';
   const modeLabel = duelMode==='notadan-klavyeye' ? '🎼➡️🎸 Notadan Klavyeye' : '🎸➡️🎼 Klavyeden Notaya';
+  const gameLabel = duelSecs > 0 ? `⏱ ${duelSecs} Saniyelik Yarış` : `${duelRounds} Tur`;
 
   document.getElementById('app-wrap').innerHTML=`
     <div class="duel-result">
       <h2>⚔️ Düello Bitti!</h2>
-      <div class="duel-mode-badge">${modeLabel}</div>
+      <div class="duel-mode-badge">${modeLabel} · ${gameLabel}</div>
       <div class="winner-badge">${winBadge}</div>
       <div class="final-scores">
         <div class="fsc-player"><div class="fsc-name">${myName}</div><div class="fsc-num ${mc}">${myF}</div></div>
@@ -1952,6 +2013,7 @@ function handleAbandoned(){
 
 window.leaveGame = async function(){
   if(cdTimer) clearInterval(cdTimer);
+  if(duelTimerInterval) clearInterval(duelTimerInterval);
   if(roundListener && roomCode){ roundListener(); roundListener=null; }
   if(roomCode) await update(ref(db,`duel_rooms/${roomCode}`),{status:'abandoned'});
   showArea('setup-area');
