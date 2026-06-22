@@ -436,14 +436,6 @@
           </div>
           <div class="card-footer"><span class="badge badge-active">Aktif</span><span class="arrow">→</span></div>
         </a>
-        <a class="card" id="deneysel-card" href="/deneysel/">
-          <div class="card-icon">🧪</div>
-          <div>
-            <div class="card-title">Deneysel</div>
-            <div class="card-desc">Yeni eklenen deneysel alıştırma ve içerikler burada yer alır.</div>
-          </div>
-          <div class="card-footer"><span class="badge badge-active">Aktif</span><span class="arrow">→</span></div>
-        </a>
         <a class="card" id="bass-card" href="https://gitar.yunusgedik.com.tr/bas/">
           <div class="card-icon">🎸</div>
           <div>
@@ -1060,10 +1052,33 @@ function renderGradeRanking() {
   const rows = ids.map(sid => ({ sid, pct: calcPct(sid, repActiveGrade) }))
     .sort((a,b) => b.pct - a.pct);
 
-  wrap.innerHTML = rows.map((r,i) => {
+  // Önceki sıralamayı yükle
+  const storageKey = `grade_rankings_${repActiveGrade}`;
+  const previousRankings = JSON.parse(localStorage.getItem(storageKey) || '{}');
+  
+  // Yeni sıralamayı sakla
+  const currentRankings = {};
+  rows.forEach((r, i) => {
+    currentRankings[r.sid] = i + 1;
+  });
+  localStorage.setItem(storageKey, JSON.stringify(currentRankings));
+
+  wrap.innerHTML = rows.map((r, i) => {
+    const currentRank = i + 1;
+    const previousRank = previousRankings[r.sid];
+    let movementIndicator = '';
+    
+    if (previousRank !== undefined) {
+      if (currentRank < previousRank) {
+        movementIndicator = '<span style="color:#3b6d11; font-weight:bold; margin-left:6px;">⬆️</span>';
+      } else if (currentRank > previousRank) {
+        movementIndicator = '<span style="color:#a32d2d; font-weight:bold; margin-left:6px;">⬇️</span>';
+      }
+    }
+    
     return `<div class="lb-row" style="cursor:pointer;" onclick="openStudentDetail('${r.sid}')">
-      <div class="lb-rank">${i+1}</div>
-      <div class="lb-name">${studentName(r.sid)}</div>
+      <div class="lb-rank">${currentRank}</div>
+      <div class="lb-name" style="display:flex; align-items:center;">${studentName(r.sid)}${movementIndicator}</div>
       <div class="lb-pct">${Math.round(r.pct*100)}%</div>
     </div>`;
   }).join('');
@@ -1258,12 +1273,15 @@ window.openAllStudentsView = async function() {
         : `background:transparent;border-color:${cat.color};color:${cat.color}`;
       return `<button class="cat-chip" style="${style}" onclick="event.stopPropagation();toggleCategory('${s.id}','${cat.id}',this)">${cat.emoji} ${cat.label}</button>`;
     }).join('');
+    const isExtra = s.id.startsWith('s_new_') || s.id.startsWith('s_extra_');
+    const deleteBtn = isExtra ? `<button class="back-btn" style="color:#fff; background:#c0392b; border-color:#c0392b; margin-top:8px; width:100%; cursor:pointer;" onclick="event.stopPropagation();deleteStudentFromAll('${s.id}')">🗑️ Sil</button>` : '';
     return `<div class="student-all-card">
       <div class="student-all-header" onclick="openStudentDetailFromAll('${s.id}')">
         <span>${hasGrades ? '' : '🔑 '}<strong>${s.name}</strong></span>
         <span class="ssc-pct">${hasGrades ? `Grade ${maxGrade} · ${score} puan` : 'Eser listesine eklenmemiş'}</span>
       </div>
       <div class="cat-chips-row">${chipsHtml}</div>
+      ${deleteBtn}
     </div>`;
   }).join('');
 };
@@ -1271,6 +1289,32 @@ window.openAllStudentsView = async function() {
 window.closeAllStudentsView = function() {
   showOnly('teacher-grade-ranking');
   renderGradeRanking();
+};
+
+window.deleteStudentFromAll = async function(sid) {
+  const name = studentName(sid);
+  if (!confirm(`${name} adlı öğrenciyi sistemden TAMAMEN silmek istediğinize emin misiniz?\n\nTüm grade kayıtları ve giriş bilgisi kalıcı olarak silinecek. Bu işlem geri alınamaz.`)) return;
+
+  try {
+    await remove(ref(db, `extra_students/${sid}`));
+    await remove(ref(db, `repertoire/${sid}`));
+  } catch (e) {
+    console.error('Öğrenci silinemedi:', e);
+    alert('Hata: Öğrenci silinemedi. Bağlantınızı kontrol edin.');
+    return;
+  }
+
+  // Yerel listelerden de temizle
+  const idx = window.STUDENTS.findIndex(s => s.id === sid);
+  if (idx !== -1) window.STUDENTS.splice(idx, 1);
+  if (extraStudentsCache) {
+    const eidx = extraStudentsCache.findIndex(s => s.id === sid);
+    if (eidx !== -1) extraStudentsCache.splice(eidx, 1);
+  }
+  delete repProgress[sid];
+
+  showSaveToast();
+  openAllStudentsView();
 };
 
 // ============================================================
@@ -1289,7 +1333,6 @@ const SECTION_DEFS = [
   { id: 'klavye',     cardId: 'klavye-card',      label: 'Klavye Alıştırması', emoji: '🎛️' },
   { id: 'nota',       cardId: 'nota-card',        label: 'Nota Okuma',   emoji: '🎵' },
   { id: 'tel',        cardId: 'tel-card',         label: 'Tel Egzersizi', emoji: '🎸' },
-  { id: 'deneysel',   cardId: 'deneysel-card',    label: 'Deneysel',     emoji: '🧪' },
   { id: 'bass',       cardId: 'bass-card',        label: 'Bas Gitar - Klavyeden Notaya', emoji: '🎸' },
   { id: 'bassv2',     cardId: 'bassv2-card',      label: 'Bas Gitar - Notadan Klavyeye', emoji: '🎸' },
 ];
@@ -1594,7 +1637,7 @@ function checkKulakAccess(sid) {
   }
 }
 
-// ===== Klavye / Nota / Tel / Deneysel: yalnızca "Bölümler" panelinden ayar yapılmışsa kısıtlanır =====
+// ===== Klavye / Nota / Tel: yalnızca "Bölümler" panelinden ayar yapılmışsa kısıtlanır =====
 function checkKlavyeAccess(sid) {
   checkSectionAccess('klavye', 'klavye-card', sid, {
     href: '/klavye/', icon: '🎛️',
@@ -1613,13 +1656,6 @@ function checkTelAccess(sid) {
   checkSectionAccess('tel', 'tel-card', sid, {
     href: '/tel/', icon: '🎸',
     unlockedDesc: 'Gitarın tellerini ve perdelerini tanımak için alıştırmalar.',
-    badgeText: 'Aktif', badgeClass: 'badge badge-active'
-  });
-}
-function checkDeneyselAccess(sid) {
-  checkSectionAccess('deneysel', 'deneysel-card', sid, {
-    href: '/deneysel/', icon: '🧪',
-    unlockedDesc: 'Yeni eklenen deneysel alıştırma ve içerikler burada yer alır.',
     badgeText: 'Aktif', badgeClass: 'badge badge-active'
   });
 }
@@ -1850,11 +1886,33 @@ function renderLeaderboard() {
     return { sid, score, maxGrade };
   }).sort((a,b) => b.score - a.score);
 
+  // Önceki sıralamayı yükle
+  const previousRankings = JSON.parse(localStorage.getItem('previous_rankings') || '{}');
+  
+  // Yeni sıralamayı sakla
+  const currentRankings = {};
+  rows.forEach((r, i) => {
+    currentRankings[r.sid] = i + 1;
+  });
+  localStorage.setItem('previous_rankings', JSON.stringify(currentRankings));
+
   lb.innerHTML = rows.map((r, i) => {
     const isMe = meObj && r.sid === meObj.id;
+    const currentRank = i + 1;
+    const previousRank = previousRankings[r.sid];
+    let movementIndicator = '';
+    
+    if (previousRank !== undefined) {
+      if (currentRank < previousRank) {
+        movementIndicator = '<span style="color:#3b6d11; font-weight:bold; margin-left:6px;">⬆️</span>';
+      } else if (currentRank > previousRank) {
+        movementIndicator = '<span style="color:#a32d2d; font-weight:bold; margin-left:6px;">⬇️</span>';
+      }
+    }
+    
     return `<div class="lb-row ${isMe ? 'me' : ''}" id="${isMe ? 'lb-me-row' : ''}">
-      <div class="lb-rank">${i+1}</div>
-      <div class="lb-name">${studentName(r.sid)}<span class="lb-grade">Grade ${r.maxGrade}</span></div>
+      <div class="lb-rank">${currentRank}</div>
+      <div class="lb-name" style="display:flex; align-items:center;">${studentName(r.sid)}<span class="lb-grade">Grade ${r.maxGrade}</span>${movementIndicator}</div>
       <div class="lb-pct">${(r.score*100).toFixed(1)} puan</div>
     </div>`;
   }).join('');
@@ -1886,7 +1944,6 @@ window.updateWelcomeCard = async function(sid) {
     checkKlavyeAccess(sid);
     checkNotaAccess(sid);
     checkTelAccess(sid);
-    checkDeneyselAccess(sid);
     return;
   }
 
@@ -1913,7 +1970,6 @@ window.updateWelcomeCard = async function(sid) {
     checkKlavyeAccess(sid);
     checkNotaAccess(sid);
     checkTelAccess(sid);
-    checkDeneyselAccess(sid);
     return;
   }
 
@@ -1939,7 +1995,6 @@ window.updateWelcomeCard = async function(sid) {
   checkKlavyeAccess(sid);
   checkNotaAccess(sid);
   checkTelAccess(sid);
-  checkDeneyselAccess(sid);
 };
 
 // Modül yüklenirken bekleyen avatar güncellemesini tetikle
@@ -2050,12 +2105,35 @@ function renderCategoryLeaderboard(catId) {
     return;
   }
 
+  // Önceki sıralamayı yükle
+  const storageKey = `cat_rankings_${catId}`;
+  const previousRankings = JSON.parse(localStorage.getItem(storageKey) || '{}');
+  
+  // Yeni sıralamayı sakla
+  const currentRankings = {};
+  rows.forEach((r, i) => {
+    currentRankings[r.sid] = i + 1;
+  });
+  localStorage.setItem(storageKey, JSON.stringify(currentRankings));
+
   lb.innerHTML = rows.map((r, i) => {
     const isMe  = meObj && r.sid === meObj.id;
     const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}`;
+    const currentRank = i + 1;
+    const previousRank = previousRankings[r.sid];
+    let movementIndicator = '';
+    
+    if (previousRank !== undefined) {
+      if (currentRank < previousRank) {
+        movementIndicator = '<span style="color:#3b6d11; font-weight:bold; margin-left:6px;">⬆️</span>';
+      } else if (currentRank > previousRank) {
+        movementIndicator = '<span style="color:#a32d2d; font-weight:bold; margin-left:6px;">⬇️</span>';
+      }
+    }
+    
     return `<div class="lb-row ${isMe ? 'me' : ''}" id="${isMe ? 'lb-me-cat-row' : ''}">
       <div class="lb-rank">${medal}</div>
-      <div class="lb-name">${studentName(r.sid)}<span class="lb-grade" style="color:${cat.color};">${cat.emoji} ${cat.label}</span></div>
+      <div class="lb-name" style="display:flex; align-items:center;">${studentName(r.sid)}<span class="lb-grade" style="color:${cat.color};">${cat.emoji} ${cat.label}</span>${movementIndicator}</div>
       <div class="lb-pct">${(r.score * 100).toFixed(1)} puan</div>
     </div>`;
   }).join('');
