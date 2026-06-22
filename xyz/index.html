@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+  <title>Bas Gitar Klavyesi</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Lato:wght@300;400;700&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body { font-family: 'Lato', sans-serif; background: #faf6ed; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 1.2rem 1rem 2rem; color: #5a3e2b; }
+    header { text-align: center; margin-bottom: 0.5rem; }
+    header h1 { font-family: 'Playfair Display', serif; font-size: 1.35rem; font-weight: 600; color: #5a3e2b; }
+    #app-wrap { width: 100%; max-width: 600px; }
+
+    /* ── TEL SEÇİM / FİLTRE PANELİ STİLLERİ ── */
+    .filter-card {
+      background: #fff;
+      border: 1.5px solid #e8e0d5;
+      border-radius: 20px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 4px 20px rgba(90,62,43,0.04);
+      text-align: center;
+    }
+    .filter-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #b09070;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.75rem;
+    }
+    .string-buttons {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 0.85rem;
+    }
+    .string-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: 1.5px solid #d4c4b0;
+      background: #fff;
+      color: #5a3e2b;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+    }
+    .string-btn.all-btn {
+      width: auto;
+      height: 42px;
+      padding: 0 16px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+    }
+    .string-btn.active {
+      background: #5a3e2b;
+      border-color: #5a3e2b;
+      color: #fff;
+      box-shadow: 0 4px 10px rgba(90,62,43,0.2);
+    }
+    .action-buttons-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .start-exercise-btn {
+      width: 100%;
+      padding: 10px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      border-radius: 12px;
+      border: 1.5px solid #d4a373;
+      background: #f5e6d3;
+      color: #5a3e2b;
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+    .start-race-btn {
+      border: 1.5px solid #e24b4a;
+      background: #fdf0f0;
+      color: #a32d2d;
+    }
+    .start-exercise-btn:disabled {
+      background: #f5f5f5;
+      border-color: #ddd;
+      color: #aaa;
+      cursor: not-allowed;
+    }
+    .back-to-menu-btn {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #b09070;
+      background: #fff;
+      border: 1.5px solid #e8e0d5;
+      padding: 6px 14px;
+      border-radius: 30px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.12s;
+      box-shadow: 0 2px 8px rgba(90,62,43,0.02);
+    }
+
+    /* ── MOD SEÇİM KARTLARI ── */
+    .mode-select-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.65rem;
+      margin-bottom: 0.85rem;
+    }
+    .mode-card {
+      background: #fff;
+      border: 2px solid #e8e0d5;
+      border-radius: 14px;
+      padding: 12px 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .mode-card .mode-icon { 
+      font-size: 1.3rem; 
+      margin-bottom: 2px; 
+    }
+    .mode-card .mode-label { 
+      font-size: 0.82rem; 
+      font-weight: 700; 
+      color: #5a3e2b; 
+      line-height: 1.2; 
+    }
+    .mode-card .mode-desc {
+      font-size: 0.68rem;
+      font-weight: 400;
+      color: #a08060;
+      line-height: 1.2;
+    }
+    .mode-card.active { 
+      border-color: #d4a373; 
+      background: #fdf6ec; 
+      box-shadow: 0 4px 12px rgba(212, 163, 115, 0.15); 
+    }
+    .mode-card.active .mode-desc {
+      color: #b37d4e;
+    }
+    @media (hover: hover) {
+      .mode-card:hover:not(.active) { 
+        border-color: #d4c4b0; 
+        background: #faf6ed;
+      }
+    }
+
+    /* ── OYUN VE KART STİLLERİ ── */
+    .card { background: #fff; border: 1.5px solid #e8e0d5; border-radius: 20px; padding: 1.1rem 1.1rem 0.9rem; margin-bottom: 0.85rem; box-shadow: 0 4px 20px rgba(90,62,43,0.04); }
+    .card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; gap: 8px; }
+
+    #listen-btn { display: flex; align-items: center; gap: 5px; font-size: 0.8rem; padding: 6px 14px; border-radius: 20px; border: 1.5px solid #d4a373; background: #fff; color: #8b5a2b; cursor: pointer; font-family: inherit; font-weight: 600; transition: all 0.2s; }
+    #listen-btn.playing { background: #eaf3de; border-color: #6b8c42; color: #3b6d11; }
+
+    @media (hover: hover) {
+      #listen-btn:hover { background: #f5e6d3; }
+      .ctrl-btn:hover { background: #f5e6d3; border-color: #c4a88a; }
+      .ctrl-btn.primary:hover { background: #ebd3b8; }
+      .start-exercise-btn:hover:not(:disabled) { background: #ebd3b8; }
+      .start-race-btn:hover:not(:disabled) { background: #f9d5d5; }
+      .back-to-menu-btn:hover { background: #f5e6d3; border-color: #d4c4b0; color: #5a3e2b; }
+    }
+
+    .timer-badge { font-size: 0.85rem; font-weight: 700; color: #8b5a2b; background: #f5e6d3; padding: 5px 12px; border-radius: 12px; border: 1px solid #e8d5c0; white-space: nowrap; }
+
+    .hint-box { text-align: center; font-size: 1.15rem; font-weight: 700; color: #5a3e2b; margin-bottom: 1rem; display: flex; align-items: center; justify-content: center; gap: 8px; background: #fdfaf4; padding: 8px 12px; border-radius: 12px; border: 1px dashed #d4c4b0; }
+    .hint-string-badge { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: #8b5a2b; color: #fff; border-radius: 50%; font-size: 0.95rem; font-weight: 700; }
+    .hint-fret-text { color: #b37d4e; background: #f5e6d3; padding: 2px 10px; border-radius: 6px; }
+
+    .guitar-wrap { width: 100%; display: flex; justify-content: center; align-items: center; margin: 0 auto 0.5rem; }
+    .guitar-wrap svg { display: block; width: 100%; max-width: 480px; height: auto; overflow: visible; }
+
+    .fret-btn { cursor: pointer; transition: fill 0.15s, stroke 0.15s; -webkit-tap-highlight-color: transparent; }
+    .fret-btn.disabled { cursor: default; pointer-events: none; }
+
+    .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1rem; }
+    .choice-card { background: #fff; border: 2px solid #e8e0d5; border-radius: 16px; padding: 8px 10px 6px; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; position: relative; box-shadow: 0 2px 8px rgba(90,62,43,0.03); overflow: visible; -webkit-tap-highlight-color: transparent; outline: none; }
+    @media (hover: hover) {
+      .choice-card:hover:not(.disabled):not(.correct):not(.wrong) { border-color: #d4a373; transform: translateY(-3px); box-shadow: 0 8px 20px rgba(90,62,43,0.1); }
+    }
+    .choice-card:active:not(.disabled) { transform: scale(0.98); }
+    .choice-staff { width: 110px; height: 115px; margin: 4px 0 0; overflow: visible; }
+    .choice-staff svg { max-width: 100%; height: auto; overflow: visible; }
+    .choice-card.correct { background: #eaf3de; border-color: #6b8c42; }
+    .choice-card.wrong { background: #fdf0f0; border-color: #c75b39; }
+    .choice-card.disabled { cursor: default; opacity: 0.92; }
+
+    /* ── NOTADAN KLAVYEYE: BÜYÜK NOTA KARTI ── */
+    .question-staff-card {
+      background: #fff;
+      border: 1.5px solid #e8e0d5;
+      border-radius: 20px;
+      padding: 1.5rem 1rem;
+      margin-bottom: 0.85rem;
+      box-shadow: 0 4px 20px rgba(90,62,43,0.04);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    #question-staff {
+      width: 300px;
+      height: 110px;
+      overflow: visible;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    #question-staff svg { width: 100%; height: 100%; overflow: visible; }
+
+    .message { text-align: center; font-size: 0.9rem; font-weight: 700; color: #8b6b4e; margin-bottom: 0.65rem; min-height: 22px; padding: 0 5px; }
+
+    #auto-bar-wrap { height: 3px; background: #e0ddd6; border-radius: 2px; margin-bottom: 0.65rem; overflow: hidden; display: none; }
+    #auto-bar { height: 100%; width: 100%; background: #6b8c42; border-radius: 2px; transition: width 1s linear; }
+
+    .progress-area { display: flex; align-items: center; margin-bottom: 1.2rem; }
+    .progress-track { flex: 1; height: 10px; background: #ede6d8; border-radius: 5px; overflow: hidden; border: 1px solid #e0d8c8; }
+    .progress-fill { height: 100%; width: 0%; background: #8cb85f; border-radius: 5px; transition: width 0.4s ease; }
+
+    .controls { display: grid; grid-template-columns: 1fr; gap: 8px; }
+    .ctrl-btn { padding: 11px; font-size: 0.85rem; font-weight: 700; border-radius: 12px; border: 1.5px solid #d4c4b0; background: #fff; color: #5a3e2b; cursor: pointer; font-family: inherit; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 5px; width: 100%; }
+    .ctrl-btn.primary { background: #f5e6d3; border-color: #d4a373; }
+    .ctrl-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .result-screen { display: none; text-align: center; padding: 1.5rem 1rem; }
+    .result-title { font-family: 'Playfair Display', serif; font-size: 1.8rem; color: #6b8c42; margin-bottom: 1rem; }
+    .result-stats { background: #fdfaf4; border: 1.5px dashed #d4c4b0; border-radius: 16px; padding: 1.2rem; margin-bottom: 1.5rem; text-align: left; }
+    .stat-row { display: flex; justify-content: space-between; font-size: 1.1rem; padding: 8px 0; border-bottom: 1px dashed #e8e0d5; color: #5a3e2b; }
+    .stat-row:last-child { border-bottom: none; }
+    .stat-val { font-weight: 700; color: #8b5a2b; }
+    .stat-val.correct-val { color: #6b8c42; }
+    .stat-val.wrong-val { color: #c75b39; }
+
+    @media (max-width: 420px) {
+      .choices { gap: 8px; }
+      .choice-card { padding: 10px 6px; }
+      .choice-staff { width: 90px; height: 100px; }
+    }
+    .site-footer {
+      display: flex;
+      justify-content: center;
+      gap: 22px;
+      margin-top: 2.5rem;
+    }
+    .site-footer a {
+      color: #b0a392;
+      font-size: 2.2rem;
+      transition: all .2s ease;
+    }
+    .site-footer a:hover {
+      color: #d4a373;
+      transform: translateY(-2px);
+    }
+
+    /* ── DÜELLO STİLLERİ ── */
+    #duel-setup-area, #duel-waiting-area, #duel-game-area { display: none; }
+    .app-btn { width: 100%; padding: 10px; font-size: 0.95rem; font-weight: 700; border-radius: 12px; border: 1.5px solid #d4a373; background: #f5e6d3; color: #5a3e2b; cursor: pointer; transition: all 0.12s; font-family: inherit; }
+    .btn-duel { border-color: #7b5ea7; background: #f3eeff; color: #4a2d8a; }
+    @media (hover:hover) { .app-btn:hover:not(:disabled) { filter: brightness(0.95); } }
+    .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem; min-height: 38px; }
+    .online-players-list { margin-bottom: 1rem; }
+    .online-player-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 12px; border-radius: 12px; border: 1.5px solid #e8e0d5;
+      background: #fff; margin-bottom: 8px; transition: border-color 0.12s;
+    }
+    .online-player-name { font-weight: 700; color: #5a3e2b; font-size: 0.95rem; }
+    .online-dot { width: 9px; height: 9px; border-radius: 50%; background: #52a050; display: inline-block; margin-right: 7px; }
+    .challenge-btn {
+      font-size: 0.8rem; font-weight: 700; padding: 6px 14px; border-radius: 20px;
+      border: 1.5px solid #7b5ea7; background: #f3eeff; color: #4a2d8a;
+      cursor: pointer; font-family: inherit; transition: all 0.12s; white-space: nowrap;
+    }
+    .challenge-btn:hover { background: #e8deff; }
+    .no-players-msg { color: #b09070; font-size: 0.9rem; font-style: italic; padding: 1rem 0; }
+    .round-row { display: flex; gap: 8px; justify-content: center; margin-bottom: 1rem; }
+    .round-btn { padding: 7px 18px; border-radius: 20px; border: 1.5px solid #d4c4b0; background: #fff; color: #5a3e2b; font-size: 0.88rem; font-weight: 700; cursor: pointer; font-family: inherit; }
+    .round-btn.active { background: #7b5ea7; border-color: #7b5ea7; color: #fff; }
+    .waiting-card { background: #fff; border: 2px solid #7b5ea7; border-radius: 20px; padding: 2rem 1.5rem; text-align: center; margin-bottom: 1rem; }
+    .waiting-name { font-family: 'Playfair Display', serif; font-size: 1.4rem; color: #5a3e2b; margin-bottom: 0.5rem; }
+    .waiting-sub { font-size: 0.9rem; color: #b09070; margin-bottom: 1.5rem; }
+    .spinner { width: 40px; height: 40px; border: 3px solid #e8e0d5; border-top-color: #7b5ea7; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 1rem; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .duel-top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; }
+    .duel-round-badge { font-size: 0.85rem; font-weight: 700; color: #7b5ea7; background: #f3eeff; border: 1.5px solid #c8b4f0; padding: 5px 14px; border-radius: 30px; }
+    .duel-scores { display: flex; gap: 10px; margin-bottom: 0.6rem; }
+    .duel-score-box { flex: 1; background: #fff; border: 1.5px solid #e8e0d5; border-radius: 14px; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; }
+    .duel-score-box.me  { border-color: #f0c88e; background: #fffaf3; }
+    .duel-score-box.opp { border-color: #c8b4f0; background: #f9f5ff; }
+    .dscore-name { font-size: 0.82rem; font-weight: 700; color: #5a3e2b; max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .dscore-num  { font-size: 1.4rem; font-weight: 700; color: #5a3e2b; }
+    .duel-note-card { margin-bottom: 0.6rem; padding: 1rem 1rem 0.4rem; }
+    #duel-notation { width: 100%; display: flex; justify-content: center; overflow: hidden; }
+    #duel-notation svg { max-width: 100%; }
+    .duel-choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 0.5rem; }
+    .dcbtn { padding: 14px 8px; font-size: 1.05rem; font-weight: 700; border-radius: 14px; border: 1.5px solid #d4c4b0; background: #fff; color: #5a3e2b; cursor: pointer; font-family: inherit; transition: all 0.1s; -webkit-tap-highlight-color: transparent; outline: none; }
+    .dcbtn:active:not(:disabled) { transform: scale(0.96); }
+    .dcbtn.correct { background: #eaf3de; border-color: #6b8c42; color: #3b6d11; }
+    .dcbtn.wrong   { background: #fdf0f0; border-color: #e24b4a; color: #a32d2d; }
+    .dcbtn:disabled { cursor: default; opacity: 0.7; transform: none; }
+    .duel-guitar-wrap { width: 100%; display: flex; justify-content: center; align-items: center; margin: 0 auto 0.5rem; }
+    .duel-guitar-wrap svg { display: block; width: 100%; max-width: 480px; height: auto; overflow: visible; }
+    .duel-feedback { text-align: center; min-height: 28px; font-size: 0.95rem; font-weight: 700; color: #5a3e2b; margin-bottom: 0.3rem; }
+    .duel-feedback.iwin  { color: #3b6d11; } .duel-feedback.opwin { color: #a32d2d; } .duel-feedback.nobody { color: #888; }
+    .duel-countdown-wrap { display: none; justify-content: center; padding: 0.4rem 0; }
+    .duel-cd { width: 52px; height: 52px; border-radius: 50%; border: 3px solid #7b5ea7; background: #f3eeff; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: 700; color: #7b5ea7; animation: cdPop 0.3s ease; }
+    @keyframes cdPop { 0%{transform:scale(1.4);opacity:0.5} 100%{transform:scale(1);opacity:1} }
+    .duel-result { background: #fff; border: 2px solid #7b5ea7; border-radius: 20px; padding: 2rem 1.5rem; text-align: center; box-shadow: 0 8px 30px rgba(123,94,167,0.12); }
+    .duel-result h2 { font-family:'Playfair Display',serif; font-size: 1.5rem; color: #5a3e2b; margin-bottom: 0.6rem; }
+    .winner-badge { font-size: 1.1rem; font-weight: 700; color: #fff; background: linear-gradient(135deg,#7b5ea7,#5a3e8a); display: inline-block; padding: 8px 24px; border-radius: 30px; margin-bottom: 1rem; }
+    .final-scores { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 1rem; }
+    .fsc-player { text-align: center; }
+    .fsc-name  { font-size: 0.85rem; font-weight: 700; color: #b09070; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
+    .fsc-num   { font-size: 3.2rem; font-weight: 700; }
+    .fsc-num.win { color: #6b8c42; } .fsc-num.lose { color: #ccc; }
+    .fsc-vs    { font-size: 1rem; font-weight: 700; color: #d4c4b0; }
+    .duel-comment { font-size: 0.9rem; color: #5a3e2b; font-style: italic; margin-bottom: 1.5rem; line-height: 1.5; padding: 0 8px; }
+    .result-btns { display: flex; gap: 10px; }
+    .duel-mode-badge { font-size: 0.78rem; font-weight: 700; color: #8b5a2b; background: #f5e6d3; padding: 4px 10px; border-radius: 10px; border: 1px solid #e8d5c0; display: inline-block; margin-bottom: 0.6rem; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🎸 Bas Gitar Klavyesi</h1>
+</header>
+
+<div id="app-wrap">
+
+  <div id="setup-area">
+
+    <div class="filter-card">
+      <div class="mode-select-row">
+        <div class="mode-card active" id="mode-card-n2k" data-mode-index="0" onclick="selectQuizMode('notadan-klavyeye')">
+          <span class="mode-icon">🎼 ➜ 🎸</span>
+          <span class="mode-label">Notadan Klavye'ye</span>
+          <span class="mode-desc">Portedeki notanın yerini bul</span>
+        </div>
+        <div class="mode-card" id="mode-card-k2n" data-mode-index="1" onclick="selectQuizMode('klavyeden-notaya')">
+          <span class="mode-icon">🎸 ➜ 🎼</span>
+          <span class="mode-label">Klavye'den Nota'ya</span>
+          <span class="mode-desc">Klavyedeki notanın adını bul</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="filter-card">
+      <div class="string-buttons">
+        <button id="btn-all" class="string-btn all-btn active" onclick="toggleAllStrings()">Hepsi</button>
+        <button class="string-btn active string-num-btn" data-string="1" onclick="toggleString(1)">①</button>
+        <button class="string-btn active string-num-btn" data-string="2" onclick="toggleString(2)">②</button>
+        <button class="string-btn active string-num-btn" data-string="3" onclick="toggleString(3)">③</button>
+        <button class="string-btn active string-num-btn" data-string="4" onclick="toggleString(4)">④</button>
+      </div>
+      <div class="action-buttons-wrap">
+        <button id="start-btn" class="start-exercise-btn" onclick="startExercise('practice')">Egzersize Başla (Zamansız) 🎯</button>
+        <button id="race-btn" class="start-exercise-btn start-race-btn" onclick="startExercise('race')">Yarışmaya Başla (40 Saniye) 🏆</button>
+        <button class="app-btn btn-duel" onclick="window.showDuelSetup()">⚔️ Online Düello</button>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="duel-setup-area" class="filter-card">
+    <div class="top-bar" style="margin-bottom:.8rem;">
+      <h2 style="font-family:'Playfair Display',serif;font-size:1.1rem;">⚔️ Online Düello</h2>
+      <button class="back-to-menu-btn" onclick="showArea('setup-area')">← Geri</button>
+    </div>
+    <div class="filter-title">Online Oyuncular</div>
+    <div id="duel-online-players-list" class="online-players-list">
+      <div class="no-players-msg">Yükleniyor...</div>
+    </div>
+    <div class="mode-select-row">
+      <div class="mode-card active" id="d-mode-card-n2k" data-mode-index="0" onclick="dSelectMode('notadan-klavyeye')">
+        <span class="mode-icon">🎼 ➜ 🎸</span>
+        <span class="mode-label">Notadan Klavye'ye</span>
+        <span class="mode-desc">Portedeki notanın yerini bul</span>
+      </div>
+      <div class="mode-card" id="d-mode-card-k2n" data-mode-index="1" onclick="dSelectMode('klavyeden-notaya')">
+        <span class="mode-icon">🎸 ➜ 🎼</span>
+        <span class="mode-label">Klavye'den Nota'ya</span>
+        <span class="mode-desc">Klavyedeki notanın adını bul</span>
+      </div>
+    </div>
+    <div class="filter-title">Oyun Modu</div>
+    <div class="round-row" style="flex-wrap:wrap;">
+      <button class="round-btn active" data-rounds="5"   data-secs="0"  onclick="selectRounds(5,0)">5 Tur</button>
+      <button class="round-btn"        data-rounds="10"  data-secs="0"  onclick="selectRounds(10,0)">10 Tur</button>
+      <button class="round-btn"        data-rounds="15"  data-secs="0"  onclick="selectRounds(15,0)">15 Tur</button>
+    </div>
+    <div class="round-row" style="flex-wrap:wrap; margin-top:-4px;">
+      <button class="round-btn"        data-rounds="0"   data-secs="40" onclick="selectRounds(0,40)">⏱ 40sn</button>
+      <button class="round-btn"        data-rounds="0"   data-secs="50" onclick="selectRounds(0,50)">⏱ 50sn</button>
+      <button class="round-btn"        data-rounds="0"   data-secs="60" onclick="selectRounds(0,60)">⏱ 60sn</button>
+    </div>
+    <div class="string-buttons" style="margin-bottom:0;">
+      <button id="d-btn-all" class="string-btn all-btn active" onclick="dToggleAll()">HEPSİ</button>
+      <button class="string-btn active d-str-btn" data-string="1" onclick="dToggleStr(1)">①</button>
+      <button class="string-btn active d-str-btn" data-string="2" onclick="dToggleStr(2)">②</button>
+      <button class="string-btn active d-str-btn" data-string="3" onclick="dToggleStr(3)">③</button>
+      <button class="string-btn active d-str-btn" data-string="4" onclick="dToggleStr(4)">④</button>
+    </div>
+  </div>
+
+  <div id="duel-waiting-area" class="filter-card">
+    <div class="top-bar" style="margin-bottom:.8rem;">
+      <h2 style="font-family:'Playfair Display',serif;font-size:1.1rem;">⚔️ Davet Gönderildi</h2>
+      <button class="back-to-menu-btn" onclick="cancelChallenge()">✕ İptal</button>
+    </div>
+    <div class="waiting-card">
+      <div class="spinner"></div>
+      <div class="waiting-name" id="waiting-opp-name">Rakip</div>
+      <div class="waiting-sub">daveti kabul etmesi bekleniyor...</div>
+    </div>
+    <p style="font-size:.8rem;color:#b09070;text-align:center;">Rakibiniz daveti reddederse veya 30 saniye içinde cevap vermezse otomatik iptal olur.</p>
+  </div>
+
+  <div id="duel-game-area">
+    <div class="duel-top-bar">
+      <button class="back-to-menu-btn" onclick="leaveGame()">← Çık</button>
+      <div class="duel-round-badge" id="duel-round-label">Tur 1 / 5</div>
+    </div>
+    <div class="duel-scores">
+      <div class="duel-score-box me">
+        <span class="dscore-name" id="dscore-me-name">Sen</span>
+        <span class="dscore-num"  id="dscore-me">0</span>
+      </div>
+      <div class="duel-score-box opp">
+        <span class="dscore-name" id="dscore-opp-name">Rakip</span>
+        <span class="dscore-num"  id="dscore-opp">0</span>
+      </div>
+    </div>
+
+    <div id="duel-view-k2n" style="display:none;">
+      <div class="card duel-note-card">
+        <div class="hint-box" id="duel-hint-text">
+          💡 <span class="hint-string-badge">1</span> . Tel – <span class="hint-fret-text">I. Perde</span>
+        </div>
+        <div class="duel-guitar-wrap">
+          <svg id="duel-guitar-svg-k2n" viewBox="60 0 400 132" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+            <defs>
+              <linearGradient id="dfbGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#2a1a0e"/>
+                <stop offset="100%" stop-color="#1a0f06"/>
+              </linearGradient>
+              <linearGradient id="dnutGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#f0e0b0"/>
+                <stop offset="100%" stop-color="#c8a050"/>
+              </linearGradient>
+              <filter id="dDotGlow" x="-80%" y="-80%" width="260%" height="260%">
+                <feGaussianBlur stdDeviation="3.5" result="blur"/>
+                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+            </defs>
+            <rect x="62" y="24" width="392" height="96" rx="5" fill="url(#dfbGrad)" stroke="#3a2010" stroke-width="1.5"/>
+            <rect x="62" y="24" width="392" height="3" rx="1" fill="#c8a050" opacity="0.5"/>
+            <rect x="62" y="117" width="392" height="3" rx="1" fill="#c8a050" opacity="0.5"/>
+            <rect x="112" y="22" width="8" height="100" rx="2" fill="url(#dnutGrad)" stroke="#c0a040" stroke-width="0.8"/>
+            <rect x="198" y="24" width="4" height="96" rx="1" fill="#b0b8b0" opacity="0.85"/>
+            <rect x="285" y="24" width="4" height="96" rx="1" fill="#b0b8b0" opacity="0.85"/>
+            <rect x="370" y="24" width="4" height="96" rx="1" fill="#b0b8b0" opacity="0.85"/>
+            <rect x="450" y="24" width="4" height="96" rx="1" fill="#b0b8b0" opacity="0.85"/>
+            <text x="155" y="14" text-anchor="middle" fill="#8b6b4e" font-size="12" font-weight="700" font-family="Lato,sans-serif">I</text>
+            <text x="243" y="14" text-anchor="middle" fill="#8b6b4e" font-size="12" font-weight="700" font-family="Lato,sans-serif">II</text>
+            <text x="328" y="14" text-anchor="middle" fill="#8b6b4e" font-size="12" font-weight="700" font-family="Lato,sans-serif">III</text>
+            <text x="412" y="14" text-anchor="middle" fill="#8b6b4e" font-size="12" font-weight="700" font-family="Lato,sans-serif">IV</text>
+            <line x1="70" y1="36"  x2="454" y2="36"  stroke="#e8d09a" stroke-width="0.9" opacity="0.95"/>
+            <line x1="70" y1="60"  x2="454" y2="60"  stroke="#e0c880" stroke-width="1.5" opacity="0.95"/>
+            <line x1="70" y1="84"  x2="454" y2="84"  stroke="#c8a84a" stroke-width="2.1" opacity="0.95"/>
+            <line x1="70" y1="108" x2="454" y2="108" stroke="#a87820" stroke-width="2.8" opacity="0.95"/>
+            <circle cx="93" cy="36"  r="10" fill="#fff8ef" stroke="#d4a373" stroke-width="1.2"/>
+            <text   x="93" y="40"  text-anchor="middle" fill="#5a3e2b" font-size="10" font-weight="700" font-family="Lato,sans-serif">1</text>
+            <circle cx="93" cy="60"  r="10" fill="#fff8ef" stroke="#d4a373" stroke-width="1.2"/>
+            <text   x="93" y="64"  text-anchor="middle" fill="#5a3e2b" font-size="10" font-weight="700" font-family="Lato,sans-serif">2</text>
+            <circle cx="93" cy="84"  r="10" fill="#fff8ef" stroke="#d4a373" stroke-width="1.2"/>
+            <text   x="93" y="88" text-anchor="middle" fill="#5a3e2b" font-size="10" font-weight="700" font-family="Lato,sans-serif">3</text>
+            <circle cx="93" cy="108" r="10" fill="#fff8ef" stroke="#d4a373" stroke-width="1.2"/>
+            <text   x="93" y="112" text-anchor="middle" fill="#5a3e2b" font-size="10" font-weight="700" font-family="Lato,sans-serif">4</text>
+            <circle id="duel-fret-highlight" cx="0" cy="0" r="14" fill="#f4d03f" stroke="#d4ac0d" stroke-width="2.5" filter="url(#dDotGlow)" opacity="0.95" style="display:none;pointer-events:none;"/>
+            <text id="duel-fret-highlight-q" x="0" y="0" text-anchor="middle" dominant-baseline="central" fill="#5a3000" font-size="11" font-weight="700" font-family="Lato,sans-serif" style="display:none;pointer-events:none;">?</text>
+          </svg>
+        </div>
+      </div>
+      <div class="duel-choices" id="duel-choices-k2n"></div>
+    </div>
