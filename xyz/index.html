@@ -319,13 +319,6 @@
 
   <div id="setup-area">
 
-    <div class="filter-card" id="online-card">
-      <div class="filter-title">Online Öğrenciler</div>
-      <div id="online-players-list" class="online-players-list">
-        <div class="no-players-msg">Yükleniyor...</div>
-      </div>
-    </div>
-
     <div class="filter-card">
       <div class="filter-title">Egzersiz Türü</div>
       <div class="mode-select-row">
@@ -352,12 +345,8 @@
       <div class="action-buttons-wrap">
         <button id="start-btn" class="start-exercise-btn" onclick="startExercise('practice')">Egzersize Başla (Zamansız) 🎯</button>
         <button id="race-btn" class="start-exercise-btn start-race-btn" onclick="startExercise('race')">Yarışmaya Başla (40 Saniye) 🏆</button>
+        <button class="app-btn btn-duel" onclick="window.showDuelSetup()">⚔️ Online Düello – Meydan Oku</button>
       </div>
-    </div>
-
-    <div class="filter-card">
-      <div class="filter-title">⚔️ Online Düello</div>
-      <button class="app-btn btn-duel" onclick="showDuelSetup()">Bir Öğrenciye Meydan Oku</button>
     </div>
 
   </div>
@@ -541,7 +530,7 @@
     </div>
   </div>
 
-  <div id="exercise-area">
+  <div id="exercise-area" style="display:none;">
 
     <!-- Klavyeden-Notaya görünümü -->
     <div id="view-k2n" style="display:none;">
@@ -687,7 +676,7 @@
     <p id="result-comment" style="color:#8b6b4e; font-weight:700; margin-bottom:1.5rem;"></p>
   </div>
 
-  <div class="controls" id="exercise-controls">
+  <div class="controls" id="exercise-controls" style="display:none;">
     <button class="ctrl-btn primary" id="next-btn" onclick="manualNext()" disabled>Sonraki Soru →</button>
   </div>
 </div>
@@ -1573,7 +1562,7 @@ window.sendChallenge = async function(toSid, toName){
     fromSid:mySid, fromName:myName,
     roomCode, status:'pending',
     strings:[...duelStrings], totalRounds:duelRounds, totalSecs:duelSecs, mode:duelMode,
-    redirectTo:'/bas/'
+    redirectTo: window.location.pathname
   });
 
   document.getElementById('waiting-opp-name').textContent = toName;
