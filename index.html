@@ -452,14 +452,6 @@
           </div>
           <div class="card-footer"><span class="badge badge-new">YENİ</span><span class="arrow">→</span></div>
         </a>
-		        <a class="card" id="bassv2-card" href="https://gitar.yunusgedik.com.tr/basv2/">
-          <div class="card-icon">🎸</div>
-          <div>
-            <div class="card-title">Bas Gitar - Notadan Klavyeye (I. Pozisyon)</div>
-            <div class="card-desc">Bas gitarda I. Pozisyondaki tüm perdeleri, telleri ve notaların dizekteki (Fa anahtarı) tam karşılıklarını interaktif olarak deneyimleyin.</div>
-          </div>
-          <div class="card-footer"><span class="badge badge-new">YENİ</span><span class="arrow">→</span></div>
-        </a>
       </div>
     </div>
 
@@ -1290,8 +1282,7 @@ const SECTION_DEFS = [
   { id: 'nota',       cardId: 'nota-card',        label: 'Nota Okuma',   emoji: '🎵' },
   { id: 'tel',        cardId: 'tel-card',         label: 'Tel Egzersizi', emoji: '🎸' },
   { id: 'deneysel',   cardId: 'deneysel-card',    label: 'Deneysel',     emoji: '🧪' },
-  { id: 'bass',       cardId: 'bass-card',        label: 'Bas Gitar - Klavyeden Notaya', emoji: '🎸' },
-  { id: 'bassv2',     cardId: 'bassv2-card',      label: 'Bas Gitar - Notadan Klavyeye', emoji: '🎸' },
+  { id: 'bass',       cardId: 'bass-card',        label: 'Bas Gitar - Klavyeden Notaya', emoji: '🎸' }, 
 ];
 
 let sectionAccessConfig = {};
@@ -1507,26 +1498,6 @@ function checkBassAccess(sid) {
   }
   checkSectionAccess('bass', 'bass-card', sid, {
     href: 'https://gitar.yunusgedik.com.tr/bas/',
-    icon: '🎸',
-    unlockedDesc: 'Bas gitarda I. Pozisyondaki tüm perdeleri, telleri ve notaların dizekteki (Fa anahtarı) tam karşılıklarını interaktif olarak deneyimleyin.',
-    badgeText: 'YENİ',
-    lockedDesc: 'Bu bölüm henüz erişiminize açılmamış.'
-  });
-}
-
-// ===== Bas Gitar V2 (Notadan Klavyeye) kilitli mi kontrolü (öğrenci için) =====
-// Taban kural: "Bas Gitar" kategorisinde olmalı. Üstüne öğretmenin "Bölümler"
-// panelinden belirlediği ek Grade/kategori sınırı (varsa) uygulanır.
-function checkBassV2Access(sid) {
-  const card = document.getElementById('bassv2-card');
-  if (!card) return;
-  const hasBaseAccess = sid === TEACHER_ID || !!(studentCategories[sid] || {})['bas_gitar'];
-  if (!hasBaseAccess) {
-    lockCard(card, { lockedDesc: 'Bu bölüm yalnızca Bas Gitar kategorisindeki öğrencilere açıktır.' });
-    return;
-  }
-  checkSectionAccess('bassv2', 'bassv2-card', sid, {
-    href: 'https://gitar.yunusgedik.com.tr/basv2/',
     icon: '🎸',
     unlockedDesc: 'Bas gitarda I. Pozisyondaki tüm perdeleri, telleri ve notaların dizekteki (Fa anahtarı) tam karşılıklarını interaktif olarak deneyimleyin.',
     badgeText: 'YENİ',
