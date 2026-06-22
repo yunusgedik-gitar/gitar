@@ -3457,7 +3457,6 @@ const STUDENTS_DATA = [
   { id: 's48', name: 'Rıfat Cenk AKSOY', pinHash: 'e5fcf24812e6585eac0ea6f1a5e3ab5a16b8c2b9568c10b4175ea088aaeae014' },
   { id: 's49', name: 'Handan ALTUNER', pinHash: 'fc8cf0cb7ee532304dc5f62ff63b096168f1f39744cf4016870ec775dcf8421f' },
   { id: 's50', name: 'Havva HOCAOĞLU', pinHash: 'e09ffd3535b9d219b9e469202e37b92a4138f8ac920871f3144742d1ba656ae0' },
-  { id: 's51', name: 'Ebrar Sümeyye ÖZ', pinHash: 'e50d31b7a14483cd90628bed916a66ecdf0bc2766711031b212e228d67db6a0b' },
   { id: 's52', name: 'Meryem ER', pinHash: 'f13f21602832553d73c27dadb056d038455d84c24bb07f0b0e6934337c621259' },
   { id: 's53', name: 'Ramazan Özgür İRİDERE', pinHash: '004c5505872f96b5e858ad7dc92883c2443512d4f45ef638076f3807937e7db3' },
   { id: 's54', name: 'Av. Yasemin YILDIZ', pinHash: '3011be4c1d6f6f1a7de65a585c70be01495eb92377268d6cd5ec02e801c36509' },
