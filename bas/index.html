@@ -942,34 +942,51 @@ function playGuitar(freq) {
     const ctx = getAudio();
     if (ctx.state === 'suspended') ctx.resume();
     const now = ctx.currentTime;
+    
     const master = ctx.createGain();
     master.connect(ctx.destination);
+    master.gain.setValueAtTime(1.0, now);
 
+    // Filtre kesim frekansını (freq * 10) yükselterek harmoniklerin duyulmasını sağlıyoruz
     const filter = ctx.createBiquadFilter();
-    filter.type = 'lowpass'; filter.frequency.value = freq * 2.8; filter.Q.value = 0.7;
+    filter.type = 'lowpass'; 
+    filter.frequency.value = freq * 10; 
+    filter.Q.value = 1.0;
     filter.connect(master);
 
-    const osc = ctx.createOscillator(); osc.type = 'triangle'; osc.frequency.value = freq;
+    // Temel Ses Gövdesi (Triangle)
+    const osc = ctx.createOscillator(); 
+    osc.type = 'triangle'; 
+    osc.frequency.value = freq;
     const og = ctx.createGain();
-    og.gain.setValueAtTime(0, now); og.gain.linearRampToValueAtTime(0.45, now + 0.006); og.gain.exponentialRampToValueAtTime(0.001, now + 2.2);
-    osc.connect(og); og.connect(filter); osc.start(now); osc.stop(now + 2.2);
+    og.gain.setValueAtTime(0, now); 
+    og.gain.linearRampToValueAtTime(0.7, now + 0.015); 
+    og.gain.exponentialRampToValueAtTime(0.001, now + 2.5);
+    osc.connect(og); og.connect(filter); osc.start(now); osc.stop(now + 2.5);
 
-    const sine = ctx.createOscillator(); sine.type = 'sine'; sine.frequency.value = freq;
-    const sg = ctx.createGain();
-    sg.gain.setValueAtTime(0, now); sg.gain.linearRampToValueAtTime(0.25, now + 0.006); sg.gain.exponentialRampToValueAtTime(0.001, now + 1.8);
-    sine.connect(sg); sg.connect(filter); sine.start(now); sine.stop(now + 1.8);
-
+    // Bası küçük cihazlarda duyulabilir kılan üst harmonikler (Sine)
     [2, 3, 4].forEach(h => {
       const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = freq * h;
       const g = ctx.createGain();
-      g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(0.1 / h, now + 0.005); g.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
-      o.connect(g); g.connect(filter); o.start(now); o.stop(now + 1.2);
+      g.gain.setValueAtTime(0, now); 
+      g.gain.linearRampToValueAtTime(0.4 / h, now + 0.015); 
+      g.gain.exponentialRampToValueAtTime(0.001, now + 2.0);
+      o.connect(g); g.connect(filter); o.start(now); o.stop(now + 2.0);
     });
 
-    master.gain.setValueAtTime(0.75, now); master.gain.exponentialRampToValueAtTime(0.001, now + 2.5);
+    // Bas teline parmakla vurma/çekme efekti (Kısa süreli Square)
+    const pluck = ctx.createOscillator(); 
+    pluck.type = 'square'; 
+    pluck.frequency.value = freq;
+    const pg = ctx.createGain();
+    pg.gain.setValueAtTime(0, now); 
+    pg.gain.linearRampToValueAtTime(0.1, now + 0.005); 
+    pg.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+    pluck.connect(pg); pg.connect(filter); pluck.start(now); pluck.stop(now + 0.1);
+
     const btn = document.getElementById(quizType === 'notadan-klavyeye' ? 'listen-btn-n2k' : 'listen-btn');
     if (btn) { btn.classList.add('playing'); setTimeout(() => btn.classList.remove('playing'), 700); }
-  } catch(e) {}
+  } catch(e) { console.error(e); }
 }
 
 function replay() { interacted = true; if (current) playGuitar(current.freq); }
@@ -1717,23 +1734,40 @@ function listenRound(){
 }
 
 // ── DÜELLO SES ÇALMA ──
-function duelPlayNote(freq){
-  try{
-    if(!duelAudioCtx) duelAudioCtx = new (window.AudioContext||window.webkitAudioContext)();
+function duelPlayNote(freq) {
+  try {
+    if (!duelAudioCtx) duelAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
     const ctx = duelAudioCtx;
-    if(ctx.state==='suspended') ctx.resume();
+    if (ctx.state === 'suspended') ctx.resume();
     const now = ctx.currentTime;
+    
     const master = ctx.createGain();
     master.connect(ctx.destination);
+    master.gain.setValueAtTime(1.0, now);
+
     const filter = ctx.createBiquadFilter();
-    filter.type='lowpass'; filter.frequency.value=freq*2.8; filter.Q.value=0.7;
+    filter.type = 'lowpass'; 
+    filter.frequency.value = freq * 10; 
+    filter.Q.value = 1.0;
     filter.connect(master);
-    const osc=ctx.createOscillator(); osc.type='triangle'; osc.frequency.value=freq;
-    const og=ctx.createGain();
-    og.gain.setValueAtTime(0,now); og.gain.linearRampToValueAtTime(0.45,now+0.006); og.gain.exponentialRampToValueAtTime(0.001,now+2.2);
-    osc.connect(og); og.connect(filter); osc.start(now); osc.stop(now+2.2);
-    master.gain.setValueAtTime(0.75,now); master.gain.exponentialRampToValueAtTime(0.001,now+2.5);
-  }catch(e){}
+
+    const osc = ctx.createOscillator(); osc.type = 'triangle'; osc.frequency.value = freq;
+    const og = ctx.createGain();
+    og.gain.setValueAtTime(0, now); og.gain.linearRampToValueAtTime(0.7, now + 0.015); og.gain.exponentialRampToValueAtTime(0.001, now + 2.5);
+    osc.connect(og); og.connect(filter); osc.start(now); osc.stop(now + 2.5);
+
+    [2, 3, 4].forEach(h => {
+      const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = freq * h;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(0.4 / h, now + 0.015); g.gain.exponentialRampToValueAtTime(0.001, now + 2.0);
+      o.connect(g); g.connect(filter); o.start(now); o.stop(now + 2.0);
+    });
+
+    const pluck = ctx.createOscillator(); pluck.type = 'square'; pluck.frequency.value = freq;
+    const pg = ctx.createGain();
+    pg.gain.setValueAtTime(0, now); pg.gain.linearRampToValueAtTime(0.1, now + 0.005); pg.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+    pluck.connect(pg); pg.connect(filter); pluck.start(now); pluck.stop(now + 0.1);
+  } catch(e) {}
 }
 
 // ── SÜRE BAZLI DÜELLO ZAMANLAYICI ──
