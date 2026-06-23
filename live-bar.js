@@ -217,3 +217,537 @@ if (document.readyState === 'loading') {
 } else {
   initLiveBar();
 }
+
+/* ══════════════════════════════════════════════════════════
+   EVRENSEL CHAT SİSTEMİ
+   Her sayfada çalışır (index, nota, vb.)
+   index.html'de ayrıca derin entegrasyon var (grade kontrolü),
+   diğer sayfalarda sadece floating panel açılır.
+══════════════════════════════════════════════════════════ */
+
+const CHAT_KEEP_MS  = 24 * 60 * 60 * 1000;
+const WORD_LIMIT    = 500;
+const TEACHER_SID   = 's01';
+
+function chatEscHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
+function chatFormatTime(ts) {
+  const d = new Date(ts), now = new Date(), diff = now - d;
+  if (diff < 60000) return 'az önce';
+  if (diff < 3600000) return `${Math.floor(diff/60000)}dk`;
+  if (d.toDateString() === now.toDateString()) return d.toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'});
+  return d.toLocaleDateString('tr-TR',{day:'2-digit',month:'2-digit'});
+}
+function getDmRoom(a, b) { return [a,b].sort().join('_'); }
+function getUsedWordsTday(sid) {
+  const k = `chat_words_${sid}_${new Date().toISOString().slice(0,10)}`;
+  return parseInt(localStorage.getItem(k)||'0');
+}
+function addUsedWordsTday(sid, n) {
+  const k = `chat_words_${sid}_${new Date().toISOString().slice(0,10)}`;
+  localStorage.setItem(k, getUsedWordsTday(sid) + n);
+}
+function countWords(t) { return t.trim().split(/\s+/).filter(Boolean).length; }
+
+async function initChatSystem() {
+  const sid  = localStorage.getItem('gitar_session');
+  const name = localStorage.getItem('gitar_student_name');
+  if (!sid || !name) return;
+
+  // index.html'de zaten chat var mı? Varsa bu modülü çalıştırma
+  if (document.getElementById('chat-fab')) return;
+
+  // ── CSS ──
+  if (!document.getElementById('_gs_chat_css')) {
+    const s = document.createElement('style');
+    s.id = '_gs_chat_css';
+    s.textContent = `
+#_gs_chat_fab {
+  position:fixed; bottom:24px; right:24px;
+  width:54px; height:54px; border-radius:50%;
+  background:linear-gradient(135deg,#2c1f14,#4a3525);
+  color:#fff; font-size:1.3rem; border:none; cursor:pointer;
+  box-shadow:0 4px 20px rgba(44,31,20,.35);
+  display:flex; align-items:center; justify-content:center;
+  z-index:8000; transition:transform .18s;
+}
+#_gs_chat_fab:hover { transform:scale(1.09); }
+._gs_fab_badge {
+  position:absolute; top:-3px; right:-3px;
+  min-width:18px; height:18px; padding:0 4px;
+  background:#e24b4a; color:#fff; font-size:.65rem; font-weight:700;
+  border-radius:9px; display:none; align-items:center; justify-content:center;
+  border:2px solid #f7f4ef;
+}
+#_gs_chat_panel {
+  position:fixed; bottom:88px; right:24px;
+  width:340px; max-height:560px;
+  background:#fff; border:1px solid #e2d9cc;
+  border-radius:22px; box-shadow:0 16px 56px rgba(44,31,20,.22);
+  display:none; flex-direction:column; z-index:8001; overflow:hidden;
+  animation:_gs_cpop .25s cubic-bezier(.34,1.56,.64,1);
+  font-family:'DM Sans',sans-serif;
+}
+@keyframes _gs_cpop {
+  from{opacity:0;transform:scale(.92) translateY(12px)}
+  to{opacity:1;transform:scale(1) translateY(0)}
+}
+._gs_chat_hdr {
+  padding:.85rem 1rem .75rem;
+  background:linear-gradient(135deg,#2c1f14,#4a3525);
+  color:#fff; display:flex; align-items:center; gap:10px;
+}
+._gs_chat_hdr_title { font-size:.9rem; font-weight:700; flex:1; }
+._gs_chat_close {
+  background:rgba(255,255,255,.15); border:none; color:#fff;
+  width:28px; height:28px; border-radius:50%; cursor:pointer;
+  font-size:.85rem; display:flex; align-items:center; justify-content:center;
+}
+._gs_chat_close:hover { background:rgba(255,255,255,.28); }
+._gs_chat_tabs { display:flex; border-bottom:1px solid #e2d9cc; background:#faf8f5; }
+._gs_chat_tab {
+  flex:1; padding:.6rem .5rem; font-size:.78rem; font-weight:600;
+  color:#7a6a5a; background:none; border:none; cursor:pointer;
+  border-bottom:2px solid transparent; font-family:inherit;
+}
+._gs_chat_tab.active { color:#2c1f14; border-bottom-color:#b8892a; }
+._gs_tab_badge {
+  display:inline-flex; align-items:center; justify-content:center;
+  min-width:16px; height:16px; padding:0 4px;
+  background:#e24b4a; color:#fff; font-size:.6rem; font-weight:700;
+  border-radius:8px; margin-left:4px;
+}
+._gs_chat_view { display:none; flex-direction:column; flex:1; min-height:0; }
+._gs_chat_view.active { display:flex; }
+._gs_msgs {
+  flex:1; overflow-y:auto; padding:.75rem;
+  display:flex; flex-direction:column; gap:6px;
+  min-height:0; max-height:330px;
+}
+._gs_msgs::-webkit-scrollbar { width:4px; }
+._gs_msgs::-webkit-scrollbar-thumb { background:#e2d9cc; border-radius:2px; }
+._gs_msg { display:flex; flex-direction:column; max-width:82%; }
+._gs_msg.mine { align-self:flex-end; align-items:flex-end; }
+._gs_msg.theirs { align-self:flex-start; align-items:flex-start; }
+._gs_msg_meta {
+  font-size:.65rem; color:#7a6a5a; margin-bottom:2px; padding:0 4px;
+  display:flex; gap:6px; align-items:center;
+}
+._gs_msg_author { font-weight:700; color:#2c1f14; }
+._gs_teacher_tag {
+  background:#b8892a; color:#fff; font-size:.58rem; font-weight:700;
+  padding:1px 5px; border-radius:4px;
+}
+._gs_bubble {
+  padding:.5rem .75rem; border-radius:14px;
+  font-size:.83rem; line-height:1.45; word-break:break-word;
+}
+._gs_msg.mine ._gs_bubble { background:linear-gradient(135deg,#2c1f14,#4a3525); color:#fff; border-bottom-right-radius:4px; }
+._gs_msg.theirs ._gs_bubble { background:#f3ede4; color:#2c1f14; border-bottom-left-radius:4px; }
+._gs_msg.teacher ._gs_bubble { background:linear-gradient(135deg,#b8892a,#d4a843); color:#fff; border-bottom-left-radius:4px; }
+._gs_del_btn {
+  background:none; border:none; font-size:.65rem; color:#ccc;
+  cursor:pointer; padding:0 3px; opacity:0; transition:opacity .15s;
+}
+._gs_msg:hover ._gs_del_btn { opacity:1; }
+._gs_del_btn:hover { color:#e24b4a; }
+._gs_locked {
+  margin:.6rem .75rem; padding:.6rem .85rem;
+  background:#fdf8f0; border:1px solid #f0c896;
+  border-radius:10px; font-size:.75rem; color:#c9650f; text-align:center;
+}
+._gs_input_area {
+  padding:.6rem .75rem; border-top:1px solid #e2d9cc;
+  display:flex; gap:8px; align-items:flex-end; background:#faf8f5;
+}
+._gs_input {
+  flex:1; min-height:36px; max-height:90px; padding:.45rem .7rem;
+  border:1px solid #e2d9cc; border-radius:12px;
+  font-family:'DM Sans',sans-serif; font-size:.82rem; color:#2c1f14;
+  background:#fff; resize:none; outline:none; transition:border-color .15s;
+}
+._gs_input:focus { border-color:#b8892a; }
+._gs_send {
+  width:36px; height:36px; background:linear-gradient(135deg,#2c1f14,#4a3525);
+  color:#fff; border:none; border-radius:10px; cursor:pointer;
+  font-size:.9rem; display:flex; align-items:center; justify-content:center;
+  transition:transform .15s, opacity .15s; flex-shrink:0;
+}
+._gs_send:hover { transform:scale(1.07); }
+._gs_send:disabled { opacity:.4; cursor:not-allowed; transform:none; }
+._gs_wlimit {
+  padding:.28rem .75rem; font-size:.68rem; color:#7a6a5a;
+  border-top:1px solid #e2d9cc; background:#faf8f5;
+  display:flex; justify-content:space-between;
+}
+._gs_wlimit.warn { color:#c9650f; }
+._gs_wlimit.danger { color:#a32d2d; font-weight:700; }
+._gs_dm_list { padding:.5rem .6rem; display:flex; flex-direction:column; gap:3px; overflow-y:auto; max-height:420px; }
+._gs_dm_item {
+  display:flex; align-items:center; gap:10px;
+  padding:.5rem .65rem; border-radius:12px; cursor:pointer; transition:background .15s;
+}
+._gs_dm_item:hover, ._gs_dm_item.active { background:#f3ede4; }
+._gs_dm_av {
+  width:34px; height:34px; border-radius:50%;
+  background:linear-gradient(135deg,#b8892a,#d4a843);
+  color:#fff; font-size:.8rem; font-weight:700;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+._gs_dm_info { flex:1; min-width:0; }
+._gs_dm_name { font-size:.82rem; font-weight:700; color:#2c1f14; }
+._gs_dm_prev { font-size:.72rem; color:#7a6a5a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+._gs_dm_unread {
+  min-width:18px; height:18px; padding:0 4px; background:#e24b4a;
+  color:#fff; font-size:.62rem; font-weight:700; border-radius:9px;
+  display:flex; align-items:center; justify-content:center;
+}
+._gs_dm_convo { display:none; flex-direction:column; flex:1; min-height:0; }
+._gs_dm_convo.active { display:flex; }
+._gs_dm_convo_hdr {
+  display:flex; align-items:center; gap:8px; padding:.6rem .75rem;
+  border-bottom:1px solid #e2d9cc; background:#faf8f5;
+}
+._gs_back { background:none; border:none; cursor:pointer; color:#7a6a5a; font-size:1rem; padding:2px 6px; border-radius:6px; }
+._gs_back:hover { background:#e2d9cc; }
+._gs_dm_convo_name { font-size:.85rem; font-weight:700; color:#2c1f14; flex:1; }
+._gs_empty {
+  flex:1; display:flex; flex-direction:column; align-items:center;
+  justify-content:center; color:#7a6a5a; gap:8px; padding:2rem; text-align:center;
+}
+._gs_empty_icon { font-size:2rem; }
+._gs_empty_text { font-size:.8rem; }
+@media(max-width:420px){
+  #_gs_chat_panel { right:8px; left:8px; width:auto; bottom:80px; }
+  #_gs_chat_fab { bottom:16px; right:16px; }
+}
+    `;
+    document.head.appendChild(s);
+  }
+
+  // ── HTML ──
+  if (document.getElementById('_gs_chat_fab')) return;
+
+  const fabEl = document.createElement('button');
+  fabEl.id = '_gs_chat_fab';
+  fabEl.title = 'Sohbet';
+  fabEl.innerHTML = `💬<span class="_gs_fab_badge" id="_gs_fab_badge"></span>`;
+  document.body.appendChild(fabEl);
+
+  const panelEl = document.createElement('div');
+  panelEl.id = '_gs_chat_panel';
+  panelEl.innerHTML = `
+    <div class="_gs_chat_hdr">
+      <span>🎸</span>
+      <span class="_gs_chat_hdr_title">Gitar Akademisi Sohbet</span>
+      <button class="_gs_chat_close" id="_gs_chat_close">✕</button>
+    </div>
+    <div class="_gs_chat_tabs">
+      <button class="_gs_chat_tab active" data-tab="general">💬 Genel<span class="_gs_tab_badge" id="_gs_gen_badge" style="display:none"></span></button>
+      <button class="_gs_chat_tab" data-tab="dm">✉️ Mesajlar<span class="_gs_tab_badge" id="_gs_dm_badge" style="display:none"></span></button>
+    </div>
+    <!-- Genel -->
+    <div class="_gs_chat_view active" id="_gs_view_general">
+      <div class="_gs_msgs" id="_gs_gen_msgs"></div>
+      <div class="_gs_locked" id="_gs_gen_locked" style="display:none">
+        🔒 Genel sohbete yazabilmek için en az <b>Grade 1</b> gerekiyor.
+      </div>
+      <div class="_gs_wlimit" id="_gs_wlimit" style="display:none">
+        <span>Günlük kelime hakkı</span><span id="_gs_wlimit_txt"></span>
+      </div>
+      <div class="_gs_input_area" id="_gs_gen_input_area" style="display:none">
+        <textarea class="_gs_input" id="_gs_gen_input" placeholder="Mesajını yaz..." rows="1"></textarea>
+        <button class="_gs_send" id="_gs_gen_send">➤</button>
+      </div>
+    </div>
+    <!-- DM -->
+    <div class="_gs_chat_view" id="_gs_view_dm">
+      <div id="_gs_dm_list_view">
+        <div class="_gs_dm_list" id="_gs_dm_list"></div>
+      </div>
+      <div class="_gs_dm_convo" id="_gs_dm_convo">
+        <div class="_gs_dm_convo_hdr">
+          <button class="_gs_back" id="_gs_dm_back">←</button>
+          <span class="_gs_dm_convo_name" id="_gs_dm_convo_name"></span>
+        </div>
+        <div class="_gs_msgs" id="_gs_dm_msgs"></div>
+        <div class="_gs_input_area">
+          <textarea class="_gs_input" id="_gs_dm_input" placeholder="Mesajını yaz..." rows="1"></textarea>
+          <button class="_gs_send" id="_gs_dm_send">➤</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(panelEl);
+
+  // ── State ──
+  let open = false, activeTab = 'general', activeDm = null;
+  let unreadGen = 0, unreadDmMap = {};
+  let lastReadGen = parseInt(localStorage.getItem('chat_last_general')||'0');
+  let lastReadDm  = JSON.parse(localStorage.getItem('chat_last_dm')||'{}');
+  let dmConvoUnsub = null;
+
+  // Kullanıcı grade'ini al (index.html'de repProgress var, diğer sayfada localStorage'a bakabiliriz)
+  function myGrade() {
+    if (typeof repProgress !== 'undefined' && repProgress[sid]) {
+      const g = Object.keys(repProgress[sid]);
+      return g.length ? Math.max(...g.map(Number)) : 0;
+    }
+    return parseInt(localStorage.getItem(`chat_grade_${sid}`) || '0');
+  }
+  const isTeacher = sid === TEACHER_SID;
+  const writeable = isTeacher || myGrade() >= 1;
+
+  // Grade'i localStorage'a yaz (index.html yüklendikten sonra güncel kalır)
+  if (typeof repProgress !== 'undefined' && repProgress[sid]) {
+    const g = Object.keys(repProgress[sid]);
+    if (g.length) localStorage.setItem(`chat_grade_${sid}`, Math.max(...g.map(Number)));
+  }
+
+  function updateFabBadge() {
+    const tdm = Object.values(unreadDmMap).reduce((a,b)=>a+b,0);
+    const tot = unreadGen + tdm;
+    const fb = document.getElementById('_gs_fab_badge');
+    if (fb) { fb.textContent = tot; fb.style.display = tot > 0 ? 'flex' : 'none'; }
+    const gb = document.getElementById('_gs_gen_badge');
+    if (gb) { gb.textContent = unreadGen; gb.style.display = unreadGen > 0 ? 'inline-flex' : 'none'; }
+    const db2 = document.getElementById('_gs_dm_badge');
+    if (db2) { db2.textContent = tdm; db2.style.display = tdm > 0 ? 'inline-flex' : 'none'; }
+  }
+
+  function markGenRead() {
+    unreadGen = 0; lastReadGen = Date.now();
+    localStorage.setItem('chat_last_general', lastReadGen); updateFabBadge();
+  }
+  function markDmRead(dsid) {
+    unreadDmMap[dsid] = 0; lastReadDm[dsid] = Date.now();
+    localStorage.setItem('chat_last_dm', JSON.stringify(lastReadDm)); updateFabBadge();
+  }
+
+  // ── Aç/Kapat ──
+  fabEl.addEventListener('click', () => {
+    open = !open;
+    panelEl.style.display = open ? 'flex' : 'none';
+    if (open && activeTab === 'general') markGenRead();
+    if (open && activeTab === 'dm' && activeDm) markDmRead(activeDm);
+  });
+  document.getElementById('_gs_chat_close').addEventListener('click', () => {
+    open = false; panelEl.style.display = 'none';
+  });
+
+  // ── Sekmeler ──
+  panelEl.querySelectorAll('._gs_chat_tab').forEach(t => {
+    t.addEventListener('click', () => {
+      activeTab = t.dataset.tab;
+      panelEl.querySelectorAll('._gs_chat_tab').forEach(x => x.classList.toggle('active', x.dataset.tab === activeTab));
+      panelEl.querySelectorAll('._gs_chat_view').forEach(v => v.classList.toggle('active', v.id === `_gs_view_${activeTab}`));
+      if (activeTab === 'general') markGenRead();
+      if (activeTab === 'dm' && activeDm) markDmRead(activeDm);
+    });
+  });
+
+  // ── Genel Sohbet ──
+  const genMsgs   = document.getElementById('_gs_gen_msgs');
+  const genLocked = document.getElementById('_gs_gen_locked');
+  const genIA     = document.getElementById('_gs_gen_input_area');
+  const genInput  = document.getElementById('_gs_gen_input');
+  const genSend   = document.getElementById('_gs_gen_send');
+  const wlDiv     = document.getElementById('_gs_wlimit');
+  const wlTxt     = document.getElementById('_gs_wlimit_txt');
+
+  genLocked.style.display   = writeable ? 'none' : 'block';
+  genIA.style.display        = writeable ? 'flex' : 'none';
+  wlDiv.style.display        = writeable && !isTeacher ? 'flex' : 'none';
+
+  function updateWL() {
+    if (isTeacher) return;
+    const rem = WORD_LIMIT - getUsedWordsTday(sid);
+    wlTxt.textContent = `${Math.max(0,rem)} / ${WORD_LIMIT} kelime kaldı`;
+    wlDiv.className = '_gs_wlimit' + (rem < 50 ? ' danger' : rem < 150 ? ' warn' : '');
+    genSend.disabled = rem <= 0;
+  }
+  if (writeable) updateWL();
+
+  genInput.addEventListener('input', () => {
+    genInput.style.height = 'auto';
+    genInput.style.height = Math.min(genInput.scrollHeight, 90) + 'px';
+  });
+
+  async function sendGen() {
+    const text = genInput.value.trim();
+    if (!text) return;
+    const wc = countWords(text);
+    if (!isTeacher) {
+      const rem = WORD_LIMIT - getUsedWordsTday(sid);
+      if (wc > rem) { genInput.style.borderColor='#e24b4a'; setTimeout(()=>{genInput.style.borderColor='';},1200); return; }
+      addUsedWordsTday(sid, wc);
+    }
+    genSend.disabled = true;
+    try {
+      await push(ref(db,'chat/general'),{ sid, name, text, ts:Date.now(), isTeacher });
+      genInput.value=''; genInput.style.height='auto'; updateWL();
+    } catch(e){console.error(e);}
+    genSend.disabled = false;
+  }
+  genSend.addEventListener('click', sendGen);
+  genInput.addEventListener('keydown', e => { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendGen();} });
+
+  // Mesajları dinle (client sort, index uyarısı yok)
+  onValue(ref(db,'chat/general'), snap => {
+    const msgs = [];
+    snap.forEach(ch => { const m=ch.val(); if(m&&m.ts&&Date.now()-m.ts<CHAT_KEEP_MS) msgs.push({key:ch.key,...m}); });
+    msgs.sort((a,b)=>a.ts-b.ts);
+
+    genMsgs.innerHTML = msgs.length ? '' : `<div class="_gs_empty"><div class="_gs_empty_icon">💬</div><div class="_gs_empty_text">Henüz mesaj yok.<br>İlk mesajı sen gönder!</div></div>`;
+    msgs.forEach(m => {
+      const isMine = m.sid===sid, isT = m.isTeacher, canDel = isTeacher||isMine;
+      const div = document.createElement('div');
+      div.className = `_gs_msg ${isMine?'mine':isT?'teacher theirs':'theirs'}`;
+      div.innerHTML = `
+        <div class="_gs_msg_meta">
+          ${!isMine?`<span class="_gs_msg_author">${chatEscHtml(m.name)}</span>`:''}
+          ${isT&&!isMine?`<span class="_gs_teacher_tag">Öğretmen</span>`:''}
+          <span>${chatFormatTime(m.ts)}</span>
+          ${canDel?`<button class="_gs_del_btn" data-key="${m.key}" data-path="chat/general">🗑</button>`:''}
+        </div>
+        <div class="_gs_bubble">${chatEscHtml(m.text)}</div>`;
+      genMsgs.appendChild(div);
+    });
+    genMsgs.querySelectorAll('._gs_del_btn').forEach(b => {
+      b.addEventListener('click', ()=>remove(ref(db,`${b.dataset.path}/${b.dataset.key}`)));
+    });
+
+    const newCount = msgs.filter(m=>m.ts>lastReadGen&&m.sid!==sid).length;
+    if (open && activeTab==='general') { markGenRead(); } else { unreadGen=newCount; updateFabBadge(); }
+    genMsgs.scrollTop = genMsgs.scrollHeight;
+  });
+
+  // ── DM ──
+  // Öğrencinin konuşabileceği tek kişi: öğretmen
+  // Öğretmenin listesi: tüm öğrenciler (window.STUDENTS kullanılabiliyorsa)
+  let contacts = [];
+  if (isTeacher) {
+    const all = window.STUDENTS || [];
+    contacts = all.filter(s=>s.id!==TEACHER_SID);
+  } else {
+    contacts = [{ id: TEACHER_SID, name: 'Dr. Yunus GEDİK' }];
+  }
+
+  let contactMeta = {};
+  contacts.forEach(c => { contactMeta[c.id]={ lastTs:0, lastText:'—', unread:false }; });
+
+  function renderDmList() {
+    const dmListEl = document.getElementById('_gs_dm_list');
+    if (!dmListEl) return;
+    const sorted = [...contacts].sort((a,b)=>(contactMeta[b.id].lastTs||0)-(contactMeta[a.id].lastTs||0));
+    dmListEl.innerHTML = sorted.map(c => {
+      const m   = contactMeta[c.id];
+      const dn  = c.id===TEACHER_SID ? '🎸 Dr. Yunus GEDİK' : c.name;
+      const ini = c.id===TEACHER_SID ? '🎸' : c.name.charAt(0);
+      return `<div class="_gs_dm_item" data-sid="${c.id}" id="_gs_dmi_${c.id}">
+        <div class="_gs_dm_av">${ini}</div>
+        <div class="_gs_dm_info">
+          <div class="_gs_dm_name">${dn}</div>
+          <div class="_gs_dm_prev">${chatEscHtml(m.lastText)}</div>
+        </div>
+        ${m.unread ? `<div class="_gs_dm_unread">●</div>` : ''}
+      </div>`;
+    }).join('');
+    sorted.forEach(c => {
+      const el = document.getElementById(`_gs_dmi_${c.id}`);
+      if (el) el.addEventListener('click', ()=>openDmConvo(c));
+    });
+  }
+
+  renderDmList();
+
+  contacts.forEach(c => {
+    const roomId = getDmRoom(sid, c.id);
+    onValue(ref(db,`chat/dm/${roomId}`), snap => {
+      let last = null;
+      snap.forEach(ch => { const m=ch.val(); if(!last||m.ts>last.ts) last=m; });
+      if (!last) return;
+      const lr = lastReadDm[c.id]||0;
+      const unread = last.ts>lr && last.sid!==sid;
+      contactMeta[c.id] = {
+        lastTs: last.ts,
+        lastText: (last.sid===sid?'Sen: ':'')+last.text.slice(0,40)+(last.text.length>40?'…':''),
+        unread
+      };
+      if (unread) {
+        unreadDmMap[c.id]=1;
+        if (!open||activeTab!=='dm'||activeDm!==c.id) updateFabBadge();
+      }
+      renderDmList();
+    });
+  });
+
+  function openDmConvo(contact) {
+    activeDm = contact.id;
+    document.getElementById('_gs_dm_list_view').style.display='none';
+    const convo = document.getElementById('_gs_dm_convo');
+    convo.classList.add('active');
+    document.getElementById('_gs_dm_convo_name').textContent = contact.id===TEACHER_SID ? '🎸 Dr. Yunus GEDİK' : contact.name;
+
+    const dmMsgs  = document.getElementById('_gs_dm_msgs');
+    const dmInput = document.getElementById('_gs_dm_input');
+    const dmSend  = document.getElementById('_gs_dm_send');
+    dmMsgs.innerHTML='';
+    markDmRead(contact.id);
+
+    const roomId = getDmRoom(sid, contact.id);
+    if (dmConvoUnsub) { dmConvoUnsub(); dmConvoUnsub=null; }
+
+    dmConvoUnsub = onValue(ref(db,`chat/dm/${roomId}`), snap => {
+      const msgs=[];
+      snap.forEach(ch=>{ const m=ch.val(); if(m&&m.ts&&Date.now()-m.ts<CHAT_KEEP_MS) msgs.push({key:ch.key,...m}); });
+      msgs.sort((a,b)=>a.ts-b.ts);
+
+      dmMsgs.innerHTML = msgs.length ? '' : `<div class="_gs_empty"><div class="_gs_empty_icon">✉️</div><div class="_gs_empty_text">Henüz mesaj yok.</div></div>`;
+      msgs.forEach(m => {
+        const isMine=m.sid===sid, isT=m.isTeacher, canDel=isTeacher||isMine;
+        const div=document.createElement('div');
+        div.className=`_gs_msg ${isMine?'mine':isT?'teacher theirs':'theirs'}`;
+        div.innerHTML=`
+          <div class="_gs_msg_meta">
+            ${!isMine?`<span class="_gs_msg_author">${chatEscHtml(m.name)}</span>`:''}
+            ${isT&&!isMine?`<span class="_gs_teacher_tag">Öğretmen</span>`:''}
+            <span>${chatFormatTime(m.ts)}</span>
+            ${canDel?`<button class="_gs_del_btn" data-key="${m.key}" data-path="chat/dm/${roomId}">🗑</button>`:''}
+          </div>
+          <div class="_gs_bubble">${chatEscHtml(m.text)}</div>`;
+        dmMsgs.appendChild(div);
+      });
+      dmMsgs.querySelectorAll('._gs_del_btn').forEach(b=>{
+        b.addEventListener('click',()=>remove(ref(db,`${b.dataset.path}/${b.dataset.key}`)));
+      });
+      dmMsgs.scrollTop=dmMsgs.scrollHeight;
+      markDmRead(contact.id);
+    });
+
+    async function sendDm() {
+      const text=dmInput.value.trim();
+      if (!text) return;
+      dmSend.disabled=true;
+      try {
+        await push(ref(db,`chat/dm/${roomId}`),{sid,name,text,ts:Date.now(),isTeacher});
+        dmInput.value=''; dmInput.style.height='auto';
+      } catch(e){console.error(e);}
+      dmSend.disabled=false;
+    }
+    dmSend.onclick=sendDm;
+    dmInput.onkeydown=e=>{ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendDm();} };
+    dmInput.oninput=()=>{ dmInput.style.height='auto'; dmInput.style.height=Math.min(dmInput.scrollHeight,90)+'px'; };
+  }
+
+  document.getElementById('_gs_dm_back').addEventListener('click', ()=>{
+    activeDm=null;
+    if(dmConvoUnsub){dmConvoUnsub();dmConvoUnsub=null;}
+    document.getElementById('_gs_dm_list_view').style.display='';
+    document.getElementById('_gs_dm_convo').classList.remove('active');
+  });
+}
+
+// Chat'i login sonrası başlat
+setTimeout(initChatSystem, 800);

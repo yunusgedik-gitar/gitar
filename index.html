@@ -780,7 +780,7 @@ if (!window.checkDeneyselAccess) window.checkDeneyselAccess = function(sid) {};
 <script type="module" src="/live-bar.js"></script>
 <script type="module">
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
-import { getDatabase, ref, get, set, remove, onValue, push, update, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js";
+import { getDatabase, ref, get, set, remove, onValue, push, update } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBkEd729B65y-NZIQ-sxScCgaEvlX-q7yA",
@@ -2311,7 +2311,9 @@ if (window.me && window.me.id) {
   function getMyGrade() {
     const meObj = getMe();
     if (!meObj) return 0;
-    const grades = Object.keys(repProgress[meObj.id] || {});
+    // repProgress henüz yüklenmediyse window üzerinden kontrol et
+    const prog = (typeof repProgress !== 'undefined' ? repProgress : {});
+    const grades = Object.keys(prog[meObj.id] || {});
     return grades.length ? Math.max(...grades.map(Number)) : 0;
   }
 
@@ -2438,24 +2440,35 @@ if (window.me && window.me.id) {
     const input    = document.getElementById('general-input');
     const sendBtn  = document.getElementById('general-send-btn');
     const wlText   = document.getElementById('word-limit-text');
-
     if (!meObj) return;
 
-    const writeable = canWrite();
-    locked.style.display   = writeable ? 'none' : 'block';
-    inputArea.style.display = writeable ? 'flex' : 'none';
-    wlDiv.style.display     = writeable && meObj.id !== TEACHER_ID ? 'flex' : 'none';
+    // repProgress yüklendikten sonra yetki kontrolü yap (max 2sn bekle)
+    function applyWriteAccess() {
+      const writeable = canWrite();
+      locked.style.display   = writeable ? 'none' : 'block';
+      inputArea.style.display = writeable ? 'flex' : 'none';
+      wlDiv.style.display     = writeable && meObj.id !== TEACHER_ID ? 'flex' : 'none';
+      updateWordLimit();
+    }
+
+    // Hemen dene, repProgress dolmamışsa kısa bekle
+    applyWriteAccess();
+    let _gradeCheck = 0;
+    const _gradeInterval = setInterval(() => {
+      if (getMyGrade() >= 1 || ++_gradeCheck > 20) {
+        clearInterval(_gradeInterval);
+        applyWriteAccess();
+      }
+    }, 100);
 
     // Kelime limiti göster
     function updateWordLimit() {
       if (!meObj || meObj.id === TEACHER_ID) return;
       const rem = getRemainingWords(meObj.id);
-      const used = getUsedWords(meObj.id);
       wlText.textContent = `${rem} / ${WORD_LIMIT} kelime kaldı`;
       wlDiv.className = 'chat-word-limit' + (rem < 50 ? ' danger' : rem < 150 ? ' warn' : '');
       sendBtn.disabled = rem <= 0;
     }
-    updateWordLimit();
 
     // Auto-resize textarea
     input.addEventListener('input', () => {
@@ -2477,6 +2490,7 @@ if (window.me && window.me.id) {
         }
         addUsedWords(meObj.id, wc);
       }
+      sendBtn.disabled = true;
       try {
         await push(ref(db, 'chat/general'), {
           sid: meObj.id, name: meObj.name,
@@ -2486,7 +2500,10 @@ if (window.me && window.me.id) {
         input.value = '';
         input.style.height = 'auto';
         updateWordLimit();
-      } catch(e) { console.error('Mesaj gönderilemedi:', e); }
+      } catch(e) {
+        console.error('Mesaj gönderilemedi:', e);
+        sendBtn.disabled = false;
+      }
     }
 
     sendBtn.addEventListener('click', sendGeneral);
@@ -2494,26 +2511,28 @@ if (window.me && window.me.id) {
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendGeneral(); }
     });
 
-    // Mesajları dinle (son 80 mesaj, 24 saatlik)
-    onValue(query(ref(db, 'chat/general'), orderByChild('ts'), limitToLast(80)), snap => {
+    // Mesajları dinle — orderByChild kaldırıldı, client'ta sıralanıyor (index uyarısı önlendi)
+    onValue(ref(db, 'chat/general'), snap => {
       const msgs = [];
       snap.forEach(child => {
         const m = child.val();
-        if (Date.now() - m.ts < CHAT_KEEP_MS) msgs.push({ key: child.key, ...m });
+        if (m && m.ts && Date.now() - m.ts < CHAT_KEEP_MS) msgs.push({ key: child.key, ...m });
       });
+      msgs.sort((a, b) => a.ts - b.ts);
+      msgs.splice(0, Math.max(0, msgs.length - 80)); // son 80
 
       msgBox.innerHTML = msgs.length ? '' : `<div class="chat-empty"><div class="chat-empty-icon">💬</div><div class="chat-empty-text">Henüz mesaj yok.<br>İlk mesajı sen gönder!</div></div>`;
 
       msgs.forEach(m => {
-        const isMine   = m.sid === meObj.id;
-        const isTeacher = m.isTeacher;
-        const canDel   = meObj.id === TEACHER_ID || isMine;
+        const isMine    = m.sid === meObj.id;
+        const isTeacherMsg = m.isTeacher;
+        const canDel    = meObj.id === TEACHER_ID || isMine;
         const div = document.createElement('div');
-        div.className = `chat-msg ${isMine ? 'mine' : isTeacher ? 'teacher-msg theirs' : 'theirs'}`;
+        div.className = `chat-msg ${isMine ? 'mine' : isTeacherMsg ? 'teacher-msg theirs' : 'theirs'}`;
         div.innerHTML = `
           <div class="chat-msg-meta">
-            ${!isMine ? `<span class="msg-author">${m.name}</span>` : ''}
-            ${isTeacher && !isMine ? '<span class="teacher-tag">Öğretmen</span>' : ''}
+            ${!isMine ? `<span class="msg-author">${escHtml(m.name)}</span>` : ''}
+            ${isTeacherMsg && !isMine ? '<span class="teacher-tag">Öğretmen</span>' : ''}
             <span>${formatTime(m.ts)}</span>
             ${canDel ? `<button class="chat-msg-delete" data-key="${m.key}" title="Sil">🗑</button>` : ''}
           </div>
@@ -2521,14 +2540,13 @@ if (window.me && window.me.id) {
         msgBox.appendChild(div);
       });
 
-      // Silme butonları
       msgBox.querySelectorAll('.chat-msg-delete').forEach(btn => {
         btn.addEventListener('click', async () => {
           await remove(ref(db, `chat/general/${btn.dataset.key}`));
         });
       });
 
-      // Unread sayacı
+      // Unread
       const newMsgs = msgs.filter(m => m.ts > lastReadGeneral && m.sid !== meObj.id);
       if (panelOpen && activeTab === 'general') {
         markGeneralRead();
@@ -2536,60 +2554,79 @@ if (window.me && window.me.id) {
         unreadGeneral = newMsgs.length;
         updateBadges();
       }
-
-      // Scroll
       msgBox.scrollTop = msgBox.scrollHeight;
     });
   }
 
   // ── DM Sistemi ──
+  // Öğretmen için tüm konuşmalara ayrı ayrı listener açmak yerine
+  // sadece listede gösterilen contacts için tek seferde son mesaj çekiyoruz
   function setupDmChat() {
     const meObj = getMe();
     if (!meObj) return;
     const dmList = document.getElementById('dm-list');
 
-    // Öğretmen: tüm öğrencileri listeler
-    // Öğrenci: sadece öğretmeni görür
     let contacts = [];
     if (meObj.id === TEACHER_ID) {
       contacts = (window.STUDENTS || []).filter(s => s.id !== TEACHER_ID);
     } else {
-      contacts = [{ id: TEACHER_ID, name: 'Dr. Yunus GEDİK 🎸' }];
+      contacts = [{ id: TEACHER_ID, name: 'Dr. Yunus GEDİK' }];
     }
 
-    dmList.innerHTML = contacts.map(c => `
-      <div class="dm-list-item" data-sid="${c.id}" id="dm-item-${c.id}">
-        <div class="dm-avatar">${c.name.charAt(0)}</div>
-        <div class="dm-item-info">
-          <div class="dm-item-name">${c.id === TEACHER_ID ? '🎸 Dr. Yunus GEDİK' : c.name}</div>
-          <div class="dm-item-preview" id="dm-preview-${c.id}">—</div>
-        </div>
-        <div class="dm-item-badge" id="dm-badge-${c.id}"></div>
-      </div>`).join('');
+    // lastTs ile sıralanacak — başlangıçta 0
+    let contactMeta = {}; // { sid: { lastTs, lastText, unread } }
+    contacts.forEach(c => { contactMeta[c.id] = { lastTs: 0, lastText: '—', unread: false }; });
 
-    // Her konuşmayı dinle (önizleme + badge)
+    function renderDmList() {
+      // Son mesaja göre sırala
+      const sorted = [...contacts].sort((a, b) => (contactMeta[b.id].lastTs || 0) - (contactMeta[a.id].lastTs || 0));
+      dmList.innerHTML = sorted.map(c => {
+        const meta = contactMeta[c.id];
+        const displayName = c.id === TEACHER_ID ? '🎸 Dr. Yunus GEDİK' : c.name;
+        const initial = c.id === TEACHER_ID ? '🎸' : c.name.charAt(0);
+        return `
+          <div class="dm-list-item" data-sid="${c.id}" id="dm-item-${c.id}">
+            <div class="dm-avatar" style="${c.id === TEACHER_ID ? 'background:linear-gradient(135deg,#b8892a,#d4a843);font-size:.9rem;' : ''}">${initial}</div>
+            <div class="dm-item-info">
+              <div class="dm-item-name">${displayName}</div>
+              <div class="dm-item-preview" id="dm-preview-${c.id}">${meta.lastText}</div>
+            </div>
+            ${meta.unread ? `<div class="dm-item-badge" style="display:flex;">●</div>` : `<div class="dm-item-badge" id="dm-badge-${c.id}"></div>`}
+          </div>`;
+      }).join('');
+
+      // Tıklama eventleri
+      sorted.forEach(c => {
+        const el = document.getElementById(`dm-item-${c.id}`);
+        if (el) el.addEventListener('click', () => openDmConvo(c));
+      });
+    }
+
+    renderDmList();
+
+    // Her konuşma için hafif listener (sadece son 1 mesaj, orderByChild yok)
     contacts.forEach(c => {
       const roomId = getDmRoomId(meObj.id, c.id);
-      onValue(query(ref(db, `chat/dm/${roomId}`), orderByChild('ts'), limitToLast(1)), snap => {
-        const msgs = [];
-        snap.forEach(ch => msgs.push(ch.val()));
-        const last = msgs[0];
-        const preview = document.getElementById(`dm-preview-${c.id}`);
-        if (preview && last) {
-          preview.textContent = (last.sid === meObj.id ? 'Sen: ' : '') + last.text.slice(0, 36) + (last.text.length > 36 ? '…' : '');
-        }
-        // Badge
+      onValue(ref(db, `chat/dm/${roomId}`), snap => {
+        let lastMsg = null;
+        snap.forEach(ch => {
+          const m = ch.val();
+          if (!lastMsg || m.ts > lastMsg.ts) lastMsg = m;
+        });
+        if (!lastMsg) return;
         const lastRead = lastReadDm[c.id] || 0;
-        if (last && last.ts > lastRead && last.sid !== meObj.id) {
-          unreadDm[c.id] = (unreadDm[c.id] || 0) + 1;
-          const badge = document.getElementById(`dm-badge-${c.id}`);
-          if (badge) { badge.textContent = '●'; badge.style.display = 'flex'; }
+        const isUnread = lastMsg.ts > lastRead && lastMsg.sid !== meObj.id;
+        contactMeta[c.id] = {
+          lastTs: lastMsg.ts,
+          lastText: (lastMsg.sid === meObj.id ? 'Sen: ' : '') + (lastMsg.text || '').slice(0, 40) + ((lastMsg.text || '').length > 40 ? '…' : ''),
+          unread: isUnread
+        };
+        if (isUnread) {
+          unreadDm[c.id] = 1;
           if (!panelOpen || activeTab !== 'dm' || activeDmSid !== c.id) updateBadges();
         }
+        renderDmList();
       });
-
-      // Tıklama
-      document.getElementById(`dm-item-${c.id}`).addEventListener('click', () => openDmConvo(c));
     });
   }
 
@@ -2618,10 +2655,11 @@ if (window.me && window.me.id) {
     // Eski listener'ı kaldır
     if (dmListener) { dmListener(); dmListener = null; }
 
-    dmListener = onValue(query(ref(db, `chat/dm/${roomId}`), orderByChild('ts'), limitToLast(60)), snap => {
+    dmListener = onValue(ref(db, `chat/dm/${roomId}`), snap => {
       const msgs = [];
       snap.forEach(ch => msgs.push({ key: ch.key, ...ch.val() }));
-      const recent = msgs.filter(m => Date.now() - m.ts < CHAT_KEEP_MS);
+      msgs.sort((a, b) => a.ts - b.ts);
+      const recent = msgs.filter(m => m && m.ts && Date.now() - m.ts < CHAT_KEEP_MS);
 
       msgBox.innerHTML = recent.length ? '' : `<div class="chat-empty"><div class="chat-empty-icon">✉️</div><div class="chat-empty-text">Henüz mesaj yok.</div></div>`;
 
