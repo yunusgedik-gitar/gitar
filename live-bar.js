@@ -635,20 +635,33 @@ async function initChatSystem() {
   }
 
   let contactMeta = {};
+  let onlineUsers = {}; // online_users realtime haritası
   contacts.forEach(c => { contactMeta[c.id]={ lastTs:0, lastText:'—', unread:false }; });
+
+  // online_users'ı dinle → DM listesini anlık güncelle
+  onValue(ref(db,'online_users'), snap => {
+    const raw = snap.val() || {};
+    onlineUsers = {};
+    Object.values(raw).forEach(u => { if(u.name) onlineUsers[u.name] = true; });
+    renderDmList();
+  });
 
   function renderDmList() {
     const dmListEl = document.getElementById('_gs_dm_list');
     if (!dmListEl) return;
     const sorted = [...contacts].sort((a,b)=>(contactMeta[b.id].lastTs||0)-(contactMeta[a.id].lastTs||0));
     dmListEl.innerHTML = sorted.map(c => {
-      const m   = contactMeta[c.id];
-      const dn  = c.id===TEACHER_SID ? '🎸 Dr. Yunus GEDİK' : c.name;
-      const ini = c.id===TEACHER_SID ? '🎸' : c.name.charAt(0);
+      const m      = contactMeta[c.id];
+      const dn     = c.id===TEACHER_SID ? '🎸 Dr. Yunus GEDİK' : c.name;
+      const ini    = c.id===TEACHER_SID ? '🎸' : c.name.charAt(0);
+      const isOnline = onlineUsers[c.name] || false;
       return `<div class="_gs_dm_item" data-sid="${c.id}" id="_gs_dmi_${c.id}">
-        <div class="_gs_dm_av">${ini}</div>
+        <div class="_gs_dm_av" style="position:relative">
+          ${ini}
+          ${isOnline ? `<span style="position:absolute;bottom:0;right:0;width:10px;height:10px;background:#3b6d11;border-radius:50%;border:2px solid #fff;"></span>` : ''}
+        </div>
         <div class="_gs_dm_info">
-          <div class="_gs_dm_name">${dn}</div>
+          <div class="_gs_dm_name">${dn}${isOnline ? ' <span style="font-size:.65rem;color:#3b6d11;font-weight:700;">● çevrimiçi</span>' : ''}</div>
           <div class="_gs_dm_prev">${chatEscHtml(m.lastText)}</div>
         </div>
         ${m.unread ? `<div class="_gs_dm_unread">●</div>` : ''}
@@ -692,7 +705,11 @@ async function initChatSystem() {
 
     const dmMsgs  = document.getElementById('_gs_dm_msgs');
     const dmInput = document.getElementById('_gs_dm_input');
-    const dmSend  = document.getElementById('_gs_dm_send');
+    // Eski onclick listener'larını temizle (çiftleme önlemi)
+    const oldSend = document.getElementById('_gs_dm_send');
+    const dmSend  = oldSend.cloneNode(true);
+    oldSend.replaceWith(dmSend);
+
     dmMsgs.innerHTML='';
     markDmRead(contact.id);
 
