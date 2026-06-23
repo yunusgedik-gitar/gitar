@@ -694,8 +694,14 @@ function openDashboard() {
   }
 
   // 🎉 KİSKANMA VERİSİNİ YÜKLEMESİ — Oturum açtığında sayacı ve bildirimleri göster
+  console.log('🔍 openDashboard çağrıldı. me.id:', me.id);
+  console.log('🔍 window.loadEnvyData var mı?', typeof window.loadEnvyData);
+  
   if (window.loadEnvyData) {
+    console.log('✅ loadEnvyData çağrılıyor...');
     window.loadEnvyData(me.id);
+  } else {
+    console.log('❌ loadEnvyData tanımlı değil!');
   }
 }
 
@@ -735,6 +741,16 @@ window.completePendingLogin = function(student) {
   window.pendingLoginSid = null;
   openDashboard();
 };
+
+// 🔧 Dummy check fonksiyonları (tanımlı değilse error atıyor)
+if (!window.checkBassV2Access) window.checkBassV2Access = function(sid) {};
+if (!window.checkRepertoireAccess) window.checkRepertoireAccess = function(sid) {};
+if (!window.checkBassAccess) window.checkBassAccess = function(sid) {};
+if (!window.checkKulakAccess) window.checkKulakAccess = function(sid) {};
+if (!window.checkKlavyeAccess) window.checkKlavyeAccess = function(sid) {};
+if (!window.checkNotaAccess) window.checkNotaAccess = function(sid) {};
+if (!window.checkTelAccess) window.checkTelAccess = function(sid) {};
+if (!window.checkDeneyselAccess) window.checkDeneyselAccess = function(sid) {};
 </script>
 
 <script type="module" src="/live-bar.js"></script>
