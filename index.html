@@ -353,6 +353,17 @@
       cursor: not-allowed;
       font-weight: 700;
     }
+    .envy-btn-undone {
+      background: var(--green-bg) !important;
+      color: var(--green) !important;
+      border-color: #b0d890 !important;
+      font-weight: 700;
+    }
+    .envy-btn-undone:hover {
+      background: #fdf0f0 !important;
+      color: var(--red) !important;
+      border-color: #f5c0c0 !important;
+    }
 
     .envy-count-badge {
       display: inline-flex; align-items: center; gap: 4px;
@@ -435,7 +446,7 @@
           <div class="welcome-badges" id="welcome-badges"></div>
           <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:4px;">
             <div id="envy-notification"></div>
-            <div id="envy-total-badge" style="display:none;" class="envy-count-badge">😤 Bugüne kadar <span id="envy-total-count">0</span> kişi kıskandı</div>
+            <div id="envy-total-badge" style="display:none;" class="envy-count-badge">🥰 💛💚 Bugüne kadar <span id="envy-total-count">0</span> kişi kıskandı</div>
           </div>
         </div>
         <span id="_gs_active_count" style="display:none;">🟢</span>
@@ -1895,11 +1906,18 @@ function renderLeaderboard() {
   }).sort((a,b) => b.score - a.score);
 
   const myRank = meObj ? rows.findIndex(r => r.sid === meObj.id) : -1;
+  const _today  = new Date().toISOString().slice(0,10);
+  const _daily  = meObj ? JSON.parse(localStorage.getItem(`envy_daily_${meObj.id}`) || '{"date":"","targets":[]}') : {date:'',targets:[]};
+  const _envied = (_daily.date === _today) ? _daily.targets : [];
+
   lb.innerHTML = rows.map((r, i) => {
     const isMe = meObj && r.sid === meObj.id;
     const canEnvy = meObj && !isMe && i < myRank && myRank > 0;
+    const already = _envied.includes(r.sid);
     const envyBtn = canEnvy
-      ? `<button class="envy-btn" onclick="sendEnvy('${r.sid}','${studentName(r.sid).replace(/'/g,"\\'")}','general')" title="Kıskan">😤 Kıskan</button>`
+      ? already
+        ? `<button class="envy-btn envy-btn-undone" onclick="sendEnvy('${r.sid}','${studentName(r.sid).replace(/'/g,"\\'")}','general')">✓ Geri Al</button>`
+        : `<button class="envy-btn" onclick="sendEnvy('${r.sid}','${studentName(r.sid).replace(/'/g,"\\'")}','general')">😤 Kıskan</button>`
       : '';
     return `<div class="lb-row ${isMe ? 'me' : ''}" id="${isMe ? 'lb-me-row' : ''}">
       <div class="lb-rank">${i+1}</div>
@@ -2102,12 +2120,19 @@ function renderCategoryLeaderboard(catId) {
   }
 
   const myCatRank = meObj ? rows.findIndex(r => r.sid === meObj.id) : -1;
+  const _today2  = new Date().toISOString().slice(0,10);
+  const _daily2  = meObj ? JSON.parse(localStorage.getItem(`envy_daily_${meObj.id}`) || '{"date":"","targets":[]}') : {date:'',targets:[]};
+  const _envied2 = (_daily2.date === _today2) ? _daily2.targets : [];
+
   lb.innerHTML = rows.map((r, i) => {
     const isMe  = meObj && r.sid === meObj.id;
     const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}`;
     const canEnvy = meObj && !isMe && i < myCatRank && myCatRank > 0;
+    const already2 = _envied2.includes(r.sid);
     const envyBtn = canEnvy
-      ? `<button class="envy-btn" onclick="sendEnvy('${r.sid}','${studentName(r.sid).replace(/'/g,"\\'")}','${catId}')" title="Kıskan">😤 Kıskan</button>`
+      ? already2
+        ? `<button class="envy-btn envy-btn-undone" onclick="sendEnvy('${r.sid}','${studentName(r.sid).replace(/'/g,"\\'")}','${catId}')">✓ Geri Al</button>`
+        : `<button class="envy-btn" onclick="sendEnvy('${r.sid}','${studentName(r.sid).replace(/'/g,"\\'")}','${catId}')">😤 Kıskan</button>`
       : '';
     return `<div class="lb-row ${isMe ? 'me' : ''}" id="${isMe ? 'lb-me-cat-row' : ''}">
       <div class="lb-rank">${medal}</div>
@@ -2135,17 +2160,40 @@ window.sendEnvy = async function(targetSid, targetName, boardId) {
   const meObj = getMe();
   if (!meObj || meObj.id === TEACHER_ID) return;
 
-  // Günlük limit kontrolü
-  const today = new Date().toISOString().slice(0,10);
-  const lkKey = `envy_daily_${meObj.id}`;
-  let daily   = JSON.parse(localStorage.getItem(lkKey) || '{"date":"","count":0,"targets":[]}');
+  const today  = new Date().toISOString().slice(0, 10);
+  const lkKey  = `envy_daily_${meObj.id}`;
+  let daily    = JSON.parse(localStorage.getItem(lkKey) || '{"date":"","count":0,"targets":[]}');
   if (daily.date !== today) { daily = { date: today, count: 0, targets: [] }; }
-  if (daily.count >= 3) {
-    alert('Günde en fazla 3 kişiyi kıskanabilirsin! 😅 Yarın tekrar dene.');
+
+  const alreadyEnvied = daily.targets.includes(targetSid);
+
+  // Geri alma
+  if (alreadyEnvied) {
+    try {
+      await remove(ref(db, `envy/${targetSid}/from/${meObj.id}`));
+      const totalRef = ref(db, `envy/${targetSid}/total`);
+      const snap = await get(totalRef);
+      const cur  = snap.val() || 0;
+      if (cur > 0) await set(totalRef, cur - 1);
+
+      daily.count = Math.max(0, daily.count - 1);
+      daily.targets = daily.targets.filter(t => t !== targetSid);
+      localStorage.setItem(lkKey, JSON.stringify(daily));
+
+      // Butonu eski haline döndür
+      document.querySelectorAll('.envy-btn').forEach(btn => {
+        if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(`'${targetSid}'`)) {
+          btn.disabled = false;
+          btn.textContent = '😤 Kıskan';
+        }
+      });
+    } catch(e) { console.error('Kıskanma geri alma hatası:', e); }
     return;
   }
-  if (daily.targets.includes(targetSid)) {
-    alert(`${targetName} kişisini bugün zaten kıskandın! 😤`);
+
+  // Günlük limit
+  if (daily.count >= 3) {
+    alert('Günde en fazla 3 kişiyi kıskanabilirsin! 😅 Yarın tekrar dene.');
     return;
   }
 
@@ -2154,26 +2202,26 @@ window.sendEnvy = async function(targetSid, targetName, boardId) {
     await set(ref(db, `envy/${targetSid}/from/${meObj.id}`), {
       name: meObj.name, ts: Date.now()
     });
-    // total sayacını transaction ile artır
     const totalRef = ref(db, `envy/${targetSid}/total`);
     const snap = await get(totalRef);
     await set(totalRef, (snap.val() || 0) + 1);
 
-    // Günlük limiti güncelle
     daily.count++;
     daily.targets.push(targetSid);
     localStorage.setItem(lkKey, JSON.stringify(daily));
 
-    // Butonu kapat (o sıralamada tekrar kıskanamaz)
+    // Butonu "geri al" moduna geçir
     document.querySelectorAll('.envy-btn').forEach(btn => {
       if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(`'${targetSid}'`)) {
-        btn.disabled = true;
-        btn.textContent = '✓ Kıskanıldı';
+        btn.disabled = false;
+        btn.textContent = '✓ Geri Al';
+        btn.style.background = 'var(--green-bg)';
+        btn.style.color = 'var(--green)';
+        btn.style.borderColor = '#b0d890';
       }
     });
 
     showSaveToast && showSaveToast();
-    alert(`${targetName} kişisini kıskandın! 😤`);
   } catch(e) { console.error('Kıskanma hatası:', e); }
 };
 
@@ -2208,7 +2256,7 @@ window.loadEnvyData = function(sid) {
       if (notifEl) {
         if (todayEnvies.length > 0) {
           const names = todayEnvies.map(e => `<strong>${e.name}</strong>`).join(', ');
-          notifEl.innerHTML = `<span class="envy-notif-icon">😤</span><div><div class="envy-notif-title">Bugün seni kıskananlar</div><div class="envy-notif-names">${names} seni kıskanıyor!</div></div>`;
+          notifEl.innerHTML = `<span class="envy-notif-icon">🙄</span><div><div class="envy-notif-title">Bugün seni kıskananlar</div><div class="envy-notif-names">${names} seni kıskanıyor!</div></div>`;
           notifEl.style.display = 'flex';
         } else {
           notifEl.style.display = 'none';
