@@ -399,7 +399,6 @@
       <div class="spinner"></div>
       <div class="waiting-name" id="waiting-opp-name">Rakip</div>
       <div class="waiting-sub">daveti kabul etmesi bekleniyor...</div>
-      <div id="waiting-game-label" style="margin-top:8px;font-size:.85rem;font-weight:700;color:#8b5a2b;background:#f5e6d3;padding:4px 12px;border-radius:8px;display:inline-block;"></div>
     </div>
     <p style="font-size:.8rem;color:#b09070;text-align:center;">Rakibiniz daveti reddederse veya 30 saniye içinde cevap vermezse otomatik iptal olur.</p>
   </div>
@@ -534,6 +533,7 @@
       <div class="card">
         <div class="card-top">
           <button class="back-to-menu-btn" onclick="goBackToMenu()">← Menüye Dön</button>
+          <button class="back-to-menu-btn" onclick="location.href='https://gitar.yunusgedik.com.tr/'" style="border-color:#d4a373;color:#8b5a2b;">🏠 Başa Dön</button>
           <button id="listen-btn" onclick="replay()">🔊 Dinle</button>
           <div class="timer-badge" id="timer-display">Süre: 00:00</div>
         </div>
@@ -602,6 +602,7 @@
       <div class="question-staff-card">
         <div class="card-top" style="width: 100%;">
           <button class="back-to-menu-btn" onclick="goBackToMenu()">← Menüye Dön</button>
+          <button class="back-to-menu-btn" onclick="location.href='https://gitar.yunusgedik.com.tr/'" style="border-color:#d4a373;color:#8b5a2b;">🏠 Başa Dön</button>
           <button id="listen-btn-n2k" onclick="replay()">🔊 Dinle</button>
           <div class="timer-badge" id="timer-display-n2k">Süre: 00:00</div>
         </div>
@@ -1556,18 +1557,18 @@ window.sendChallenge = async function(toSid, toName){
   });
   onDisconnect(ref(db,`duel_rooms/${roomCode}`)).update({status:'abandoned'});
 
-  const _gameLabel = duelSecs > 0 ? `⏱ ${duelSecs} Saniyelik Yarış` : `${duelRounds} Tur`;
-  const _modeLabel = duelMode === 'klavyeden-notaya' ? 'Klavyeden Notaya' : 'Notadan Klavyeye';
   await set(ref(db,`duel_challenges/${toSid}`),{
     fromSid:mySid, fromName:myName,
     roomCode, status:'pending',
     strings:[...duelStrings], totalRounds:duelRounds, totalSecs:duelSecs, mode:duelMode,
-    gameLabel: _gameLabel, modeLabel: _modeLabel,
     redirectTo: window.location.pathname
   });
 
   document.getElementById('waiting-opp-name').textContent = toName;
-  document.getElementById('waiting-game-label').textContent = `${_modeLabel} · ${_gameLabel}`;
+  const _gl2 = duelSecs > 0 ? `⏱ ${duelSecs} Saniyelik Yarış` : `${duelRounds} Tur`;
+  const _ml2 = duelMode === 'klavyeden-notaya' ? 'Klavyeden Notaya' : 'Notadan Klavyeye';
+  const wlbl = document.getElementById('waiting-game-label');
+  if(wlbl) wlbl.textContent = `${_ml2} · ${_gl2}`;
   showArea('duel-waiting-area');
 
   const cRef = ref(db,`duel_challenges/${toSid}`);
@@ -2040,78 +2041,105 @@ window.leaveGame = async function(){
   showArea('setup-area');
 };
 
-// ── GUEST: gelen davet bildirimini index.html'den dinle ──
-// (live-bar.js'deki bildirimin içeriğini kontrol edemediğimiz için
-//  ek olarak in-page bir davet popup'ı gösteriyoruz)
-function listenIncomingChallenge(){
-  if(!mySid) return;
+// ════════════════════════════════════════════════════════
+// IN-PAGE DAVET POPUP — live-bar.js bildiriminden bağımsız
+// duel_challenges/${mySid} dinleyerek kendi popup'ımızı gösteririz
+// ════════════════════════════════════════════════════════
+
+// live-bar.js kendi popup/bildirimini gösteriyorsa onu DOM'dan gizle
+function hideLiveBarDuelNotif(){
+  // live-bar genellikle .duel-invite, .challenge-notif gibi class kullanır
+  const selectors = ['.duel-invite','.challenge-notif','.duel-notification',
+                     '[data-duel-invite]','#duel-invite','#challenge-notif'];
+  selectors.forEach(s=>{ document.querySelectorAll(s).forEach(el=>el.remove()); });
+}
+
+// Gelen daveti dinle
+(function listenIncomingChallenge(){
+  if(!mySid) return;  // const olduğu için her zaman hazır
+
   const cRef = ref(db, `duel_challenges/${mySid}`);
   onValue(cRef, snap => {
     const c = snap.val();
-    if(!c || c.status !== 'pending') {
-      hideChallengePopup(); return;
+    hideLiveBarDuelNotif();
+    if(!c || c.status !== 'pending'){
+      const p = document.getElementById('ix-challenge-popup');
+      if(p) p.remove();
+      return;
     }
-    showChallengePopup(c);
+    showIxChallengePopup(c);
   });
-}
+})();
 
-function showChallengePopup(c){
-  let popup = document.getElementById('challenge-popup');
-  if(!popup){
-    popup = document.createElement('div');
-    popup.id = 'challenge-popup';
-    popup.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:9999;background:#fff;border:2px solid #d4a373;border-radius:20px;padding:1rem 1.2rem;box-shadow:0 8px 32px rgba(90,62,43,.18);max-width:320px;width:90%;text-align:center;font-family:Lato,sans-serif;';
-    document.body.appendChild(popup);
-  }
-  const gl = c.gameLabel || (c.totalSecs > 0 ? `⏱ ${c.totalSecs} Saniyelik Yarış` : `${c.totalRounds} Tur`);
-  const ml = c.modeLabel || (c.mode === 'klavyeden-notaya' ? 'Klavyeden Notaya' : 'Notadan Klavyeye');
+function showIxChallengePopup(c){
+  document.getElementById('ix-challenge-popup')?.remove();
+  const gl = c.totalSecs > 0
+    ? `⏱ ${c.totalSecs} Saniyelik Yarış`
+    : `${c.totalRounds} Tur`;
+  const ml = c.mode === 'klavyeden-notaya' ? 'Klavyeden Notaya' : 'Notadan Klavyeye';
+
+  const popup = document.createElement('div');
+  popup.id = 'ix-challenge-popup';
+  popup.style.cssText = [
+    'position:fixed','bottom:80px','left:50%','transform:translateX(-50%)',
+    'z-index:99999','background:#fff','border:2px solid #d4a373',
+    'border-radius:20px','padding:1rem 1.2rem',
+    'box-shadow:0 8px 32px rgba(90,62,43,.2)',
+    'max-width:320px','width:90%','text-align:center',
+    'font-family:Lato,sans-serif','color:#5a3e2b'
+  ].join(';');
   popup.innerHTML = `
-    <div style="font-weight:700;font-size:1rem;color:#5a3e2b;margin-bottom:4px;">⚔️ Düello Daveti</div>
-    <div style="color:#8b5a2b;font-size:.9rem;margin-bottom:4px;"><b>${c.fromName || '?'}</b> seni düelloya çağırıyor</div>
-    <div style="font-size:.8rem;font-weight:700;color:#b37d4e;background:#f5e6d3;padding:3px 10px;border-radius:6px;display:inline-block;margin-bottom:.8rem;">${ml} · ${gl}</div>
-    <div style="display:flex;gap:8px;justify-content:center;">
-      <button onclick="acceptIncomingChallenge()" style="padding:8px 18px;border-radius:10px;border:1.5px solid #6b8c42;background:#eaf3de;color:#3b6d11;font-weight:700;cursor:pointer;font-family:inherit;">✓ Kabul</button>
-      <button onclick="declineIncomingChallenge()" style="padding:8px 18px;border-radius:10px;border:1.5px solid #c75b39;background:#fdf0f0;color:#a32d2d;font-weight:700;cursor:pointer;font-family:inherit;">✕ Reddet</button>
+    <div style="font-weight:700;font-size:1.05rem;margin-bottom:4px;">⚔️ Düello Daveti!</div>
+    <div style="color:#8b5a2b;font-size:.9rem;margin-bottom:6px;">
+      <b>${c.fromName||'Rakip'}</b> seni düelloya çağırıyor
+    </div>
+    <div style="font-size:.8rem;font-weight:700;color:#b37d4e;
+      background:#f5e6d3;padding:3px 12px;border-radius:8px;
+      display:inline-block;margin-bottom:.9rem;">${ml} · ${gl}</div>
+    <div style="display:flex;gap:10px;justify-content:center;">
+      <button id="ix-accept-btn" style="padding:8px 20px;border-radius:10px;
+        border:1.5px solid #6b8c42;background:#eaf3de;color:#3b6d11;
+        font-weight:700;cursor:pointer;font-family:inherit;font-size:.9rem;">✓ Kabul</button>
+      <button id="ix-decline-btn" style="padding:8px 20px;border-radius:10px;
+        border:1.5px solid #c75b39;background:#fdf0f0;color:#a32d2d;
+        font-weight:700;cursor:pointer;font-family:inherit;font-size:.9rem;">✕ Reddet</button>
     </div>`;
-  popup.style.display = 'block';
+  document.body.appendChild(popup);
+
+  document.getElementById('ix-accept-btn').onclick  = () => ixAccept(c);
+  document.getElementById('ix-decline-btn').onclick = () => ixDecline(c);
 }
 
-function hideChallengePopup(){
-  const popup = document.getElementById('challenge-popup');
-  if(popup) popup.style.display = 'none';
-}
-
-async function acceptIncomingChallenge(){
-  hideChallengePopup();
-  const snap = await get(ref(db, `duel_challenges/${mySid}`));
-  const c = snap.val();
-  if(!c || c.status !== 'pending') return;
-  // handoff localStorage'a yaz (checkDuelHandoff ile aynı format)
-  const handoff = {
-    roomCode: c.roomCode,
-    fromSid: c.fromSid, fromName: c.fromName,
-    mode: c.mode, strings: c.strings,
-    totalRounds: c.totalRounds, totalSecs: c.totalSecs
-  };
-  localStorage.setItem('gitar_duel_handoff', JSON.stringify(handoff));
-  await update(ref(db, `duel_challenges/${mySid}`), {status:'accepted'});
-  // Aynı sayfadaysak checkDuelHandoff'u çağır
+async function ixAccept(c){
+  document.getElementById('ix-challenge-popup')?.remove();
+  // handoff localStorage'a yaz
+  localStorage.setItem('gitar_duel_handoff', JSON.stringify({
+    roomCode:c.roomCode, fromSid:c.fromSid, fromName:c.fromName,
+    mode:c.mode, strings:c.strings,
+    totalRounds:c.totalRounds, totalSecs:c.totalSecs
+  }));
+  await update(ref(db,`duel_challenges/${mySid}`),{status:'accepted'});
   const handled = await checkDuelHandoff();
   if(!handled) window.location.reload();
 }
 
-async function declineIncomingChallenge(){
-  hideChallengePopup();
-  await update(ref(db, `duel_challenges/${mySid}`), {status:'declined'});
+async function ixDecline(c){
+  document.getElementById('ix-challenge-popup')?.remove();
+  await update(ref(db,`duel_challenges/${mySid}`),{status:'declined'});
 }
 
-// mySid hazır olunca dinlemeye başla
-const _origMySidWait = setInterval(()=>{
-  if(typeof mySid !== 'undefined' && mySid){
-    clearInterval(_origMySidWait);
-    listenIncomingChallenge();
-  }
-}, 300);
+// live-bar.js'in window.acceptChallenge / declineChallenge çağırması durumunda
+// onları da kendi fonksiyonlarımıza yönlendir
+window.acceptChallenge = async function(roomCode_, fromSid_, fromName_){
+  const snap = await get(ref(db,`duel_challenges/${mySid}`));
+  const c = snap.val();
+  if(c) await ixAccept(c);
+};
+window.declineChallenge = async function(){
+  const snap = await get(ref(db,`duel_challenges/${mySid}`));
+  const c = snap.val();
+  if(c) await ixDecline(c);
+};
 
 checkDuelHandoff();
 </script>
