@@ -355,33 +355,30 @@
     }
 
     .envy-count-badge {
-      display: inline-flex; align-items: center; gap: 6px;
-      font-size: .8rem; font-weight: 700; color: #7a2020;
-      background: linear-gradient(135deg, #fff0f0, #fde8e8);
-      border: 1.5px solid #f5b8b8;
-      border-radius: 20px; padding: 6px 14px; margin-top: 6px;
-      box-shadow: 0 2px 8px rgba(226,75,74,0.1);
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: .72rem; font-weight: 700; color: #a32d2d;
+      background: #fdf0f0; border: 1px solid #f5c0c0;
+      border-radius: 20px; padding: 3px 10px; margin-top: 0;
     }
 
     #envy-notification {
       display: none;
-      align-items: center; gap: 14px;
-      background: linear-gradient(135deg, #fff5f0, #fff0f0);
-      border: 1.5px solid #f5b8b8;
-      border-left: 4px solid #e24b4a;
-      border-radius: 16px;
-      padding: 1rem 1.2rem;
-      margin-bottom: 1rem;
-      animation: envyPop .4s cubic-bezier(.34,1.56,.64,1);
-      box-shadow: 0 4px 16px rgba(226,75,74,0.1);
+      align-items: center; gap: 6px;
+      background: #fdf0f0;
+      border: 1px solid #f5c0c0;
+      border-radius: 20px;
+      padding: 4px 11px;
+      font-size: .75rem; font-weight: 600; color: #a32d2d;
+      white-space: nowrap;
+      animation: envyPop .3s ease;
     }
     @keyframes envyPop {
-      from { opacity:0; transform:translateY(-10px); }
+      from { opacity:0; transform:translateY(-6px); }
       to   { opacity:1; transform:translateY(0); }
     }
-    .envy-notif-icon { font-size: 1.8rem; line-height: 1; flex-shrink: 0; }
-    .envy-notif-title { font-size: .75rem; font-weight: 700; color: #b04040; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 3px; }
-    .envy-notif-names { font-size: .92rem; font-weight: 500; color: #5a1a1a; line-height: 1.5; }
+    .envy-notif-icon { font-size: .85rem; }
+    .envy-notif-title { display: none; }
+    .envy-notif-names { font-size: .75rem; font-weight: 600; color: #a32d2d; }
 
     .save-toast {
       position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px);
@@ -436,13 +433,15 @@
         <div class="welcome-info">
           <span class="welcome-name" id="welcome-name">Gitar Akademisi</span>
           <div class="welcome-badges" id="welcome-badges"></div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:4px;">
+            <div id="envy-notification"></div>
+            <div id="envy-total-badge" style="display:none;" class="envy-count-badge">😤 Bugüne kadar <span id="envy-total-count">0</span> kişi kıskandı</div>
+          </div>
         </div>
         <span id="_gs_active_count" style="display:none;">🟢</span>
         <div id="online-badges-row"><span class="online-name-badge">🟢</span></div>
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
-        <div id="envy-notification"></div>
-        <div id="envy-total-badge" style="display:none;" class="envy-count-badge">😤 Seni bugüne kadar <span id="envy-total-count">0</span> kişi kıskandı</div>
         <button class="logout-btn" onclick="doLogout()">Çıkış Yap</button>
       </div>
     </div>
@@ -701,16 +700,16 @@ function openDashboard() {
     window._pendingAvatarUpdate = me.id;
   }
 
-  // 🎉 KİSKANMA VERİSİNİ YÜKLEMESİ — Oturum açtığında sayacı ve bildirimleri göster
-  console.log('🔍 openDashboard çağrıldı. me.id:', me.id);
-  console.log('🔍 window.loadEnvyData var mı?', typeof window.loadEnvyData);
-  
-  if (window.loadEnvyData) {
-    console.log('✅ loadEnvyData çağrılıyor...');
-    window.loadEnvyData(me.id);
-  } else {
-    console.log('❌ loadEnvyData tanımlı değil!');
-  }
+  // Kıskanma verisi — module script'in yüklenmesini bekle (max 3sn, 100ms aralıkla dene)
+  let _envyRetry = 0;
+  const _envyInterval = setInterval(() => {
+    if (window.loadEnvyData) {
+      clearInterval(_envyInterval);
+      window.loadEnvyData(me.id);
+    } else if (++_envyRetry > 30) {
+      clearInterval(_envyInterval);
+    }
+  }, 100);
 }
 
 // ESKİ doLogout fonksiyonunu tamamen sil, BUNUNLA değiştir:
