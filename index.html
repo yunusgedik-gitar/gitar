@@ -346,7 +346,13 @@
       flex-shrink: 0;
     }
     .envy-btn:hover { background: #f9d5d5; }
-    .envy-btn:disabled { opacity: .4; cursor: not-allowed; }
+    .envy-btn:disabled { 
+      background: var(--green-bg) !important;
+      color: var(--green) !important;
+      border-color: #b0d890 !important;
+      cursor: not-allowed;
+      font-weight: 700;
+    }
 
     .envy-count-badge {
       display: inline-flex; align-items: center; gap: 5px;
@@ -685,6 +691,11 @@ function openDashboard() {
     window.updateWelcomeCard(me.id);
   } else {
     window._pendingAvatarUpdate = me.id;
+  }
+
+  // 🎉 KİSKANMA VERİSİNİ YÜKLEMESİ — Oturum açtığında sayacı ve bildirimleri göster
+  if (window.loadEnvyData) {
+    window.loadEnvyData(me.id);
   }
 }
 
@@ -2143,38 +2154,49 @@ window.sendEnvy = async function(targetSid, targetName, boardId) {
   } catch(e) { console.error('Kıskanma hatası:', e); }
 };
 
-// Kişiye gelen kıskanmaları yükle ve göster
-async function loadEnvyData(sid) {
+// Kişiye gelen kıskanmaları yükle ve göster (Real-time listener ile)
+window.loadEnvyData = function(sid) {
   if (!sid || sid === TEACHER_ID) return;
+  
   try {
-    const snap = await get(ref(db, `envy/${sid}`));
-    const data = snap.val();
-    if (!data) return;
+    onValue(ref(db, `envy/${sid}`), (snap) => {
+      const data = snap.val();
+      if (!data) return;
 
-    const total = data.total || 0;
-    const badge = document.getElementById('envy-total-badge');
-    const countEl = document.getElementById('envy-total-count');
-    if (badge && total > 0) {
-      countEl.textContent = total;
-      badge.style.display = 'inline-flex';
-    }
+      // Toplam sayacı güncelleştir
+      const total = data.total || 0;
+      const badge = document.getElementById('envy-total-badge');
+      const countEl = document.getElementById('envy-total-count');
+      if (badge) {
+        if (total > 0) {
+          countEl.textContent = total;
+          badge.style.display = 'inline-flex';
+        } else {
+          badge.style.display = 'none';
+        }
+      }
 
-    // Bugün kıskanılanlar — bildirim göster
-    const fromEntries = data.from ? Object.values(data.from) : [];
-    const today = new Date().toISOString().slice(0,10);
-    const todayEnvies = fromEntries.filter(e => {
-      const d = new Date(e.ts).toISOString().slice(0,10);
-      return d === today;
+      // Bugün kıskanılanlar — bildirim göster
+      const fromEntries = data.from ? Object.values(data.from) : [];
+      const today = new Date().toISOString().slice(0, 10);
+      const todayEnvies = fromEntries.filter(e => {
+        const d = new Date(e.ts).toISOString().slice(0, 10);
+        return d === today;
+      });
+
+      const notifEl = document.getElementById('envy-notification');
+      if (notifEl) {
+        if (todayEnvies.length > 0) {
+          const names = todayEnvies.map(e => `<b>${e.name}</b>`).join(', ');
+          notifEl.innerHTML = `😤 Bugün seni kıskananlar:<div class="envy-notif-list">${names} seni kıskanıyor!</div>`;
+          notifEl.style.display = 'block';
+        } else {
+          notifEl.style.display = 'none';
+        }
+      }
     });
-
-    const notifEl = document.getElementById('envy-notification');
-    if (notifEl && todayEnvies.length > 0) {
-      const names = todayEnvies.map(e => `<b>${e.name}</b>`).join(', ');
-      notifEl.innerHTML = `😤 Bugün seni kıskananlar:<div class="envy-notif-list">${names} seni kıskanıyor!</div>`;
-      notifEl.style.display = 'block';
-    }
   } catch(e) { console.error('Kıskanma verisi yüklenemedi:', e); }
-}
+};
 
 // ===== Online Rozet Gösterimi =====
 (function setupOnlineBadges() {
