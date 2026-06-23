@@ -355,25 +355,33 @@
     }
 
     .envy-count-badge {
-      display: inline-flex; align-items: center; gap: 5px;
-      font-size: .78rem; font-weight: 700; color: #a32d2d;
-      background: #fdf0f0; border: 1px solid #f5c0c0;
-      border-radius: 12px; padding: 4px 10px; margin-top: 6px;
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: .8rem; font-weight: 700; color: #7a2020;
+      background: linear-gradient(135deg, #fff0f0, #fde8e8);
+      border: 1.5px solid #f5b8b8;
+      border-radius: 20px; padding: 6px 14px; margin-top: 6px;
+      box-shadow: 0 2px 8px rgba(226,75,74,0.1);
     }
 
     #envy-notification {
       display: none;
-      background: linear-gradient(135deg,#fdf0f0,#fff8f8);
-      border: 2px solid #e24b4a; border-radius: 16px;
-      padding: .85rem 1rem; margin-bottom: .75rem;
-      font-size: .85rem; color: #a32d2d; font-weight: 600;
+      align-items: center; gap: 14px;
+      background: linear-gradient(135deg, #fff5f0, #fff0f0);
+      border: 1.5px solid #f5b8b8;
+      border-left: 4px solid #e24b4a;
+      border-radius: 16px;
+      padding: 1rem 1.2rem;
+      margin-bottom: 1rem;
       animation: envyPop .4s cubic-bezier(.34,1.56,.64,1);
+      box-shadow: 0 4px 16px rgba(226,75,74,0.1);
     }
     @keyframes envyPop {
-      from { opacity:0; transform:scale(.92) translateY(-8px); }
-      to   { opacity:1; transform:scale(1)   translateY(0);    }
+      from { opacity:0; transform:translateY(-10px); }
+      to   { opacity:1; transform:translateY(0); }
     }
-    #envy-notification .envy-notif-list { margin-top: 6px; font-weight: 400; color: #c0392b; }
+    .envy-notif-icon { font-size: 1.8rem; line-height: 1; flex-shrink: 0; }
+    .envy-notif-title { font-size: .75rem; font-weight: 700; color: #b04040; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 3px; }
+    .envy-notif-names { font-size: .92rem; font-weight: 500; color: #5a1a1a; line-height: 1.5; }
 
     .save-toast {
       position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px);
@@ -2170,18 +2178,18 @@ window.sendEnvy = async function(targetSid, targetName, boardId) {
   } catch(e) { console.error('Kıskanma hatası:', e); }
 };
 
-// Kişiye gelen kıskanmaları yükle ve göster (Real-time listener ile)
+// loadEnvyData → module script'in SONUNDA db hazır olduktan sonra tanımlanıyor (aşağıya bak)
+
+// ✅ db hazır olduktan sonra window'a bağla (module scope sorununu çözer)
 window.loadEnvyData = function(sid) {
   if (!sid || sid === TEACHER_ID) return;
-  
   try {
     onValue(ref(db, `envy/${sid}`), (snap) => {
       const data = snap.val();
-      if (!data) return;
 
-      // Toplam sayacı güncelleştir
-      const total = data.total || 0;
-      const badge = document.getElementById('envy-total-badge');
+      // Toplam sayaç
+      const total = data ? (data.total || 0) : 0;
+      const badge   = document.getElementById('envy-total-badge');
       const countEl = document.getElementById('envy-total-count');
       if (badge) {
         if (total > 0) {
@@ -2192,20 +2200,17 @@ window.loadEnvyData = function(sid) {
         }
       }
 
-      // Bugün kıskanılanlar — bildirim göster
-      const fromEntries = data.from ? Object.values(data.from) : [];
+      // Bugün kıskanılanlar
+      const fromEntries = (data && data.from) ? Object.values(data.from) : [];
       const today = new Date().toISOString().slice(0, 10);
-      const todayEnvies = fromEntries.filter(e => {
-        const d = new Date(e.ts).toISOString().slice(0, 10);
-        return d === today;
-      });
+      const todayEnvies = fromEntries.filter(e => new Date(e.ts).toISOString().slice(0, 10) === today);
 
       const notifEl = document.getElementById('envy-notification');
       if (notifEl) {
         if (todayEnvies.length > 0) {
-          const names = todayEnvies.map(e => `<b>${e.name}</b>`).join(', ');
-          notifEl.innerHTML = `😤 Bugün seni kıskananlar:<div class="envy-notif-list">${names} seni kıskanıyor!</div>`;
-          notifEl.style.display = 'block';
+          const names = todayEnvies.map(e => `<strong>${e.name}</strong>`).join(', ');
+          notifEl.innerHTML = `<span class="envy-notif-icon">😤</span><div><div class="envy-notif-title">Bugün seni kıskananlar</div><div class="envy-notif-names">${names} seni kıskanıyor!</div></div>`;
+          notifEl.style.display = 'flex';
         } else {
           notifEl.style.display = 'none';
         }
@@ -2213,6 +2218,11 @@ window.loadEnvyData = function(sid) {
     });
   } catch(e) { console.error('Kıskanma verisi yüklenemedi:', e); }
 };
+
+// Eğer openDashboard zaten çağrıldıysa (sayfa yüklenirken me hazır) hemen çalıştır
+if (window.me && window.me.id) {
+  window.loadEnvyData(window.me.id);
+}
 
 // ===== Online Rozet Gösterimi =====
 (function setupOnlineBadges() {
