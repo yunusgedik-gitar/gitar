@@ -322,11 +322,11 @@
     <div class="filter-card">
             <div class="mode-select-row">
         <div class="mode-card active" id="mode-card-n2k" onclick="selectQuizMode('notadan-klavyeye')">
-          <span class="mode-icon">🎼➡️🎸</span>
+          <span class="mode-icon">🎼 ➜ 🎸</span>
           <span class="mode-label">Notadan Klavye'ye</span>
         </div>
         <div class="mode-card" id="mode-card-k2n" onclick="selectQuizMode('klavyeden-notaya')">
-          <span class="mode-icon">🎸➡️🎼</span>
+          <span class="mode-icon">🎸 ➜ 🎼</span>
           <span class="mode-label">Klavye'den Nota'ya</span>
         </div>
       </div>
@@ -355,7 +355,6 @@
       <h2 style="font-family:'Playfair Display',serif;font-size:1.1rem;">⚔️ Online Düello</h2>
       <button class="back-to-menu-btn" onclick="showArea('setup-area')">← Geri</button>
     </div>
-    <div class="filter-title">Online Oyuncular</div>
     <div id="duel-online-players-list" class="online-players-list">
       <div class="no-players-msg">Yükleniyor...</div>
     </div>
@@ -533,6 +532,7 @@
       <div class="card">
         <div class="card-top">
           <button class="back-to-menu-btn" onclick="goBackToMenu()">← Menüye Dön</button>
+          <button class="back-to-menu-btn" onclick="location.href='https://gitar.yunusgedik.com.tr/'" style="border-color:#d4a373;color:#8b5a2b;">🏠 Başa Dön</button>
           <button id="listen-btn" onclick="replay()">🔊 Dinle</button>
           <div class="timer-badge" id="timer-display">Süre: 00:00</div>
         </div>
@@ -601,6 +601,7 @@
       <div class="question-staff-card">
         <div class="card-top" style="width: 100%;">
           <button class="back-to-menu-btn" onclick="goBackToMenu()">← Menüye Dön</button>
+          <button class="back-to-menu-btn" onclick="location.href='https://gitar.yunusgedik.com.tr/'" style="border-color:#d4a373;color:#8b5a2b;">🏠 Başa Dön</button>
           <button id="listen-btn-n2k" onclick="replay()">🔊 Dinle</button>
           <div class="timer-badge" id="timer-display-n2k">Süre: 00:00</div>
         </div>
@@ -1450,7 +1451,7 @@ function loadOnlinePlayers(){
     const users = snap.val() || {};
     const others = Object.entries(users).filter(([sid])=>sid!==mySid);
     if(!others.length){
-      listEl.innerHTML='<div class="no-players-msg">Şu an başka online oyuncu yok. Birinin giriş yapmasını bekleyin.</div>';
+      listEl.innerHTML='<div class="no-players-msg">Şu an başka online öğrenci yok. Birinin giriş yapmasını bekleyin.</div>';
       return;
     }
     listEl.innerHTML = others.map(([sid,u])=>`
@@ -1563,6 +1564,10 @@ window.sendChallenge = async function(toSid, toName){
   });
 
   document.getElementById('waiting-opp-name').textContent = toName;
+  const _gl2 = duelSecs > 0 ? `⏱ ${duelSecs} Saniyelik Yarış` : `${duelRounds} Tur`;
+  const _ml2 = duelMode === 'klavyeden-notaya' ? 'Klavyeden Notaya' : 'Notadan Klavyeye';
+  const wlbl = document.getElementById('waiting-game-label');
+  if(wlbl) wlbl.textContent = `${_ml2} · ${_gl2}`;
   showArea('duel-waiting-area');
 
   const cRef = ref(db,`duel_challenges/${toSid}`);
@@ -2033,6 +2038,106 @@ window.leaveGame = async function(){
   if(roundListener && roomCode){ roundListener(); roundListener=null; }
   if(roomCode) await update(ref(db,`duel_rooms/${roomCode}`),{status:'abandoned'});
   showArea('setup-area');
+};
+
+// ════════════════════════════════════════════════════════
+// IN-PAGE DAVET POPUP — live-bar.js bildiriminden bağımsız
+// duel_challenges/${mySid} dinleyerek kendi popup'ımızı gösteririz
+// ════════════════════════════════════════════════════════
+
+// live-bar.js kendi popup/bildirimini gösteriyorsa onu DOM'dan gizle
+function hideLiveBarDuelNotif(){
+  // live-bar genellikle .duel-invite, .challenge-notif gibi class kullanır
+  const selectors = ['.duel-invite','.challenge-notif','.duel-notification',
+                     '[data-duel-invite]','#duel-invite','#challenge-notif'];
+  selectors.forEach(s=>{ document.querySelectorAll(s).forEach(el=>el.remove()); });
+}
+
+// Gelen daveti dinle
+(function listenIncomingChallenge(){
+  if(!mySid) return;  // const olduğu için her zaman hazır
+
+  const cRef = ref(db, `duel_challenges/${mySid}`);
+  onValue(cRef, snap => {
+    const c = snap.val();
+    hideLiveBarDuelNotif();
+    if(!c || c.status !== 'pending'){
+      const p = document.getElementById('ix-challenge-popup');
+      if(p) p.remove();
+      return;
+    }
+    showIxChallengePopup(c);
+  });
+})();
+
+function showIxChallengePopup(c){
+  document.getElementById('ix-challenge-popup')?.remove();
+  const gl = c.totalSecs > 0
+    ? `⏱ ${c.totalSecs} Saniyelik Yarış`
+    : `${c.totalRounds} Tur`;
+  const ml = c.mode === 'klavyeden-notaya' ? 'Klavyeden Notaya' : 'Notadan Klavyeye';
+
+  const popup = document.createElement('div');
+  popup.id = 'ix-challenge-popup';
+  popup.style.cssText = [
+    'position:fixed','bottom:80px','left:50%','transform:translateX(-50%)',
+    'z-index:99999','background:#fff','border:2px solid #d4a373',
+    'border-radius:20px','padding:1rem 1.2rem',
+    'box-shadow:0 8px 32px rgba(90,62,43,.2)',
+    'max-width:320px','width:90%','text-align:center',
+    'font-family:Lato,sans-serif','color:#5a3e2b'
+  ].join(';');
+  popup.innerHTML = `
+    <div style="font-weight:700;font-size:1.05rem;margin-bottom:4px;">⚔️ Düello Daveti!</div>
+    <div style="color:#8b5a2b;font-size:.9rem;margin-bottom:6px;">
+      <b>${c.fromName||'Rakip'}</b> seni düelloya çağırıyor
+    </div>
+    <div style="font-size:.8rem;font-weight:700;color:#b37d4e;
+      background:#f5e6d3;padding:3px 12px;border-radius:8px;
+      display:inline-block;margin-bottom:.9rem;">${ml} · ${gl}</div>
+    <div style="display:flex;gap:10px;justify-content:center;">
+      <button id="ix-accept-btn" style="padding:8px 20px;border-radius:10px;
+        border:1.5px solid #6b8c42;background:#eaf3de;color:#3b6d11;
+        font-weight:700;cursor:pointer;font-family:inherit;font-size:.9rem;">✓ Kabul</button>
+      <button id="ix-decline-btn" style="padding:8px 20px;border-radius:10px;
+        border:1.5px solid #c75b39;background:#fdf0f0;color:#a32d2d;
+        font-weight:700;cursor:pointer;font-family:inherit;font-size:.9rem;">✕ Reddet</button>
+    </div>`;
+  document.body.appendChild(popup);
+
+  document.getElementById('ix-accept-btn').onclick  = () => ixAccept(c);
+  document.getElementById('ix-decline-btn').onclick = () => ixDecline(c);
+}
+
+async function ixAccept(c){
+  document.getElementById('ix-challenge-popup')?.remove();
+  // handoff localStorage'a yaz
+  localStorage.setItem('gitar_duel_handoff', JSON.stringify({
+    roomCode:c.roomCode, fromSid:c.fromSid, fromName:c.fromName,
+    mode:c.mode, strings:c.strings,
+    totalRounds:c.totalRounds, totalSecs:c.totalSecs
+  }));
+  await update(ref(db,`duel_challenges/${mySid}`),{status:'accepted'});
+  const handled = await checkDuelHandoff();
+  if(!handled) window.location.reload();
+}
+
+async function ixDecline(c){
+  document.getElementById('ix-challenge-popup')?.remove();
+  await update(ref(db,`duel_challenges/${mySid}`),{status:'declined'});
+}
+
+// live-bar.js'in window.acceptChallenge / declineChallenge çağırması durumunda
+// onları da kendi fonksiyonlarımıza yönlendir
+window.acceptChallenge = async function(roomCode_, fromSid_, fromName_){
+  const snap = await get(ref(db,`duel_challenges/${mySid}`));
+  const c = snap.val();
+  if(c) await ixAccept(c);
+};
+window.declineChallenge = async function(){
+  const snap = await get(ref(db,`duel_challenges/${mySid}`));
+  const c = snap.val();
+  if(c) await ixDecline(c);
 };
 
 checkDuelHandoff();
