@@ -142,8 +142,12 @@ function listenForChallenge(sid, myName) {
       document.body.appendChild(overlay);
     }
 
+    const _gameLabel = c.totalSecs > 0
+      ? `⏱ ${c.totalSecs} saniyelik`
+      : `${c.totalRounds} turluk`;
+    const _modeLabel = c.mode === 'klavyeden-notaya' ? 'Klavyeden Notaya' : 'Notadan Klavyeye';
     document.getElementById('_gs_challenge_sub').textContent =
-      `${c.fromName} seni ${c.totalRounds} turluk düelloya davet etti!`;
+      `${c.fromName} seni ${_gameLabel} düelloya davet etti! (${_modeLabel})`;
     overlay.style.display = 'block';
 
     // 30 saniyelik sayaç çubuğu
@@ -178,7 +182,7 @@ async function acceptChallenge(c, mySid, myName, expireTimer) {
 
   await update(ref(db, `duel_rooms/${c.roomCode}`), {
     guest: { sid: mySid, name: myName },
-    status: 'active'
+    status: 'playing'
   });
   await update(ref(db, `duel_challenges/${mySid}`), { status: 'accepted' });
 
@@ -188,7 +192,9 @@ async function acceptChallenge(c, mySid, myName, expireTimer) {
     oppSid:      c.fromSid,
     oppName:     c.fromName,
     strings:     c.strings,
-    totalRounds: c.totalRounds
+    totalRounds: c.totalRounds,
+    totalSecs:   c.totalSecs   || 0,
+    mode:        c.mode        || 'notadan-klavyeye'
   }));
 
   window.location.href = c.redirectTo || '/nota/';
