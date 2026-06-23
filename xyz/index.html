@@ -1451,7 +1451,7 @@ function loadOnlinePlayers(){
     const users = snap.val() || {};
     const others = Object.entries(users).filter(([sid])=>sid!==mySid);
     if(!others.length){
-      listEl.innerHTML='<div class="no-players-msg">Şu an başka online oyuncu yok. Birinin giriş yapmasını bekleyin.</div>';
+      listEl.innerHTML='<div class="no-players-msg">Şu an başka online öğrenci yok. Birinin giriş yapmasını bekleyin.</div>';
       return;
     }
     listEl.innerHTML = others.map(([sid,u])=>`
