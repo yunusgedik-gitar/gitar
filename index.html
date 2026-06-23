@@ -364,6 +364,13 @@
       color: var(--red) !important;
       border-color: #f5c0c0 !important;
     }
+    .envy-lb-count {
+      display: inline-flex; align-items: center;
+      font-size: .68rem; font-weight: 700; color: #a32d2d;
+      background: #fdf0f0; border: 1px solid #f5c0c0;
+      border-radius: 10px; padding: 1px 7px; margin-left: 6px;
+      vertical-align: middle;
+    }
 
     .envy-count-badge {
       display: inline-flex; align-items: center; gap: 4px;
@@ -1892,7 +1899,7 @@ function showSaveToast() {
   setTimeout(() => t.classList.remove('show'), 1600);
 }
 
-function renderLeaderboard() {
+async function renderLeaderboard() {
   const lb = document.getElementById('leaderboard');
   const meObj = getMe();
   const rows = Object.keys(repProgress)
@@ -1905,6 +1912,16 @@ function renderLeaderboard() {
     return { sid, score, maxGrade };
   }).sort((a,b) => b.score - a.score);
 
+  // Firebase'den kıskanılma sayılarını çek
+  let envyCounts = {};
+  try {
+    const envySnap = await get(ref(db, 'envy'));
+    const envyData = envySnap.val() || {};
+    Object.entries(envyData).forEach(([sid, val]) => {
+      envyCounts[sid] = val.total || 0;
+    });
+  } catch(e) {}
+
   const myRank = meObj ? rows.findIndex(r => r.sid === meObj.id) : -1;
   const _today  = new Date().toISOString().slice(0,10);
   const _daily  = meObj ? JSON.parse(localStorage.getItem(`envy_daily_${meObj.id}`) || '{"date":"","targets":[]}') : {date:'',targets:[]};
@@ -1912,16 +1929,18 @@ function renderLeaderboard() {
 
   lb.innerHTML = rows.map((r, i) => {
     const isMe = meObj && r.sid === meObj.id;
-    const canEnvy = meObj && !isMe && i < myRank && myRank > 0;
+    const canEnvy = meObj && !isMe && meObj.id !== TEACHER_ID && i < myRank && myRank > 0;
     const already = _envied.includes(r.sid);
     const envyBtn = canEnvy
       ? already
         ? `<button class="envy-btn envy-btn-undone" onclick="sendEnvy('${r.sid}','${studentName(r.sid).replace(/'/g,"\\'")}','general')">✓ Geri Al</button>`
         : `<button class="envy-btn" onclick="sendEnvy('${r.sid}','${studentName(r.sid).replace(/'/g,"\\'")}','general')">😤 Kıskan</button>`
       : '';
+    const eCount = envyCounts[r.sid] || 0;
+    const envyBadge = eCount > 0 ? `<span class="envy-lb-count" title="${eCount} kişi kıskandı">🙄 ${eCount}</span>` : '';
     return `<div class="lb-row ${isMe ? 'me' : ''}" id="${isMe ? 'lb-me-row' : ''}">
       <div class="lb-rank">${i+1}</div>
-      <div class="lb-name">${studentName(r.sid)}<span class="lb-grade">Grade ${r.maxGrade}</span></div>
+      <div class="lb-name">${studentName(r.sid)}<span class="lb-grade">Grade ${r.maxGrade}</span>${envyBadge}</div>
       <div class="lb-pct">${(r.score*100).toFixed(1)} puan</div>
       ${envyBtn}
     </div>`;
@@ -2093,7 +2112,7 @@ function calcCategoryRank(sid, catId) {
 }
 
 // Kategori sıralamasını render et
-function renderCategoryLeaderboard(catId) {
+async function renderCategoryLeaderboard(catId) {
   const lb    = document.getElementById('cat-leaderboard');
   const meObj = getMe();
   const cat   = CATEGORIES.find(c => c.id === catId);
@@ -2124,19 +2143,29 @@ function renderCategoryLeaderboard(catId) {
   const _daily2  = meObj ? JSON.parse(localStorage.getItem(`envy_daily_${meObj.id}`) || '{"date":"","targets":[]}') : {date:'',targets:[]};
   const _envied2 = (_daily2.date === _today2) ? _daily2.targets : [];
 
+  // Firebase'den kıskanılma sayıları
+  let envyCounts2 = {};
+  try {
+    const envySnap2 = await get(ref(db, 'envy'));
+    const envyData2 = envySnap2.val() || {};
+    Object.entries(envyData2).forEach(([sid, val]) => { envyCounts2[sid] = val.total || 0; });
+  } catch(e) {}
+
   lb.innerHTML = rows.map((r, i) => {
     const isMe  = meObj && r.sid === meObj.id;
     const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}`;
-    const canEnvy = meObj && !isMe && i < myCatRank && myCatRank > 0;
+    const canEnvy = meObj && !isMe && meObj.id !== TEACHER_ID && i < myCatRank && myCatRank > 0;
     const already2 = _envied2.includes(r.sid);
     const envyBtn = canEnvy
       ? already2
         ? `<button class="envy-btn envy-btn-undone" onclick="sendEnvy('${r.sid}','${studentName(r.sid).replace(/'/g,"\\'")}','${catId}')">✓ Geri Al</button>`
         : `<button class="envy-btn" onclick="sendEnvy('${r.sid}','${studentName(r.sid).replace(/'/g,"\\'")}','${catId}')">😤 Kıskan</button>`
       : '';
+    const eCount2 = envyCounts2[r.sid] || 0;
+    const envyBadge2 = eCount2 > 0 ? `<span class="envy-lb-count" title="${eCount2} kişi kıskandı">🙄 ${eCount2}</span>` : '';
     return `<div class="lb-row ${isMe ? 'me' : ''}" id="${isMe ? 'lb-me-cat-row' : ''}">
       <div class="lb-rank">${medal}</div>
-      <div class="lb-name">${studentName(r.sid)}<span class="lb-grade" style="color:${cat.color};">${cat.emoji} ${cat.label}</span></div>
+      <div class="lb-name">${studentName(r.sid)}<span class="lb-grade" style="color:${cat.color};">${cat.emoji} ${cat.label}</span>${envyBadge2}</div>
       <div class="lb-pct">${(r.score * 100).toFixed(1)} puan</div>
       ${envyBtn}
     </div>`;
@@ -2247,16 +2276,16 @@ window.loadEnvyData = function(sid) {
         }
       }
 
-      // Bugün kıskanılanlar
+      // Son 24 saatte kıskanılanlar
       const fromEntries = (data && data.from) ? Object.values(data.from) : [];
-      const today = new Date().toISOString().slice(0, 10);
-      const todayEnvies = fromEntries.filter(e => new Date(e.ts).toISOString().slice(0, 10) === today);
+      const now24 = Date.now() - 24 * 60 * 60 * 1000;
+      const recentEnvies = fromEntries.filter(e => e.ts > now24);
 
       const notifEl = document.getElementById('envy-notification');
       if (notifEl) {
-        if (todayEnvies.length > 0) {
-          const names = todayEnvies.map(e => `<strong>${e.name}</strong>`).join(', ');
-          notifEl.innerHTML = `<span class="envy-notif-icon">🙄</span><div><div class="envy-notif-title">Bugün seni kıskananlar</div><div class="envy-notif-names">${names} seni kıskanıyor!</div></div>`;
+        if (recentEnvies.length > 0) {
+          const names = recentEnvies.map(e => `<strong>${e.name}</strong>`).join(', ');
+          notifEl.innerHTML = `<span class="envy-notif-icon">🙄</span><div><div class="envy-notif-title">Son 24 saatte seni kıskananlar</div><div class="envy-notif-names">${names} seni kıskanıyor!</div></div>`;
           notifEl.style.display = 'flex';
         } else {
           notifEl.style.display = 'none';
