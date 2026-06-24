@@ -25,16 +25,14 @@ async function initLiveBar() {
   const name = localStorage.getItem('gitar_student_name');
   if (!sid || !name) return;
 
+  // _gs_active_count yoksa gizli span olarak body'e ekle (veri taşıyıcı)
   let countEl = document.getElementById('_gs_active_count');
   if (!countEl) {
-    const header = document.querySelector('header') || document.body;
-    const bar = document.createElement('div');
-    bar.style.cssText = 'text-align:center;font-size:.82rem;font-weight:600;color:#2c1f14;background:#eaf3de;border:1px solid #b0c999;border-radius:20px;padding:6px 16px;margin:.5rem auto 1rem;display:inline-block;box-shadow:0 2px 8px rgba(0,0,0,0.04);';
-    bar.innerHTML = `<span id="_gs_active_count">🟢 Yükleniyor...</span>`;
-    const h1 = header.querySelector('h1');
-    if (h1) h1.insertAdjacentElement('afterend', bar);
-    else header.prepend(bar);
-    countEl = document.getElementById('_gs_active_count');
+    const span = document.createElement('span');
+    span.id = '_gs_active_count';
+    span.style.display = 'none';
+    document.body.appendChild(span);
+    countEl = span;
   }
 
   const userRef = ref(db, 'online_users/' + sid);
@@ -43,9 +41,23 @@ async function initLiveBar() {
 
   onValue(ref(db, 'online_users'), (snapshot) => {
     const users = snapshot.val() || {};
-    const names = Object.values(users).map(u => u.name);
+    const names = Object.values(users)
+      .filter(u => u && u.name)
+      .map(u => u.name);
+
+    // _gs_active_count guncelle
     if (countEl) {
-      countEl.innerHTML = names.length > 0 ? `🟢 ${names.join(', ')}` : `⚪ —`;
+      countEl.textContent = names.length > 0 ? '\u{1F7E2} ' + names.join(', ') : '\u26AA \u2014';
+    }
+
+    // online-badges-row'u dogrudan guncelle
+    const row = document.getElementById('online-badges-row');
+    if (row) {
+      if (names.length === 0) {
+        row.innerHTML = '<span class="online-name-badge">\u{1F7E2}</span>';
+      } else {
+        row.innerHTML = names.map(n => '<span class="online-name-badge">\u{1F7E2} ' + n + '</span>').join('');
+      }
     }
   });
 

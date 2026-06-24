@@ -2824,34 +2824,7 @@ if (window.me && window.me.id) {
 
 })();
 
-// ===== Online Rozet Gösterimi =====
-(function setupOnlineBadges() {
-  function buildBadges(rawText) {
-    const row = document.getElementById('online-badges-row');
-    if (!row) return;
-    const clean = (rawText || '').replace(/🟢\s*/g, '').trim();
-    if (!clean || clean === 'Canlı Oda...') {
-      row.innerHTML = '<span class="online-name-badge">🟢</span>';
-      return;
-    }
-    const names = clean.split(',').map(n => n.trim()).filter(Boolean);
-    row.innerHTML = names.map(n => `<span class="online-name-badge">🟢 ${n}</span>`).join('');
-  }
-  function tryAttach(attempt) {
-    const pill = document.getElementById('_gs_active_count');
-    if (pill) {
-      // Hemen mevcut değeri render et
-      buildBadges(pill.textContent || pill.innerText || '');
-      // Sonraki güncellemeleri dinle
-      const obs = new MutationObserver(() => buildBadges(pill.textContent || pill.innerText || ''));
-      obs.observe(pill, { childList: true, subtree: true, characterData: true });
-    } else if (attempt < 20) {
-      // live-bar.js henüz elementi oluşturmamış olabilir, 250ms sonra tekrar dene
-      setTimeout(() => tryAttach(attempt + 1), 250);
-    }
-  }
-  tryAttach(0);
-})();
+// Online rozet gosterimi live-bar.js tarafindan dogrudan guncelleniyor
 </script>
 
 <!-- ████████████████████████████████████████
