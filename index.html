@@ -860,6 +860,14 @@ async function loadRepProgress() {
       }
     }
     repLoaded = true;
+    // Mevcut kullanıcının grade'ini localStorage'a yaz (diğer sayfalar için)
+    const _curSid = localStorage.getItem('gitar_session');
+    if (_curSid && repProgress[_curSid]) {
+      const _grades = Object.keys(repProgress[_curSid]).filter(k => !isNaN(Number(k)));
+      if (_grades.length) {
+        localStorage.setItem(`chat_grade_${_curSid}`, String(Math.max(..._grades.map(Number))));
+      }
+    }
   } catch (e) {
     console.error('Repertuar verisi yüklenemedi:', e);
     repProgress = JSON.parse(JSON.stringify(INITIAL_PROGRESS));
@@ -2401,11 +2409,17 @@ if (window.me && window.me.id) {
 
   // ── iOS klavye: visualViewport ile paneli yukarı kaydır ──
   if (window.visualViewport) {
+    let _vvTimer = null;
     function _reposPanel() {
       if (!panelOpen) return;
-      const vv = window.visualViewport;
-      const kbH = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-      panel.style.bottom = (kbH > 0 ? kbH + 8 : 88) + 'px';
+      clearTimeout(_vvTimer);
+      _vvTimer = setTimeout(() => {
+        const vv  = window.visualViewport;
+        const gap = window.innerHeight - (vv.height + vv.pageTop);
+        const bot = gap > 20 ? gap + 12 : 88;
+        panel.style.transition = 'bottom .15s ease';
+        panel.style.bottom = bot + 'px';
+      }, 50);
     }
     window.visualViewport.addEventListener('resize', _reposPanel);
     window.visualViewport.addEventListener('scroll', _reposPanel);
@@ -2553,7 +2567,7 @@ if (window.me && window.me.id) {
         const m = child.val();
         if (m && m.ts && Date.now() - m.ts < CHAT_KEEP_MS) msgs.push({ key: child.key, ...m });
       });
-      msgs.sort((a, b) => a.ts - b.ts);
+      msgs.sort((a, b) => a.key < b.key ? -1 : a.key > b.key ? 1 : 0);
       msgs.splice(0, Math.max(0, msgs.length - 80)); // son 80
 
       msgBox.innerHTML = msgs.length ? '' : `<div class="chat-empty"><div class="chat-empty-icon">💬</div><div class="chat-empty-text">Henüz mesaj yok.<br>İlk mesajı sen gönder!</div></div>`;
@@ -2715,7 +2729,7 @@ if (window.me && window.me.id) {
       if (!msgBox) return;
       const msgs = [];
       snap.forEach(ch => { const v=ch.val(); if(v) msgs.push({ key: ch.key, ...v }); });
-      msgs.sort((a, b) => a.ts - b.ts);
+      msgs.sort((a, b) => a.key < b.key ? -1 : a.key > b.key ? 1 : 0);
       // DM'de filtre yok — tüm mesajlar gösterilir
       const recent = msgs.filter(m => m && m.text);
 

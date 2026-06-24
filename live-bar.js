@@ -519,25 +519,26 @@ async function initChatSystem() {
   async function ensureGrade() {
     if (isTeacher || writeable) return;
     try {
-      const snap = await get(ref(db, `repProgress/${sid}`));
+      // Doğru yol: repertoire/{sid} → grade anahtarları
+      const snap = await get(ref(db, `repertoire/${sid}`));
       if (snap.exists()) {
-        const g = Object.keys(snap.val() || {}).filter(k => !isNaN(k));
-        if (g.length) {
-          const maxG = Math.max(...g.map(Number));
-          localStorage.setItem(`chat_grade_${sid}`, maxG);
+        const grades = Object.keys(snap.val() || {}).filter(k => !isNaN(Number(k)));
+        if (grades.length) {
+          const maxG = Math.max(...grades.map(Number));
+          localStorage.setItem(`chat_grade_${sid}`, String(maxG));
           if (maxG >= 1) {
             writeable = true;
-            // UI kilidini aç
             const gl = document.getElementById('_gs_gen_locked');
             const gi = document.getElementById('_gs_gen_input_area');
             const wd = document.getElementById('_gs_wlimit');
             if (gl) gl.style.display = 'none';
             if (gi) gi.style.display = 'flex';
-            if (wd) { wd.style.display = 'flex'; updateWL && updateWL(); }
+            if (wd) wd.style.display = 'flex';
+            if (typeof updateWL === 'function') updateWL();
           }
         }
       }
-    } catch(e) { console.warn('grade fetch:', e); }
+    } catch(e) { console.warn('[chat] grade fetch hatası:', e); }
   }
   ensureGrade();
 
@@ -580,12 +581,18 @@ async function initChatSystem() {
 
   // ── iOS klavye: visualViewport ile paneli yukarı kaydır ──
   if (window.visualViewport) {
+    let _vvTimer = null;
     function _gsRepos() {
       if (!open) return;
-      const vv = window.visualViewport;
-      // Klavye yüksekliği = window.innerHeight - vv.height
-      const kbH = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-      panelEl.style.bottom = (kbH > 0 ? kbH + 8 : 88) + 'px';
+      clearTimeout(_vvTimer);
+      _vvTimer = setTimeout(() => {
+        const vv   = window.visualViewport;
+        const gap  = window.innerHeight - (vv.height + vv.pageTop);
+        // Klavye açıkken gap > 0 (klavye yüksekliği kadar)
+        const bot  = gap > 20 ? gap + 12 : 88;
+        panelEl.style.transition = 'bottom .15s ease';
+        panelEl.style.bottom = bot + 'px';
+      }, 50); // debounce
     }
     window.visualViewport.addEventListener('resize', _gsRepos);
     window.visualViewport.addEventListener('scroll', _gsRepos);
@@ -652,7 +659,7 @@ async function initChatSystem() {
   onValue(ref(db,'chat/general'), snap => {
     const msgs = [];
     snap.forEach(ch => { const m=ch.val(); if(m&&m.ts&&Date.now()-m.ts<CHAT_KEEP_MS) msgs.push({key:ch.key,...m}); });
-    msgs.sort((a,b)=>a.ts-b.ts);
+    msgs.sort((a,b)=> a.key < b.key ? -1 : a.key > b.key ? 1 : 0);
 
     genMsgs.innerHTML = msgs.length ? '' : `<div class="_gs_empty"><div class="_gs_empty_icon">💬</div><div class="_gs_empty_text">Henüz mesaj yok.<br>İlk mesajı sen gönder!</div></div>`;
     msgs.forEach(m => {
@@ -779,7 +786,7 @@ async function initChatSystem() {
     dmConvoUnsub = onValue(ref(db,`chat/dm/${roomId}`), snap => {
       const msgs=[];
       snap.forEach(ch=>{ const m=ch.val(); if(m&&m.ts&&Date.now()-m.ts<CHAT_KEEP_MS) msgs.push({key:ch.key,...m}); });
-      msgs.sort((a,b)=>a.ts-b.ts);
+      msgs.sort((a,b)=> a.key < b.key ? -1 : a.key > b.key ? 1 : 0);
 
       dmMsgs.innerHTML = msgs.length ? '' : `<div class="_gs_empty"><div class="_gs_empty_icon">✉️</div><div class="_gs_empty_text">Henüz mesaj yok.</div></div>`;
       msgs.forEach(m => {
