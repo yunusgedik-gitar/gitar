@@ -679,10 +679,10 @@ async function initChatSystem() {
       const div = document.createElement('div');
       div.className = `_gs_msg ${isMine?'mine':isT?'teacher theirs':'theirs'}`;
       div.innerHTML = `
-        <div class="_gs_msg_meta">
+<div class="_gs_msg_meta">
           ${!isMine?`<span class="_gs_msg_author">${chatEscHtml(m.name)}</span>`:''}
           ${isT&&!isMine?`<span class="_gs_teacher_tag">Legendary</span>`:''}
-          ${(!isT&&!isMine)?(()=>{const g=gradeOf(m.sid);return g>0?`<span class="_gs_grade_tag">Grade ${g}</span>`:'';})():''
+          ${(!isT&&!isMine)?(()=>{const g=gradeOf(m.sid);return g>0?`<span class="_gs_grade_tag">Grade ${g}</span>`:'';})():''}
           <span>${chatFormatTime(m.ts)}</span>
           ${canDel?`<button class="_gs_del_btn" data-key="${m.key}" data-path="chat/general">🗑</button>`:''}
         </div>
