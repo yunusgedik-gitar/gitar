@@ -2378,8 +2378,20 @@ if (window.me && window.me.id) {
   function openPanel() {
     panelOpen = true;
     panel.style.display = 'flex';
-    if (activeTab === 'general') { markGeneralRead(); }
-    if (activeTab === 'dm' && activeDmSid) { markDmRead(activeDmSid); }
+    if (activeTab === 'general') {
+      markGeneralRead();
+      requestAnimationFrame(() => {
+        const m = document.getElementById('general-messages');
+        if (m) m.scrollTop = m.scrollHeight;
+      });
+    }
+    if (activeTab === 'dm' && activeDmSid) {
+      markDmRead(activeDmSid);
+      requestAnimationFrame(() => {
+        const m = document.getElementById('dm-messages');
+        if (m) m.scrollTop = m.scrollHeight;
+      });
+    }
   }
   function closePanel() {
     panelOpen = false;
@@ -2395,8 +2407,14 @@ if (window.me && window.me.id) {
       document.querySelectorAll('.chat-view').forEach(v => {
         v.classList.toggle('active', v.id === `chat-view-${t}`);
       });
-      if (t === 'general') markGeneralRead();
-      if (t === 'dm' && activeDmSid) markDmRead(activeDmSid);
+      if (t === 'general') {
+        markGeneralRead();
+        requestAnimationFrame(() => { const m=document.getElementById('general-messages'); if(m) m.scrollTop=m.scrollHeight; });
+      }
+      if (t === 'dm' && activeDmSid) {
+        markDmRead(activeDmSid);
+        requestAnimationFrame(() => { const m=document.getElementById('dm-messages'); if(m) m.scrollTop=m.scrollHeight; });
+      }
     });
   });
 
@@ -2554,7 +2572,7 @@ if (window.me && window.me.id) {
         unreadGeneral = newMsgs.length;
         updateBadges();
       }
-      msgBox.scrollTop = msgBox.scrollHeight;
+      requestAnimationFrame(() => { msgBox.scrollTop = msgBox.scrollHeight; });
     });
   }
 
@@ -2666,6 +2684,9 @@ if (window.me && window.me.id) {
     const input   = document.getElementById('dm-input');
     const sendBtn = document.getElementById('dm-send-btn');
     msgBox.innerHTML = '';
+    // Input alanını görünür yap (display garantisi)
+    const inputArea = document.querySelector('#dm-convo-view .chat-input-area');
+    if (inputArea) inputArea.style.display = 'flex';
     markDmRead(contact.id);
 
     const roomId = getDmRoomId(meObj.id, contact.id);
@@ -2704,7 +2725,7 @@ if (window.me && window.me.id) {
         });
       });
 
-      msgBox.scrollTop = msgBox.scrollHeight;
+      requestAnimationFrame(() => { msgBox.scrollTop = msgBox.scrollHeight; });
       markDmRead(contact.id);
     });
 
@@ -2833,8 +2854,9 @@ if (window.me && window.me.id) {
 /* ── Chat panel ── */
 #chat-panel {
   position: fixed;
-  bottom: 88px; right: 24px;
-  width: 420px; max-height: 600px;
+  bottom: 88px; right: 16px;
+  width: min(370px, calc(100vw - 24px));
+  height: min(560px, calc(100vh - 120px));
   background: #fff;
   border: 1px solid var(--border);
   border-radius: 22px;
@@ -2904,7 +2926,6 @@ if (window.me && window.me.id) {
   padding: .75rem;
   display: flex; flex-direction: column; gap: 6px;
   min-height: 0;
-  max-height: 400px;
 }
 .chat-messages::-webkit-scrollbar { width: 4px; }
 .chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
@@ -3010,7 +3031,7 @@ if (window.me && window.me.id) {
 .chat-word-limit.danger { color: var(--red); font-weight: 700; }
 
 /* ── DM listesi ── */
-.dm-list { padding: .6rem .75rem; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; max-height: 420px; }
+.dm-list { padding: .6rem .75rem; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; flex: 1; }
 .dm-list-item {
   display: flex; align-items: center; gap: 10px;
   padding: .55rem .7rem; border-radius: 12px;
@@ -3037,7 +3058,9 @@ if (window.me && window.me.id) {
 }
 
 /* ── DM konuşma görünümü ── */
-.dm-convo { display: none; flex-direction: column; flex: 1; min-height: 0; }
+#dm-list-view { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
+#chat-view-dm { overflow: hidden; }
+.dm-convo { display: none; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
 .dm-convo.active { display: flex; }
 .dm-convo-header {
   display: flex; align-items: center; gap: 8px;
@@ -3064,9 +3087,9 @@ if (window.me && window.me.id) {
 .chat-empty-text { font-size: .8rem; }
 
 /* ── Mobile ── */
-@media (max-width: 420px) {
-  #chat-panel { right: 8px; left: 8px; width: auto; bottom: 80px; }
-  #chat-fab { bottom: 16px; right: 16px; }
+@media (max-width: 480px) {
+  #chat-panel { right: 8px; left: 8px; width: auto; bottom: 72px; height: min(520px, calc(100vh - 100px)); }
+  #chat-fab { bottom: 14px; right: 14px; }
 }
 </style>
 

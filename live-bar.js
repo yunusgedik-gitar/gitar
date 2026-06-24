@@ -282,7 +282,7 @@ async function initChatSystem() {
 }
 #_gs_chat_panel {
   position:fixed; bottom:88px; right:24px;
-  width:420px; max-height:600px;
+  width:min(370px,calc(100vw - 24px)); height:min(560px,calc(100vh - 120px));
   background:#fff; border:1px solid #e2d9cc;
   border-radius:22px; box-shadow:0 16px 56px rgba(44,31,20,.22);
   display:none; flex-direction:column; z-index:8001; overflow:hidden;
@@ -323,7 +323,7 @@ async function initChatSystem() {
 ._gs_msgs {
   flex:1; overflow-y:auto; padding:.75rem;
   display:flex; flex-direction:column; gap:6px;
-  min-height:0; max-height:400px;
+  min-height:0;
 }
 ._gs_msgs::-webkit-scrollbar { width:4px; }
 ._gs_msgs::-webkit-scrollbar-thumb { background:#e2d9cc; border-radius:2px; }
@@ -383,7 +383,7 @@ async function initChatSystem() {
 }
 ._gs_wlimit.warn { color:#c9650f; }
 ._gs_wlimit.danger { color:#a32d2d; font-weight:700; }
-._gs_dm_list { padding:.5rem .6rem; display:flex; flex-direction:column; gap:3px; overflow-y:auto; max-height:460px; }
+._gs_dm_list { padding:.5rem .6rem; display:flex; flex-direction:column; gap:3px; overflow-y:auto; flex:1; }
 ._gs_dm_item {
   display:flex; align-items:center; gap:10px;
   padding:.5rem .65rem; border-radius:12px; cursor:pointer; transition:background .15s;
@@ -529,8 +529,14 @@ async function initChatSystem() {
   fabEl.addEventListener('click', () => {
     open = !open;
     panelEl.style.display = open ? 'flex' : 'none';
-    if (open && activeTab === 'general') markGenRead();
-    if (open && activeTab === 'dm' && activeDm) markDmRead(activeDm);
+    if (open && activeTab === 'general') {
+      markGenRead();
+      requestAnimationFrame(()=>{ if(genMsgs) genMsgs.scrollTop=genMsgs.scrollHeight; });
+    }
+    if (open && activeTab === 'dm' && activeDm) {
+      markDmRead(activeDm);
+      requestAnimationFrame(()=>{ const m=document.getElementById('_gs_dm_msgs'); if(m) m.scrollTop=m.scrollHeight; });
+    }
   });
   document.getElementById('_gs_chat_close').addEventListener('click', () => {
     open = false; panelEl.style.display = 'none';
@@ -542,8 +548,8 @@ async function initChatSystem() {
       activeTab = t.dataset.tab;
       panelEl.querySelectorAll('._gs_chat_tab').forEach(x => x.classList.toggle('active', x.dataset.tab === activeTab));
       panelEl.querySelectorAll('._gs_chat_view').forEach(v => v.classList.toggle('active', v.id === `_gs_view_${activeTab}`));
-      if (activeTab === 'general') markGenRead();
-      if (activeTab === 'dm' && activeDm) markDmRead(activeDm);
+      if (activeTab === 'general') { markGenRead(); requestAnimationFrame(()=>{ if(genMsgs) genMsgs.scrollTop=genMsgs.scrollHeight; }); }
+      if (activeTab === 'dm' && activeDm) { markDmRead(activeDm); requestAnimationFrame(()=>{ const m=document.getElementById('_gs_dm_msgs'); if(m) m.scrollTop=m.scrollHeight; }); }
     });
   });
 
@@ -743,7 +749,7 @@ async function initChatSystem() {
       dmMsgs.querySelectorAll('._gs_del_btn').forEach(b=>{
         b.addEventListener('click',()=>remove(ref(db,`${b.dataset.path}/${b.dataset.key}`)));
       });
-      dmMsgs.scrollTop=dmMsgs.scrollHeight;
+      requestAnimationFrame(()=>{ dmMsgs.scrollTop=dmMsgs.scrollHeight; });
       markDmRead(contact.id);
     });
 
