@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
 import {
-  getDatabase, ref, set, get, update, remove, push,
-  onValue, onDisconnect, serverTimestamp
+  getDatabase, ref, set, get, update, remove,
+  onValue, onDisconnect, serverTimestamp, push
 } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js";
 
 const firebaseConfig = {
@@ -18,12 +18,19 @@ const app = initializeApp(firebaseConfig);
 const db  = getDatabase(app);
 
 /* ══════════════════════════════════
-   ONLINE SAYACI (mevcut özellik)
+   ONLINE SAYACI
 ══════════════════════════════════ */
 async function initLiveBar() {
-  const sid  = localStorage.getItem('gitar_session');
-  const name = localStorage.getItem('gitar_student_name');
-  if (!sid || !name) return;
+  // Alternatif anahtarları da kontrol ederek güvenceye alıyoruz
+  const sid  = localStorage.getItem('gitar_session') || localStorage.getItem('gitar_user_id');
+  const name = localStorage.getItem('gitar_student_name') || localStorage.getItem('gitar_name') || localStorage.getItem('gitar_student');
+
+  console.log("[LiveBar] Giriş bilgileri kontrol ediliyor:", { sid, name });
+
+  if (!sid || !name) {
+    console.warn("[LiveBar] Başarısız: 'gitar_session' veya 'gitar_student_name' tarayıcı hafızasında bulunamadı!");
+    return;
+  }
 
   // _gs_active_count yoksa gizli span olarak body'e ekle (veri taşıyıcı)
   let countEl = document.getElementById('_gs_active_count');
@@ -36,11 +43,19 @@ async function initLiveBar() {
   }
 
   const userRef = ref(db, 'online_users/' + sid);
-  set(userRef, { name, online: true });
+  
+  // Yazma işlemine başarı ve hata takibi ekledik
+  set(userRef, { name, online: true })
+    .then(() => console.log(`[LiveBar] ${name} başarıyla veritabanına online yazıldı.`))
+    .catch(err => console.error("[LiveBar] Veritabanına online yazılırken HATA oluştu (Kuralları kontrol edin):", err));
+
   onDisconnect(userRef).remove();
 
+  // Okuma işlemine hata takibi ekledik
   onValue(ref(db, 'online_users'), (snapshot) => {
     const users = snapshot.val() || {};
+    console.log("[LiveBar] Güncel online veritabanı snapshot'ı alındı:", users);
+
     const names = Object.values(users)
       .filter(u => u && u.name)
       .map(u => u.name);
@@ -59,6 +74,8 @@ async function initLiveBar() {
         row.innerHTML = names.map(n => '<span class="online-name-badge">\u{1F7E2} ' + n + '</span>').join('');
       }
     }
+  }, (error) => {
+    console.error("[LiveBar] Online kullanıcı listesi OKUNURKEN HATA oluştu (Firebase Read izinleri kısıtlı olabilir):", error);
   });
 
   /* ══════════════════════════════════
@@ -138,7 +155,6 @@ function listenForChallenge(sid, myName) {
       return;
     }
 
-    // Overlay DOM oluştur (yoksa)
     let overlay = document.getElementById('_gs_challenge_overlay');
     if (!overlay) {
       overlay = document.createElement('div');
@@ -162,7 +178,6 @@ function listenForChallenge(sid, myName) {
       `${c.fromName} seni ${_gameLabel} düelloya davet etti! (${_modeLabel})`;
     overlay.style.display = 'block';
 
-    // 30 saniyelik sayaç çubuğu
     const fill = document.getElementById('_gs_timer_fill');
     fill.style.transition = 'none';
     fill.style.width = '100%';
@@ -177,7 +192,6 @@ function listenForChallenge(sid, myName) {
       hideOverlay();
     }, 30000);
 
-    // Butonları her seferinde yeniden bağla (eski listener birikmesin)
     const btnAccept  = document.getElementById('_gs_btn_accept');
     const btnDecline = document.getElementById('_gs_btn_decline');
     btnAccept.replaceWith(btnAccept.cloneNode(true));
@@ -198,7 +212,6 @@ async function acceptChallenge(c, mySid, myName, expireTimer) {
   });
   await update(ref(db, `duel_challenges/${mySid}`), { status: 'accepted' });
 
-  // Oyun verisini localStorage'a yaz, /nota/ sayfasına yönlendir
   localStorage.setItem('gitar_duel_handoff', JSON.stringify({
     roomCode:    c.roomCode,
     oppSid:      c.fromSid,
@@ -223,7 +236,6 @@ function hideOverlay() {
   if (o) o.style.display = 'none';
 }
 
-/* ── Başlat ── */
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initLiveBar);
 } else {
@@ -232,9 +244,7 @@ if (document.readyState === 'loading') {
 
 /* ══════════════════════════════════════════════════════════
    EVRENSEL CHAT SİSTEMİ
-   Her sayfada çalışır (index, nota, vb.)
 ══════════════════════════════════════════════════════════ */
-
 const CHAT_KEEP_MS  = 24 * 60 * 60 * 1000;
 const WORD_LIMIT    = 100;
 const TEACHER_SID   = 's01';
@@ -261,14 +271,12 @@ function addUsedWordsTday(sid, n) {
 function countWords(t) { return t.trim().split(/\s+/).filter(Boolean).length; }
 
 async function initChatSystem() {
-  const sid  = localStorage.getItem('gitar_session');
-  const name = localStorage.getItem('gitar_student_name');
+  const sid  = localStorage.getItem('gitar_session') || localStorage.getItem('gitar_user_id');
+  const name = localStorage.getItem('gitar_student_name') || localStorage.getItem('gitar_name') || localStorage.getItem('gitar_student');
   if (!sid || !name) return;
 
-  // index.html'de zaten chat var mı? Varsa bu modülü çalıştırma
   if (document.getElementById('chat-fab')) return;
 
-  // ── CSS ──
   if (!document.getElementById('_gs_chat_css')) {
     const s = document.createElement('style');
     s.id = '_gs_chat_css';
@@ -436,7 +444,6 @@ async function initChatSystem() {
     document.head.appendChild(s);
   }
 
-  // ── HTML ──
   if (document.getElementById('_gs_chat_fab')) return;
 
   const fabEl = document.createElement('button');
@@ -489,14 +496,12 @@ async function initChatSystem() {
   `;
   document.body.appendChild(panelEl);
 
-  // ── State ──
   let open = false, activeTab = 'general', activeDm = null;
   let unreadGen = 0, unreadDmMap = {};
   let lastReadGen = parseInt(localStorage.getItem('chat_last_general')||'0');
   let lastReadDm  = JSON.parse(localStorage.getItem('chat_last_dm')||'{}');
   let dmConvoUnsub = null;
 
-  // ── Grade tespiti ──
   function myGrade() {
     if (typeof repProgress !== 'undefined' && repProgress[sid]) {
       const g = Object.keys(repProgress[sid]);
@@ -565,7 +570,6 @@ async function initChatSystem() {
     localStorage.setItem('chat_last_dm', JSON.stringify(lastReadDm)); updateFabBadge();
   }
 
-  // ── Aç/Kapat ──
   fabEl.addEventListener('click', () => {
     open = !open;
     panelEl.style.display = open ? 'flex' : 'none';
@@ -582,7 +586,6 @@ async function initChatSystem() {
     open = false; panelEl.style.display = 'none';
   });
 
-  // ── iOS klavye uyumluluğu ──
   if (window.visualViewport) {
     let _vvTimer = null;
     function _gsRepos() {
@@ -600,7 +603,6 @@ async function initChatSystem() {
     window.visualViewport.addEventListener('scroll', _gsRepos);
   }
 
-  // ── Sekmeler ──
   panelEl.querySelectorAll('._gs_chat_tab').forEach(t => {
     t.addEventListener('click', () => {
       activeTab = t.dataset.tab;
@@ -611,7 +613,6 @@ async function initChatSystem() {
     });
   });
 
-  // ── Genel Sohbet ──
   const genMsgs   = document.getElementById('_gs_gen_msgs');
   const genLocked = document.getElementById('_gs_gen_locked');
   const genIA     = document.getElementById('_gs_gen_input_area');
@@ -671,7 +672,7 @@ async function initChatSystem() {
         <div class="_gs_msg_meta">
           ${!isMine?`<span class="_gs_msg_author">${chatEscHtml(m.name)}</span>`:''}
           ${isT&&!isMine?`<span class="_gs_teacher_tag">Legendary</span>`:''}
-          ${(!isT&&!isMine)?(()=>{const g=gradeOf(m.sid);return g>0?`<span class="_gs_grade_tag">Grade ${g}</span>`:'';})():''}
+          ${(!isT&&!isMine)?(()=>{const g=gradeOf(m.sid);return g>0?`<span class="_gs_grade_tag">Grade ${g}</span>`:'';})():''
           <span>${chatFormatTime(m.ts)}</span>
           ${canDel?`<button class="_gs_del_btn" data-key="${m.key}" data-path="chat/general">🗑</button>`:''}
         </div>
@@ -687,7 +688,6 @@ async function initChatSystem() {
     genMsgs.scrollTop = genMsgs.scrollHeight;
   });
 
-  // ── DM ──
   let contacts = [];
   if (isTeacher) {
     const all = window.STUDENTS || [];
@@ -697,7 +697,7 @@ async function initChatSystem() {
   }
 
   let contactMeta = {};
-  let onlineUsers = {};
+  let onlineUsers = {}; 
   contacts.forEach(c => { contactMeta[c.id]={ lastTs:0, lastText:'—', unread:false }; });
 
   onValue(ref(db,'online_users'), snap => {
@@ -833,5 +833,4 @@ async function initChatSystem() {
   });
 }
 
-// Chat'i login sonrası başlat
 setTimeout(initChatSystem, 800);
