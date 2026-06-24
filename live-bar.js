@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
 import {
-  getDatabase, ref, set, get, update, remove,
+  getDatabase, ref, set, get, update, remove, push,
   onValue, onDisconnect, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js";
 
@@ -459,7 +459,6 @@ async function initChatSystem() {
       <button class="_gs_chat_tab active" data-tab="general">💬 Genel<span class="_gs_tab_badge" id="_gs_gen_badge" style="display:none"></span></button>
       <button class="_gs_chat_tab" data-tab="dm">✉️ Mesajlar<span class="_gs_tab_badge" id="_gs_dm_badge" style="display:none"></span></button>
     </div>
-    <!-- Genel -->
     <div class="_gs_chat_view active" id="_gs_view_general">
       <div class="_gs_msgs" id="_gs_gen_msgs"></div>
       <div class="_gs_locked" id="_gs_gen_locked" style="display:none">
@@ -473,7 +472,6 @@ async function initChatSystem() {
         <button class="_gs_send" id="_gs_gen_send">➤</button>
       </div>
     </div>
-    <!-- DM -->
     <div class="_gs_chat_view" id="_gs_view_dm">
       <div id="_gs_dm_list_view">
         <div class="_gs_dm_list" id="_gs_dm_list"></div>
@@ -674,21 +672,33 @@ async function initChatSystem() {
     msgs.sort((a,b)=> a.key < b.key ? -1 : a.key > b.key ? 1 : 0);
 
     genMsgs.innerHTML = msgs.length ? '' : `<div class="_gs_empty"><div class="_gs_empty_icon">💬</div><div class="_gs_empty_text">Henüz mesaj yok.<br>İlk mesajı sen gönder!</div></div>`;
+    
     msgs.forEach(m => {
       const isMine = m.sid===sid, isT = m.isTeacher, canDel = isTeacher||isMine;
       const div = document.createElement('div');
       div.className = `_gs_msg ${isMine?'mine':isT?'teacher theirs':'theirs'}`;
+      
+      // Temiz grade kontrolü
+      let gradeTag = '';
+      if (!isT && !isMine) {
+        const g = gradeOf(m.sid);
+        if (g > 0) {
+          gradeTag = `<span class="_gs_grade_tag">Grade ${g}</span>`;
+        }
+      }
+
       div.innerHTML = `
-<div class="_gs_msg_meta">
+        <div class="_gs_msg_meta">
           ${!isMine?`<span class="_gs_msg_author">${chatEscHtml(m.name)}</span>`:''}
           ${isT&&!isMine?`<span class="_gs_teacher_tag">Legendary</span>`:''}
-          ${(!isT&&!isMine)?(()=>{const g=gradeOf(m.sid);return g>0?`<span class="_gs_grade_tag">Grade ${g}</span>`:'';})():''}
+          ${gradeTag}
           <span>${chatFormatTime(m.ts)}</span>
           ${canDel?`<button class="_gs_del_btn" data-key="${m.key}" data-path="chat/general">🗑</button>`:''}
         </div>
         <div class="_gs_bubble">${chatEscHtml(m.text)}</div>`;
       genMsgs.appendChild(div);
     });
+    
     genMsgs.querySelectorAll('._gs_del_btn').forEach(b => {
       b.addEventListener('click', ()=>remove(ref(db,`${b.dataset.path}/${b.dataset.key}`)));
     });
@@ -699,8 +709,6 @@ async function initChatSystem() {
   });
 
   // ── DM ──
-  // Öğrencinin konuşabileceği tek kişi: öğretmen
-  // Öğretmenin listesi: tüm öğrenciler (window.STUDENTS kullanılabiliyorsa)
   let contacts = [];
   if (isTeacher) {
     const all = window.STUDENTS || [];
@@ -806,13 +814,12 @@ async function initChatSystem() {
         const div=document.createElement('div');
         div.className=`_gs_msg ${isMine?'mine':isT?'teacher theirs':'theirs'}`;
         div.innerHTML=`
-<div class="_gs_msg_meta">
-          ${!isMine ? `<span class="_gs_msg_author">${chatEscHtml(m.name)}</span>` : ''}
-          ${isT && !isMine ? `<span class="_gs_teacher_tag">Legendary</span>` : ''}
-          ${(!isT && !isMine && gradeOf(m.sid) > 0) ? '<span class="_gs_grade_tag">Grade ' + gradeOf(m.sid) + '</span>' : ''}
-          <span>${chatFormatTime(m.ts)}</span>
-          ${canDel ? `<button class="_gs_del_btn" data-key="${m.key}" data-path="chat/general">🗑</button>` : ''}
-        </div>
+          <div class="_gs_msg_meta">
+            ${!isMine?`<span class="_gs_msg_author">${chatEscHtml(m.name)}</span>`:''}
+            ${isT&&!isMine?`<span class="_gs_teacher_tag">Legendary</span>`:''}
+            <span>${chatFormatTime(m.ts)}</span>
+            ${canDel?`<button class="_gs_del_btn" data-key="${m.key}" data-path="chat/dm/${roomId}">🗑</button>`:''}
+          </div>
           <div class="_gs_bubble">${chatEscHtml(m.text)}</div>`;
         dmMsgs.appendChild(div);
       });
@@ -851,3 +858,5 @@ async function initChatSystem() {
 
 // Chat'i login sonrası başlat
 setTimeout(initChatSystem, 800);
+
+}
