@@ -51,31 +51,33 @@ async function initLiveBar() {
 
   onDisconnect(userRef).remove();
 
-  // Okuma işlemine hata takibi ekledik
+// live-bar.js içindeki onValue kısmını bu şekilde güncelliyoruz:
   onValue(ref(db, 'online_users'), (snapshot) => {
     const users = snapshot.val() || {};
-    console.log("[LiveBar] Güncel online veritabanı snapshot'ı alındı:", users);
+    console.log("[LiveBar] Güncel online listesi:", users);
 
+    // Benzersiz isimleri filtreleyerek diziye alıyoruz
     const names = Object.values(users)
       .filter(u => u && u.name)
       .map(u => u.name);
 
-    // _gs_active_count guncelle
+    // 1. GİZLİ SAYAC ELEMENTİNİ GÜNCELLE
     if (countEl) {
       countEl.textContent = names.length > 0 ? '\u{1F7E2} ' + names.join(', ') : '\u26AA \u2014';
     }
 
-    // online-badges-row'u dogrudan guncelle
-    const row = document.getElementById('online-badges-row');
+    // 2. TÜM EKRANLARDAKİ YEŞİL ÇUBUĞU (BARI) GÜNCELLE
+    // Hem öğretmen hem öğrenci ekranlarında ortak id'leri veya sınıfları hedef alıyoruz
+    const row = document.getElementById('online-badges-row') || document.querySelector('.online-badges-row');
+    
     if (row) {
       if (names.length === 0) {
-        row.innerHTML = '<span class="online-name-badge">\u{1F7E2}</span>';
+        row.innerHTML = '<span class="online-name-badge">\u{1F7E2} Kimse Yok</span>';
       } else {
-        row.innerHTML = names.map(n => '<span class="online-name-badge">\u{1F7E2} ' + n + '</span>').join('');
+        // Online olan HERKESİ yan yana ekliyoruz (Sadece kendisini değil, tüm diziyi)
+        row.innerHTML = names.map(n => `<span class="online-name-badge" style="margin-right:8px; display:inline-block;">\u{1F7E2} ${n}</span>`).join('');
       }
     }
-  }, (error) => {
-    console.error("[LiveBar] Online kullanıcı listesi OKUNURKEN HATA oluştu (Firebase Read izinleri kısıtlı olabilir):", error);
   });
 
   /* ══════════════════════════════════
