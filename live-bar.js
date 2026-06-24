@@ -282,7 +282,7 @@ async function initChatSystem() {
 }
 #_gs_chat_panel {
   position:fixed; bottom:88px; right:24px;
-  width:340px; max-height:560px;
+  width:420px; max-height:600px;
   background:#fff; border:1px solid #e2d9cc;
   border-radius:22px; box-shadow:0 16px 56px rgba(44,31,20,.22);
   display:none; flex-direction:column; z-index:8001; overflow:hidden;
@@ -323,7 +323,7 @@ async function initChatSystem() {
 ._gs_msgs {
   flex:1; overflow-y:auto; padding:.75rem;
   display:flex; flex-direction:column; gap:6px;
-  min-height:0; max-height:330px;
+  min-height:0; max-height:400px;
 }
 ._gs_msgs::-webkit-scrollbar { width:4px; }
 ._gs_msgs::-webkit-scrollbar-thumb { background:#e2d9cc; border-radius:2px; }
@@ -383,7 +383,7 @@ async function initChatSystem() {
 }
 ._gs_wlimit.warn { color:#c9650f; }
 ._gs_wlimit.danger { color:#a32d2d; font-weight:700; }
-._gs_dm_list { padding:.5rem .6rem; display:flex; flex-direction:column; gap:3px; overflow-y:auto; max-height:420px; }
+._gs_dm_list { padding:.5rem .6rem; display:flex; flex-direction:column; gap:3px; overflow-y:auto; max-height:460px; }
 ._gs_dm_item {
   display:flex; align-items:center; gap:10px;
   padding:.5rem .65rem; border-radius:12px; cursor:pointer; transition:background .15s;
@@ -607,7 +607,7 @@ async function initChatSystem() {
       div.innerHTML = `
         <div class="_gs_msg_meta">
           ${!isMine?`<span class="_gs_msg_author">${chatEscHtml(m.name)}</span>`:''}
-          ${isT&&!isMine?`<span class="_gs_teacher_tag">Öğretmen</span>`:''}
+          ${isT&&!isMine?`<span class="_gs_teacher_tag">Legendary</span>`:''}
           <span>${chatFormatTime(m.ts)}</span>
           ${canDel?`<button class="_gs_del_btn" data-key="${m.key}" data-path="chat/general">🗑</button>`:''}
         </div>
@@ -649,7 +649,11 @@ async function initChatSystem() {
   function renderDmList() {
     const dmListEl = document.getElementById('_gs_dm_list');
     if (!dmListEl) return;
-    const sorted = [...contacts].sort((a,b)=>(contactMeta[b.id].lastTs||0)-(contactMeta[a.id].lastTs||0));
+    const sorted = [...contacts].sort((a,b)=>{
+        const aOn=onlineUsers[a.name]?1:0, bOn=onlineUsers[b.name]?1:0;
+        if(bOn!==aOn) return bOn-aOn;
+        return (contactMeta[b.id].lastTs||0)-(contactMeta[a.id].lastTs||0);
+      });
     dmListEl.innerHTML = sorted.map(c => {
       const m      = contactMeta[c.id];
       const dn     = c.id===TEACHER_SID ? '🎸 Dr. Yunus GEDİK' : c.name;
@@ -729,7 +733,7 @@ async function initChatSystem() {
         div.innerHTML=`
           <div class="_gs_msg_meta">
             ${!isMine?`<span class="_gs_msg_author">${chatEscHtml(m.name)}</span>`:''}
-            ${isT&&!isMine?`<span class="_gs_teacher_tag">Öğretmen</span>`:''}
+            ${isT&&!isMine?`<span class="_gs_teacher_tag">Legendary</span>`:''}
             <span>${chatFormatTime(m.ts)}</span>
             ${canDel?`<button class="_gs_del_btn" data-key="${m.key}" data-path="chat/dm/${roomId}">🗑</button>`:''}
           </div>
@@ -743,15 +747,18 @@ async function initChatSystem() {
       markDmRead(contact.id);
     });
 
+    let _dmSending=false;
     async function sendDm() {
       const text=dmInput.value.trim();
-      if (!text) return;
+      if(!text||_dmSending) return;
+      _dmSending=true;
       dmSend.disabled=true;
+      const saved=text;
+      dmInput.value=''; dmInput.style.height='auto';
       try {
-        await push(ref(db,`chat/dm/${roomId}`),{sid,name,text,ts:Date.now(),isTeacher});
-        dmInput.value=''; dmInput.style.height='auto';
-      } catch(e){console.error(e);}
-      dmSend.disabled=false;
+        await push(ref(db,`chat/dm/${roomId}`),{sid,name,text:saved,ts:Date.now(),isTeacher});
+      } catch(e){ console.error(e); dmInput.value=saved; }
+      finally { _dmSending=false; dmSend.disabled=false; dmInput.focus(); }
     }
     dmSend.onclick=sendDm;
     dmInput.onkeydown=e=>{ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendDm();} };

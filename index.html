@@ -2532,7 +2532,7 @@ if (window.me && window.me.id) {
         div.innerHTML = `
           <div class="chat-msg-meta">
             ${!isMine ? `<span class="msg-author">${escHtml(m.name)}</span>` : ''}
-            ${isTeacherMsg && !isMine ? '<span class="teacher-tag">Öğretmen</span>' : ''}
+            ${isTeacherMsg && !isMine ? '<span class="teacher-tag">Legendary</span>' : ''}
             <span>${formatTime(m.ts)}</span>
             ${canDel ? `<button class="chat-msg-delete" data-key="${m.key}" title="Sil">🗑</button>` : ''}
           </div>
@@ -2575,20 +2575,38 @@ if (window.me && window.me.id) {
 
     // lastTs ile sıralanacak — başlangıçta 0
     let contactMeta = {}; // { sid: { lastTs, lastText, unread } }
+    let dmOnlineUsers = {}; // { name: true } — online olanlar
     contacts.forEach(c => { contactMeta[c.id] = { lastTs: 0, lastText: '—', unread: false }; });
 
+    // Online kullanıcıları Firebase'den dinle
+    onValue(ref(db, 'online_users'), snap => {
+      const raw = snap.val() || {};
+      dmOnlineUsers = {};
+      Object.values(raw).forEach(u => { if (u && u.name) dmOnlineUsers[u.name] = true; });
+      renderDmList();
+    });
+
     function renderDmList() {
-      // Son mesaja göre sırala
-      const sorted = [...contacts].sort((a, b) => (contactMeta[b.id].lastTs || 0) - (contactMeta[a.id].lastTs || 0));
+      // Online önce, sonra son mesaja göre sırala
+      const sorted = [...contacts].sort((a, b) => {
+        const aOn = dmOnlineUsers[a.name] ? 1 : 0;
+        const bOn = dmOnlineUsers[b.name] ? 1 : 0;
+        if (bOn !== aOn) return bOn - aOn;
+        return (contactMeta[b.id].lastTs || 0) - (contactMeta[a.id].lastTs || 0);
+      });
       dmList.innerHTML = sorted.map(c => {
         const meta = contactMeta[c.id];
+        const isOnline = dmOnlineUsers[c.name] || false;
         const displayName = c.id === TEACHER_ID ? '🎸 Dr. Yunus GEDİK' : c.name;
         const initial = c.id === TEACHER_ID ? '🎸' : c.name.charAt(0);
         return `
           <div class="dm-list-item" data-sid="${c.id}" id="dm-item-${c.id}">
-            <div class="dm-avatar" style="${c.id === TEACHER_ID ? 'background:linear-gradient(135deg,#b8892a,#d4a843);font-size:.9rem;' : ''}">${initial}</div>
+            <div class="dm-avatar" style="position:relative;${c.id === TEACHER_ID ? 'background:linear-gradient(135deg,#b8892a,#d4a843);font-size:.9rem;' : ''}">
+              ${initial}
+              ${isOnline ? '<span style="position:absolute;bottom:0;right:0;width:9px;height:9px;background:#3b6d11;border-radius:50%;border:2px solid #fff;"></span>' : ''}
+            </div>
             <div class="dm-item-info">
-              <div class="dm-item-name">${displayName}</div>
+              <div class="dm-item-name">${displayName}${isOnline ? ' <span style="font-size:.62rem;color:#3b6d11;font-weight:700;">● çevrimiçi</span>' : ''}</div>
               <div class="dm-item-preview" id="dm-preview-${c.id}">${meta.lastText}</div>
             </div>
             ${meta.unread ? `<div class="dm-item-badge" style="display:flex;">●</div>` : `<div class="dm-item-badge" id="dm-badge-${c.id}"></div>`}
@@ -2672,7 +2690,7 @@ if (window.me && window.me.id) {
         div.innerHTML = `
           <div class="chat-msg-meta">
             ${!isMine ? `<span class="msg-author">${m.name}</span>` : ''}
-            ${isTeacherMsg && !isMine ? '<span class="teacher-tag">Öğretmen</span>' : ''}
+            ${isTeacherMsg && !isMine ? '<span class="teacher-tag">Legendary</span>' : ''}
             <span>${formatTime(m.ts)}</span>
             ${canDel ? `<button class="chat-msg-delete" data-key="${m.key}" title="Sil">🗑</button>` : ''}
           </div>
@@ -2690,19 +2708,30 @@ if (window.me && window.me.id) {
       markDmRead(contact.id);
     });
 
-    // Gönder
+    // Gönder — çift gönderimi önleyen guard
+    let _dmSending = false;
     async function sendDm() {
       const text = input.value.trim();
-      if (!text || !meObj) return;
+      if (!text || !meObj || _dmSending) return;
+      _dmSending = true;
+      sendBtn.disabled = true;
+      const savedText = text;
+      input.value = '';
+      input.style.height = 'auto';
       try {
         await push(ref(db, `chat/dm/${roomId}`), {
           sid: meObj.id, name: meObj.name,
-          text, ts: Date.now(),
+          text: savedText, ts: Date.now(),
           isTeacher: meObj.id === TEACHER_ID
         });
-        input.value = '';
-        input.style.height = 'auto';
-      } catch(e) { console.error('DM gönderilemedi:', e); }
+      } catch(e) {
+        console.error('DM gönderilemedi:', e);
+        input.value = savedText;
+      } finally {
+        _dmSending = false;
+        sendBtn.disabled = false;
+        input.focus();
+      }
     }
 
     sendBtn.onclick = sendDm;
@@ -2805,7 +2834,7 @@ if (window.me && window.me.id) {
 #chat-panel {
   position: fixed;
   bottom: 88px; right: 24px;
-  width: 360px; max-height: 580px;
+  width: 420px; max-height: 600px;
   background: #fff;
   border: 1px solid var(--border);
   border-radius: 22px;
@@ -2875,7 +2904,7 @@ if (window.me && window.me.id) {
   padding: .75rem;
   display: flex; flex-direction: column; gap: 6px;
   min-height: 0;
-  max-height: 340px;
+  max-height: 400px;
 }
 .chat-messages::-webkit-scrollbar { width: 4px; }
 .chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
