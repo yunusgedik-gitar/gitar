@@ -51,31 +51,31 @@ async function initLiveBar() {
 
   onDisconnect(userRef).remove();
 
-// live-bar.js içindeki ilgili onValue fonksiyonunu bununla güncelleyin:
+  // Okuma işlemine hata takibi ekledik
   onValue(ref(db, 'online_users'), (snapshot) => {
     const users = snapshot.val() || {};
-    
-    // Benzersiz isimleri filtreleyerek diziye alıyoruz
+    console.log("[LiveBar] Güncel online veritabanı snapshot'ı alındı:", users);
+
     const names = Object.values(users)
       .filter(u => u && u.name)
       .map(u => u.name);
 
-    // 1. Sayaç elementini güncelle
+    // _gs_active_count guncelle
     if (countEl) {
       countEl.textContent = names.length > 0 ? '\u{1F7E2} ' + names.join(', ') : '\u26AA \u2014';
     }
 
-    // 2. Yeşil çubuğu (Barı) güncelle
-    const row = document.getElementById('online-badges-row') || document.querySelector('.online-badges-row');
-    
+    // online-badges-row'u dogrudan guncelle
+    const row = document.getElementById('online-badges-row');
     if (row) {
       if (names.length === 0) {
-        row.innerHTML = '<span class="online-name-badge">\u{1F7E2} Kimse Yok</span>';
+        row.innerHTML = '<span class="online-name-badge">\u{1F7E2}</span>';
       } else {
-        // Tırnak hatasını önlemek için klasik birleştirme (artı işareti) kullandık:
-        row.innerHTML = names.map(n => '<span class="online-name-badge" style="margin-right:8px; display:inline-block;">\u{1F7E2} ' + n + '</span>').join('');
+        row.innerHTML = names.map(n => '<span class="online-name-badge">\u{1F7E2} ' + n + '</span>').join('');
       }
     }
+  }, (error) => {
+    console.error("[LiveBar] Online kullanıcı listesi OKUNURKEN HATA oluştu (Firebase Read izinleri kısıtlı olabilir):", error);
   });
 
   /* ══════════════════════════════════
