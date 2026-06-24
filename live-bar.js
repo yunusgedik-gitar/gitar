@@ -226,7 +226,7 @@ if (document.readyState === 'loading') {
 ══════════════════════════════════════════════════════════ */
 
 const CHAT_KEEP_MS  = 24 * 60 * 60 * 1000;
-const WORD_LIMIT    = 500;
+const WORD_LIMIT    = 100;
 const TEACHER_SID   = 's01';
 
 function chatEscHtml(s) {
@@ -488,22 +488,61 @@ async function initChatSystem() {
   let lastReadDm  = JSON.parse(localStorage.getItem('chat_last_dm')||'{}');
   let dmConvoUnsub = null;
 
-  // Kullanıcı grade'ini al (index.html'de repProgress var, diğer sayfada localStorage'a bakabiliriz)
+  // ── Grade tespiti ──
   function myGrade() {
+    // 1) index.html'de repProgress doğrudan erişilebilir
     if (typeof repProgress !== 'undefined' && repProgress[sid]) {
       const g = Object.keys(repProgress[sid]);
-      return g.length ? Math.max(...g.map(Number)) : 0;
+      if (g.length) {
+        const max = Math.max(...g.map(Number));
+        localStorage.setItem(`chat_grade_${sid}`, max); // güncelle
+        return max;
+      }
     }
+    // 2) Diğer sayfalar: localStorage'a bak
     return parseInt(localStorage.getItem(`chat_grade_${sid}`) || '0');
   }
-  const isTeacher = sid === TEACHER_SID;
-  const writeable = isTeacher || myGrade() >= 1;
 
-  // Grade'i localStorage'a yaz (index.html yüklendikten sonra güncel kalır)
-  if (typeof repProgress !== 'undefined' && repProgress[sid]) {
-    const g = Object.keys(repProgress[sid]);
-    if (g.length) localStorage.setItem(`chat_grade_${sid}`, Math.max(...g.map(Number)));
+  function gradeOf(sid_) {
+    if (typeof repProgress !== 'undefined' && repProgress[sid_]) {
+      const g = Object.keys(repProgress[sid_]);
+      return g.length ? Math.max(...g.map(Number)) : 0;
+    }
+    return 0;
   }
+
+  const isTeacher = sid === TEACHER_SID;
+
+  // Diğer sayfalarda grade bilinmiyorsa Firebase'den çek
+  async function ensureGrade() {
+    if (isTeacher) return;
+    if (myGrade() >= 1) return; // zaten biliniyor
+    try {
+      const { get, ref: fbRef } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js');
+      const snap = await get(fbRef(db, `repProgress/${sid}`));
+      if (snap.exists()) {
+        const g = Object.keys(snap.val());
+        if (g.length) localStorage.setItem(`chat_grade_${sid}`, Math.max(...g.map(Number)));
+      }
+    } catch(e) { /* sessiz hata */ }
+  }
+  ensureGrade();
+
+  let writeable = isTeacher || myGrade() >= 1;
+  // Grade yüklendikten sonra erişimi aç
+  setTimeout(() => {
+    if (!writeable && !isTeacher) {
+      writeable = myGrade() >= 1;
+      if (writeable) {
+        const gl = document.getElementById('_gs_gen_locked');
+        const gi = document.getElementById('_gs_gen_input_area');
+        const wd = document.getElementById('_gs_wlimit');
+        if (gl) gl.style.display = 'none';
+        if (gi) gi.style.display = 'flex';
+        if (wd) wd.style.display = 'flex';
+      }
+    }
+  }, 2000);
 
   function updateFabBadge() {
     const tdm = Object.values(unreadDmMap).reduce((a,b)=>a+b,0);
@@ -570,7 +609,7 @@ async function initChatSystem() {
     if (isTeacher) return;
     const rem = WORD_LIMIT - getUsedWordsTday(sid);
     wlTxt.textContent = `${Math.max(0,rem)} / ${WORD_LIMIT} kelime kaldı`;
-    wlDiv.className = '_gs_wlimit' + (rem < 50 ? ' danger' : rem < 150 ? ' warn' : '');
+    wlDiv.className = '_gs_wlimit' + (rem < 15 ? ' danger' : rem < 30 ? ' warn' : '');
     genSend.disabled = rem <= 0;
   }
   if (writeable) updateWL();
@@ -614,6 +653,7 @@ async function initChatSystem() {
         <div class="_gs_msg_meta">
           ${!isMine?`<span class="_gs_msg_author">${chatEscHtml(m.name)}</span>`:''}
           ${isT&&!isMine?`<span class="_gs_teacher_tag">Legendary</span>`:''}
+          ${(!isT&&!isMine)?(()=>{const g=gradeOf(m.sid);return g>0?`<span class="_gs_grade_tag">Grade ${g}</span>`:'';})()):''}
           <span>${chatFormatTime(m.ts)}</span>
           ${canDel?`<button class="_gs_del_btn" data-key="${m.key}" data-path="chat/general">🗑</button>`:''}
         </div>

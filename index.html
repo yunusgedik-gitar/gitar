@@ -2305,15 +2305,20 @@ if (window.me && window.me.id) {
 (function initChat() {
 
   // ── Yardımcılar ──
-  const WORD_LIMIT = 500;
+  const WORD_LIMIT = 100;
   const CHAT_KEEP_MS = 24 * 60 * 60 * 1000; // 24 saat
 
   function getMyGrade() {
     const meObj = getMe();
     if (!meObj) return 0;
-    // repProgress henüz yüklenmediyse window üzerinden kontrol et
     const prog = (typeof repProgress !== 'undefined' ? repProgress : {});
     const grades = Object.keys(prog[meObj.id] || {});
+    return grades.length ? Math.max(...grades.map(Number)) : 0;
+  }
+
+  function getGradeOf(sid) {
+    const prog = (typeof repProgress !== 'undefined' ? repProgress : {});
+    const grades = Object.keys(prog[sid] || {});
     return grades.length ? Math.max(...grades.map(Number)) : 0;
   }
 
@@ -2551,6 +2556,7 @@ if (window.me && window.me.id) {
           <div class="chat-msg-meta">
             ${!isMine ? `<span class="msg-author">${escHtml(m.name)}</span>` : ''}
             ${isTeacherMsg && !isMine ? '<span class="teacher-tag">Legendary</span>' : ''}
+            ${!isTeacherMsg && !isMine ? (() => { const g=getGradeOf(m.sid); return g>0 ? `<span class="grade-tag">Grade ${g}</span>` : ''; })() : ''}
             <span>${formatTime(m.ts)}</span>
             ${canDel ? `<button class="chat-msg-delete" data-key="${m.key}" title="Sil">🗑</button>` : ''}
           </div>
@@ -2680,10 +2686,8 @@ if (window.me && window.me.id) {
     document.getElementById('dm-convo-name').textContent =
       contact.id === TEACHER_ID ? '🎸 Dr. Yunus GEDİK' : contact.name;
 
-    const msgBox  = document.getElementById('dm-messages');
     const input   = document.getElementById('dm-input');
     const sendBtn = document.getElementById('dm-send-btn');
-    msgBox.innerHTML = '';
     // Input alanını görünür yap (display garantisi)
     const inputArea = document.querySelector('#dm-convo-view .chat-input-area');
     if (inputArea) inputArea.style.display = 'flex';
@@ -2695,10 +2699,13 @@ if (window.me && window.me.id) {
     if (dmListener) { dmListener(); dmListener = null; }
 
     dmListener = onValue(ref(db, `chat/dm/${roomId}`), snap => {
+      const msgBox = document.getElementById('dm-messages'); // her seferinde taze ref
+      if (!msgBox) return;
       const msgs = [];
-      snap.forEach(ch => msgs.push({ key: ch.key, ...ch.val() }));
+      snap.forEach(ch => { const v=ch.val(); if(v) msgs.push({ key: ch.key, ...v }); });
       msgs.sort((a, b) => a.ts - b.ts);
-      const recent = msgs.filter(m => m && m.ts && Date.now() - m.ts < CHAT_KEEP_MS);
+      // DM'de filtre yok — tüm mesajlar gösterilir
+      const recent = msgs.filter(m => m && m.text);
 
       msgBox.innerHTML = recent.length ? '' : `<div class="chat-empty"><div class="chat-empty-icon">✉️</div><div class="chat-empty-text">Henüz mesaj yok.</div></div>`;
 
@@ -2712,6 +2719,7 @@ if (window.me && window.me.id) {
           <div class="chat-msg-meta">
             ${!isMine ? `<span class="msg-author">${m.name}</span>` : ''}
             ${isTeacherMsg && !isMine ? '<span class="teacher-tag">Legendary</span>' : ''}
+            ${!isTeacherMsg && !isMine ? (() => { const g=getGradeOf(m.sid); return g>0 ? `<span class="grade-tag">Grade ${g}</span>` : ''; })() : ''}
             <span>${formatTime(m.ts)}</span>
             ${canDel ? `<button class="chat-msg-delete" data-key="${m.key}" title="Sil">🗑</button>` : ''}
           </div>
@@ -2948,6 +2956,11 @@ if (window.me && window.me.id) {
   font-size: .58rem; font-weight: 700;
   padding: 1px 5px; border-radius: 4px;
 }
+.chat-msg-meta .grade-tag {
+  background: #3b6d11; color: #fff;
+  font-size: .58rem; font-weight: 700;
+  padding: 1px 5px; border-radius: 4px;
+}
 
 .chat-bubble {
   padding: .5rem .75rem;
@@ -3058,9 +3071,8 @@ if (window.me && window.me.id) {
 }
 
 /* ── DM konuşma görünümü ── */
-#dm-list-view { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
-#chat-view-dm { overflow: hidden; }
-.dm-convo { display: none; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
+#dm-list-view { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.dm-convo { display: none; flex-direction: column; flex: 1; min-height: 0; }
 .dm-convo.active { display: flex; }
 .dm-convo-header {
   display: flex; align-items: center; gap: 8px;
