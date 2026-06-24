@@ -43,9 +43,13 @@ async function initLiveBar() {
 
   onValue(ref(db, 'online_users'), (snapshot) => {
     const users = snapshot.val() || {};
-    const names = Object.values(users).map(u => u.name);
+    const names = Object.values(users)
+      .filter(u => u && u.name) // null/undefined kontrolleri ekle
+      .map(u => u.name)
+      .filter(name => name && name.trim()); // boş string kontrolleri
     if (countEl) {
       countEl.innerHTML = names.length > 0 ? `🟢 ${names.join(', ')}` : `⚪ —`;
+      console.log('🟢 Çevrimiçi kullanıcılar:', names);
     }
   });
 
@@ -705,7 +709,12 @@ async function initChatSystem() {
   onValue(ref(db,'online_users'), snap => {
     const raw = snap.val() || {};
     onlineUsers = {};
-    Object.values(raw).forEach(u => { if(u.name) onlineUsers[u.name] = true; });
+    Object.values(raw).forEach(u => { 
+      if(u && u.name && u.name.trim()) { // null/undefined/boş string kontrolleri
+        onlineUsers[u.name] = true;
+      }
+    });
+    console.log('🟢 DM Listesi Online Haritası:', onlineUsers);
     renderDmList();
   });
 
