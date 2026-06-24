@@ -3201,14 +3201,7 @@ if (window.me && window.me.id) {
 <!-- ████████████████████████████████████████
      CHAT SİSTEMİ — JS (module script içinde tanımlanır)
 ████████████████████████████████████████ -->
-<script type="module">
-// ✅ live-bar.js'i import et (çevrimiçi gösterim + düello sistemi)
-import('./live-bar.js').then(() => {
-  console.log('✅ Live Bar Sistemi Yüklendi - Çevrimiçi gösterim aktif');
-}).catch(err => {
-  console.error('❌ Live Bar Yükleme Hatası:', err);
-});
-
+<script>
 // Chat başlatma — module script hazır olunca çağrılır
 window._chatInit = null; // module'dan set edilecek
 </script>
