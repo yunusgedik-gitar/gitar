@@ -2398,6 +2398,18 @@ if (window.me && window.me.id) {
       });
     }
   }
+
+  // ── iOS klavye: visualViewport ile paneli yukarı kaydır ──
+  if (window.visualViewport) {
+    function _reposPanel() {
+      if (!panelOpen) return;
+      const vv = window.visualViewport;
+      const kbH = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      panel.style.bottom = (kbH > 0 ? kbH + 8 : 88) + 'px';
+    }
+    window.visualViewport.addEventListener('resize', _reposPanel);
+    window.visualViewport.addEventListener('scroll', _reposPanel);
+  }
   function closePanel() {
     panelOpen = false;
     panel.style.display = 'none';
@@ -2946,7 +2958,7 @@ if (window.me && window.me.id) {
 .chat-msg.theirs { align-self: flex-start; align-items: flex-start; }
 
 .chat-msg-meta {
-  font-size: .65rem; color: var(--muted);
+  font-size: .70rem; color: var(--muted);
   margin-bottom: 2px; padding: 0 4px;
   display: flex; gap: 6px; align-items: center;
 }
@@ -2965,7 +2977,7 @@ if (window.me && window.me.id) {
 .chat-bubble {
   padding: .5rem .75rem;
   border-radius: 14px;
-  font-size: .83rem; line-height: 1.45;
+  font-size: .94rem; line-height: 1.5;
   word-break: break-word;
 }
 .chat-msg.mine .chat-bubble {

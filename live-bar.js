@@ -341,7 +341,7 @@ async function initChatSystem() {
 }
 ._gs_bubble {
   padding:.5rem .75rem; border-radius:14px;
-  font-size:.83rem; line-height:1.45; word-break:break-word;
+  font-size:.94rem; line-height:1.5; word-break:break-word;
 }
 ._gs_msg.mine ._gs_bubble { background:linear-gradient(135deg,#2c1f14,#4a3525); color:#fff; border-bottom-right-radius:4px; }
 ._gs_msg.theirs ._gs_bubble { background:#f3ede4; color:#2c1f14; border-bottom-left-radius:4px; }
@@ -513,36 +513,33 @@ async function initChatSystem() {
 
   const isTeacher = sid === TEACHER_SID;
 
-  // Diğer sayfalarda grade bilinmiyorsa Firebase'den çek
+  // Diğer sayfalarda grade bilinmiyorsa Firebase'den çek (mevcut get() kullan)
+  let writeable = isTeacher || myGrade() >= 1;
+
   async function ensureGrade() {
-    if (isTeacher) return;
-    if (myGrade() >= 1) return; // zaten biliniyor
+    if (isTeacher || writeable) return;
     try {
-      const { get, ref: fbRef } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js');
-      const snap = await get(fbRef(db, `repProgress/${sid}`));
+      const snap = await get(ref(db, `repProgress/${sid}`));
       if (snap.exists()) {
-        const g = Object.keys(snap.val());
-        if (g.length) localStorage.setItem(`chat_grade_${sid}`, Math.max(...g.map(Number)));
+        const g = Object.keys(snap.val() || {}).filter(k => !isNaN(k));
+        if (g.length) {
+          const maxG = Math.max(...g.map(Number));
+          localStorage.setItem(`chat_grade_${sid}`, maxG);
+          if (maxG >= 1) {
+            writeable = true;
+            // UI kilidini aç
+            const gl = document.getElementById('_gs_gen_locked');
+            const gi = document.getElementById('_gs_gen_input_area');
+            const wd = document.getElementById('_gs_wlimit');
+            if (gl) gl.style.display = 'none';
+            if (gi) gi.style.display = 'flex';
+            if (wd) { wd.style.display = 'flex'; updateWL && updateWL(); }
+          }
+        }
       }
-    } catch(e) { /* sessiz hata */ }
+    } catch(e) { console.warn('grade fetch:', e); }
   }
   ensureGrade();
-
-  let writeable = isTeacher || myGrade() >= 1;
-  // Grade yüklendikten sonra erişimi aç
-  setTimeout(() => {
-    if (!writeable && !isTeacher) {
-      writeable = myGrade() >= 1;
-      if (writeable) {
-        const gl = document.getElementById('_gs_gen_locked');
-        const gi = document.getElementById('_gs_gen_input_area');
-        const wd = document.getElementById('_gs_wlimit');
-        if (gl) gl.style.display = 'none';
-        if (gi) gi.style.display = 'flex';
-        if (wd) wd.style.display = 'flex';
-      }
-    }
-  }, 2000);
 
   function updateFabBadge() {
     const tdm = Object.values(unreadDmMap).reduce((a,b)=>a+b,0);
@@ -580,6 +577,19 @@ async function initChatSystem() {
   document.getElementById('_gs_chat_close').addEventListener('click', () => {
     open = false; panelEl.style.display = 'none';
   });
+
+  // ── iOS klavye: visualViewport ile paneli yukarı kaydır ──
+  if (window.visualViewport) {
+    function _gsRepos() {
+      if (!open) return;
+      const vv = window.visualViewport;
+      // Klavye yüksekliği = window.innerHeight - vv.height
+      const kbH = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      panelEl.style.bottom = (kbH > 0 ? kbH + 8 : 88) + 'px';
+    }
+    window.visualViewport.addEventListener('resize', _gsRepos);
+    window.visualViewport.addEventListener('scroll', _gsRepos);
+  }
 
   // ── Sekmeler ──
   panelEl.querySelectorAll('._gs_chat_tab').forEach(t => {
