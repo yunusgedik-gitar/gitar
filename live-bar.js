@@ -846,4 +846,6 @@ async function initChatSystem() {
 }
 
 // Chat'i login sonrası başlat
+console.log('🔵 Live Bar Başlatılıyor...');
+initLiveBar(); // ✅ ÇEVRIMIÇI SİSTEMİ BAŞLAT
 setTimeout(initChatSystem, 800);
