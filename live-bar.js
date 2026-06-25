@@ -150,13 +150,18 @@ function initNewsTicker() {
       .filter(n => n && n.text && n.ts && (now - n.ts) < NEWS_WINDOW_MS)
       .sort((a, b) => b.ts - a.ts);
 
-    // Aynı olayın tekrarlarını (sadece sayı farklı) tekilleştir —
-    // örn. "...41. sıraya yükseldi!" ve "...45. sıraya yükseldi!"
-    // aynı kabul edilir, sadece en yenisi kalır.
+    // Aynı öğrenci + aynı oyun (veya 'genel') için birden fazla haber
+    // birikmiş olabilir (örn. önce "5. sıraya yükseldi", sonra aynı
+    // oturumda "rekor kırdı"). Bu durumda eskisi artık geçersizdir —
+    // sadece o öğrenci+oyun ikilisi için EN SON haber gösterilir.
+    // sid/game bilgisi olmayan eski kayıtlarda (örn. kıskanma haberleri)
+    // metin bazlı (sayılar silinerek) tekilleştirme yapılır.
     const seen = new Set();
     const deduped = [];
     items.forEach(n => {
-      const dedupeKey = n.text.replace(/\d+/g, '#');
+      const dedupeKey = (n.sid && n.game)
+        ? `${n.sid}__${n.game}`
+        : n.text.replace(/\d+/g, '#');
       if (seen.has(dedupeKey)) return;
       seen.add(dedupeKey);
       deduped.push(n);

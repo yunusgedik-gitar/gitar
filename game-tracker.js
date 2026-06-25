@@ -77,9 +77,11 @@ export function createTracker({ db, ref, push, get, set }) {
     }
   }
 
-  async function pushNews(text) {
+  async function pushNews(text, meta) {
     if (!push || !ref || !db) return;
-    try { await push(ref(db, 'news_feed'), { text, ts: Date.now() }); }
+    try {
+      await push(ref(db, 'news_feed'), { text, ts: Date.now(), ...(meta || {}) });
+    }
     catch (e) { console.error('[GameTracker] haber yazılamadı:', e); }
   }
 
@@ -104,10 +106,10 @@ export function createTracker({ db, ref, push, get, set }) {
     } catch (e) { /* ilk kayıt - sorun değil */ }
 
     if (oldRank !== null && newRank < oldRank) {
-      await pushNews(`📈 ${rosterName(sid)}, ${gameLabel} sıralamasında ${newRank}. sıraya yükseldi!`);
+      await pushNews(`📈 ${rosterName(sid)}, ${gameLabel} sıralamasında ${newRank}. sıraya yükseldi!`, { sid, game });
     }
     if (isRecordMetric && newRank === 1 && oldRank !== 1) {
-      await pushNews(`🏆 ${rosterName(sid)}, ${gameLabel} yarışmasında yeni sınıf rekoru kırdı! (${rows[0].v} doğru)`);
+      await pushNews(`🏆 ${rosterName(sid)}, ${gameLabel} yarışmasında yeni sınıf rekoru kırdı! (${rows[0].v} doğru)`, { sid, game });
     }
 
     try { await set(snapRef, newRank); } catch (e) { /* yoksay */ }

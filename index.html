@@ -1068,8 +1068,8 @@ function studentName(sid) {
 }
 
 // ── Haber bandı: yardımcı yazma fonksiyonu ──
-async function pushNews(text) {
-  try { await push(ref(db, 'news_feed'), { text, ts: Date.now() }); }
+async function pushNews(text, meta) {
+  try { await push(ref(db, 'news_feed'), { text, ts: Date.now(), ...(meta || {}) }); }
   catch (e) { console.error('[Haber] yazılamadı:', e); }
 }
 
@@ -1094,7 +1094,7 @@ async function checkGenelRankChange(sid) {
     } catch (e) { /* ilk kayıt - sorun değil */ }
 
     if (oldRank !== null && newRank < oldRank) {
-      await pushNews(`📈 ${studentName(sid)} genel sıralamada ${newRank}. sıraya yükseldi!`);
+      await pushNews(`📈 ${studentName(sid)} genel sıralamada ${newRank}. sıraya yükseldi!`, { sid, game: 'genel' });
     }
     await set(snapRef, newRank);
   } catch (e) {
