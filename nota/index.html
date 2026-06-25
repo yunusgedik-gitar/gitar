@@ -144,6 +144,7 @@
 <header>
   <h1>🎸 Nota Okuma Egzersizi</h1>
   <div id="online-badges-row"></div>
+  <div id="news-ticker-row"></div>
 </header>
 
 <div id="app">
@@ -366,7 +367,7 @@ const mySid  = localStorage.getItem('gitar_session');
 const myName = localStorage.getItem('gitar_student_name') || 'Öğrenci';
 
 // ── Performans takibi (süre / doğru-yanlış / hata kırılımı) ──
-const _tracker = createTracker({ db, ref, push });
+const _tracker = createTracker({ db, ref, push, get, set });
 window.trackStart = (mode) => _tracker.start(mySid, 'nota', mode);
 window.trackLog   = (ok, key, label) => _tracker.log(ok, key, label);
 window.trackEnd   = () => _tracker.end();

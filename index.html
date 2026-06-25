@@ -480,6 +480,7 @@
         </div>
         <span id="_gs_active_count" style="display:none;">🟢</span>
         <div id="online-badges-row"><span class="online-name-badge">🟢</span></div>
+        <div id="news-ticker-row"></div>
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
         <button class="panel-go-btn" onclick="openStats(event)">📊 Panele Git</button>
@@ -1063,6 +1064,41 @@ function calcWeightedScore(sid) {
 function studentName(sid) {
   const s = window.STUDENTS.find(x => x.id === sid);
   return s ? s.name : sid;
+}
+
+// ── Haber bandı: yardımcı yazma fonksiyonu ──
+async function pushNews(text) {
+  try { await push(ref(db, 'news_feed'), { text, ts: Date.now() }); }
+  catch (e) { console.error('[Haber] yazılamadı:', e); }
+}
+
+// Genel Sıralama'da (repertuvar tamamlama puanı bazlı) bir öğrencinin
+// sırası yükseldiyse haber bandına satır ekler.
+async function checkGenelRankChange(sid) {
+  try {
+    const rows = Object.keys(repProgress)
+      .filter(s => s !== TEACHER_ID && window.STUDENTS.find(st => st.id === s))
+      .map(s => ({ sid: s, score: calcWeightedScore(s) }))
+      .sort((a, b) => b.score - a.score);
+
+    const idx = rows.findIndex(r => r.sid === sid);
+    if (idx < 0) return;
+    const newRank = idx + 1;
+
+    const snapRef = ref(db, `rank_snapshots/genel/${sid}`);
+    let oldRank = null;
+    try {
+      const s = await get(snapRef);
+      oldRank = s.exists() ? s.val() : null;
+    } catch (e) { /* ilk kayıt - sorun değil */ }
+
+    if (oldRank !== null && newRank < oldRank) {
+      await pushNews(`📈 ${studentName(sid)} genel sıralamada ${newRank}. sıraya yükseldi!`);
+    }
+    await set(snapRef, newRank);
+  } catch (e) {
+    console.error('[Genel Sıralama haber] hata:', e);
+  }
 }
 
 // Tüm öğrencilerden, belirli bir grade'de kaydı olanları döndürür (sadece tanınan öğrenciler)
@@ -1857,6 +1893,7 @@ window.togglePiece = async function(i) {
   try {
     await set(ref(db, `repertoire/${repActiveStudentId}/${repActiveGrade}`), entry);
     showSaveToast();
+    checkGenelRankChange(repActiveStudentId);
   } catch (e) { console.error('Kaydedilemedi:', e); }
 };
 
@@ -1870,6 +1907,7 @@ window.toggleDecodePiece = async function(i) {
   try {
     await set(ref(db, `repertoire/${repActiveStudentId}/${repActiveGrade}`), entry);
     showSaveToast();
+    checkGenelRankChange(repActiveStudentId);
   } catch (e) { console.error('Kaydedilemedi:', e); }
 };
 
@@ -1884,6 +1922,7 @@ window.toggleCustomPiece = async function(ci) {
   try {
     await set(ref(db, `repertoire/${repActiveStudentId}/${repActiveGrade}`), entry);
     showSaveToast();
+    checkGenelRankChange(repActiveStudentId);
   } catch (e) { console.error('Kaydedilemedi:', e); }
 };
 
@@ -1898,6 +1937,7 @@ window.toggleCustomDecodePiece = async function(ci) {
   try {
     await set(ref(db, `repertoire/${repActiveStudentId}/${repActiveGrade}`), entry);
     showSaveToast();
+    checkGenelRankChange(repActiveStudentId);
   } catch (e) { console.error('Kaydedilemedi:', e); }
 };
 
@@ -2323,6 +2363,7 @@ window.sendEnvy = async function(targetSid, targetName, boardId) {
     });
 
     showSaveToast && showSaveToast();
+    pushNews(`😤 ${meObj.name}, ${targetName} kişisini kıskandı!`);
   } catch(e) { console.error('Kıskanma hatası:', e); }
 };
 

@@ -11,7 +11,7 @@
    olduğu <script type="module"> içinde):
 
      import { createTracker } from '/game-tracker.js';
-     const tracker = createTracker({ db, ref, push });
+     const tracker = createTracker({ db, ref, push, get, set });
 
      // Egzersiz başladığında (practice/race):
      tracker.start(sid, 'nota', mode);
@@ -26,9 +26,29 @@
    Veri şu yola yazılır: game_sessions/{sid}/{pushId}
    { game, mode, startTs, endTs, durationSec, correct, wrong,
      errors: { [key]: count }, errorLabels: { [key]: label } }
+
+   Oturum bittiğinde otomatik olarak:
+   - O oyundaki "en çok doğru" ve "en yüksek yarışma skoru" sıralamalarında
+     öğrencinin yeri yükseldiyse haber_feed'e bir satır yazılır.
+   - Yarışma modunda sınıfın yeni rekoru kırıldıysa ayrıca duyurulur.
 ══════════════════════════════════════════════════════════ */
 
-export function createTracker({ db, ref, push }) {
+import { ROSTER } from '/roster-data.js';
+
+const GAME_NAME_LABELS = {
+  nota:   'Nota Okuma',
+  tel:    'Tel Egzersizi',
+  klavye: 'Klavye Alıştırması',
+  kulak:  'Kulak Eğitimi',
+  bas:    'Bas Gitar'
+};
+
+function rosterName(sid) {
+  const r = ROSTER.find(x => x.id === sid);
+  return r ? r.name : sid;
+}
+
+export function createTracker({ db, ref, push, get, set }) {
   let session = null;
   let ended = false;
 
@@ -54,6 +74,70 @@ export function createTracker({ db, ref, push }) {
         session.errors[k] = (session.errors[k] || 0) + 1;
         if (errorLabel) session.errorLabels[k] = errorLabel;
       }
+    }
+  }
+
+  async function pushNews(text) {
+    if (!push || !ref || !db) return;
+    try { await push(ref(db, 'news_feed'), { text, ts: Date.now() }); }
+    catch (e) { console.error('[GameTracker] haber yazılamadı:', e); }
+  }
+
+  // Tek bir metrik için (correct toplamı veya en iyi yarışma skoru)
+  // sıralama değişimini kontrol eder, yükseldiyse haber üretir,
+  // yarışma modunda sınıf rekoruysa ayrıca duyurur.
+  async function checkMetricRank(game, metric, sid, agg, valueFn, isRecordMetric, gameLabel) {
+    const rows = Object.keys(agg)
+      .map(s => ({ sid: s, v: valueFn(agg[s]) }))
+      .filter(r => r.v > 0)
+      .sort((a, b) => b.v - a.v);
+
+    const idx = rows.findIndex(r => r.sid === sid);
+    if (idx < 0) return;
+    const newRank = idx + 1;
+
+    const snapRef = ref(db, `rank_snapshots/${game}/${metric}/${sid}`);
+    let oldRank = null;
+    try {
+      const s = await get(snapRef);
+      oldRank = s.exists() ? s.val() : null;
+    } catch (e) { /* ilk kayıt - sorun değil */ }
+
+    if (oldRank !== null && newRank < oldRank) {
+      await pushNews(`📈 ${rosterName(sid)}, ${gameLabel} sıralamasında ${newRank}. sıraya yükseldi!`);
+    }
+    if (isRecordMetric && newRank === 1 && oldRank !== 1) {
+      await pushNews(`🏆 ${rosterName(sid)}, ${gameLabel} yarışmasında yeni sınıf rekoru kırdı! (${rows[0].v} doğru)`);
+    }
+
+    try { await set(snapRef, newRank); } catch (e) { /* yoksay */ }
+  }
+
+  async function checkGameRankChanges(game, sid) {
+    if (!get || !set) return; // eski/eksik bağımlılık enjeksiyonu - sessizce atla
+    try {
+      const snap = await get(ref(db, 'game_sessions'));
+      const all = snap.exists() ? snap.val() : {};
+      const agg = {}; // sid -> { correct, bestRace }
+
+      Object.keys(all).forEach(s => {
+        Object.values(all[s] || {}).forEach(sess => {
+          if (!sess || sess.game !== game) return;
+          const b = agg[s] || (agg[s] = { correct: 0, bestRace: 0 });
+          b.correct += (sess.correct || 0);
+          if (sess.mode && String(sess.mode).indexOf('race') === 0 && (sess.correct || 0) > b.bestRace) {
+            b.bestRace = sess.correct;
+          }
+        });
+      });
+
+      const gameLabel = GAME_NAME_LABELS[game] || game;
+      await checkMetricRank(game, 'correct', sid, agg, r => r.correct, false, gameLabel);
+      if (agg[sid] && agg[sid].bestRace > 0) {
+        await checkMetricRank(game, 'race', sid, agg, r => r.bestRace, true, gameLabel);
+      }
+    } catch (e) {
+      console.error('[GameTracker] sıralama kontrolü hatası:', e);
     }
   }
 
@@ -83,7 +167,12 @@ export function createTracker({ db, ref, push }) {
       });
     } catch (e) {
       console.error('[GameTracker] kayıt yazılırken hata:', e);
+      return;
     }
+
+    // Sıralama / rekor kontrolünü kayıt başarıyla yazıldıktan sonra,
+    // ana akışı geciktirmeden arka planda yap.
+    checkGameRankChanges(s.game, s.sid);
   }
 
   // Sekme kapatılırken / sayfadan ayrılırken yarım kalan (özellikle
@@ -96,3 +185,4 @@ export function createTracker({ db, ref, push }) {
 
   return { start, log, end };
 }
+

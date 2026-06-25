@@ -3,6 +3,7 @@ import {
   getDatabase, ref, set, get, update, remove,
   onValue, onDisconnect, serverTimestamp, push
 } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js";
+import { ROSTER } from '/roster-data.js';
 
 const firebaseConfig = {
   apiKey: "AIzaSyBkEd729B65y-NZIQ-sxScCgaEvlX-q7yA",
@@ -83,6 +84,91 @@ async function initLiveBar() {
   ══════════════════════════════════ */
   injectChallengeStyles();
   listenForChallenge(sid, name);
+
+  /* ══════════════════════════════════
+     HABER BANDI — HER SAYFADA
+  ══════════════════════════════════ */
+  initNewsTicker();
+}
+
+/* ══════════════════════════════════
+   HABER BANDI (kayan yazı)
+   - news_feed/{pushId}: { text, ts }
+   - Sadece son 24 saatteki haberler gösterilir.
+   - Tek satırlık, sürekli kayan marquee.
+══════════════════════════════════ */
+const NEWS_WINDOW_MS = 24 * 60 * 60 * 1000;   // 24 saat
+const NEWS_PRUNE_MS  = 48 * 60 * 60 * 1000;   // temizlik için 2 günden eskileri sil
+
+function injectNewsTickerStyles() {
+  if (document.getElementById('_gs_news_ticker_style')) return;
+  const style = document.createElement('style');
+  style.id = '_gs_news_ticker_style';
+  style.textContent = `
+    #news-ticker-row {
+      overflow: hidden; white-space: nowrap; margin-top: 8px;
+      background: linear-gradient(135deg,#fff7e6,#fdebc8);
+      border: 1px solid #e8d5a0; border-radius: 20px;
+      padding: 6px 0; display: none;
+    }
+    #news-ticker-row.has-news { display: block; }
+    #news-ticker-row ._gs_news_track {
+      display: inline-block; white-space: nowrap;
+      animation: _gs_news_scroll linear infinite;
+      padding-left: 100%;
+    }
+    #news-ticker-row ._gs_news_item {
+      display: inline-block; font-size: .8rem; font-weight: 600;
+      color: #8b5a2b; padding: 0 32px;
+    }
+    @keyframes _gs_news_scroll {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-100%); }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+function initNewsTicker() {
+  const row = document.getElementById('news-ticker-row');
+  if (!row) return; // bu sayfada haber bandı markup'ı eklenmemiş
+  injectNewsTickerStyles();
+
+  onValue(ref(db, 'news_feed'), snap => {
+    const all = snap.val() || {};
+    const now = Date.now();
+    const items = Object.entries(all)
+      .map(([key, v]) => ({ key, ...v }))
+      .filter(n => n && n.text && n.ts && (now - n.ts) < NEWS_WINDOW_MS)
+      .sort((a, b) => b.ts - a.ts);
+
+    if (!items.length) {
+      row.classList.remove('has-news');
+      row.innerHTML = '';
+      return;
+    }
+
+    row.classList.add('has-news');
+    const trackHtml = items.map(n => `<span class="_gs_news_item">${chatEscHtml(n.text)}</span>`).join('');
+    // Kesintisiz döngü için içerik iki kere art arda yazılır.
+    row.innerHTML = `<div class="_gs_news_track">${trackHtml}${trackHtml}</div>`;
+    const track = row.querySelector('._gs_news_track');
+    if (track) {
+      const totalChars = items.reduce((a, n) => a + n.text.length, 0);
+      const dur = Math.max(18, totalChars * 0.18); // metin uzunluğuna göre hız
+      track.style.animationDuration = dur + 's';
+    }
+
+    // Eski haberleri (2 günden fazla) arada bir temizle — herhangi bir
+    // kullanıcı bunu tetikleyebilir, zararsız ve gerekli.
+    Object.entries(all).forEach(([key, v]) => {
+      if (v && v.ts && (now - v.ts) > NEWS_PRUNE_MS) {
+        remove(ref(db, `news_feed/${key}`)).catch(() => {});
+      }
+    });
+  }, (error) => {
+    console.error('[LiveBar] Haber bandı okunamadı:', error);
+  });
 }
 
 /* ── Floating davet bildirimi CSS'i enjekte et ── */
@@ -356,6 +442,11 @@ async function initChatSystem() {
 ._gs_teacher_tag {
   background:#b8892a; color:#fff; font-size:.58rem; font-weight:700;
   padding:1px 5px; border-radius:4px;
+}
+._gs_grade_tag {
+  background:#eaf3de; color:#3b6d11; font-size:.58rem; font-weight:700;
+  padding:1px 6px; border-radius:4px; border:1px solid #b0d890;
+  white-space:nowrap;
 }
 ._gs_bubble {
   padding:.5rem .75rem; border-radius:14px;
@@ -688,13 +779,11 @@ async function initChatSystem() {
     genMsgs.scrollTop = genMsgs.scrollHeight;
   });
 
-  let contacts = [];
-  if (isTeacher) {
-    const all = window.STUDENTS || [];
-    contacts = all.filter(s=>s.id!==TEACHER_SID);
-  } else {
-    contacts = [{ id: TEACHER_SID, name: 'Dr. Yunus GEDİK' }];
-  }
+  // Herkes (öğretmen dahil) tüm diğer kullanıcılarla DM atabilir.
+  // window.STUDENTS varsa (örn. index.html'de) ad bilgisi orası ile de
+  // güncel kalsın diye onu önceliklendiriyoruz, yoksa ROSTER'a düşüyoruz.
+  const fullRoster = (window.STUDENTS && window.STUDENTS.length) ? window.STUDENTS : ROSTER;
+  let contacts = fullRoster.filter(s => s.id !== sid);
 
   let contactMeta = {};
   let onlineUsers = {}; 
