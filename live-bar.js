@@ -110,7 +110,7 @@ function injectNewsTickerStyles() {
   style.id = '_gs_news_ticker_style';
   style.textContent = `
     #news-ticker-row {
-      overflow: hidden; white-space: nowrap; margin: 10px 0;
+      overflow: hidden; white-space: nowrap; margin: 0 0 10px 0;
       background: linear-gradient(135deg,#fff7e6,#fdebc8);
       border: 1px solid #e8d5a0; border-radius: 20px;
       padding: 7px 0; display: none;
