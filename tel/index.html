@@ -618,8 +618,10 @@
     function startExercise(mode) {
       filteredNotes = NOTES.filter(n => selectedStrings.has(n.stringVal));
       if (filteredNotes.length === 0) return;
+      if (window.trackEnd) window.trackEnd();
 
       currentMode = mode;
+      if (window.trackStart) window.trackStart(mode);
       prevSol = null;
       document.getElementById('setup-area').style.display = 'none';
       document.getElementById('exercise-area').style.display = 'block';
@@ -641,6 +643,7 @@
     }
 
     function goBackToMenu() {
+      if (window.trackEnd) window.trackEnd();
       if (gameTimer) {
         clearInterval(gameTimer);
         gameTimer = null;
@@ -677,6 +680,7 @@
     }
 
     function endGame() {
+      if (window.trackEnd) window.trackEnd();
       clearAutoTimer();
       const appContainer = document.getElementById('app');
       
@@ -893,6 +897,7 @@
         if(currentMode === 'race') {
           correctCount++; 
         }
+        if (window.trackLog) window.trackLog(true);
         btn.className='cbtn correct';
         btn.blur();
         fb.textContent='✓ Doğru!';
@@ -901,6 +906,7 @@
         startAutoAdvance();
       } else {
         missCounts[current.sol] = (missCounts[current.sol] || 0) + 1;
+        if (window.trackLog) window.trackLog(false, current.sol, current.name+' → '+current.sol);
         btn.className='cbtn wrong';
         
         const randomMsg = ERROR_MESSAGES[Math.floor(Math.random() * ERROR_MESSAGES.length)];
@@ -926,8 +932,9 @@
   import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js';
   import {
     getDatabase, ref, set, get, update, remove,
-    onValue, onDisconnect, runTransaction
+    onValue, onDisconnect, runTransaction, push
   } from 'https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js';
+  import { createTracker } from '/game-tracker.js';
 
   const FIREBASE_CONFIG = {
     apiKey: "AIzaSyBkEd729B65y-NZIQ-sxScCgaEvlX-q7yA",
@@ -944,6 +951,13 @@
 
   const mySid  = localStorage.getItem('gitar_session');
   const myName = localStorage.getItem('gitar_student_name') || 'Öğrenci';
+
+  // ── Performans takibi (süre / doğru-yanlış / hata kırılımı) ──
+  const _tracker = createTracker({ db, ref, push });
+  window.trackStart = (mode) => _tracker.start(mySid, 'tel', mode);
+  window.trackLog   = (ok, key, label) => _tracker.log(ok, key, label);
+  window.trackEnd   = () => _tracker.end();
+
 
   // Düello için tel/nota tanımları (üst scriptteki NOTES ile aynı)
   const D_NOTES = [

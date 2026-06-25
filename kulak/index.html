@@ -878,6 +878,8 @@
       currentQIndex = 0;
       correct = 0;
       wrong = 0;
+      if (window.trackEnd) window.trackEnd();
+      if (window.trackStart) window.trackStart('quiz');
       document.getElementById('setup-area').style.display = 'none';
       document.getElementById('exercise-area').style.display = 'block';
       document.getElementById('result-screen').style.display = 'none';
@@ -985,12 +987,14 @@
 
       if (isCorrect) {
         correct++;
+        if (window.trackLog) window.trackLog(true);
         card.classList.add('correct');
         document.getElementById('message').textContent = '✅ Doğru!';
         document.getElementById('message').style.color = '#3b6d11';
       } else {
         wrong++;
         missCounts[q.correctNote] = (missCounts[q.correctNote] || 0) + 1;
+        if (window.trackLog) window.trackLog(false, q.correctNote, q.correctNote);
         card.classList.add('wrong');
         const correctCard = document.querySelector(`#choices [data-note="${q.correctNote}"]`);
         if (correctCard) correctCard.classList.add('correct');
@@ -1043,6 +1047,7 @@
     }
 
     function showResults() {
+      if (window.trackEnd) window.trackEnd();
       document.getElementById('exercise-area').style.display = 'none';
       document.getElementById('result-screen').style.display = 'block';
 
@@ -1092,6 +1097,7 @@
     }
 
     function backToMenu() {
+      if (window.trackEnd) window.trackEnd();
       clearAutoTimer();
       document.getElementById('setup-area').style.display = 'block';
       document.getElementById('exercise-area').style.display = 'none';
@@ -1109,8 +1115,9 @@
   import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js';
   import {
     getDatabase, ref, set, get, update, remove,
-    onValue, onDisconnect, runTransaction
+    onValue, onDisconnect, runTransaction, push
   } from 'https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js';
+  import { createTracker } from '/game-tracker.js';
 
   const FIREBASE_CONFIG = {
     apiKey: "AIzaSyBkEd729B65y-NZIQ-sxScCgaEvlX-q7yA",
@@ -1127,6 +1134,13 @@
 
   const mySid  = localStorage.getItem('gitar_session');
   const myName = localStorage.getItem('gitar_student_name') || 'Öğrenci';
+
+  // ── Performans takibi (süre / doğru-yanlış / hata kırılımı) ──
+  const _tracker = createTracker({ db, ref, push });
+  window.trackStart = (mode) => _tracker.start(mySid, 'kulak', mode);
+  window.trackLog   = (ok, key, label) => _tracker.log(ok, key, label);
+  window.trackEnd   = () => _tracker.end();
+
 
   // Kulak indeksindeki nota tanımları (üst scriptteki NOTES/NOTE_NAMES/NOTE_LABELS ile aynı)
   const D_NOTES = {

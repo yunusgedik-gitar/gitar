@@ -871,8 +871,10 @@ function checkStartButton() {
 function startExercise(mode) {
   filteredNotes = NOTES.filter(n => selectedStrings.has(n.string));
   if (filteredNotes.length === 0) return;
+  if (window.trackEnd) window.trackEnd();
 
   currentMode = mode;
+  if (window.trackStart) window.trackStart(mode + '-' + quizType);
   prevPositionId = null;
   document.getElementById('setup-area').style.display = 'none';
   document.getElementById('exercise-area').style.display = 'block';
@@ -909,6 +911,7 @@ function setTimerText(txt) {
 }
 
 function goBackToMenu() {
+  if (window.trackEnd) window.trackEnd();
   if (timerInterval) clearInterval(timerInterval);
   if (gameTimer) clearInterval(gameTimer);
   clearAutoTimer();
@@ -1144,10 +1147,12 @@ function handleFretClick(element, stringNum, fretNum) {
     msg.style.color = '#6b8c42';
     playGuitar(current.freq);
     correctCount++;
+    if (window.trackLog) window.trackLog(true);
     document.getElementById('next-btn').disabled = false;
     startAutoAdvance();
   } else {
     missCounts[current.id] = (missCounts[current.id] || 0) + 1;
+    if (window.trackLog) window.trackLog(false, current.id, current.name+' ('+current.string+'. tel, '+ROMAN_FRETS[current.fret]+')');
     createFeedbackCircle(element, cx, cy, '#6b8c42');
     msg.textContent = '✗ ' + ERR[Math.floor(Math.random() * ERR.length)] + ' — Doğrusu: ' + current.string + '. Tel - ' + ROMAN_FRETS[current.fret] + ` (${current.name})`;
     msg.style.color = '#c75b39';
@@ -1173,10 +1178,12 @@ function selectChoice(card, name) {
     msg.textContent = '✓ Doğru! İyi iş çıkardın, devam et!'; msg.style.color = '#6b8c42';
     playGuitar(current.freq);
     correctCount++;
+    if (window.trackLog) window.trackLog(true);
     document.getElementById('next-btn').disabled = false;
     startAutoAdvance();
   } else {
     missCounts[current.id] = (missCounts[current.id] || 0) + 1;
+    if (window.trackLog) window.trackLog(false, current.id, current.name+' ('+current.string+'. tel, '+ROMAN_FRETS[current.fret]+')');
     card.classList.add('wrong');
     card.blur();
     msg.textContent = '✗ ' + ERR[Math.floor(Math.random() * ERR.length)] + ' — Doğrusu: ' + current.name;
@@ -1219,6 +1226,7 @@ function manualNext() {
 }
 
 function showFinalResults() {
+  if (window.trackEnd) window.trackEnd();
   if (timerInterval) clearInterval(timerInterval);
   if (gameTimer) clearInterval(gameTimer);
   clearAutoTimer();
@@ -1330,8 +1338,9 @@ function nextQuestion() {
 
 <script type="module">
 import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js';
-import { getDatabase, ref, get, set, update, remove, onValue, onDisconnect, runTransaction }
+import { getDatabase, ref, get, set, update, remove, onValue, onDisconnect, runTransaction, push }
   from 'https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js';
+import { createTracker } from '/game-tracker.js';
 
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyBkEd729B65y-NZIQ-sxScCgaEvlX-q7yA",
@@ -1348,6 +1357,13 @@ const db    = getDatabase(fbApp);
 
 const mySid  = localStorage.getItem('gitar_session');
 const myName = localStorage.getItem('gitar_student_name') || 'Öğrenci';
+
+// ── Performans takibi (süre / doğru-yanlış / hata kırılımı) ──
+const _tracker = createTracker({ db, ref, push });
+window.trackStart = (mode) => _tracker.start(mySid, 'bas', mode);
+window.trackLog   = (ok, key, label) => _tracker.log(ok, key, label);
+window.trackEnd   = () => _tracker.end();
+
 
 // Düello için nota tanımları (üst scriptteki NOTES ile aynı)
 const D_NOTES = [

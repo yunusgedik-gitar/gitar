@@ -203,6 +203,8 @@
     /* ===== Repertuar Paneli ===== */
     #screen-repertoire { width: 100%; display: none; }
     #screen-repertoire.active { display: block; }
+    #screen-stats { width: 100%; display: none; }
+    #screen-stats.active { display: block; }
     #screen-dash.hidden { display: none; }
 
     .rep-topbar {
@@ -522,10 +524,39 @@
           </div>
           <div class="card-footer"><span class="badge badge-new">YENİ</span><span class="arrow">→</span></div>
         </a>
+        <a class="card" id="stats-card" href="#" onclick="openStats(event)">
+          <div class="card-icon">📊</div>
+          <div>
+            <div class="card-title">İstatistiklerim</div>
+            <div class="card-desc">Çalışma sürelerin, doğru/yanlış oranların ve en çok hata yaptığın konular.</div>
+          </div>
+          <div class="card-footer"><span class="badge badge-new">YENİ</span><span class="arrow">→</span></div>
+        </a>
       </div>
     </div>
 
     <footer class="site-footer">❤️ yunusgedik.com.tr</footer>
+  </div>
+</div>
+
+<div id="screen-stats">
+  <div class="dash-inner">
+    <div class="rep-topbar">
+      <button class="back-btn" onclick="closeStats()">← Panele Dön</button>
+    </div>
+
+    <div class="section-title">📊 İstatistikler</div>
+
+    <div id="stats-student-picker" style="display:none;">
+      <p style="font-size:.85rem;color:var(--muted);margin-bottom:1rem;">Bir öğrenci seç:</p>
+      <div class="student-select-grid" id="stats-student-grid"></div>
+    </div>
+
+    <button id="stats-detail-back" class="back-btn" style="display:none;margin-bottom:1.2rem;">← Öğrenci Listesine Dön</button>
+
+    <div id="stats-detail">
+      <p style="font-size:.85rem;color:var(--muted);">Yükleniyor…</p>
+    </div>
   </div>
 </div>
 
@@ -2825,6 +2856,175 @@ if (window.me && window.me.id) {
 })();
 
 // Online rozet gosterimi live-bar.js tarafindan dogrudan guncelleniyor
+
+// ============================================================
+//  📊 İSTATİSTİKLER (Oyun Performans Paneli)
+// ============================================================
+const GAME_LABELS = {
+  nota:   { name: 'Nota Okuma',          emoji: '🎵' },
+  tel:    { name: 'Tel Egzersizi',       emoji: '🎸' },
+  klavye: { name: 'Klavye Alıştırması',  emoji: '🎛️' },
+  kulak:  { name: 'Kulak Eğitimi',       emoji: '🎧' },
+  bas:    { name: 'Bas Gitar',           emoji: '🎸' }
+};
+
+function escStatsHtml(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function fmtDuration(sec) {
+  sec = Math.round(sec || 0);
+  const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
+  if (h > 0) return `${h} sa ${m} dk`;
+  if (m > 0) return `${m} dk ${s} sn`;
+  return `${s} sn`;
+}
+
+async function fetchStudentGameSessions(sid) {
+  try {
+    const snap = await get(ref(db, `game_sessions/${sid}`));
+    const val = snap.exists() ? snap.val() : {};
+    return Object.values(val);
+  } catch (e) {
+    console.error('[Stats] veri okunamadı:', e);
+    return [];
+  }
+}
+
+function aggregateSessions(sessions) {
+  const byGame = {};
+  let totalSec = 0, totalCorrect = 0, totalWrong = 0;
+  sessions.forEach(s => {
+    if (!s || !s.game) return;
+    const g = byGame[s.game] || (byGame[s.game] = { totalSec: 0, correct: 0, wrong: 0, errors: {}, labels: {} });
+    g.totalSec   += (s.durationSec || 0);
+    g.correct    += (s.correct || 0);
+    g.wrong      += (s.wrong || 0);
+    totalSec     += (s.durationSec || 0);
+    totalCorrect += (s.correct || 0);
+    totalWrong   += (s.wrong || 0);
+    const errs = s.errors || {}, labels = s.errorLabels || {};
+    Object.keys(errs).forEach(k => {
+      g.errors[k] = (g.errors[k] || 0) + errs[k];
+      if (labels[k]) g.labels[k] = labels[k];
+    });
+  });
+  return { byGame, totalSec, totalCorrect, totalWrong };
+}
+
+function renderStatsPanel(sid, displayName) {
+  const wrap = document.getElementById('stats-detail');
+  wrap.innerHTML = `<p style="font-size:.85rem;color:var(--muted);">Yükleniyor…</p>`;
+
+  fetchStudentGameSessions(sid).then(sessions => {
+    const agg = aggregateSessions(sessions);
+    const totalAttempts = agg.totalCorrect + agg.totalWrong;
+    const accPct = totalAttempts ? Math.round(agg.totalCorrect / totalAttempts * 100) : 0;
+
+    const gameKeys = Object.keys(agg.byGame).sort((a, b) => agg.byGame[b].totalSec - agg.byGame[a].totalSec);
+
+    let gameRows = '';
+    if (!gameKeys.length) {
+      gameRows = `<p style="font-size:.85rem;color:var(--muted);">Henüz hiç oyun oynanmamış.</p>`;
+    }
+    gameKeys.forEach(g => {
+      const d = agg.byGame[g];
+      const att = d.correct + d.wrong;
+      const pct = att ? Math.round(d.correct / att * 100) : 0;
+      const meta = GAME_LABELS[g] || { name: g, emoji: '🎮' };
+      const topErr = Object.entries(d.errors).sort((a, b) => b[1] - a[1]).slice(0, 3)
+        .map(([k, v]) => `${escStatsHtml(d.labels[k] || k)} (${v})`).join(', ') || '—';
+      gameRows += `
+        <div class="progress-summary" style="margin-bottom:.9rem;">
+          <div class="progress-summary-head">
+            <div class="progress-summary-title">${meta.emoji} ${meta.name}</div>
+            <div class="progress-summary-pct">${pct}%</div>
+          </div>
+          <div class="progress-bar-track"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
+          <div style="font-size:.8rem;color:var(--muted);margin-top:.55rem;display:flex;flex-wrap:wrap;gap:14px;">
+            <span>⏱ ${fmtDuration(d.totalSec)}</span>
+            <span>✅ ${d.correct} doğru</span>
+            <span>❌ ${d.wrong} yanlış</span>
+          </div>
+          ${d.wrong > 0 ? `<div style="font-size:.78rem;color:#a3402d;margin-top:.45rem;">En çok hata: ${topErr}</div>` : ''}
+        </div>`;
+    });
+
+    wrap.innerHTML = `
+      <div class="progress-summary" style="margin-bottom:1.2rem;">
+        <div class="progress-summary-head">
+          <div class="progress-summary-title">${escStatsHtml(displayName)} — Genel Özet</div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:16px;margin-top:.65rem;font-size:.88rem;">
+          <span>⏱ Toplam Süre: <strong>${fmtDuration(agg.totalSec)}</strong></span>
+          <span>✅ Doğru: <strong>${agg.totalCorrect}</strong></span>
+          <span>❌ Yanlış: <strong>${agg.totalWrong}</strong></span>
+          <span>🎯 Doğruluk: <strong>${accPct}%</strong></span>
+        </div>
+      </div>
+      ${gameRows}
+    `;
+  });
+}
+
+function renderStatsStudentGrid() {
+  const grid = document.getElementById('stats-student-grid');
+  const list = (window.STUDENTS || []).filter(s => s.id !== TEACHER_ID);
+  if (!list.length) {
+    grid.innerHTML = `<p style="color:var(--muted);font-size:.85rem;">Henüz öğrenci yok.</p>`;
+    return;
+  }
+  grid.innerHTML = list.map(s => `
+    <div class="student-all-card">
+      <div class="student-all-header" onclick="window.selectStatsStudent('${s.id}')">
+        <strong>${escStatsHtml(s.name)}</strong>
+      </div>
+    </div>
+  `).join('');
+}
+
+window.openStats = function(e) {
+  if (e) e.preventDefault();
+  document.getElementById('screen-dash').classList.add('hidden');
+  document.getElementById('screen-stats').classList.add('active');
+
+  const meObj = getMe();
+  const isTeacher = !!(meObj && meObj.id === TEACHER_ID);
+  const picker = document.getElementById('stats-student-picker');
+  const backBtn = document.getElementById('stats-detail-back');
+
+  if (isTeacher) {
+    picker.style.display = '';
+    backBtn.style.display = 'none';
+    renderStatsStudentGrid();
+    document.getElementById('stats-detail').innerHTML =
+      `<p style="font-size:.85rem;color:var(--muted);">Yukarıdan bir öğrenci seç.</p>`;
+  } else {
+    picker.style.display = 'none';
+    backBtn.style.display = 'none';
+    if (meObj) renderStatsPanel(meObj.id, meObj.name);
+  }
+};
+
+window.closeStats = function() {
+  document.getElementById('screen-stats').classList.remove('active');
+  document.getElementById('screen-dash').classList.remove('hidden');
+};
+
+window.selectStatsStudent = function(sid) {
+  const s = (window.STUDENTS || []).find(x => x.id === sid);
+  document.getElementById('stats-student-picker').style.display = 'none';
+  document.getElementById('stats-detail-back').style.display = '';
+  renderStatsPanel(sid, s ? s.name : sid);
+};
+
+document.getElementById('stats-detail-back').addEventListener('click', () => {
+  document.getElementById('stats-student-picker').style.display = '';
+  document.getElementById('stats-detail-back').style.display = 'none';
+  document.getElementById('stats-detail').innerHTML =
+    `<p style="font-size:.85rem;color:var(--muted);">Yukarıdan bir öğrenci seç.</p>`;
+});
+
 </script>
 
 <!-- ████████████████████████████████████████

@@ -617,6 +617,7 @@ function startExercise(mode) {
 }
 
 function goBackToMenu() {
+  if (window.trackEnd) window.trackEnd();
   if (gameTimer) { clearInterval(gameTimer); gameTimer = null; }
   if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
   clearAutoTimer();
@@ -757,6 +758,7 @@ function startAutoAdvance() {
 function manualNext() { clearAutoTimer(); nextQuestion(); }
 
 function showFinalResults() {
+  if (window.trackEnd) window.trackEnd();
   if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
   if (gameTimer) { clearInterval(gameTimer); gameTimer = null; }
   clearAutoTimer();
@@ -827,6 +829,7 @@ function selectChoice(card, name) {
     msg.textContent = '✓ Doğru! İyi iş çıkardın, devam et!'; msg.style.color = '#6b8c42';
     playGuitar(current.freq);
     correctCount++;
+    if (window.trackLog) window.trackLog(true);
     document.getElementById('next-btn').disabled = false;
     startAutoAdvance();
   } else {
@@ -834,6 +837,7 @@ function selectChoice(card, name) {
     msg.textContent = '✗ ' + ERR[Math.floor(Math.random() * ERR.length)] + ' — Doğrusu: ' + current.name;
     msg.style.color = '#c75b39';
     wrongCount++;
+    if (window.trackLog) window.trackLog(false, current.string+'-'+current.fret, current.name+' ('+current.string+'. tel)');
     document.querySelectorAll('.choice-card').forEach(c => { if (c.dataset.choice === current.name) c.classList.add('correct'); });
     document.getElementById('next-btn').disabled = false;
   }
@@ -846,9 +850,13 @@ function resetQuiz(showSetup = true) {
   if (gameTimer) { clearInterval(gameTimer); gameTimer = null; }
 
   if (showSetup) {
+    if (window.trackEnd) window.trackEnd();
     goBackToMenu();
     return;
   }
+
+  if (window.trackEnd) window.trackEnd();
+  if (window.trackStart) window.trackStart(currentMode);
 
   document.getElementById('quiz-zone').style.display = 'block';
   document.getElementById('result-zone').style.display = 'none';
@@ -875,8 +883,9 @@ function resetQuiz(showSetup = true) {
 import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js';
 import {
   getDatabase, ref, set, get, update, remove,
-  onValue, onDisconnect, runTransaction
+  onValue, onDisconnect, runTransaction, push
 } from 'https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js';
+import { createTracker } from '/game-tracker.js';
 
 const FIREBASE_CONFIG = {
   apiKey:"AIzaSyBkEd729B65y-NZIQ-sxScCgaEvlX-q7yA",
@@ -892,6 +901,13 @@ const db = getDatabase(fbApp);
 
 const mySid  = localStorage.getItem('gitar_session');
 const myName = localStorage.getItem('gitar_student_name') || 'Öğrenci';
+
+// ── Performans takibi (süre / doğru-yanlış / hata kırılımı) ──
+const _tracker = createTracker({ db, ref, push });
+window.trackStart = (mode) => _tracker.start(mySid, 'klavye', mode);
+window.trackLog   = (ok, key, label) => _tracker.log(ok, key, label);
+window.trackEnd   = () => _tracker.end();
+
 
 /* ── Düello Durum ── */
 let dStrings   = new Set([1,2,3,4,5,6]);
