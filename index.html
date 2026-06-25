@@ -162,6 +162,26 @@
     .online-name-badge { font-size: .75rem; font-weight: 600; background: var(--green-bg); color: var(--green); padding: 4px 11px; border-radius: 20px; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 2px 6px rgba(59,109,17,0.08); border: 1px solid #b0d890; white-space: nowrap; }
     .student-select-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px,1fr)); gap: 10px; margin-bottom: 1.4rem; }
     .student-all-card { background:#fff; border:1px solid var(--border); border-radius:12px; padding:12px 14px; display:flex; flex-direction:column; gap:6px; }
+
+    .panel-go-btn { font-size: .8rem; font-weight: 600; color: var(--green); background: var(--green-bg); border: 1px solid #b0d890; padding: 7px 16px; border-radius: 20px; cursor: pointer; font-family: inherit; transition: all .15s; }
+    .panel-go-btn:hover { transform: translateY(-1px); box-shadow: 0 3px 8px rgba(59,109,17,0.18); }
+
+    .panel-subnav { display: flex; gap: 8px; margin-bottom: 1.6rem; flex-wrap: wrap; }
+    .panel-subnav-btn { font-size: .85rem; font-weight: 600; padding: 9px 16px; border-radius: 20px; border: 1px solid var(--border); background: #fff; color: var(--muted); cursor: pointer; font-family: inherit; transition: all .15s; }
+    .panel-subnav-btn.active { background: var(--gold); color: #fff; border-color: var(--gold); }
+    .panel-subnav-soon { cursor: not-allowed; opacity: .65; display: flex; align-items: center; gap: 6px; }
+    .badge-soon { font-size: .65rem; font-weight: 700; background: var(--cream); color: var(--muted); padding: 2px 7px; border-radius: 8px; border: 1px solid var(--border); }
+
+    .lb-game-tabs, .lb-metric-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: .7rem; }
+    .lb-tab-btn { font-size: .8rem; font-weight: 600; padding: 6px 14px; border-radius: 16px; border: 1px solid var(--border); background: #fff; color: var(--muted); cursor: pointer; font-family: inherit; transition: all .15s; }
+    .lb-tab-btn.active { background: var(--green); color: #fff; border-color: var(--green); }
+    .lb-metric-tabs .lb-tab-btn.active { background: #3b6d8c; border-color: #3b6d8c; }
+
+    .lb-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border: 1px solid var(--border); border-radius: 12px; background: #fff; margin-bottom: 7px; }
+    .lb-rank { font-weight: 700; font-size: 1rem; width: 28px; text-align: center; flex-shrink: 0; }
+    .lb-rank.top1 { color: #d4a017; } .lb-rank.top2 { color: #9aa0a6; } .lb-rank.top3 { color: #a86a3d; }
+    .lb-name { flex: 1; font-weight: 600; font-size: .9rem; }
+    .lb-value { font-weight: 700; color: var(--gold); font-size: .92rem; white-space: nowrap; }
     .student-all-header { display:flex; flex-direction:column; cursor:pointer; gap:2px; }
     .student-all-header:hover strong { color:var(--gold); }
     .cat-chips-row { display:flex; flex-wrap:wrap; gap:5px; margin-top:2px; }
@@ -462,6 +482,7 @@
         <div id="online-badges-row"><span class="online-name-badge">🟢</span></div>
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+        <button class="panel-go-btn" onclick="openStats(event)">📊 Panele Git</button>
         <button class="logout-btn" onclick="doLogout()">Çıkış Yap</button>
       </div>
     </div>
@@ -524,14 +545,6 @@
           </div>
           <div class="card-footer"><span class="badge badge-new">YENİ</span><span class="arrow">→</span></div>
         </a>
-        <a class="card" id="stats-card" href="#" onclick="openStats(event)">
-          <div class="card-icon">📊</div>
-          <div>
-            <div class="card-title">İstatistiklerim</div>
-            <div class="card-desc">Çalışma sürelerin, doğru/yanlış oranların ve en çok hata yaptığın konular.</div>
-          </div>
-          <div class="card-footer"><span class="badge badge-new">YENİ</span><span class="arrow">→</span></div>
-        </a>
       </div>
     </div>
 
@@ -542,20 +555,41 @@
 <div id="screen-stats">
   <div class="dash-inner">
     <div class="rep-topbar">
-      <button class="back-btn" onclick="closeStats()">← Panele Dön</button>
+      <button class="back-btn" onclick="closeStats()">← Ana Sayfaya Dön</button>
     </div>
 
-    <div class="section-title">📊 İstatistikler</div>
+    <div class="section-title">📊 Panel</div>
 
-    <div id="stats-student-picker" style="display:none;">
-      <p style="font-size:.85rem;color:var(--muted);margin-bottom:1rem;">Bir öğrenci seç:</p>
-      <div class="student-select-grid" id="stats-student-grid"></div>
+    <div class="panel-subnav">
+      <button class="panel-subnav-btn active" data-panel="istatistik" onclick="switchPanelSection('istatistik')">📊 İstatistiklerim</button>
+      <button class="panel-subnav-btn panel-subnav-soon" disabled title="Yakında eklenecek">📅 Devam/Devamsızlık <span class="badge-soon">Yakında</span></button>
     </div>
 
-    <button id="stats-detail-back" class="back-btn" style="display:none;margin-bottom:1.2rem;">← Öğrenci Listesine Dön</button>
+    <div id="panel-section-istatistik">
 
-    <div id="stats-detail">
-      <p style="font-size:.85rem;color:var(--muted);">Yükleniyor…</p>
+      <div id="stats-student-picker" style="display:none;">
+        <p style="font-size:.85rem;color:var(--muted);margin-bottom:1rem;">Bir öğrenci seç:</p>
+        <div class="student-select-grid" id="stats-student-grid"></div>
+      </div>
+
+      <button id="stats-detail-back" class="back-btn" style="display:none;margin-bottom:1.2rem;">← Öğrenci Listesine Dön</button>
+
+      <div id="stats-detail">
+        <p style="font-size:.85rem;color:var(--muted);">Yükleniyor…</p>
+      </div>
+
+      <!-- ══════════ SIRALAMALAR (Liderlik Tablosu) ══════════ -->
+      <div id="leaderboard-block">
+        <div class="section-title" style="font-size:1.05rem;margin-top:2rem;">🏆 Sıralamalar</div>
+        <p style="font-size:.82rem;color:var(--muted);margin-top:-.6rem;margin-bottom:1rem;">Oyun seç, sonra hangi kritere göre sıralanacağını seç.</p>
+
+        <div class="lb-game-tabs" id="lb-game-tabs"></div>
+        <div class="lb-metric-tabs" id="lb-metric-tabs"></div>
+        <div id="lb-list">
+          <p style="font-size:.85rem;color:var(--muted);">Yükleniyor…</p>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -3004,6 +3038,8 @@ window.openStats = function(e) {
     backBtn.style.display = 'none';
     if (meObj) renderStatsPanel(meObj.id, meObj.name);
   }
+
+  initLeaderboard();
 };
 
 window.closeStats = function() {
@@ -3024,6 +3060,169 @@ document.getElementById('stats-detail-back').addEventListener('click', () => {
   document.getElementById('stats-detail').innerHTML =
     `<p style="font-size:.85rem;color:var(--muted);">Yukarıdan bir öğrenci seç.</p>`;
 });
+
+// Panel içi alt-sekmeler (şimdilik tek bölüm var, ileride "Devam/Devamsızlık" eklenecek)
+window.switchPanelSection = function(name) {
+  document.querySelectorAll('.panel-subnav-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.querySelector(`.panel-subnav-btn[data-panel="${name}"]`);
+  if (btn) btn.classList.add('active');
+};
+
+// ============================================================
+//  🏆 SIRALAMALAR (Liderlik Tablosu)
+// ============================================================
+const LB_GAMES = ['nota', 'tel', 'klavye', 'kulak', 'bas'];
+const LB_METRICS = {
+  nota:   [['correct','✅ En Çok Doğru'], ['accuracy','🎯 En Yüksek Doğruluk'], ['race','🏆 En Yüksek Yarışma Skoru'], ['time','⏱ En Çok Çalışan']],
+  tel:    [['correct','✅ En Çok Doğru'], ['accuracy','🎯 En Yüksek Doğruluk'], ['race','🏆 En Yüksek Yarışma Skoru'], ['time','⏱ En Çok Çalışan']],
+  klavye: [['correct','✅ En Çok Doğru'], ['accuracy','🎯 En Yüksek Doğruluk'], ['race','🏆 En Yüksek Yarışma Skoru'], ['time','⏱ En Çok Çalışan']],
+  bas:    [['correct','✅ En Çok Doğru'], ['accuracy','🎯 En Yüksek Doğruluk'], ['race','🏆 En Yüksek Yarışma Skoru'], ['time','⏱ En Çok Çalışan']],
+  kulak:  [['correct','✅ En Çok Doğru'], ['accuracy','🎯 En Yüksek Doğruluk'], ['speed','⚡ En Hızlı (≥%80 doğruluk)'], ['time','⏱ En Çok Çalışan']],
+};
+const MIN_ATTEMPTS_FOR_ACCURACY = 10; // tek seferlik şans eseri %100'ler sıralamayı bozmasın
+
+let _lbCache = null;        // tüm öğrencilerin tüm oturumları, oyun bazında işlenmiş hâli
+let _lbCurrentGame = 'nota';
+let _lbCurrentMetric = 'correct';
+
+async function loadLeaderboardData(forceRefresh) {
+  if (_lbCache && !forceRefresh) return _lbCache;
+
+  const data = {}; // game -> sid -> { correct, wrong, totalSec, bestRace, bestSpeed }
+  LB_GAMES.forEach(g => data[g] = {});
+
+  try {
+    const snap = await get(ref(db, 'game_sessions'));
+    const all = snap.exists() ? snap.val() : {};
+
+    Object.keys(all).forEach(sid => {
+      const sessions = Object.values(all[sid] || {});
+      sessions.forEach(s => {
+        if (!s || !s.game || !data[s.game]) return;
+        const bucket = data[s.game][sid] || (data[s.game][sid] = {
+          correct: 0, wrong: 0, totalSec: 0, bestRace: 0, bestSpeed: null
+        });
+        bucket.correct   += (s.correct || 0);
+        bucket.wrong     += (s.wrong || 0);
+        bucket.totalSec  += (s.durationSec || 0);
+
+        // Yarışma modunda tek oturumdaki en yüksek doğru sayısı
+        if (s.mode && String(s.mode).indexOf('race') === 0) {
+          if ((s.correct || 0) > bucket.bestRace) bucket.bestRace = s.correct;
+        }
+
+        // Hız (kulak quiz): yeterince doğru oranı olan en kısa süreli oturum
+        const att = (s.correct || 0) + (s.wrong || 0);
+        if (att > 0) {
+          const acc = (s.correct || 0) / att;
+          if (acc >= 0.8 && (bucket.bestSpeed === null || (s.durationSec || 0) < bucket.bestSpeed)) {
+            bucket.bestSpeed = s.durationSec || 0;
+          }
+        }
+      });
+    });
+  } catch (e) {
+    console.error('[Leaderboard] veri okunamadı:', e);
+  }
+
+  _lbCache = data;
+  return data;
+}
+
+function lbStudentName(sid) {
+  const s = (window.STUDENTS || []).find(x => x.id === sid);
+  return s ? s.name : sid;
+}
+
+function renderLbTabs() {
+  const gameTabsEl = document.getElementById('lb-game-tabs');
+  gameTabsEl.innerHTML = LB_GAMES.map(g => {
+    const meta = GAME_LABELS[g] || { name: g, emoji: '🎮' };
+    return `<button class="lb-tab-btn ${g === _lbCurrentGame ? 'active' : ''}" onclick="selectLbGame('${g}')">${meta.emoji} ${meta.name}</button>`;
+  }).join('');
+
+  const metricTabsEl = document.getElementById('lb-metric-tabs');
+  const metrics = LB_METRICS[_lbCurrentGame] || [];
+  // Eğer şu anki metrik bu oyunda yoksa (örn. kulak'a geçince 'race') ilk metriğe düş
+  if (!metrics.find(m => m[0] === _lbCurrentMetric)) _lbCurrentMetric = metrics[0][0];
+  metricTabsEl.innerHTML = metrics.map(([key, label]) =>
+    `<button class="lb-tab-btn ${key === _lbCurrentMetric ? 'active' : ''}" onclick="selectLbMetric('${key}')">${label}</button>`
+  ).join('');
+}
+
+function renderLbList() {
+  const listEl = document.getElementById('lb-list');
+  const gameData = (_lbCache && _lbCache[_lbCurrentGame]) || {};
+
+  let rows = Object.keys(gameData).map(sid => {
+    const d = gameData[sid];
+    const attempts = d.correct + d.wrong;
+    const accuracy = attempts ? d.correct / attempts : 0;
+    return { sid, ...d, attempts, accuracy };
+  });
+
+  let valueFmt;
+  switch (_lbCurrentMetric) {
+    case 'correct':
+      rows = rows.filter(r => r.attempts > 0).sort((a, b) => b.correct - a.correct);
+      valueFmt = r => `${r.correct} doğru`;
+      break;
+    case 'accuracy':
+      rows = rows.filter(r => r.attempts >= MIN_ATTEMPTS_FOR_ACCURACY).sort((a, b) => b.accuracy - a.accuracy);
+      valueFmt = r => `${Math.round(r.accuracy * 100)}%`;
+      break;
+    case 'race':
+      rows = rows.filter(r => r.bestRace > 0).sort((a, b) => b.bestRace - a.bestRace);
+      valueFmt = r => `${r.bestRace} doğru / 40sn`;
+      break;
+    case 'speed':
+      rows = rows.filter(r => r.bestSpeed !== null && r.bestSpeed !== undefined).sort((a, b) => a.bestSpeed - b.bestSpeed);
+      valueFmt = r => fmtDuration(r.bestSpeed);
+      break;
+    case 'time':
+      rows = rows.filter(r => r.totalSec > 0).sort((a, b) => b.totalSec - a.totalSec);
+      valueFmt = r => fmtDuration(r.totalSec);
+      break;
+  }
+
+  rows = rows.slice(0, 10);
+
+  if (!rows.length) {
+    listEl.innerHTML = `<p style="font-size:.85rem;color:var(--muted);">Bu kriterde henüz yeterli veri yok.</p>`;
+    return;
+  }
+
+  listEl.innerHTML = rows.map((r, i) => {
+    const rankCls = i === 0 ? 'top1' : i === 1 ? 'top2' : i === 2 ? 'top3' : '';
+    const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1);
+    return `
+      <div class="lb-row">
+        <div class="lb-rank ${rankCls}">${medal}</div>
+        <div class="lb-name">${escStatsHtml(lbStudentName(r.sid))}</div>
+        <div class="lb-value">${valueFmt(r)}</div>
+      </div>`;
+  }).join('');
+}
+
+window.selectLbGame = function(g) {
+  _lbCurrentGame = g;
+  renderLbTabs();
+  renderLbList();
+};
+
+window.selectLbMetric = function(m) {
+  _lbCurrentMetric = m;
+  renderLbTabs();
+  renderLbList();
+};
+
+async function initLeaderboard() {
+  document.getElementById('lb-list').innerHTML = `<p style="font-size:.85rem;color:var(--muted);">Yükleniyor…</p>`;
+  renderLbTabs();
+  await loadLeaderboardData();
+  renderLbList();
+}
+
 
 </script>
 
