@@ -480,13 +480,14 @@
         </div>
         <span id="_gs_active_count" style="display:none;">🟢</span>
         <div id="online-badges-row"><span class="online-name-badge">🟢</span></div>
-        <div id="news-ticker-row"></div>
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
         <button class="panel-go-btn" onclick="openStats(event)">📊 Panele Git</button>
         <button class="logout-btn" onclick="doLogout()">Çıkış Yap</button>
       </div>
     </div>
+
+    <div id="news-ticker-row"></div>
 
     <div id="tab-games">
       <div class="game-grid">
@@ -1099,6 +1100,15 @@ async function checkGenelRankChange(sid) {
   } catch (e) {
     console.error('[Genel Sıralama haber] hata:', e);
   }
+}
+
+// Öğretmen art arda birden çok eseri hızlıca işaretlerse, her tıklamada
+// ayrı bir sıralama kontrolü/haberi tetiklenmesin; 2.5 sn içinde gelen
+// art arda çağrıları tek bir kontrole indir.
+let _genelRankDebounceTimer = null;
+function debouncedCheckGenelRankChange(sid) {
+  if (_genelRankDebounceTimer) clearTimeout(_genelRankDebounceTimer);
+  _genelRankDebounceTimer = setTimeout(() => checkGenelRankChange(sid), 2500);
 }
 
 // Tüm öğrencilerden, belirli bir grade'de kaydı olanları döndürür (sadece tanınan öğrenciler)
@@ -1893,7 +1903,7 @@ window.togglePiece = async function(i) {
   try {
     await set(ref(db, `repertoire/${repActiveStudentId}/${repActiveGrade}`), entry);
     showSaveToast();
-    checkGenelRankChange(repActiveStudentId);
+    debouncedCheckGenelRankChange(repActiveStudentId);
   } catch (e) { console.error('Kaydedilemedi:', e); }
 };
 
@@ -1907,7 +1917,7 @@ window.toggleDecodePiece = async function(i) {
   try {
     await set(ref(db, `repertoire/${repActiveStudentId}/${repActiveGrade}`), entry);
     showSaveToast();
-    checkGenelRankChange(repActiveStudentId);
+    debouncedCheckGenelRankChange(repActiveStudentId);
   } catch (e) { console.error('Kaydedilemedi:', e); }
 };
 
@@ -1922,7 +1932,7 @@ window.toggleCustomPiece = async function(ci) {
   try {
     await set(ref(db, `repertoire/${repActiveStudentId}/${repActiveGrade}`), entry);
     showSaveToast();
-    checkGenelRankChange(repActiveStudentId);
+    debouncedCheckGenelRankChange(repActiveStudentId);
   } catch (e) { console.error('Kaydedilemedi:', e); }
 };
 
@@ -1937,7 +1947,7 @@ window.toggleCustomDecodePiece = async function(ci) {
   try {
     await set(ref(db, `repertoire/${repActiveStudentId}/${repActiveGrade}`), entry);
     showSaveToast();
-    checkGenelRankChange(repActiveStudentId);
+    debouncedCheckGenelRankChange(repActiveStudentId);
   } catch (e) { console.error('Kaydedilemedi:', e); }
 };
 

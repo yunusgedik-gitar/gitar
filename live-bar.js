@@ -95,10 +95,14 @@ async function initLiveBar() {
    HABER BANDI (kayan yazı)
    - news_feed/{pushId}: { text, ts }
    - Sadece son 24 saatteki haberler gösterilir.
-   - Tek satırlık, sürekli kayan marquee.
+   - Aynı olayın sayı değişen tekrarları (örn. art arda sıralama
+     salınımları) tekilleştirilir, sadece en sonuncusu kalır.
+   - Tek satırlık, BİR SEFERDE TEK haber gösterilir; sabit ve yavaş
+     hızda kayar, bitince sıradaki habere geçer.
 ══════════════════════════════════ */
-const NEWS_WINDOW_MS = 24 * 60 * 60 * 1000;   // 24 saat
-const NEWS_PRUNE_MS  = 48 * 60 * 60 * 1000;   // temizlik için 2 günden eskileri sil
+const NEWS_WINDOW_MS   = 24 * 60 * 60 * 1000;  // 24 saat
+const NEWS_PRUNE_MS    = 48 * 60 * 60 * 1000;  // temizlik için 2 günden eskileri sil
+const NEWS_SCROLL_SECS = 16;                   // sabit, yavaş kayma süresi
 
 function injectNewsTickerStyles() {
   if (document.getElementById('_gs_news_ticker_style')) return;
@@ -106,20 +110,20 @@ function injectNewsTickerStyles() {
   style.id = '_gs_news_ticker_style';
   style.textContent = `
     #news-ticker-row {
-      overflow: hidden; white-space: nowrap; margin-top: 8px;
+      overflow: hidden; white-space: nowrap; margin: 10px 0;
       background: linear-gradient(135deg,#fff7e6,#fdebc8);
       border: 1px solid #e8d5a0; border-radius: 20px;
-      padding: 6px 0; display: none;
+      padding: 7px 0; display: none;
     }
     #news-ticker-row.has-news { display: block; }
     #news-ticker-row ._gs_news_track {
       display: inline-block; white-space: nowrap;
-      animation: _gs_news_scroll linear infinite;
+      animation: _gs_news_scroll linear 1;
       padding-left: 100%;
     }
     #news-ticker-row ._gs_news_item {
       display: inline-block; font-size: .8rem; font-weight: 600;
-      color: #8b5a2b; padding: 0 32px;
+      color: #8b5a2b; padding: 0 16px;
     }
     @keyframes _gs_news_scroll {
       from { transform: translateX(0); }
@@ -128,6 +132,10 @@ function injectNewsTickerStyles() {
   `;
   document.head.appendChild(style);
 }
+
+let _newsItems = [];
+let _newsIdx = 0;
+let _newsRotateTimer = null;
 
 function initNewsTicker() {
   const row = document.getElementById('news-ticker-row');
@@ -142,21 +150,26 @@ function initNewsTicker() {
       .filter(n => n && n.text && n.ts && (now - n.ts) < NEWS_WINDOW_MS)
       .sort((a, b) => b.ts - a.ts);
 
-    if (!items.length) {
-      row.classList.remove('has-news');
-      row.innerHTML = '';
-      return;
-    }
+    // Aynı olayın tekrarlarını (sadece sayı farklı) tekilleştir —
+    // örn. "...41. sıraya yükseldi!" ve "...45. sıraya yükseldi!"
+    // aynı kabul edilir, sadece en yenisi kalır.
+    const seen = new Set();
+    const deduped = [];
+    items.forEach(n => {
+      const dedupeKey = n.text.replace(/\d+/g, '#');
+      if (seen.has(dedupeKey)) return;
+      seen.add(dedupeKey);
+      deduped.push(n);
+    });
 
-    row.classList.add('has-news');
-    const trackHtml = items.map(n => `<span class="_gs_news_item">${chatEscHtml(n.text)}</span>`).join('');
-    // Kesintisiz döngü için içerik iki kere art arda yazılır.
-    row.innerHTML = `<div class="_gs_news_track">${trackHtml}${trackHtml}</div>`;
-    const track = row.querySelector('._gs_news_track');
-    if (track) {
-      const totalChars = items.reduce((a, n) => a + n.text.length, 0);
-      const dur = Math.max(18, totalChars * 0.18); // metin uzunluğuna göre hız
-      track.style.animationDuration = dur + 's';
+    const prevLen = _newsItems.length;
+    _newsItems = deduped;
+    if (_newsIdx >= _newsItems.length) _newsIdx = 0;
+
+    // Sadece liste boştan doluya geçtiyse veya hiç döngü çalışmıyorsa
+    // baştan başlat; aksi halde mevcut rotasyonu kesintiye uğratma.
+    if (!_newsRotateTimer || prevLen === 0) {
+      renderCurrentNewsItem(row);
     }
 
     // Eski haberleri (2 günden fazla) arada bir temizle — herhangi bir
@@ -169,6 +182,26 @@ function initNewsTicker() {
   }, (error) => {
     console.error('[LiveBar] Haber bandı okunamadı:', error);
   });
+}
+
+function renderCurrentNewsItem(row) {
+  if (_newsRotateTimer) { clearTimeout(_newsRotateTimer); _newsRotateTimer = null; }
+
+  if (!_newsItems.length) {
+    row.classList.remove('has-news');
+    row.innerHTML = '';
+    return;
+  }
+
+  row.classList.add('has-news');
+  const item = _newsItems[_newsIdx % _newsItems.length];
+  row.innerHTML = `<div class="_gs_news_track" style="animation-duration:${NEWS_SCROLL_SECS}s;">` +
+    `<span class="_gs_news_item">${chatEscHtml(item.text)}</span></div>`;
+
+  _newsRotateTimer = setTimeout(() => {
+    _newsIdx = (_newsIdx + 1) % Math.max(_newsItems.length, 1);
+    renderCurrentNewsItem(row);
+  }, NEWS_SCROLL_SECS * 1000);
 }
 
 /* ── Floating davet bildirimi CSS'i enjekte et ── */
