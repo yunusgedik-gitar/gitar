@@ -413,13 +413,7 @@
         <button class="round-btn"        data-rounds="15" onclick="selectRounds(15)">15 Tur</button>
       </div>
       <div class="string-buttons" style="margin-bottom:0;">
-        <button id="d-btn-all" class="string-btn all-btn active" onclick="dToggleAll()">HEPSİ</button>
-        <button class="string-btn active d-str-btn" data-string="1" onclick="dToggleStr(1)">①</button>
-        <button class="string-btn active d-str-btn" data-string="2" onclick="dToggleStr(2)">②</button>
-        <button class="string-btn active d-str-btn" data-string="3" onclick="dToggleStr(3)">③</button>
-        <button class="string-btn active d-str-btn" data-string="4" onclick="dToggleStr(4)">④</button>
-        <button class="string-btn active d-str-btn" data-string="5" onclick="dToggleStr(5)">⑤</button>
-        <button class="string-btn active d-str-btn" data-string="6" onclick="dToggleStr(6)">⑥</button>
+        <p style="width:100%;text-align:center;font-size:.8rem;color:#8a7860;margin:0;">🎸 Düellolarda adil olması için tüm teller kullanılır.</p>
       </div>
     </div>
 
@@ -619,7 +613,7 @@
     }
 
     function startExercise(mode) {
-      filteredNotes = NOTES.filter(n => selectedStrings.has(n.stringVal));
+      filteredNotes = mode === 'race' ? NOTES.slice() : NOTES.filter(n => selectedStrings.has(n.stringVal));
       if (filteredNotes.length === 0) return;
       if (window.trackEnd) window.trackEnd();
 
@@ -1097,7 +1091,7 @@
   }
 
   window.sendChallenge = async function(toSid, toName){
-    if(duelStrings.size===0){ alert('En az bir tel seçin.'); return; }
+    duelStrings = new Set([1,2,3,4,5,6]); // Düellolarda adil olsun diye her zaman tüm teller
     if(onlineListener){ onlineListener(); onlineListener=null; }
 
     myRole   = 'host';
@@ -1183,6 +1177,8 @@
   }
 
   function beginGame(){
+    if(window.trackEnd)window.trackEnd();
+    if(window.trackStart)window.trackStart('duel');
     myScore_ = 0; oppScore_ = 0;
     document.getElementById('dscore-me-name').textContent  = myName;
     document.getElementById('dscore-opp-name').textContent = oppName;
@@ -1259,6 +1255,7 @@
 
     const correct = sol === currentQuestionData.notaAdi;
     btn.classList.add(correct ? 'correct' : 'wrong');
+    if(window.trackLog)window.trackLog(correct, currentQuestionData.notaAdi, currentQuestionData.noteName+' → '+currentQuestionData.notaAdi);
     if(!correct){
       duelMissCounts[currentQuestionData.notaAdi] = (duelMissCounts[currentQuestionData.notaAdi] || 0) + 1;
     }
@@ -1325,6 +1322,7 @@
   function setCd(el,n){ el.textContent=n; el.classList.remove('duel-cd'); void el.offsetWidth; el.classList.add('duel-cd'); }
 
   function endDuel(){
+    if(window.trackEnd)window.trackEnd();
     if(cdTimer) clearInterval(cdTimer);
     if(roundListener){ roundListener(); roundListener=null; }
 
@@ -1353,12 +1351,14 @@
   }
 
   function handleAbandoned(){
+    if(window.trackEnd)window.trackEnd();
     if(cdTimer) clearInterval(cdTimer);
     alert('Rakibiniz oyundan ayrıldı.');
     showArea('setup-area');
   }
 
   window.leaveGame = async function(){
+    if(window.trackEnd)window.trackEnd();
     if(cdTimer) clearInterval(cdTimer);
     if(roundListener && roomCode){ roundListener(); roundListener=null; }
     if(roomCode) await update(ref(db,`duel_rooms/${roomCode}`),{status:'abandoned'});
