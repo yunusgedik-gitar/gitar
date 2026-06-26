@@ -180,13 +180,7 @@
       <button class="round-btn"        data-rounds="15" onclick="selectRounds(15)">15 Tur</button>
     </div>
         <div class="string-buttons" style="margin-bottom:0;">
-      <button id="d-btn-all" class="string-btn all-btn active" onclick="dToggleAll()">Hepsi</button>
-      <button class="string-btn active d-str-btn" data-string="1" onclick="dToggleStr(1)">①</button>
-      <button class="string-btn active d-str-btn" data-string="2" onclick="dToggleStr(2)">②</button>
-      <button class="string-btn active d-str-btn" data-string="3" onclick="dToggleStr(3)">③</button>
-      <button class="string-btn active d-str-btn" data-string="4" onclick="dToggleStr(4)">④</button>
-      <button class="string-btn active d-str-btn" data-string="5" onclick="dToggleStr(5)">⑤</button>
-      <button class="string-btn active d-str-btn" data-string="6" onclick="dToggleStr(6)">⑥</button>
+      <p style="width:100%;text-align:center;font-size:.8rem;color:#8a7860;margin:0;">🎸 Düellolarda adil olması için tüm teller kullanılır.</p>
     </div>
   </div>
 
@@ -308,7 +302,7 @@ function drawNote(noteKey,cid='notation'){
 function toggleAllStrings(){const a=document.getElementById('btn-all'),n=document.querySelectorAll('.string-num-btn');if(selectedStrings.size===6){selectedStrings.clear();a.classList.remove('active');n.forEach(b=>b.classList.remove('active'));}else{selectedStrings=new Set([1,2,3,4,5,6]);a.classList.add('active');n.forEach(b=>b.classList.add('active'));}checkStartBtn();}
 function toggleString(num){const b=document.querySelector(`.string-num-btn[data-string="${num}"]`),a=document.getElementById('btn-all');if(selectedStrings.has(num)){selectedStrings.delete(num);b.classList.remove('active');}else{selectedStrings.add(num);b.classList.add('active');}selectedStrings.size===6?a.classList.add('active'):a.classList.remove('active');checkStartBtn();}
 function checkStartBtn(){const z=selectedStrings.size===0;document.getElementById('start-btn').disabled=z;document.getElementById('race-btn').disabled=z;}
-function startExercise(mode){filteredNotes=NOTES.filter(n=>selectedStrings.has(n.string));if(!filteredNotes.length)return;if(window.trackEnd)window.trackEnd();currentMode=mode;if(window.trackStart)window.trackStart(mode);showArea('exercise-wrap');if(mode==='race'){timeLeft=40;correctCount=0;document.getElementById('timer-display').style.display='inline-block';document.getElementById('timer-display').textContent='Kalan Süre: '+timeLeft;startGameTimer();}else document.getElementById('timer-display').style.display='none';nextCard();}
+function startExercise(mode){filteredNotes=mode==='race'?NOTES.slice():NOTES.filter(n=>selectedStrings.has(n.string));if(!filteredNotes.length)return;if(window.trackEnd)window.trackEnd();currentMode=mode;if(window.trackStart)window.trackStart(mode);showArea('exercise-wrap');if(mode==='race'){timeLeft=40;correctCount=0;document.getElementById('timer-display').style.display='inline-block';document.getElementById('timer-display').textContent='Kalan Süre: '+timeLeft;startGameTimer();}else document.getElementById('timer-display').style.display='none';nextCard();}
 function goBackToMenu(){if(window.trackEnd)window.trackEnd();if(gameTimer){clearInterval(gameTimer);gameTimer=null;}clearAutoTimer();showArea('setup-area');}
 function resetQuiz(){if(gameTimer){clearInterval(gameTimer);gameTimer=null;}clearAutoTimer();startExercise(currentMode);}
 function startGameTimer(){if(gameTimer)clearInterval(gameTimer);gameTimer=setInterval(()=>{timeLeft--;if(timeLeft<=0){document.getElementById('timer-display').textContent='Süre Bitti!';clearInterval(gameTimer);endGame();}else document.getElementById('timer-display').textContent='Kalan Süre: '+timeLeft;},1000);}
@@ -460,7 +454,7 @@ function loadOnlinePlayers(){
 }
 
 window.sendChallenge = async function(toSid, toName){
-  if(duelStrings.size===0){ alert('En az bir tel seçin.'); return; }
+  duelStrings = new Set([1,2,3,4,5,6]); // Düellolarda adil olsun diye her zaman tüm teller
   if(onlineListener){ onlineListener(); onlineListener=null; }
 
   myRole   = 'host';
@@ -547,6 +541,8 @@ function checkDuelHandoff(){
 }
 
 function beginGame(){
+  if(window.trackEnd)window.trackEnd();
+  if(window.trackStart)window.trackStart('duel');
   myScore_ = 0; oppScore_ = 0;
   document.getElementById('dscore-me-name').textContent  = myName;
   document.getElementById('dscore-opp-name').textContent = oppName;
@@ -626,6 +622,7 @@ function duelAnswer(nota, btn, rNum){
 
   const correct = nota === currentQuestionData.notaAdi;
   btn.classList.add(correct?'correct':'wrong');
+  if(window.trackLog)window.trackLog(correct, currentQuestionData.string, currentQuestionData.notaAdi+' ('+currentQuestionData.string+'. tel)');
 
   runTransaction(ref(db,`duel_rooms/${roomCode}`), room => {
     if(!room) return room;
@@ -694,6 +691,7 @@ function startCountdown(onDone){
 function setCd(el,n){el.textContent=n;el.classList.remove('duel-cd');void el.offsetWidth;el.classList.add('duel-cd');}
 
 function endDuel(){
+  if(window.trackEnd)window.trackEnd();
   if(cdTimer) clearInterval(cdTimer);
   if(roundListener){ roundListener(); roundListener=null; }
 
@@ -723,12 +721,14 @@ function endDuel(){
 }
 
 function handleAbandoned(){
+  if(window.trackEnd)window.trackEnd();
   if(cdTimer) clearInterval(cdTimer);
   alert('Rakibiniz oyundan ayrıldı.');
   showArea('setup-area');
 }
 
 window.leaveGame = async function(){
+  if(window.trackEnd)window.trackEnd();
   if(cdTimer) clearInterval(cdTimer);
   if(roundListener&&roomCode){ roundListener(); roundListener=null; }
   if(roomCode) await update(ref(db,`duel_rooms/${roomCode}`),{status:'abandoned'});
