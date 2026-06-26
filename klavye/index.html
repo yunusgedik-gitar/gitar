@@ -286,13 +286,7 @@
       <button class="duel-round-btn"        data-rounds="15" onclick="selectDuelRounds(15)">15 Tur</button>
     </div>
     <div class="string-buttons" style="margin-bottom:0;">
-      <button id="d-btn-all" class="string-btn all-btn active" onclick="dToggleAll()">Hepsi</button>
-      <button class="string-btn active d-str-btn" data-string="1" onclick="dToggleStr(1)">①</button>
-      <button class="string-btn active d-str-btn" data-string="2" onclick="dToggleStr(2)">②</button>
-      <button class="string-btn active d-str-btn" data-string="3" onclick="dToggleStr(3)">③</button>
-      <button class="string-btn active d-str-btn" data-string="4" onclick="dToggleStr(4)">④</button>
-      <button class="string-btn active d-str-btn" data-string="5" onclick="dToggleStr(5)">⑤</button>
-      <button class="string-btn active d-str-btn" data-string="6" onclick="dToggleStr(6)">⑥</button>
+      <p style="width:100%;text-align:center;font-size:.8rem;color:#8a7860;margin:0;">🎸 Düellolarda adil olması için tüm teller kullanılır.</p>
     </div>
   </div>
 
@@ -598,7 +592,7 @@ function checkStartButton() {
 }
 
 function startExercise(mode) {
-  filteredNotes = NOTES.filter(n => selectedStrings.has(n.string));
+  filteredNotes = mode === 'race' ? NOTES.slice() : NOTES.filter(n => selectedStrings.has(n.string));
   if (filteredNotes.length === 0) return;
 
   currentMode = mode;
@@ -998,7 +992,7 @@ function makeDuelQuestion(strings){
 
 /* ── Davet gönderme ── */
 window.sendDuelChallenge = async(toSid,toName)=>{
-  if(dStrings.size===0){alert('En az bir tel seçin.');return;}
+  dStrings = new Set([1,2,3,4,5,6]); // Düellolarda adil olsun diye her zaman tüm teller
   if(onlineUnsub){onlineUnsub();onlineUnsub=null;}
   myRole='host'; oppSid_=toSid; oppName_=toName;
   roomCode_=Math.floor(100000+Math.random()*900000).toString();
@@ -1062,6 +1056,8 @@ function checkHandoff(){
 
 /* ── Oyun başlat ── */
 function beginDuelGame(){
+  if(window.trackEnd)window.trackEnd();
+  if(window.trackStart)window.trackStart('duel');
   myScore_=0; oppScore_=0;
   document.getElementById('dscore-me-name').textContent=myName;
   document.getElementById('dscore-opp-name').textContent=oppName_;
@@ -1079,7 +1075,7 @@ function beginDuelGame(){
 
   statusUnsub=onValue(ref(db,`duel_rooms/${roomCode_}/status`),snap=>{
     const s=snap.val();
-    if(s==='abandoned'){cleanupDuel();alert('Rakibiniz oyundan ayrıldı.');showOnly('setup-area');}
+    if(s==='abandoned'){if(window.trackEnd)window.trackEnd();cleanupDuel();alert('Rakibiniz oyundan ayrıldı.');showOnly('setup-area');}
     if(s==='finished') endDuel();
   });
 
@@ -1147,6 +1143,7 @@ function duelAnswer(name,card,roundNum){
   document.querySelectorAll('#duel-choices .choice-card').forEach(c=>{c.classList.add('disabled');c.onclick=null;});
   const correct=name===currentRound_.noteName;
   card.classList.add(correct?'correct':'wrong');
+  if(window.trackLog)window.trackLog(correct, currentRound_.noteName, currentRound_.noteName+' ('+(currentRound_.string||'')+'. tel)');
   runTransaction(ref(db,`duel_rooms/${roomCode_}/round`),r=>{
     if(!r||r.num!==roundNum) return;
     if(correct){ if(r.winner) return; return{...r,winner:myRole,winnerName:myName,[myRole+'Done']:true}; }
@@ -1217,6 +1214,7 @@ function cleanupDuel(){
 
 /* ── Oyun sonu ── */
 function endDuel(){
+  if(window.trackEnd)window.trackEnd();
   cleanupDuel();
   const my=myScore_, op=oppScore_;
   let badge,comment;
@@ -1243,6 +1241,7 @@ function endDuel(){
 }
 
 window.leaveDuelGame = async()=>{
+  if(window.trackEnd)window.trackEnd();
   cleanupDuel();
   if(roomRef_) await update(roomRef_,{status:'abandoned'});
   showOnly('setup-area');
