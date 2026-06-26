@@ -125,6 +125,12 @@
       transition: all 0.12s;
     }
 
+    .start-race-btn {
+      border: 1.5px solid #e24b4a;
+      background: #fdf0f0;
+      color: #a32d2d;
+    }
+
     .start-exercise-btn:disabled {
       background: #f5f5f5;
       border-color: #ddd;
@@ -549,7 +555,8 @@
       </div>
       <div class="string-buttons" id="note-buttons"></div>
       <div class="action-buttons-wrap">
-        <button class="start-exercise-btn" id="startBtn" onclick="startExercise()">Egzersize Başla 🎧</button>
+        <button class="start-exercise-btn" id="startBtn" onclick="startExercise('practice')">Egzersize Başla (Zamansız) 🎯</button>
+        <button class="start-exercise-btn start-race-btn" id="raceBtn" onclick="startExercise('race')">Yarışmaya Başla (40 Saniye) 🏆</button>
         <button class="app-btn btn-duel" onclick="showDuelSetup()">⚔️ Online Düello</button>
       </div>
     </div>
@@ -571,10 +578,11 @@
         <button class="round-btn"        data-rounds="15" onclick="selectRounds(15)">15 Tur</button>
       </div>
       <div class="filter-title">Çalışılacak Notalar</div>
-      <div class="string-buttons" style="margin-bottom:0;">
+      <p style="text-align:center;font-size:.8rem;color:#8a7860;margin:0 0 8px;">🎵 Düellolarda adil olması için tüm notalar kullanılır.</p>
+      <div class="string-buttons" style="margin-bottom:0; display:none;">
         <button id="d-btn-all" class="string-btn all-btn active" onclick="dToggleAll()">Hepsi</button>
       </div>
-      <div class="string-buttons" id="duel-note-buttons" style="margin-top:8px;"></div>
+      <div class="string-buttons" id="duel-note-buttons" style="margin-top:8px; display:none;"></div>
     </div>
 
     <!-- Düello Waiting Area -->
@@ -752,6 +760,10 @@
     let wrong = 0;
     let answered = false;
     let audioContext;
+    let currentMode = 'practice';
+    let activeNotePool = [...NOTE_NAMES];
+    let timeLeft = 0;
+    let raceTimer = null;
 
     // Setup Panel Initialization
     function initSetupPanel() {
@@ -856,36 +868,69 @@
       return NOTE_NAMES.slice(start, start + blockSize);
     }
 
-    function startExercise() {
-      if (selectedNotes.length === 0) {
+    function clearRaceTimer() {
+      if (raceTimer) { clearInterval(raceTimer); raceTimer = null; }
+    }
+
+    function updateRaceTimerDisplay() {
+      document.getElementById('timer-badge').textContent = '⏱ ' + timeLeft + 'sn';
+      const pct = Math.max(0, Math.min(100, (timeLeft / 40) * 100));
+      document.getElementById('progress-fill').style.width = pct + '%';
+    }
+
+    function startExercise(mode) {
+      currentMode = mode || 'practice';
+      // Yarışma modunda sömürüyü (sadece 1 nota seçip kolay puan almayı) önlemek için
+      // her zaman TÜM notalar kullanılır; seçim filtresi sadece pratik modda geçerlidir.
+      activeNotePool = currentMode === 'race' ? [...NOTE_NAMES] : selectedNotes;
+
+      if (activeNotePool.length === 0) {
         alert('Lütfen en az bir nota seçin!');
         return;
       }
 
-      // 10 soru oluştur
+      // Pratik modda sabit 10 soru baştan hazırlanır.
+      // Yarışma modunda sadece ilk soru hazırlanır, devamı süre bitene kadar nextQ() içinde üretilir.
       currentQuestions = [];
-      let prevNote = null;
-      for (let i = 0; i < 10; i++) {
-        const correctNote = pickNextQuestionNote(selectedNotes, prevNote);
-        prevNote = correctNote;
+      const firstNote = pickNextQuestionNote(activeNotePool, null);
+      currentQuestions.push({ correctNote: firstNote, choices: shuffleArr(pickAdjacentChoiceBlock(firstNote)) });
 
-        // Cevap şıkları: tüm 7 nota üzerinden, doğruyu içeren yanaşık 4'lü blok
-        const choices = shuffleArr(pickAdjacentChoiceBlock(correctNote));
-
-        currentQuestions.push({
-          correctNote,
-          choices
-        });
+      if (currentMode === 'practice') {
+        let prevNote = firstNote;
+        for (let i = 1; i < 10; i++) {
+          const correctNote = pickNextQuestionNote(activeNotePool, prevNote);
+          prevNote = correctNote;
+          currentQuestions.push({ correctNote, choices: shuffleArr(pickAdjacentChoiceBlock(correctNote)) });
+        }
       }
 
       currentQIndex = 0;
       correct = 0;
       wrong = 0;
       if (window.trackEnd) window.trackEnd();
-      if (window.trackStart) window.trackStart('quiz');
+      if (window.trackStart) window.trackStart(currentMode);
       document.getElementById('setup-area').style.display = 'none';
       document.getElementById('exercise-area').style.display = 'block';
       document.getElementById('result-screen').style.display = 'none';
+
+      clearRaceTimer();
+      if (currentMode === 'race') {
+        timeLeft = 40;
+        updateRaceTimerDisplay();
+        raceTimer = setInterval(() => {
+          timeLeft--;
+          if (timeLeft <= 0) {
+            timeLeft = 0;
+            updateRaceTimerDisplay();
+            clearRaceTimer();
+            clearAutoTimer();
+            showResults();
+          } else {
+            updateRaceTimerDisplay();
+          }
+        }, 1000);
+      }
+
       showQuestion();
     }
 
@@ -894,10 +939,12 @@
       answered = false;
       const q = currentQuestions[currentQIndex];
 
-      // Progress güncelle
-      const progress = ((currentQIndex + 1) / currentQuestions.length) * 100;
-      document.getElementById('progress-fill').style.width = progress + '%';
-      document.getElementById('timer-badge').textContent = `${currentQIndex + 1}/${currentQuestions.length}`;
+      // Progress güncelle (yarışma modunda bu alan süre göstergesi olarak kullanılıyor, dokunma)
+      if (currentMode !== 'race') {
+        const progress = ((currentQIndex + 1) / currentQuestions.length) * 100;
+        document.getElementById('progress-fill').style.width = progress + '%';
+        document.getElementById('timer-badge').textContent = `${currentQIndex + 1}/${currentQuestions.length}`;
+      }
 
       // Şıkları oluştur — sadece VexFlow notası, yazı yok
       const choicesDiv = document.getElementById('choices');
@@ -1013,8 +1060,15 @@
 
       updateControls();
 
-      // Doğru cevapta otomatik ilerle; yanlışta kullanıcı doğruyu görüp "Sonraki"ye kendi bassın
-      if (isCorrect && currentQIndex < currentQuestions.length - 1) {
+      // Yarışma modunda doğru/yanlış fark etmeden hızlıca ilerle (süreyle yarışılıyor).
+      // Pratik modda doğruda otomatik ilerle, yanlışta kullanıcı doğruyu görüp "Sonraki"ye kendi bassın.
+      if (currentMode === 'race') {
+        if (timeLeft > 0) {
+          autoTimer = setTimeout(() => { clearAutoTimer(); nextQ(); }, isCorrect ? 650 : 900);
+        } else {
+          autoTimer = setTimeout(() => { showResults(); }, 400);
+        }
+      } else if (isCorrect && currentQIndex < currentQuestions.length - 1) {
         startAutoAdvance();
       } else if (isCorrect) {
         // son soruysa kısa gecikmeyle sonucu göster
@@ -1023,6 +1077,12 @@
     }
 
     function updateControls() {
+      if (currentMode === 'race') {
+        document.getElementById('prevBtn').disabled = true;
+        document.getElementById('nextBtn').disabled = true;
+        document.getElementById('listenAgainBtn').disabled = false;
+        return;
+      }
       const isPrevDisabled = currentQIndex === 0;
       const isNextDisabled = currentQIndex === currentQuestions.length - 1;
 
@@ -1041,6 +1101,15 @@
 
     function nextQ() {
       clearAutoTimer();
+      if (currentMode === 'race') {
+        if (timeLeft <= 0) { showResults(); return; }
+        const prevNote = currentQuestions[currentQIndex].correctNote;
+        const correctNote = pickNextQuestionNote(activeNotePool, prevNote);
+        currentQuestions.push({ correctNote, choices: shuffleArr(pickAdjacentChoiceBlock(correctNote)) });
+        currentQIndex++;
+        showQuestion();
+        return;
+      }
       if (currentQIndex < currentQuestions.length - 1) {
         currentQIndex++;
         showQuestion();
@@ -1050,6 +1119,7 @@
     }
 
     function showResults() {
+      clearRaceTimer();
       if (window.trackEnd) window.trackEnd();
       document.getElementById('exercise-area').style.display = 'none';
       document.getElementById('result-screen').style.display = 'block';
@@ -1092,6 +1162,7 @@
     }
 
     function restartExercise() {
+      clearRaceTimer();
       document.getElementById('setup-area').style.display = 'block';
       document.getElementById('result-screen').style.display = 'none';
       const dsa=document.getElementById('duel-setup-area'), dwa=document.getElementById('duel-waiting-area'), dga=document.getElementById('duel-game-area');
@@ -1101,6 +1172,7 @@
 
     function backToMenu() {
       if (window.trackEnd) window.trackEnd();
+      clearRaceTimer();
       clearAutoTimer();
       document.getElementById('setup-area').style.display = 'block';
       document.getElementById('exercise-area').style.display = 'none';
@@ -1296,7 +1368,7 @@
   }
 
   window.sendChallenge = async function(toSid, toName){
-    if(duelNotes.size===0){ alert('En az bir nota seçin.'); return; }
+    duelNotes = new Set(D_NOTE_NAMES); // Düellolarda adil olsun diye her zaman tüm notalar
     if(onlineListener){ onlineListener(); onlineListener=null; }
 
     myRole   = 'host';
@@ -1382,6 +1454,8 @@
   }
 
   function beginGame(){
+    if(window.trackEnd)window.trackEnd();
+    if(window.trackStart)window.trackStart('duel');
     myScore_ = 0; oppScore_ = 0;
     document.getElementById('dscore-me-name').textContent  = myName;
     document.getElementById('dscore-opp-name').textContent = oppName;
@@ -1514,6 +1588,7 @@
 
     const correct = noteName === currentQuestionData.noteName;
     card.classList.add(correct ? 'correct' : 'wrong');
+    if(window.trackLog)window.trackLog(correct, currentQuestionData.noteName, currentQuestionData.noteName);
     if(!correct){
       duelMissCounts[currentQuestionData.noteName] = (duelMissCounts[currentQuestionData.noteName] || 0) + 1;
     }
@@ -1580,6 +1655,7 @@
   function setCd(el,n){ el.textContent=n; el.classList.remove('duel-cd'); void el.offsetWidth; el.classList.add('duel-cd'); }
 
   function endDuel(){
+    if(window.trackEnd)window.trackEnd();
     if(cdTimer) clearInterval(cdTimer);
     if(roundListener){ roundListener(); roundListener=null; }
 
@@ -1608,12 +1684,14 @@
   }
 
   function handleAbandoned(){
+    if(window.trackEnd)window.trackEnd();
     if(cdTimer) clearInterval(cdTimer);
     alert('Rakibiniz oyundan ayrıldı.');
     showArea('setup-area');
   }
 
   window.leaveGame = async function(){
+    if(window.trackEnd)window.trackEnd();
     if(cdTimer) clearInterval(cdTimer);
     if(roundListener && roomCode){ roundListener(); roundListener=null; }
     if(roomCode) await update(ref(db,`duel_rooms/${roomCode}`),{status:'abandoned'});
