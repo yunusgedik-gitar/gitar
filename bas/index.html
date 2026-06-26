@@ -383,11 +383,7 @@
       <button class="round-btn"        data-rounds="0"   data-secs="60" onclick="selectRounds(0,60)">⏱ 60sn</button>
     </div>
         <div class="string-buttons" style="margin-bottom:0;">
-      <button id="d-btn-all" class="string-btn all-btn active" onclick="dToggleAll()">HEPSİ</button>
-      <button class="string-btn active d-str-btn" data-string="1" onclick="dToggleStr(1)">①</button>
-      <button class="string-btn active d-str-btn" data-string="2" onclick="dToggleStr(2)">②</button>
-      <button class="string-btn active d-str-btn" data-string="3" onclick="dToggleStr(3)">③</button>
-      <button class="string-btn active d-str-btn" data-string="4" onclick="dToggleStr(4)">④</button>
+      <p style="width:100%;text-align:center;font-size:.8rem;color:#8a7860;margin:0;">🎸 Düellolarda adil olması için tüm teller kullanılır.</p>
     </div>
   </div>
 
@@ -872,7 +868,7 @@ function checkStartButton() {
 }
 
 function startExercise(mode) {
-  filteredNotes = NOTES.filter(n => selectedStrings.has(n.string));
+  filteredNotes = mode === 'race' ? NOTES.slice() : NOTES.filter(n => selectedStrings.has(n.string));
   if (filteredNotes.length === 0) return;
   if (window.trackEnd) window.trackEnd();
 
@@ -1554,7 +1550,7 @@ function buildQuestionDeck(strings, totalRounds, mode){
 
 // ── MEYDAN OKUMA ──
 window.sendChallenge = async function(toSid, toName){
-  if(duelStrings.size===0){ alert('En az bir tel seçin.'); return; }
+  duelStrings = new Set([1,2,3,4]); // Düellolarda adil olsun diye her zaman tüm teller
   if(onlineListener){ onlineListener(); onlineListener=null; }
 
   myRole   = 'host';
@@ -1663,6 +1659,8 @@ async function checkDuelHandoff(){
 
 // ── OYUNU BAŞLAT ──
 function beginGame(){
+  if(window.trackEnd)window.trackEnd();
+  if(window.trackStart)window.trackStart('duel');
   myScore_ = 0; oppScore_ = 0;
   document.getElementById('dscore-me-name').textContent  = myName;
   document.getElementById('dscore-opp-name').textContent = oppName;
@@ -1950,6 +1948,7 @@ function duelAnswerN2K(element, stringNum, fretNum, rNum){
 
 // ── FIREBASE'E CEVAP KAYDET ──
 function submitDuelAnswer(rNum, correct){
+  if(window.trackLog)window.trackLog(correct, currentQuestionData.posId, currentQuestionData.name+' ('+currentQuestionData.string+'. tel)');
   runTransaction(ref(db,`duel_rooms/${roomCode}`), room=>{
     if(!room) return room;
     if(room.currentRoundNum !== rNum) return room;
@@ -2013,6 +2012,7 @@ function setCd(el,n){ el.textContent=n; el.classList.remove('duel-cd'); void el.
 
 // ── DÜELLO BİTİŞ ──
 function endDuel(){
+  if(window.trackEnd)window.trackEnd();
   if(cdTimer) clearInterval(cdTimer);
   if(duelTimerInterval) clearInterval(duelTimerInterval);
   if(roundListener){ roundListener(); roundListener=null; }
@@ -2046,12 +2046,14 @@ function endDuel(){
 }
 
 function handleAbandoned(){
+  if(window.trackEnd)window.trackEnd();
   if(cdTimer) clearInterval(cdTimer);
   alert('Rakibiniz oyundan ayrıldı.');
   showArea('setup-area');
 }
 
 window.leaveGame = async function(){
+  if(window.trackEnd)window.trackEnd();
   if(cdTimer) clearInterval(cdTimer);
   if(duelTimerInterval) clearInterval(duelTimerInterval);
   if(roundListener && roomCode){ roundListener(); roundListener=null; }
