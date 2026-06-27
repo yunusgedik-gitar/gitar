@@ -665,8 +665,8 @@
 
       <div id="live-note-filter" class="string-buttons" style="margin-bottom:.8rem;">
         <button id="btn-all" class="string-btn all-btn active" onclick="toggleAll()">Hepsi</button>
+        <div id="note-buttons" style="display:contents;"></div>
       </div>
-      <div class="string-buttons" id="note-buttons" style="margin-bottom:.8rem;"></div>
 
       <div class="card">
         <div class="q-title">Bu duyduğunuz ses hangi notaya ait?</div>
@@ -916,7 +916,6 @@
       document.getElementById('exercise-area').style.display = 'block';
       document.getElementById('result-screen').style.display = 'none';
       document.getElementById('live-note-filter').style.display = currentMode === 'practice' ? 'flex' : 'none';
-      document.getElementById('note-buttons').style.display = currentMode === 'practice' ? 'flex' : 'none';
 
       clearRaceTimer();
       if (currentMode === 'race') {

@@ -110,7 +110,7 @@ function injectNewsTickerStyles() {
   style.id = '_gs_news_ticker_style';
   style.textContent = `
     #news-ticker-row {
-      overflow: hidden; white-space: nowrap; margin: 0 0 10px 0;
+      overflow: hidden; white-space: nowrap; margin: 10px 0;
       background: linear-gradient(135deg,#fff7e6,#fdebc8);
       border: 1px solid #e8d5a0; border-radius: 20px;
       padding: 7px 0; display: none;
@@ -477,6 +477,13 @@ async function initChatSystem() {
   display:flex; gap:6px; align-items:center;
 }
 ._gs_msg_author { font-weight:700; color:#2c1f14; }
+._gs_msg.news { align-self: center; max-width: 90%; }
+._gs_msg.news ._gs_msg_author { color: #8b5a2b; }
+._gs_bubble.news-bubble {
+  background: linear-gradient(135deg,#fff7e6,#fdebc8);
+  border: 1px solid #e8d5a0; color: #6b4423;
+  font-weight: 600; text-align: center;
+}
 ._gs_teacher_tag {
   background:#b8892a; color:#fff; font-size:.58rem; font-weight:700;
   padding:1px 5px; border-radius:4px;
@@ -794,10 +801,17 @@ async function initChatSystem() {
 
     genMsgs.innerHTML = msgs.length ? '' : `<div class="_gs_empty"><div class="_gs_empty_icon">💬</div><div class="_gs_empty_text">Henüz mesaj yok.<br>İlk mesajı sen gönder!</div></div>`;
     msgs.forEach(m => {
-      const isMine = m.sid===sid, isT = m.isTeacher, canDel = isTeacher||isMine;
+      const isNews = m.sid === 'system_news';
+      const isMine = m.sid===sid, isT = m.isTeacher, canDel = isTeacher||isMine||isNews;
       const div = document.createElement('div');
-      div.className = `_gs_msg ${isMine?'mine':isT?'teacher theirs':'theirs'}`;
-      div.innerHTML = `
+      div.className = isNews ? '_gs_msg news' : `_gs_msg ${isMine?'mine':isT?'teacher theirs':'theirs'}`;
+      div.innerHTML = isNews ? `
+        <div class="_gs_msg_meta">
+          <span class="_gs_msg_author">📰 Haberler</span>
+          <span>${chatFormatTime(m.ts)}</span>
+          ${isTeacher?`<button class="_gs_del_btn" data-key="${m.key}" data-path="chat/general">🗑</button>`:''}
+        </div>
+        <div class="_gs_bubble news-bubble">${chatEscHtml(m.text)}</div>` : `
         <div class="_gs_msg_meta">
           ${!isMine?`<span class="_gs_msg_author">${chatEscHtml(m.name)}</span>`:''}
           ${isT&&!isMine?`<span class="_gs_teacher_tag">Legendary</span>`:''}

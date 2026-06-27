@@ -331,6 +331,10 @@
 
   <div id="setup-area">
 
+    <div style="display:flex; justify-content:flex-end; margin-bottom:0.5rem;">
+      <button class="back-to-menu-btn" style="margin-bottom:0;" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
+    </div>
+
     <div class="filter-card">
             <div class="mode-select-row">
         <div class="mode-card active" id="mode-card-n2k" onclick="selectQuizMode('notadan-klavyeye')">
@@ -538,10 +542,11 @@
 
     <!-- Klavyeden-Notaya görünümü -->
     <div id="view-k2n" style="display:none;">
+      <div class="top-bar-exercise">
+        <button class="back-to-menu-btn" onclick="goBackToMenu()">← Menüye Dön</button>
+      </div>
       <div class="card">
         <div class="card-top">
-          <button class="back-to-menu-btn" onclick="goBackToMenu()">← Menüye Dön</button>
-          <button class="back-to-menu-btn" onclick="location.href='https://gitar.yunusgedik.com.tr/'" style="border-color:#d4a373;color:#8b5a2b;">🏠 Ana Sayfa</button>
           <button id="listen-btn" onclick="replay()">🔊 Dinle</button>
           <div class="timer-badge" id="timer-display">Süre: 00:00</div>
         </div>
@@ -607,10 +612,11 @@
 
     <!-- Notadan-Klavyeye görünümü -->
     <div id="view-n2k" style="display:none;">
+      <div class="top-bar-exercise">
+        <button class="back-to-menu-btn" onclick="goBackToMenu()">← Menüye Dön</button>
+      </div>
       <div class="question-staff-card">
         <div class="card-top" style="width: 100%;">
-          <button class="back-to-menu-btn" onclick="goBackToMenu()">← Menüye Dön</button>
-          <button class="back-to-menu-btn" onclick="location.href='https://gitar.yunusgedik.com.tr/'" style="border-color:#d4a373;color:#8b5a2b;">🏠 Ana Sayfa</button>
           <button id="listen-btn-n2k" onclick="replay()">🔊 Dinle</button>
           <div class="timer-badge" id="timer-display-n2k">Süre: 00:00</div>
         </div>

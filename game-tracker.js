@@ -83,6 +83,10 @@ export function createTracker({ db, ref, push, get, set }) {
       await push(ref(db, 'news_feed'), { text, ts: Date.now(), ...(meta || {}) });
     }
     catch (e) { console.error('[GameTracker] haber yazılamadı:', e); }
+    try {
+      await push(ref(db, 'chat/general'), { sid: 'system_news', name: '📰 Haberler', text, ts: Date.now(), isTeacher: false });
+    }
+    catch (e) { console.error('[GameTracker] haber chat\'e yazılamadı:', e); }
   }
 
   // Tek bir metrik için (correct toplamı veya en iyi yarışma skoru)
@@ -148,6 +152,10 @@ export function createTracker({ db, ref, push, get, set }) {
     ended = true;
     const s = session;
     session = null;
+
+    // Öğretmen/test hesapları (s01, s02) hiçbir şekilde istatistiklere/
+    // sıralamalara dahil edilmez.
+    if (s.sid === 's01' || s.sid === 's02') return;
 
     const total = s.correct + s.wrong;
     if (total === 0) return; // hiç soru cevaplanmadıysa kayıt atma

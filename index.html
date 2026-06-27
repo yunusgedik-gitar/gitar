@@ -1071,6 +1071,8 @@ function studentName(sid) {
 async function pushNews(text, meta) {
   try { await push(ref(db, 'news_feed'), { text, ts: Date.now(), ...(meta || {}) }); }
   catch (e) { console.error('[Haber] yazılamadı:', e); }
+  try { await push(ref(db, 'chat/general'), { sid: 'system_news', name: '📰 Haberler', text, ts: Date.now(), isTeacher: false }); }
+  catch (e) { console.error('[Haber] chat\'e yazılamadı:', e); }
 }
 
 // Genel Sıralama'da (repertuvar tamamlama puanı bazlı) bir öğrencinin
@@ -3148,6 +3150,7 @@ async function loadLeaderboardData(forceRefresh) {
     const all = snap.exists() ? snap.val() : {};
 
     Object.keys(all).forEach(sid => {
+      if (sid === 's01' || sid === 's02') return; // öğretmen/test hesapları sıralamaya dahil değil
       const sessions = Object.values(all[sid] || {});
       sessions.forEach(s => {
         if (!s || !s.game || !data[s.game]) return;
