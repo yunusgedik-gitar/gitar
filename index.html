@@ -1071,7 +1071,7 @@ function studentName(sid) {
 async function pushNews(text, meta) {
   try { await push(ref(db, 'news_feed'), { text, ts: Date.now(), ...(meta || {}) }); }
   catch (e) { console.error('[Haber] yazılamadı:', e); }
-  try { await push(ref(db, 'chat/general'), { sid: 'system_news', name: '📰 Kıskanış Atağı Bildirisi:', text, ts: Date.now(), isTeacher: false }); }
+  try { await push(ref(db, 'chat/general'), { sid: 'system_news', name: '📰 Kıskanış News:', text, ts: Date.now(), isTeacher: false }); }
   catch (e) { console.error('[Haber] chat\'e yazılamadı:', e); }
 }
 
