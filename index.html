@@ -1695,7 +1695,7 @@ function checkRepertoireAccess(sid) {
 
   if (!isTeacher && grades.length === 0) {
     btn.classList.add('locked');
-    btn.dataset.lockedMsg = 'Grade fakiri olduğunuzdan eser listesine erişiminiz henüz açılmamış. Çok çalışırsanız bir gün bu bölüme girebilirsin.';
+    btn.dataset.lockedMsg = 'Grade fakiri olduğundan eser listesine erişimin henüz açılmamış. Çok çalışırsan bir gün bu bölüme girebilirsin. Not: Sanmıyoruz ama hadi hayırlısı.';
     if (icon) icon.textContent = '🔒';
     return;
   }
