@@ -1166,7 +1166,7 @@ function handleFretClick(element, stringNum, fretNum) {
   } else {
     missCounts[current.id] = (missCounts[current.id] || 0) + 1;
     if (window.trackLog) window.trackLog(false, current.id, current.name+' ('+current.string+'. tel, '+ROMAN_FRETS[current.fret]+')');
-    createFeedbackCircle(element, cx, cy, '#6b8c42');
+    createFeedbackCircle(element, cx, cy, '#c75b39');
     msg.textContent = '✗ ' + ERR[Math.floor(Math.random() * ERR.length)] + ' — Doğrusu: ' + current.string + '. Tel - ' + ROMAN_FRETS[current.fret] + ` (${current.name})`;
     msg.style.color = '#c75b39';
     wrongCount++;
