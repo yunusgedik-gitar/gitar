@@ -266,6 +266,31 @@
       color: #5a3e2b;
     }
 
+    .q-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 0.5rem;
+    }
+
+    .q-title-row .q-title {
+      flex: 1;
+      margin-bottom: 0;
+    }
+
+    .practice-timer-box {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #8b5a2b;
+      background: #f5e6d3;
+      border: 1px solid #e8d5c0;
+      border-radius: 12px;
+      padding: 5px 12px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
     .choices {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -696,7 +721,10 @@
       </div>
 
       <div class="card">
-        <div class="q-title">Bu duyduğunuz ses hangi notaya ait?</div>
+        <div class="q-title-row">
+          <div class="q-title">Bu duyduğunuz ses hangi notaya ait?</div>
+          <span class="practice-timer-box" id="practice-timer-box" style="display:none;">Süre: 0sn</span>
+        </div>
 
         <div class="speaker-wrap" id="speaker-wrap" onclick="playSound()">
           <svg viewBox="60 0 400 210" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
@@ -897,6 +925,35 @@
       if (raceTimer) { clearInterval(raceTimer); raceTimer = null; }
     }
 
+    let practiceTimer = null;
+    let practiceSeconds = 0;
+
+    function clearPracticeTimer() {
+      if (practiceTimer) { clearInterval(practiceTimer); practiceTimer = null; }
+    }
+
+	function updatePracticeTimerDisplay() {
+      const box = document.getElementById('practice-timer-box');
+      if (!box) return;
+      const m = Math.floor(practiceSeconds / 60);
+      const s = practiceSeconds % 60;
+      const mm = String(m).padStart(2, '0');
+      const ss = String(s).padStart(2, '0');
+      box.textContent = 'Süre: ' + mm + ':' + ss;
+    }
+
+    function startPracticeTimer() {
+      clearPracticeTimer();
+      practiceSeconds = 0;
+      const box = document.getElementById('practice-timer-box');
+      if (box) box.style.display = '';
+      updatePracticeTimerDisplay();
+      practiceTimer = setInterval(() => {
+        practiceSeconds++;
+        updatePracticeTimerDisplay();
+      }, 1000);
+    }
+
     function updateRaceTimerDisplay() {
       const badge = document.getElementById('timer-badge');
       badge.style.display = '';
@@ -949,7 +1006,9 @@
       document.getElementById('live-note-filter').style.display = currentMode === 'practice' ? 'flex' : 'none';
 
       clearRaceTimer();
+      clearPracticeTimer();
       if (currentMode === 'race') {
+        document.getElementById('practice-timer-box').style.display = 'none';
         timeLeft = 40;
         updateRaceTimerDisplay();
         raceTimer = setInterval(() => {
@@ -964,6 +1023,8 @@
             updateRaceTimerDisplay();
           }
         }, 1000);
+      } else {
+        startPracticeTimer();
       }
       showQuestion();
     }
@@ -1133,6 +1194,7 @@
 
     function showResults() {
       clearRaceTimer();
+      clearPracticeTimer();
       if (window.trackEnd) window.trackEnd();
       document.getElementById('exercise-area').style.display = 'none';
       document.getElementById('result-screen').style.display = 'block';
@@ -1176,6 +1238,7 @@
 
     function restartExercise() {
       clearRaceTimer();
+      clearPracticeTimer();
       document.getElementById('setup-nav').style.display = 'flex';
       document.getElementById('setup-area').style.display = 'block';
       document.getElementById('result-screen').style.display = 'none';
@@ -1187,6 +1250,7 @@
     function backToMenu() {
       if (window.trackEnd) window.trackEnd();
       clearRaceTimer();
+      clearPracticeTimer();
       clearAutoTimer();
       document.getElementById('setup-nav').style.display = 'flex';
       document.getElementById('setup-area').style.display = 'block';
