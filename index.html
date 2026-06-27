@@ -1800,7 +1800,7 @@ function checkKulakAccess(sid) {
       href: 'https://gitar.yunusgedik.com.tr/kulak',
       icon: '🎧',
       unlockedDesc: 'Duyduğun sesin hangi notaya ait olduğunu tanı, kulağını geliştir.',
-      badgeText: 'AKTİF'
+      badgeText: 'Aktif', badgeClass: 'badge badge-active'
     });
     return;
   }
@@ -1822,7 +1822,7 @@ function checkKulakAccess(sid) {
       href: 'https://gitar.yunusgedik.com.tr/kulak',
       icon: '🎧',
       unlockedDesc: 'Duyduğun sesin hangi notaya ait olduğunu tanı, kulağını geliştir.',
-      badgeText: 'AKTİF'
+      badgeText: 'Aktif', badgeClass: 'badge badge-active'
     });
   } else {
     lockCard(card, { lockedDesc: 'Bu bölüm henüz erişiminize açılmamış.' });
@@ -1834,7 +1834,7 @@ function checkKlavyeAccess(sid) {
   checkSectionAccess('klavye', 'klavye-card', sid, {
     href: '/klavye/', icon: '🎛️',
     unlockedDesc: 'I. Pozisyondaki tüm perdeleri, telleri ve notaların dizekteki tam karşılıklarını interaktif olarak deneyimleyin.',
-    badgeText: 'AKTİF'
+    badgeText: 'Aktif', badgeClass: 'badge badge-active'
   });
 }
 function checkNotaAccess(sid) {
@@ -1848,13 +1848,6 @@ function checkTelAccess(sid) {
   checkSectionAccess('tel', 'tel-card', sid, {
     href: '/tel/', icon: '🎸',
     unlockedDesc: 'Gitarın tellerini ve perdelerini tanımak için alıştırmalar.',
-    badgeText: 'Aktif', badgeClass: 'badge badge-active'
-  });
-}
-function checkDeneyselAccess(sid) {
-  checkSectionAccess('deneysel', 'deneysel-card', sid, {
-    href: '/deneysel/', icon: '🧪',
-    unlockedDesc: 'Yeni eklenen deneysel alıştırma ve içerikler burada yer alır.',
     badgeText: 'Aktif', badgeClass: 'badge badge-active'
   });
 }
