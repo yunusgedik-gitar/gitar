@@ -69,6 +69,15 @@
       align-items: center;
       justify-content: center;
       transition: all 0.15s ease;
+      position: relative;
+    }
+    .string-num-btn:not(.active) { opacity: .45; }
+    .string-num-btn:not(.active)::after {
+      content: '✕'; position: absolute; top: -4px; right: -4px;
+      width: 16px; height: 16px; background: #c0392b; color: #fff;
+      border-radius: 50%; font-size: .62rem; font-weight: 900;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,.3);
     }
     .string-btn.all-btn {
       width: auto;
@@ -381,16 +390,7 @@
     
     <div id="setup-area" class="filter-card">
 	<div style="display:flex; justify-content:flex-end; margin-bottom:0.5rem;">
-    <button class="back-to-menu-btn" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Başa Dön</button>
-      </div>
-      <div class="string-buttons">
-        <button id="btn-all" class="string-btn all-btn active" onclick="toggleAllStrings()">HEPSİ</button>
-        <button class="string-btn active string-num-btn" data-string="1" onclick="toggleString(1)">①</button>
-        <button class="string-btn active string-num-btn" data-string="2" onclick="toggleString(2)">②</button>
-        <button class="string-btn active string-num-btn" data-string="3" onclick="toggleString(3)">③</button>
-        <button class="string-btn active string-num-btn" data-string="4" onclick="toggleString(4)">④</button>
-        <button class="string-btn active string-num-btn" data-string="5" onclick="toggleString(5)">⑤</button>
-        <button class="string-btn active string-num-btn" data-string="6" onclick="toggleString(6)">⑥</button>
+    <button class="back-to-menu-btn" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
       </div>
       <div class="action-buttons-wrap">
         <button id="start-btn" class="start-exercise-btn" onclick="startExercise('practice')">Egzersize Başla (Zamansız) 🎯</button>
@@ -413,13 +413,7 @@
         <button class="round-btn"        data-rounds="15" onclick="selectRounds(15)">15 Tur</button>
       </div>
       <div class="string-buttons" style="margin-bottom:0;">
-        <button id="d-btn-all" class="string-btn all-btn active" onclick="dToggleAll()">HEPSİ</button>
-        <button class="string-btn active d-str-btn" data-string="1" onclick="dToggleStr(1)">①</button>
-        <button class="string-btn active d-str-btn" data-string="2" onclick="dToggleStr(2)">②</button>
-        <button class="string-btn active d-str-btn" data-string="3" onclick="dToggleStr(3)">③</button>
-        <button class="string-btn active d-str-btn" data-string="4" onclick="dToggleStr(4)">④</button>
-        <button class="string-btn active d-str-btn" data-string="5" onclick="dToggleStr(5)">⑤</button>
-        <button class="string-btn active d-str-btn" data-string="6" onclick="dToggleStr(6)">⑥</button>
+        <p style="width:100%;text-align:center;font-size:.8rem;color:#8a7860;margin:0;">🎸 Düellolarda adil olması için tüm teller kullanılır.</p>
       </div>
     </div>
 
@@ -471,6 +465,16 @@
         <div id="timer-display">Kalan Süre: 40</div>
       </div>
 
+      <div id="live-string-filter" class="string-buttons" style="margin-bottom:.8rem;">
+        <button id="btn-all" class="string-btn all-btn active" onclick="toggleAllStrings()">HEPSİ</button>
+        <button class="string-btn active string-num-btn" data-string="1" onclick="toggleString(1)">①</button>
+        <button class="string-btn active string-num-btn" data-string="2" onclick="toggleString(2)">②</button>
+        <button class="string-btn active string-num-btn" data-string="3" onclick="toggleString(3)">③</button>
+        <button class="string-btn active string-num-btn" data-string="4" onclick="toggleString(4)">④</button>
+        <button class="string-btn active string-num-btn" data-string="5" onclick="toggleString(5)">⑤</button>
+        <button class="string-btn active string-num-btn" data-string="6" onclick="toggleString(6)">⑥</button>
+      </div>
+
       <div class="card">
         <div class="card-top">
           <span id="card-question-title" class="card-label">Bu Nota Hangi Telde?</span>
@@ -488,7 +492,7 @@
       <div class="controls">
         <button class="ctrl-btn" onclick="resetQuiz()">↻ Tekrar</button>
         <button class="ctrl-btn primary" id="next-btn" onclick="manualNext()" disabled>Sonraki Soru →</button>
-        <button class="ctrl-btn" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Başa Dön</button>
+        <button class="ctrl-btn" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
       </div>
     </div>
 
@@ -577,37 +581,33 @@
     function toggleAllStrings() {
       const allBtn = document.getElementById('btn-all');
       const numBtns = document.querySelectorAll('.string-num-btn');
-      
-      if (selectedStrings.size === 6) {
-        selectedStrings.clear();
-        allBtn.classList.remove('active');
-        numBtns.forEach(b => b.classList.remove('active'));
-      } else {
-        selectedStrings = new Set([1, 2, 3, 4, 5, 6]);
-        allBtn.classList.add('active');
-        numBtns.forEach(b => b.classList.add('active'));
-      }
+      selectedStrings = new Set([1, 2, 3, 4, 5, 6]);
+      allBtn.classList.add('active');
+      numBtns.forEach(b => b.classList.add('active'));
       checkStartButton();
+      if (currentMode === 'practice') filteredNotes = NOTES.filter(n => selectedStrings.has(n.stringVal));
     }
 
     function toggleString(num) {
       const btn = document.querySelector(`.string-num-btn[data-string="${num}"]`);
       const allBtn = document.getElementById('btn-all');
-      
+
       if (selectedStrings.has(num)) {
+        if (selectedStrings.size === 1) return; // en az bir tel seçili kalmalı
         selectedStrings.delete(num);
         btn.classList.remove('active');
       } else {
         selectedStrings.add(num);
         btn.classList.add('active');
       }
-      
+
       if (selectedStrings.size === 6) {
         allBtn.classList.add('active');
       } else {
         allBtn.classList.remove('active');
       }
       checkStartButton();
+      if (currentMode === 'practice') filteredNotes = NOTES.filter(n => selectedStrings.has(n.stringVal));
     }
 
     function checkStartButton() {
@@ -619,7 +619,7 @@
     }
 
     function startExercise(mode) {
-      filteredNotes = NOTES.filter(n => selectedStrings.has(n.stringVal));
+      filteredNotes = mode === 'race' ? NOTES.slice() : NOTES.filter(n => selectedStrings.has(n.stringVal));
       if (filteredNotes.length === 0) return;
       if (window.trackEnd) window.trackEnd();
 
@@ -628,6 +628,7 @@
       prevSol = null;
       document.getElementById('setup-area').style.display = 'none';
       document.getElementById('exercise-area').style.display = 'block';
+      document.getElementById('live-string-filter').style.display = currentMode === 'practice' ? 'flex' : 'none';
       const dsa=document.getElementById('duel-setup-area'), dwa=document.getElementById('duel-waiting-area'), dga=document.getElementById('duel-game-area');
       if(dsa) dsa.style.display='none'; if(dwa) dwa.style.display='none'; if(dga) dga.style.display='none';
       
@@ -854,7 +855,8 @@
 
     function nextCard(){
       if (currentMode === 'race' && timeLeft <= 0) return;
-      
+      if (currentMode === 'practice') filteredNotes = NOTES.filter(n => selectedStrings.has(n.stringVal));
+
       answered = false;
       if(document.activeElement) document.activeElement.blur();
       document.getElementById('feedback').textContent = '';
@@ -1097,7 +1099,7 @@
   }
 
   window.sendChallenge = async function(toSid, toName){
-    if(duelStrings.size===0){ alert('En az bir tel seçin.'); return; }
+    duelStrings = new Set([1,2,3,4,5,6]); // Düellolarda adil olsun diye her zaman tüm teller
     if(onlineListener){ onlineListener(); onlineListener=null; }
 
     myRole   = 'host';
@@ -1183,6 +1185,8 @@
   }
 
   function beginGame(){
+    if(window.trackEnd)window.trackEnd();
+    if(window.trackStart)window.trackStart('duel');
     myScore_ = 0; oppScore_ = 0;
     document.getElementById('dscore-me-name').textContent  = myName;
     document.getElementById('dscore-opp-name').textContent = oppName;
@@ -1259,6 +1263,7 @@
 
     const correct = sol === currentQuestionData.notaAdi;
     btn.classList.add(correct ? 'correct' : 'wrong');
+    if(window.trackLog)window.trackLog(correct, currentQuestionData.notaAdi, currentQuestionData.noteName+' → '+currentQuestionData.notaAdi);
     if(!correct){
       duelMissCounts[currentQuestionData.notaAdi] = (duelMissCounts[currentQuestionData.notaAdi] || 0) + 1;
     }
@@ -1325,6 +1330,7 @@
   function setCd(el,n){ el.textContent=n; el.classList.remove('duel-cd'); void el.offsetWidth; el.classList.add('duel-cd'); }
 
   function endDuel(){
+    if(window.trackEnd)window.trackEnd();
     if(cdTimer) clearInterval(cdTimer);
     if(roundListener){ roundListener(); roundListener=null; }
 
@@ -1353,12 +1359,14 @@
   }
 
   function handleAbandoned(){
+    if(window.trackEnd)window.trackEnd();
     if(cdTimer) clearInterval(cdTimer);
     alert('Rakibiniz oyundan ayrıldı.');
     showArea('setup-area');
   }
 
   window.leaveGame = async function(){
+    if(window.trackEnd)window.trackEnd();
     if(cdTimer) clearInterval(cdTimer);
     if(roundListener && roomCode){ roundListener(); roundListener=null; }
     if(roomCode) await update(ref(db,`duel_rooms/${roomCode}`),{status:'abandoned'});

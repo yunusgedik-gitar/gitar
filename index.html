@@ -1757,9 +1757,10 @@ function checkKulakAccess(sid) {
   if (hasMinGrade && studentMaxGrade(sid) >= Number(conf.minGrade)) allowed = true;
   if (!allowed && selectedCats.some(c => !!cats[c])) allowed = true;
   // Varsayılan enstrüman kontrolü (section config ayarı varsa ama öğrenci geçemediyse son şans)
+  // Not: Bas Gitar / Elektro Gitar kategorisindeki öğrenciler henüz hiç grade/repertuvar
+  // kaydı olmasa bile bu varsayılan kuraldan erişebilmeli — grade şartı aranmaz.
   if (!allowed) {
-    const hasGrade = Object.keys(repProgress[sid] || {}).length > 0;
-    if (hasGrade && (!!cats['bas_gitar'] || !!cats['elektro_gitar'])) allowed = true;
+    if (!!cats['bas_gitar'] || !!cats['elektro_gitar']) allowed = true;
   }
 
   if (allowed) {

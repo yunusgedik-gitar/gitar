@@ -89,6 +89,15 @@
       align-items: center;
       justify-content: center;
       transition: all 0.15s ease;
+      position: relative;
+    }
+    .string-btn[data-note]:not(.active) { opacity: .45; }
+    .string-btn[data-note]:not(.active)::after {
+      content: '✕'; position: absolute; top: -4px; right: -4px;
+      width: 16px; height: 16px; background: #c0392b; color: #fff;
+      border-radius: 50%; font-size: .62rem; font-weight: 900;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,.3);
     }
 
     .string-btn.all-btn {
@@ -123,6 +132,12 @@
       color: #5a3e2b;
       cursor: pointer;
       transition: all 0.12s;
+    }
+
+    .start-race-btn {
+      border: 1.5px solid #e24b4a;
+      background: #fdf0f0;
+      color: #a32d2d;
     }
 
     .start-exercise-btn:disabled {
@@ -542,14 +557,11 @@
     <!-- Setup Area -->
     <div id="setup-area" class="filter-card">
       <div style="display:flex; justify-content:flex-end; margin-bottom:0.5rem;">
-        <button class="back-to-menu-btn" style="margin-bottom:0;" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Başa Dön</button>
+        <button class="back-to-menu-btn" style="margin-bottom:0;" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
       </div>
-      <div class="string-buttons">
-        <button id="btn-all" class="string-btn all-btn active" onclick="toggleAll()">Hepsi</button>
-      </div>
-      <div class="string-buttons" id="note-buttons"></div>
       <div class="action-buttons-wrap">
-        <button class="start-exercise-btn" id="startBtn" onclick="startExercise()">Egzersize Başla 🎧</button>
+        <button class="start-exercise-btn" id="startBtn" onclick="startExercise('practice')">Egzersize Başla (Zamansız) 🎯</button>
+        <button class="start-exercise-btn start-race-btn" id="raceBtn" onclick="startExercise('race')">Yarışmaya Başla (40 Saniye) 🏆</button>
         <button class="app-btn btn-duel" onclick="showDuelSetup()">⚔️ Online Düello</button>
       </div>
     </div>
@@ -571,10 +583,11 @@
         <button class="round-btn"        data-rounds="15" onclick="selectRounds(15)">15 Tur</button>
       </div>
       <div class="filter-title">Çalışılacak Notalar</div>
-      <div class="string-buttons" style="margin-bottom:0;">
+      <p style="text-align:center;font-size:.8rem;color:#8a7860;margin:0 0 8px;">🎵 Düellolarda adil olması için tüm notalar kullanılır.</p>
+      <div class="string-buttons" style="margin-bottom:0; display:none;">
         <button id="d-btn-all" class="string-btn all-btn active" onclick="dToggleAll()">Hepsi</button>
       </div>
-      <div class="string-buttons" id="duel-note-buttons" style="margin-top:8px;"></div>
+      <div class="string-buttons" id="duel-note-buttons" style="margin-top:8px; display:none;"></div>
     </div>
 
     <!-- Düello Waiting Area -->
@@ -650,6 +663,11 @@
         <button class="back-to-menu-btn" style="margin-bottom:0;" onclick="backToMenu()">← Menüye Dön</button>
       </div>
 
+      <div id="live-note-filter" class="string-buttons" style="margin-bottom:.8rem;">
+        <button id="btn-all" class="string-btn all-btn active" onclick="toggleAll()">Hepsi</button>
+      </div>
+      <div class="string-buttons" id="note-buttons" style="margin-bottom:.8rem;"></div>
+
       <div class="card">
         <div class="q-title">Bu duyduğunuz ses hangi notaya ait?</div>
 
@@ -700,7 +718,7 @@
         <div class="controls">
           <button class="ctrl-btn" id="prevBtn" onclick="previousQ()">← Önceki</button>
           <button class="ctrl-btn primary" id="listenAgainBtn" onclick="playSound()">🔊 Tekrar Dinle</button>
-          <button class="ctrl-btn" id="nextBtn" onclick="nextQ()">Sonraki →</button>
+          <button class="ctrl-btn" id="nextBtn" onclick="nextQ()">Sonraki Soru →</button>
         </div>
       </div>
     </div>
@@ -711,7 +729,7 @@
       <div class="result-stats" id="result-stats"></div>
       <p style="color:#8b6b4e; font-weight:700; margin-bottom:1.5rem; text-align:center;" id="result-comment"></p>
       <div class="controls">
-        <button class="ctrl-btn" onclick="backToMenu()">🏠 Menüye Dön</button>
+        <button class="ctrl-btn" onclick="backToMenu()">← Menüye Dön</button>
         <button class="ctrl-btn primary" onclick="restartExercise()">🔄 Tekrar Başla</button>
       </div>
     </div>
@@ -752,6 +770,10 @@
     let wrong = 0;
     let answered = false;
     let audioContext;
+    let currentMode = 'practice';
+    let activeNotePool = [...NOTE_NAMES];
+    let timeLeft = 0;
+    let raceTimer = null;
 
     // Setup Panel Initialization
     function initSetupPanel() {
@@ -804,6 +826,7 @@
     function toggleNote(note, btn, e) {
       e.preventDefault();
       if (selectedNotes.includes(note)) {
+        if (selectedNotes.length === 1) return; // en az bir nota seçili kalmalı
         selectedNotes = selectedNotes.filter(n => n !== note);
         btn.classList.remove('active');
       } else {
@@ -856,36 +879,63 @@
       return NOTE_NAMES.slice(start, start + blockSize);
     }
 
-    function startExercise() {
-      if (selectedNotes.length === 0) {
+    function clearRaceTimer() {
+      if (raceTimer) { clearInterval(raceTimer); raceTimer = null; }
+    }
+
+    function updateRaceTimerDisplay() {
+      document.getElementById('timer-badge').textContent = '⏱ ' + timeLeft + 'sn';
+      const pct = Math.max(0, Math.min(100, (timeLeft / 40) * 100));
+      document.getElementById('progress-fill').style.width = pct + '%';
+    }
+
+    function startExercise(mode) {
+      currentMode = mode || 'practice';
+      // Yarışma modunda sömürüyü (sadece 1 nota seçip kolay puan almayı) önlemek için
+      // her zaman TÜM notalar kullanılır; seçim filtresi sadece pratik modda geçerlidir.
+      activeNotePool = currentMode === 'race' ? [...NOTE_NAMES] : selectedNotes;
+
+      if (activeNotePool.length === 0) {
         alert('Lütfen en az bir nota seçin!');
         return;
       }
 
-      // 10 soru oluştur
+      // Her iki modda da sadece ilk soru hazırlanır; devamı (pratikte 10 soru
+      // dolana, yarışmada süre bitene kadar) nextQ() içinde CANLI olarak,
+      // o anki seçili nota havuzuna göre üretilir.
       currentQuestions = [];
-      let prevNote = null;
-      for (let i = 0; i < 10; i++) {
-        const correctNote = pickNextQuestionNote(selectedNotes, prevNote);
-        prevNote = correctNote;
-
-        // Cevap şıkları: tüm 7 nota üzerinden, doğruyu içeren yanaşık 4'lü blok
-        const choices = shuffleArr(pickAdjacentChoiceBlock(correctNote));
-
-        currentQuestions.push({
-          correctNote,
-          choices
-        });
-      }
+      const firstNote = pickNextQuestionNote(activeNotePool, null);
+      currentQuestions.push({ correctNote: firstNote, choices: shuffleArr(pickAdjacentChoiceBlock(firstNote)) });
 
       currentQIndex = 0;
       correct = 0;
       wrong = 0;
       if (window.trackEnd) window.trackEnd();
-      if (window.trackStart) window.trackStart('quiz');
+      if (window.trackStart) window.trackStart(currentMode);
       document.getElementById('setup-area').style.display = 'none';
       document.getElementById('exercise-area').style.display = 'block';
       document.getElementById('result-screen').style.display = 'none';
+      document.getElementById('live-note-filter').style.display = currentMode === 'practice' ? 'flex' : 'none';
+      document.getElementById('note-buttons').style.display = currentMode === 'practice' ? 'flex' : 'none';
+
+      clearRaceTimer();
+      if (currentMode === 'race') {
+        timeLeft = 40;
+        updateRaceTimerDisplay();
+        raceTimer = setInterval(() => {
+          timeLeft--;
+          if (timeLeft <= 0) {
+            timeLeft = 0;
+            updateRaceTimerDisplay();
+            clearRaceTimer();
+            clearAutoTimer();
+            showResults();
+          } else {
+            updateRaceTimerDisplay();
+          }
+        }, 1000);
+      }
+
       showQuestion();
     }
 
@@ -894,10 +944,12 @@
       answered = false;
       const q = currentQuestions[currentQIndex];
 
-      // Progress güncelle
-      const progress = ((currentQIndex + 1) / currentQuestions.length) * 100;
-      document.getElementById('progress-fill').style.width = progress + '%';
-      document.getElementById('timer-badge').textContent = `${currentQIndex + 1}/${currentQuestions.length}`;
+      // Progress güncelle (yarışma modunda bu alan süre göstergesi olarak kullanılıyor, dokunma)
+      if (currentMode !== 'race') {
+        const progress = ((currentQIndex + 1) / 10) * 100;
+        document.getElementById('progress-fill').style.width = progress + '%';
+        document.getElementById('timer-badge').textContent = `${currentQIndex + 1}/10`;
+      }
 
       // Şıkları oluştur — sadece VexFlow notası, yazı yok
       const choicesDiv = document.getElementById('choices');
@@ -1013,8 +1065,15 @@
 
       updateControls();
 
-      // Doğru cevapta otomatik ilerle; yanlışta kullanıcı doğruyu görüp "Sonraki"ye kendi bassın
-      if (isCorrect && currentQIndex < currentQuestions.length - 1) {
+      // Yarışma modunda doğru/yanlış fark etmeden hızlıca ilerle (süreyle yarışılıyor).
+      // Pratik modda doğruda otomatik ilerle, yanlışta kullanıcı doğruyu görüp "Sonraki"ye kendi bassın.
+      if (currentMode === 'race') {
+        if (timeLeft > 0) {
+          autoTimer = setTimeout(() => { clearAutoTimer(); nextQ(); }, isCorrect ? 650 : 900);
+        } else {
+          autoTimer = setTimeout(() => { showResults(); }, 400);
+        }
+      } else if (isCorrect && currentQIndex < 9) {
         startAutoAdvance();
       } else if (isCorrect) {
         // son soruysa kısa gecikmeyle sonucu göster
@@ -1023,8 +1082,14 @@
     }
 
     function updateControls() {
+      if (currentMode === 'race') {
+        document.getElementById('prevBtn').disabled = true;
+        document.getElementById('nextBtn').disabled = true;
+        document.getElementById('listenAgainBtn').disabled = false;
+        return;
+      }
       const isPrevDisabled = currentQIndex === 0;
-      const isNextDisabled = currentQIndex === currentQuestions.length - 1;
+      const isNextDisabled = currentQIndex === 9;
 
       document.getElementById('prevBtn').disabled = isPrevDisabled;
       document.getElementById('nextBtn').disabled = isNextDisabled || !answered;
@@ -1041,7 +1106,23 @@
 
     function nextQ() {
       clearAutoTimer();
-      if (currentQIndex < currentQuestions.length - 1) {
+      if (currentMode === 'race') {
+        if (timeLeft <= 0) { showResults(); return; }
+        const prevNote = currentQuestions[currentQIndex].correctNote;
+        const correctNote = pickNextQuestionNote(activeNotePool, prevNote);
+        currentQuestions.push({ correctNote, choices: shuffleArr(pickAdjacentChoiceBlock(correctNote)) });
+        currentQIndex++;
+        showQuestion();
+        return;
+      }
+      // Pratik modda 10 soruluk sınır var; her soru o anki seçili nota
+      // havuzundan (selectedNotes) CANLI üretilir, böylece oynarken bir
+      // nota kapatılırsa sonraki sorularda artık gelmez.
+      if (currentQIndex < 9) {
+        const prevNote = currentQuestions[currentQIndex].correctNote;
+        const pool = selectedNotes.length > 0 ? selectedNotes : NOTE_NAMES;
+        const correctNote = pickNextQuestionNote(pool, prevNote);
+        currentQuestions.push({ correctNote, choices: shuffleArr(pickAdjacentChoiceBlock(correctNote)) });
         currentQIndex++;
         showQuestion();
       } else {
@@ -1050,6 +1131,7 @@
     }
 
     function showResults() {
+      clearRaceTimer();
       if (window.trackEnd) window.trackEnd();
       document.getElementById('exercise-area').style.display = 'none';
       document.getElementById('result-screen').style.display = 'block';
@@ -1092,6 +1174,7 @@
     }
 
     function restartExercise() {
+      clearRaceTimer();
       document.getElementById('setup-area').style.display = 'block';
       document.getElementById('result-screen').style.display = 'none';
       const dsa=document.getElementById('duel-setup-area'), dwa=document.getElementById('duel-waiting-area'), dga=document.getElementById('duel-game-area');
@@ -1101,6 +1184,7 @@
 
     function backToMenu() {
       if (window.trackEnd) window.trackEnd();
+      clearRaceTimer();
       clearAutoTimer();
       document.getElementById('setup-area').style.display = 'block';
       document.getElementById('exercise-area').style.display = 'none';
@@ -1296,7 +1380,7 @@
   }
 
   window.sendChallenge = async function(toSid, toName){
-    if(duelNotes.size===0){ alert('En az bir nota seçin.'); return; }
+    duelNotes = new Set(D_NOTE_NAMES); // Düellolarda adil olsun diye her zaman tüm notalar
     if(onlineListener){ onlineListener(); onlineListener=null; }
 
     myRole   = 'host';
@@ -1382,6 +1466,8 @@
   }
 
   function beginGame(){
+    if(window.trackEnd)window.trackEnd();
+    if(window.trackStart)window.trackStart('duel');
     myScore_ = 0; oppScore_ = 0;
     document.getElementById('dscore-me-name').textContent  = myName;
     document.getElementById('dscore-opp-name').textContent = oppName;
@@ -1514,6 +1600,7 @@
 
     const correct = noteName === currentQuestionData.noteName;
     card.classList.add(correct ? 'correct' : 'wrong');
+    if(window.trackLog)window.trackLog(correct, currentQuestionData.noteName, currentQuestionData.noteName);
     if(!correct){
       duelMissCounts[currentQuestionData.noteName] = (duelMissCounts[currentQuestionData.noteName] || 0) + 1;
     }
@@ -1580,6 +1667,7 @@
   function setCd(el,n){ el.textContent=n; el.classList.remove('duel-cd'); void el.offsetWidth; el.classList.add('duel-cd'); }
 
   function endDuel(){
+    if(window.trackEnd)window.trackEnd();
     if(cdTimer) clearInterval(cdTimer);
     if(roundListener){ roundListener(); roundListener=null; }
 
@@ -1608,12 +1696,14 @@
   }
 
   function handleAbandoned(){
+    if(window.trackEnd)window.trackEnd();
     if(cdTimer) clearInterval(cdTimer);
     alert('Rakibiniz oyundan ayrıldı.');
     showArea('setup-area');
   }
 
   window.leaveGame = async function(){
+    if(window.trackEnd)window.trackEnd();
     if(cdTimer) clearInterval(cdTimer);
     if(roundListener && roomCode){ roundListener(); roundListener=null; }
     if(roomCode) await update(ref(db,`duel_rooms/${roomCode}`),{status:'abandoned'});
