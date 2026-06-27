@@ -152,6 +152,14 @@ export function createTracker({ db, ref, push, get, set }) {
     const total = s.correct + s.wrong;
     if (total === 0) return; // hiç soru cevaplanmadıysa kayıt atma
 
+    // İstatistikler ve sıralamalar sadece YARIŞMA ve DÜELLO sonuçlarından
+    // oluşur. "Zamansız" pratik modu, tel/nota seçimini istediğin gibi
+    // daraltabildiğin için adil bir karşılaştırma sağlamaz; bu yüzden
+    // hiç Firebase'e yazılmaz, sıralamaya/istatistiklere girmez.
+    const modeStr = String(s.mode || '');
+    const isCountable = modeStr.indexOf('practice') !== 0;
+    if (!isCountable) return;
+
     const endTs = Date.now();
     const durationSec = Math.max(1, Math.round((endTs - s.startTs) / 1000));
 
