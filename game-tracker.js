@@ -45,7 +45,14 @@ const GAME_NAME_LABELS = {
 
 function rosterName(sid) {
   const r = ROSTER.find(x => x.id === sid);
-  return r ? r.name : sid;
+  if (r) return r.name;
+  
+  // s_new_ formatındaki dinamik hesaplar için daha iyi bir fallback
+  if (sid && sid.startsWith('s_new_')) {
+    return 'Yeni Öğrenci';
+  }
+  
+  return sid;
 }
 
 export function createTracker({ db, ref, push, get, set }) {
