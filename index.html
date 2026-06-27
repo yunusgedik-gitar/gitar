@@ -556,7 +556,7 @@
             <div class="card-title">Bas Gitar - Klavyeden Notaya (I. Pozisyon)</div>
             <div class="card-desc">Bas gitarda I. Pozisyondaki tüm perdeleri, telleri ve notaların dizekteki (Fa anahtarı) tam karşılıklarını interaktif olarak deneyimleyin.</div>
           </div>
-          <div class="card-footer"><span class="badge badge-new">YENİ</span><span class="arrow">→</span></div>
+          <div class="card-footer"><span class="badge badge-active">Aktif</span><span class="arrow">→</span></div>
         </a>
       </div>
     </div>
@@ -1717,7 +1717,7 @@ function checkRepertoireAccess(sid) {
 
   if (!isTeacher && grades.length === 0) {
     btn.classList.add('locked');
-    btn.dataset.lockedMsg = 'Grade fakiri olduğunuzdan eser listesine erişiminiz henüz açılmamış. Çok çalışırsanız bir gün bu bölüme girebilirsin.';
+    btn.dataset.lockedMsg = 'Grade fakiri olduğundan eser listesine erişiminiz henüz açılmamış. Çok çalışırsan bir gün bu bölüme girebilirsin, belki..';
     if (icon) icon.textContent = '🔒';
     return;
   }
@@ -1800,7 +1800,7 @@ function checkKulakAccess(sid) {
       href: 'https://gitar.yunusgedik.com.tr/kulak',
       icon: '🎧',
       unlockedDesc: 'Duyduğun sesin hangi notaya ait olduğunu tanı, kulağını geliştir.',
-      badgeText: 'YENİ'
+      badgeText: 'AKTİF'
     });
     return;
   }
@@ -1822,7 +1822,7 @@ function checkKulakAccess(sid) {
       href: 'https://gitar.yunusgedik.com.tr/kulak',
       icon: '🎧',
       unlockedDesc: 'Duyduğun sesin hangi notaya ait olduğunu tanı, kulağını geliştir.',
-      badgeText: 'YENİ'
+      badgeText: 'AKTİF'
     });
   } else {
     lockCard(card, { lockedDesc: 'Bu bölüm henüz erişiminize açılmamış.' });
@@ -1834,7 +1834,7 @@ function checkKlavyeAccess(sid) {
   checkSectionAccess('klavye', 'klavye-card', sid, {
     href: '/klavye/', icon: '🎛️',
     unlockedDesc: 'I. Pozisyondaki tüm perdeleri, telleri ve notaların dizekteki tam karşılıklarını interaktif olarak deneyimleyin.',
-    badgeText: 'YENİ'
+    badgeText: 'AKTİF'
   });
 }
 function checkNotaAccess(sid) {
