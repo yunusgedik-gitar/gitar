@@ -264,7 +264,7 @@
 <div id="app-wrap">
 
   <!-- ── GİRİŞ EKRANI ── -->
-    <div class="nav-row">
+    <div id="setup-nav" class="nav-row">
       <button class="back-to-menu-btn" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
     </div>
   <div id="setup-area" class="filter-card">
@@ -613,6 +613,7 @@ function startExercise(mode) {
   if (filteredNotes.length === 0) return;
 
   currentMode = mode;
+  document.getElementById('setup-nav').style.display = 'none';
   document.getElementById('setup-area').style.display = 'none';
   document.getElementById('quiz-zone').style.display = 'block';
   document.getElementById('live-string-filter').style.display = currentMode === 'practice' ? 'flex' : 'none';
@@ -638,6 +639,7 @@ function goBackToMenu() {
   clearAutoTimer();
   document.getElementById('quiz-zone').style.display = 'none';
   document.getElementById('result-zone').style.display = 'none';
+  document.getElementById('setup-nav').style.display = 'flex';
   document.getElementById('setup-area').style.display = 'block';
 }
 
@@ -980,6 +982,8 @@ function showOnly(id){
   ['setup-area','duel-setup-area','duel-waiting-area','duel-game-area','quiz-zone','result-zone']
     .forEach(x=>{ const e=document.getElementById(x); if(e) e.style.display='none'; });
   const dsn=document.getElementById('duel-setup-nav'); if(dsn) dsn.style.display='none';
+  const sn=document.getElementById('setup-nav');
+  if(sn) sn.style.display = id==='setup-area' ? 'flex' : 'none';
   const t=document.getElementById(id); if(t) t.style.display='block';
 }
 
