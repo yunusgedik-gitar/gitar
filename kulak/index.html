@@ -389,7 +389,7 @@
 
     .controls {
       display: grid;
-      grid-template-columns: 1fr 2fr 1fr;
+      grid-template-columns: 1fr 1fr;
       gap: 8px;
     }
 
@@ -739,12 +739,11 @@
           <div class="progress-track">
             <div class="progress-fill" id="progress-fill"></div>
           </div>
-          <span class="timer-badge" id="timer-badge">1/10</span>
+          <span class="timer-badge" id="timer-badge" style="display:none;"></span>
         </div>
 
         <div class="controls">
           <button class="ctrl-btn" id="prevBtn" onclick="previousQ()">← Önceki</button>
-          <button class="ctrl-btn primary" id="listenAgainBtn" onclick="playSound()">🔊 Tekrar Dinle</button>
           <button class="ctrl-btn" id="nextBtn" onclick="nextQ()">Sonraki Soru →</button>
         </div>
       </div>
@@ -899,9 +898,26 @@
     }
 
     function updateRaceTimerDisplay() {
-      document.getElementById('timer-badge').textContent = '⏱ ' + timeLeft + 'sn';
+      const badge = document.getElementById('timer-badge');
+      badge.style.display = '';
+      badge.textContent = '⏱ ' + timeLeft + 'sn';
       const pct = Math.max(0, Math.min(100, (timeLeft / 40) * 100));
-      document.getElementById('progress-fill').style.width = pct + '%';
+      const fill = document.getElementById('progress-fill');
+      fill.style.background = '#8cb85f';
+      fill.style.width = pct + '%';
+    }
+
+    function updateAccuracyBar() {
+      const fill = document.getElementById('progress-fill');
+      const total = correct + wrong;
+      if (total === 0) {
+        fill.style.width = '0%';
+        fill.style.background = '#8cb85f';
+        return;
+      }
+      const greenPct = (correct / total) * 100;
+      fill.style.width = '100%';
+      fill.style.background = `linear-gradient(to right, #8cb85f ${greenPct}%, #c75b39 ${greenPct}%)`;
     }
 
     function startExercise(mode) {
@@ -920,6 +936,9 @@
       currentQIndex = 0;
       correct = 0;
       wrong = 0;
+      document.getElementById('progress-fill').style.width = '0%';
+      document.getElementById('progress-fill').style.background = '#8cb85f';
+      document.getElementById('timer-badge').style.display = currentMode === 'race' ? '' : 'none';
       if (window.trackEnd) window.trackEnd();
       if (window.trackStart) window.trackStart(currentMode);
       
@@ -954,11 +973,7 @@
       answered = false;
       const q = currentQuestions[currentQIndex];
 
-      if (currentMode !== 'race') {
-        const progress = ((currentQIndex + 1) / 10) * 100;
-        document.getElementById('progress-fill').style.width = progress + '%';
-        document.getElementById('timer-badge').textContent = `${currentQIndex + 1}/10`;
-      }
+      // Race mode timer display is handled by updateRaceTimerDisplay()
 
       const choicesDiv = document.getElementById('choices');
       choicesDiv.innerHTML = '';
@@ -1056,6 +1071,7 @@
         c.onclick = null;
       });
 
+      if (currentMode !== 'race') updateAccuracyBar();
       updateControls();
 
       if (currentMode === 'race') {
@@ -1075,7 +1091,6 @@
       if (currentMode === 'race') {
         document.getElementById('prevBtn').disabled = true;
         document.getElementById('nextBtn').disabled = true;
-        document.getElementById('listenAgainBtn').disabled = false;
         return;
       }
       const isPrevDisabled = currentQIndex === 0;
@@ -1083,7 +1098,6 @@
 
       document.getElementById('prevBtn').disabled = isPrevDisabled;
       document.getElementById('nextBtn').disabled = isNextDisabled || !answered;
-      document.getElementById('listenAgainBtn').disabled = false;
     }
 
     function previousQ() {
