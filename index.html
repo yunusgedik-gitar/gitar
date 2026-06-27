@@ -165,6 +165,11 @@
 
     .panel-go-btn { font-size: .8rem; font-weight: 600; color: var(--green); background: var(--green-bg); border: 1px solid #b0d890; padding: 7px 16px; border-radius: 20px; cursor: pointer; font-family: inherit; transition: all .15s; }
     .panel-go-btn:hover { transform: translateY(-1px); box-shadow: 0 3px 8px rgba(59,109,17,0.18); }
+    .panel-go-btn.locked { color: var(--muted); background: #f0f0f0; border-color: #ddd; opacity: .75; }
+    .panel-go-btn.locked:hover { transform: none; box-shadow: none; }
+    .lock-tooltip { display: none; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 8px; background: #2c2c2c; color: #fff; font-size: .8rem; line-height: 1.35; padding: 10px 14px; border-radius: 10px; max-width: 260px; text-align: center; z-index: 50; box-shadow: 0 4px 14px rgba(0,0,0,.25); }
+    .lock-tooltip::before { content: ''; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); border: 6px solid transparent; border-bottom-color: #2c2c2c; }
+    .lock-tooltip.show { display: block; }
 
     .panel-subnav { display: flex; gap: 8px; margin-bottom: 1.6rem; flex-wrap: wrap; }
     .panel-subnav-btn { font-size: .85rem; font-weight: 600; padding: 9px 16px; border-radius: 20px; border: 1px solid var(--border); background: #fff; color: var(--muted); cursor: pointer; font-family: inherit; transition: all .15s; }
@@ -486,9 +491,10 @@
       </div>
     </div>
 
-    <div style="display:flex;justify-content:center;gap:10px;margin:4px 0 10px;flex-wrap:wrap;">
-      <button class="panel-go-btn" onclick="openRepertoire(event)">📜 Grade Listesi</button>
+    <div style="display:flex;justify-content:center;gap:10px;margin:4px 0 10px;flex-wrap:wrap;position:relative;">
+      <button class="panel-go-btn" id="grade-listesi-btn" onclick="openRepertoire(event)"><span id="grade-listesi-icon">📜</span> Grade Listesi</button>
       <button class="panel-go-btn" onclick="openStats(event)">📊 İstatistiklerim</button>
+      <div id="grade-lock-tooltip" class="lock-tooltip"></div>
     </div>
 
     <div id="news-ticker-row"></div>
@@ -546,13 +552,6 @@
   <div class="dash-inner">
     <div class="rep-topbar">
       <button class="back-btn" onclick="closeStats()">← Ana Sayfaya Dön</button>
-    </div>
-
-    <div class="section-title">📊 Panel</div>
-
-    <div class="panel-subnav">
-      <button class="panel-subnav-btn active" data-panel="istatistik" onclick="switchPanelSection('istatistik')">📊 İstatistiklerim</button>
-      <button class="panel-subnav-btn panel-subnav-soon" disabled title="Yakında eklenecek">📅 Devam/Devamsızlık <span class="badge-soon">Yakında</span></button>
     </div>
 
     <div id="panel-section-istatistik">
@@ -1112,6 +1111,13 @@ function studentsInGrade(grade) {
 
 window.openRepertoire = async function(e) {
   if (e) e.preventDefault();
+
+  const btn = document.getElementById('grade-listesi-btn');
+  if (btn && btn.classList.contains('locked')) {
+    showLockTooltip(btn.dataset.lockedMsg || 'Bu bölüm henüz erişiminize açılmamış.');
+    return;
+  }
+
   await loadRepProgress();
   await loadCategories();
 
@@ -1121,7 +1127,10 @@ window.openRepertoire = async function(e) {
   // Grade'i olmayan öğrenci eser listesine giremez
   if (!isTeacherView && meObj) {
     const grades = Object.keys(repProgress[meObj.id] || {});
-    if (!grades.length) return;
+    if (!grades.length) {
+      showLockTooltip('Grade fakiri olduğunuzdan eser listesine erişiminiz henüz açılmamış. Çok çalışırsanız bir gün bu bölüme girebilirsin.');
+      return;
+    }
   }
 
   if (isTeacherView) {
@@ -1153,6 +1162,16 @@ window.closeRepertoire = function() {
   document.getElementById('screen-repertoire').classList.remove('active');
   document.getElementById('screen-dash').classList.remove('hidden');
 };
+
+let _lockTooltipTimer = null;
+function showLockTooltip(msg) {
+  const tip = document.getElementById('grade-lock-tooltip');
+  if (!tip) return;
+  tip.textContent = msg;
+  tip.classList.add('show');
+  clearTimeout(_lockTooltipTimer);
+  _lockTooltipTimer = setTimeout(() => tip.classList.remove('show'), 4000);
+}
 
 function renderGradeTabs() {
   const tabs = document.getElementById('grade-tabs');
@@ -1668,20 +1687,43 @@ window.openStudentDetailFromAll = function(sid) {
 // Taban kural: en az 1 grade'i olmalı. Üstüne, öğretmenin "Bölümler" panelinden
 // belirlediği ek Grade/kategori sınırı (varsa) uygulanır.
 function checkRepertoireAccess(sid) {
-  const card = document.getElementById('repertoire-card');
-  if (!card) return;
+  const btn = document.getElementById('grade-listesi-btn');
+  if (!btn) return;
+  const icon = document.getElementById('grade-listesi-icon');
   const grades = Object.keys(repProgress[sid] || {});
-  if (sid !== TEACHER_ID && grades.length === 0) {
-    lockCard(card, { lockedDesc: 'Grade fakiri olduğunuzdan eser listesine erişiminiz henüz açılmamış. Çok çalışırsanız bir gün bu bölüme girebilirsin.' });
+  const isTeacher = sid === TEACHER_ID;
+
+  if (!isTeacher && grades.length === 0) {
+    btn.classList.add('locked');
+    btn.dataset.lockedMsg = 'Grade fakiri olduğunuzdan eser listesine erişiminiz henüz açılmamış. Çok çalışırsanız bir gün bu bölüme girebilirsin.';
+    if (icon) icon.textContent = '🔒';
     return;
   }
-  checkSectionAccess('repertoire', 'repertoire-card', sid, {
-    href: '#',
-    icon: '📜',
-    unlockedDesc: "Grade'ine göre çalman gereken eserleri gör, ne kadar tamamladığını ve genel sıralamadaki yerini takip et.",
-    badgeText: 'YENİ',
-    lockedDesc: 'Bu bölüm henüz erişiminize açılmamış.'
-  });
+
+  // Öğretmenin "Bölümler" panelinden belirlediği ek Grade/kategori sınırı kontrolü
+  const conf = sectionAccessConfig['repertoire'];
+  const hasMinGrade = conf && conf.minGrade != null && conf.minGrade !== '';
+  const selectedCats = (conf && conf.cats) ? Object.keys(conf.cats).filter(c => conf.cats[c]) : [];
+
+  let allowed = true;
+  if (!isTeacher && (hasMinGrade || selectedCats.length)) {
+    allowed = false;
+    if (hasMinGrade && studentMaxGrade(sid) >= Number(conf.minGrade)) allowed = true;
+    if (!allowed && selectedCats.length) {
+      const myCats = studentCategories[sid] || {};
+      allowed = selectedCats.some(c => !!myCats[c]);
+    }
+  }
+
+  if (!allowed) {
+    btn.classList.add('locked');
+    btn.dataset.lockedMsg = 'Bu bölüm henüz erişiminize açılmamış.';
+    if (icon) icon.textContent = '🔒';
+  } else {
+    btn.classList.remove('locked');
+    delete btn.dataset.lockedMsg;
+    if (icon) icon.textContent = '📜';
+  }
 }
 
 // ===== Bas Gitar Klavyesi kilitli mi kontrolü (öğrenci için) =====
