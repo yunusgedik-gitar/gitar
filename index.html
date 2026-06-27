@@ -482,23 +482,19 @@
         <div id="online-badges-row"><span class="online-name-badge">🟢</span></div>
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
-        <button class="panel-go-btn" onclick="openStats(event)">📊 Panele Git</button>
         <button class="logout-btn" onclick="doLogout()">Çıkış Yap</button>
       </div>
+    </div>
+
+    <div style="display:flex;justify-content:center;gap:10px;margin:4px 0 10px;flex-wrap:wrap;">
+      <button class="panel-go-btn" onclick="openRepertoire(event)">📜 Grade Listesi</button>
+      <button class="panel-go-btn" onclick="openStats(event)">📊 İstatistiklerim</button>
     </div>
 
     <div id="news-ticker-row"></div>
 
     <div id="tab-games">
       <div class="game-grid">
-        <a class="card" id="repertoire-card" href="#" onclick="openRepertoire(event)">
-          <div class="card-icon">📜</div>
-          <div>
-            <div class="card-title">Eser Listesi</div>
-            <div class="card-desc">Grade'ine göre çalman gereken eserleri gör, ne kadar tamamladığını ve genel sıralamadaki yerini takip et.</div>
-          </div>
-          <div class="card-footer"><span class="badge badge-new">YENİ</span><span class="arrow">→</span></div>
-        </a>
         <a class="card" id="kulak-card" href="https://gitar.yunusgedik.com.tr/kulak">
           <div class="card-icon">🎧</div>
           <div>
@@ -528,14 +524,6 @@
           <div>
             <div class="card-title">Tel Egzersizi</div>
             <div class="card-desc">Gitarın tellerini ve perdelerini tanımak için alıştırmalar.</div>
-          </div>
-          <div class="card-footer"><span class="badge badge-active">Aktif</span><span class="arrow">→</span></div>
-        </a>
-        <a class="card" id="deneysel-card" href="/deneysel/">
-          <div class="card-icon">🧪</div>
-          <div>
-            <div class="card-title">Deneysel</div>
-            <div class="card-desc">Yeni eklenen deneysel alıştırma ve içerikler burada yer alır.</div>
           </div>
           <div class="card-footer"><span class="badge badge-active">Aktif</span><span class="arrow">→</span></div>
         </a>
