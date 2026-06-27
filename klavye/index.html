@@ -482,10 +482,10 @@
       <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
     </div>
 
-    <div class="controls">
-      <button class="ctrl-btn" onclick="resetQuiz(false)">↻ Tekrar</button>
-      <button class="ctrl-btn primary" id="next-btn" onclick="manualNext()" disabled>Sonraki Soru →</button>
-    </div>
+        <div class="controls">
+          <button class="ctrl-btn" id="prevBtn" onclick="previousQ()">← Önceki</button>
+          <button class="ctrl-btn" id="nextBtn" onclick="nextQ()">Sonraki Soru →</button>
+        </div>
   </div>
 
   <div id="result-zone" class="result-screen">
