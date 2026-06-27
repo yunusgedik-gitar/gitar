@@ -171,7 +171,9 @@
     .progress-track { flex: 1; height: 10px; background: #ede6d8; border-radius: 5px; overflow: hidden; border: 1px solid #e0d8c8; }
     .progress-fill { height: 100%; width: 0%; background: #8cb85f; border-radius: 5px; transition: width 0.4s ease; }
 
-    .controls { display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 8px; }
+    .nav-row { display: flex; justify-content: flex-end; align-items: center; margin-bottom: 0.5rem; width: 100%; }
+    .nav-row.between { justify-content: space-between; }
+    .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .ctrl-btn { padding: 11px; font-size: 0.85rem; font-weight: 700; border-radius: 12px; border: 1.5px solid #d4c4b0; background: #fff; color: #5a3e2b; cursor: pointer; font-family: inherit; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 5px; }
     .ctrl-btn.primary { background: #f5e6d3; border-color: #d4a373; }
     .ctrl-btn:disabled { opacity: 0.45; cursor: not-allowed; }
@@ -262,8 +264,8 @@
 <div id="app-wrap">
 
   <!-- ── GİRİŞ EKRANI ── -->
-    <div style="display:flex; justify-content:flex-end; margin-bottom:0.5rem;">
-      <button class="back-to-menu-btn" style="margin-bottom:0;" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
+    <div class="nav-row">
+      <button class="back-to-menu-btn" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
     </div>
   <div id="setup-area" class="filter-card">
     <div class="action-buttons-wrap">
@@ -273,11 +275,16 @@
     </div>
   </div>
 
+  <!-- ── DÜELLO KURULUM NAV ── -->
+  <div id="duel-setup-nav" class="nav-row between" style="display:none;">
+    <button class="back-to-menu-btn" onclick="hideDuelSetup()">← Menüye Dön</button>
+    <button class="back-to-menu-btn" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
+  </div>
+
   <!-- ── DÜELLO KURULUM ── -->
   <div id="duel-setup-area" class="filter-card" style="display:none;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.9rem;">
+    <div style="margin-bottom:.9rem;">
       <h2 style="font-family:'Playfair Display',serif;font-size:1.1rem;">⚔️ Online Düello</h2>
-      <button class="back-to-menu-btn" style="margin-bottom:0;" onclick="hideDuelSetup()">← Geri</button>
     </div>
     <div id="duel-online-list" style="margin-bottom:1rem;"></div>
     <div style="display:flex;gap:8px;justify-content:center;margin-bottom:1rem;">
@@ -306,8 +313,11 @@
 
   <!-- ── DÜELLO OYUN ALANI ── -->
   <div id="duel-game-area" style="display:none;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem;">
-      <button class="back-to-menu-btn" style="margin-bottom:0;" onclick="leaveDuelGame()">← Çık</button>
+    <div class="nav-row between" style="margin-bottom:0.4rem;">
+      <button class="back-to-menu-btn" onclick="leaveDuelGame()">← Çık</button>
+      <button class="back-to-menu-btn" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
+    </div>
+    <div style="display:flex;justify-content:center;margin-bottom:.6rem;">
       <div class="duel-round-badge" id="duel-round-label">Tur 1 / 5</div>
     </div>
     <!-- Skorlar -->
@@ -382,8 +392,9 @@
 
   <!-- ── EGZERSIZ ALANI ── -->
   <div id="quiz-zone" style="display:none;">
-    <div style="display:flex; justify-content:flex-start; align-items:center; margin-bottom:0.85rem;">
-      <button class="back-to-menu-btn" style="margin-bottom:0;" onclick="goBackToMenu()">← Menüye Dön</button>
+    <div class="nav-row between" style="margin-bottom:0.85rem;">
+      <button class="back-to-menu-btn" onclick="goBackToMenu()">← Menüye Dön</button>
+      <button class="back-to-menu-btn" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
     </div>
 
     <div id="live-string-filter" class="string-buttons" style="margin-bottom:.8rem;">
@@ -474,7 +485,6 @@
     <div class="controls">
       <button class="ctrl-btn" onclick="resetQuiz(false)">↻ Tekrar</button>
       <button class="ctrl-btn primary" id="next-btn" onclick="manualNext()" disabled>Sonraki Soru →</button>
-      <button class="ctrl-btn" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
     </div>
   </div>
 
@@ -751,6 +761,19 @@ function clearAutoTimer() {
   document.getElementById('auto-bar-wrap').style.display = 'none';
 }
 
+function updateAccuracyBar() {
+  const fill = document.getElementById('progress-fill');
+  const total = correctCount + wrongCount;
+  if (total === 0) {
+    fill.style.width = '0%';
+    fill.style.background = '#8cb85f';
+    return;
+  }
+  const greenPct = (correctCount / total) * 100;
+  fill.style.width = '100%';
+  fill.style.background = `linear-gradient(to right, #8cb85f ${greenPct}%, #c75b39 ${greenPct}%)`;
+}
+
 function startAutoAdvance() {
   const wrap = document.getElementById('auto-bar-wrap'), bar = document.getElementById('auto-bar');
   wrap.style.display = 'block'; bar.style.width = '100%'; bar.style.transition = 'none';
@@ -817,9 +840,6 @@ function nextQuestion() {
     drawMiniStaff(staffDiv, noteObj);
   });
 
-  if (currentMode !== 'race') {
-    document.getElementById('progress-fill').style.width = (currentIndex / TOTAL_QUESTIONS_COUNT * 100) + '%';
-  }
   if (interacted) setTimeout(() => playGuitar(current.freq), 300);
 }
 
@@ -847,7 +867,7 @@ function selectChoice(card, name) {
     document.querySelectorAll('.choice-card').forEach(c => { if (c.dataset.choice === current.name) c.classList.add('correct'); });
     document.getElementById('next-btn').disabled = false;
   }
-  if (currentMode !== 'race') currentIndex++;
+  if (currentMode !== 'race') { currentIndex++; updateAccuracyBar(); }
 }
 
 function resetQuiz(showSetup = true) {
@@ -867,6 +887,8 @@ function resetQuiz(showSetup = true) {
   document.getElementById('quiz-zone').style.display = 'block';
   document.getElementById('result-zone').style.display = 'none';
   correctCount = 0; wrongCount = 0; currentIndex = 0; answered = false; interacted = false;
+  const _pf = document.getElementById('progress-fill');
+  _pf.style.width = '0%'; _pf.style.background = '#8cb85f';
   const pool = filteredNotes.length > 0 ? filteredNotes : NOTES;
   questions = generateRandomQuizSet(pool, TOTAL_QUESTIONS_COUNT);
   document.getElementById('hint-text').innerHTML = '💡 Soruyu incele ve doğru notayı seç';
@@ -957,12 +979,14 @@ window.selectDuelRounds = n=>{
 function showOnly(id){
   ['setup-area','duel-setup-area','duel-waiting-area','duel-game-area','quiz-zone','result-zone']
     .forEach(x=>{ const e=document.getElementById(x); if(e) e.style.display='none'; });
+  const dsn=document.getElementById('duel-setup-nav'); if(dsn) dsn.style.display='none';
   const t=document.getElementById(id); if(t) t.style.display='block';
 }
 
 /* ── Kurulum ── */
 window.showDuelSetup = ()=>{
   showOnly('duel-setup-area');
+  const dsn=document.getElementById('duel-setup-nav'); if(dsn) dsn.style.display='flex';
   loadOnlinePlayers();
 };
 window.hideDuelSetup = ()=>{
