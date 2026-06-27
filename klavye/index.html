@@ -55,15 +55,6 @@
       align-items: center;
       justify-content: center;
       transition: all 0.15s ease;
-      position: relative;
-    }
-    .string-num-btn:not(.active) { opacity: .45; }
-    .string-num-btn:not(.active)::after {
-      content: '✕'; position: absolute; top: -4px; right: -4px;
-      width: 16px; height: 16px; background: #c0392b; color: #fff;
-      border-radius: 50%; font-size: .62rem; font-weight: 900;
-      display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 1px 3px rgba(0,0,0,.3);
     }
     .string-btn.all-btn {
       width: auto;
@@ -171,9 +162,7 @@
     .progress-track { flex: 1; height: 10px; background: #ede6d8; border-radius: 5px; overflow: hidden; border: 1px solid #e0d8c8; }
     .progress-fill { height: 100%; width: 0%; background: #8cb85f; border-radius: 5px; transition: width 0.4s ease; }
 
-    .nav-row { display: flex; justify-content: flex-end; align-items: center; margin-bottom: 0.5rem; width: 100%; }
-    .nav-row.between { justify-content: space-between; }
-    .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .controls { display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 8px; }
     .ctrl-btn { padding: 11px; font-size: 0.85rem; font-weight: 700; border-radius: 12px; border: 1.5px solid #d4c4b0; background: #fff; color: #5a3e2b; cursor: pointer; font-family: inherit; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 5px; }
     .ctrl-btn.primary { background: #f5e6d3; border-color: #d4a373; }
     .ctrl-btn:disabled { opacity: 0.45; cursor: not-allowed; }
@@ -264,10 +253,19 @@
 <div id="app-wrap">
 
   <!-- ── GİRİŞ EKRANI ── -->
-    <div id="setup-nav" class="nav-row">
-      <button class="back-to-menu-btn" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
-    </div>
   <div id="setup-area" class="filter-card">
+    <div style="display:flex; justify-content:flex-end; margin-bottom:0.5rem;">
+      <button class="back-to-menu-btn" style="margin-bottom:0;" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Başa Dön</button>
+    </div>
+    <div class="string-buttons">
+      <button id="btn-all" class="string-btn all-btn active" onclick="toggleAllStrings()">Hepsi</button>
+      <button class="string-btn active string-num-btn" data-string="1" onclick="toggleString(1)">①</button>
+      <button class="string-btn active string-num-btn" data-string="2" onclick="toggleString(2)">②</button>
+      <button class="string-btn active string-num-btn" data-string="3" onclick="toggleString(3)">③</button>
+      <button class="string-btn active string-num-btn" data-string="4" onclick="toggleString(4)">④</button>
+      <button class="string-btn active string-num-btn" data-string="5" onclick="toggleString(5)">⑤</button>
+      <button class="string-btn active string-num-btn" data-string="6" onclick="toggleString(6)">⑥</button>
+    </div>
     <div class="action-buttons-wrap">
       <button id="start-btn" class="start-exercise-btn" onclick="startExercise('practice')">Egzersize Başla (Zamansız) 🎯</button>
       <button id="race-btn" class="start-exercise-btn start-race-btn" onclick="startExercise('race')">Yarışmaya Başla (40 Saniye) 🏆</button>
@@ -275,16 +273,11 @@
     </div>
   </div>
 
-  <!-- ── DÜELLO KURULUM NAV ── -->
-  <div id="duel-setup-nav" class="nav-row between" style="display:none;">
-    <button class="back-to-menu-btn" onclick="hideDuelSetup()">← Menüye Dön</button>
-    <button class="back-to-menu-btn" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
-  </div>
-
   <!-- ── DÜELLO KURULUM ── -->
   <div id="duel-setup-area" class="filter-card" style="display:none;">
-    <div style="margin-bottom:.9rem;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.9rem;">
       <h2 style="font-family:'Playfair Display',serif;font-size:1.1rem;">⚔️ Online Düello</h2>
+      <button class="back-to-menu-btn" style="margin-bottom:0;" onclick="hideDuelSetup()">← Geri</button>
     </div>
     <div id="duel-online-list" style="margin-bottom:1rem;"></div>
     <div style="display:flex;gap:8px;justify-content:center;margin-bottom:1rem;">
@@ -293,7 +286,13 @@
       <button class="duel-round-btn"        data-rounds="15" onclick="selectDuelRounds(15)">15 Tur</button>
     </div>
     <div class="string-buttons" style="margin-bottom:0;">
-      <p style="width:100%;text-align:center;font-size:.8rem;color:#8a7860;margin:0;">🎸 Düellolarda adil olması için tüm teller kullanılır.</p>
+      <button id="d-btn-all" class="string-btn all-btn active" onclick="dToggleAll()">Hepsi</button>
+      <button class="string-btn active d-str-btn" data-string="1" onclick="dToggleStr(1)">①</button>
+      <button class="string-btn active d-str-btn" data-string="2" onclick="dToggleStr(2)">②</button>
+      <button class="string-btn active d-str-btn" data-string="3" onclick="dToggleStr(3)">③</button>
+      <button class="string-btn active d-str-btn" data-string="4" onclick="dToggleStr(4)">④</button>
+      <button class="string-btn active d-str-btn" data-string="5" onclick="dToggleStr(5)">⑤</button>
+      <button class="string-btn active d-str-btn" data-string="6" onclick="dToggleStr(6)">⑥</button>
     </div>
   </div>
 
@@ -313,11 +312,8 @@
 
   <!-- ── DÜELLO OYUN ALANI ── -->
   <div id="duel-game-area" style="display:none;">
-    <div class="nav-row between" style="margin-bottom:0.4rem;">
-      <button class="back-to-menu-btn" onclick="leaveDuelGame()">← Çık</button>
-      <button class="back-to-menu-btn" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
-    </div>
-    <div style="display:flex;justify-content:center;margin-bottom:.6rem;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem;">
+      <button class="back-to-menu-btn" style="margin-bottom:0;" onclick="leaveDuelGame()">← Çık</button>
       <div class="duel-round-badge" id="duel-round-label">Tur 1 / 5</div>
     </div>
     <!-- Skorlar -->
@@ -392,19 +388,8 @@
 
   <!-- ── EGZERSIZ ALANI ── -->
   <div id="quiz-zone" style="display:none;">
-    <div class="nav-row between" style="margin-bottom:0.85rem;">
-      <button class="back-to-menu-btn" onclick="goBackToMenu()">← Menüye Dön</button>
-      <button class="back-to-menu-btn" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
-    </div>
-
-    <div id="live-string-filter" class="string-buttons" style="margin-bottom:.8rem;">
-      <button id="btn-all" class="string-btn all-btn active" onclick="toggleAllStrings()">Hepsi</button>
-      <button class="string-btn active string-num-btn" data-string="1" onclick="toggleString(1)">①</button>
-      <button class="string-btn active string-num-btn" data-string="2" onclick="toggleString(2)">②</button>
-      <button class="string-btn active string-num-btn" data-string="3" onclick="toggleString(3)">③</button>
-      <button class="string-btn active string-num-btn" data-string="4" onclick="toggleString(4)">④</button>
-      <button class="string-btn active string-num-btn" data-string="5" onclick="toggleString(5)">⑤</button>
-      <button class="string-btn active string-num-btn" data-string="6" onclick="toggleString(6)">⑥</button>
+    <div style="display:flex; justify-content:flex-start; align-items:center; margin-bottom:0.85rem;">
+      <button class="back-to-menu-btn" style="margin-bottom:0;" onclick="goBackToMenu()">← Menüye Dön</button>
     </div>
 
     <div class="card">
@@ -482,10 +467,11 @@
       <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
     </div>
 
-      <div style="display:flex;gap:10px;">
-        <button class="start-exercise-btn start-duel-btn" onclick="location.reload()">🔄 Tekrar Oyna</button>
-        <button class="start-exercise-btn" onclick="location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
-      </div>
+    <div class="controls">
+      <button class="ctrl-btn" onclick="resetQuiz(false)">↻ Tekrar</button>
+      <button class="ctrl-btn primary" id="next-btn" onclick="manualNext()" disabled>Sonraki Soru →</button>
+      <button class="ctrl-btn" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
+    </div>
   </div>
 
   <div id="result-zone" class="result-screen">
@@ -579,18 +565,22 @@ let correctCount=0, wrongCount=0, startTime=null, timerInterval=null;
 function toggleAllStrings() {
   const allBtn = document.getElementById('btn-all');
   const numBtns = document.querySelectorAll('.string-num-btn');
-  selectedStrings = new Set([1,2,3,4,5,6]);
-  allBtn.classList.add('active');
-  numBtns.forEach(b => b.classList.add('active'));
+  if (selectedStrings.size === 6) {
+    selectedStrings.clear();
+    allBtn.classList.remove('active');
+    numBtns.forEach(b => b.classList.remove('active'));
+  } else {
+    selectedStrings = new Set([1,2,3,4,5,6]);
+    allBtn.classList.add('active');
+    numBtns.forEach(b => b.classList.add('active'));
+  }
   checkStartButton();
-  if (currentMode === 'practice') filteredNotes = NOTES.filter(n => selectedStrings.has(n.string));
 }
 
 function toggleString(num) {
   const btn = document.querySelector(`.string-num-btn[data-string="${num}"]`);
   const allBtn = document.getElementById('btn-all');
   if (selectedStrings.has(num)) {
-    if (selectedStrings.size === 1) return; // en az bir tel seçili kalmalı
     selectedStrings.delete(num);
     btn.classList.remove('active');
   } else {
@@ -599,7 +589,6 @@ function toggleString(num) {
   }
   allBtn.classList.toggle('active', selectedStrings.size === 6);
   checkStartButton();
-  if (currentMode === 'practice') filteredNotes = NOTES.filter(n => selectedStrings.has(n.string));
 }
 
 function checkStartButton() {
@@ -609,14 +598,12 @@ function checkStartButton() {
 }
 
 function startExercise(mode) {
-  filteredNotes = mode === 'race' ? NOTES.slice() : NOTES.filter(n => selectedStrings.has(n.string));
+  filteredNotes = NOTES.filter(n => selectedStrings.has(n.string));
   if (filteredNotes.length === 0) return;
 
   currentMode = mode;
-  document.getElementById('setup-nav').style.display = 'none';
   document.getElementById('setup-area').style.display = 'none';
   document.getElementById('quiz-zone').style.display = 'block';
-  document.getElementById('live-string-filter').style.display = currentMode === 'practice' ? 'flex' : 'none';
 
   const timerEl = document.getElementById('timer-display');
   if (currentMode === 'race') {
@@ -639,7 +626,6 @@ function goBackToMenu() {
   clearAutoTimer();
   document.getElementById('quiz-zone').style.display = 'none';
   document.getElementById('result-zone').style.display = 'none';
-  document.getElementById('setup-nav').style.display = 'flex';
   document.getElementById('setup-area').style.display = 'block';
 }
 
@@ -763,19 +749,6 @@ function clearAutoTimer() {
   document.getElementById('auto-bar-wrap').style.display = 'none';
 }
 
-function updateAccuracyBar() {
-  const fill = document.getElementById('progress-fill');
-  const total = correctCount + wrongCount;
-  if (total === 0) {
-    fill.style.width = '0%';
-    fill.style.background = '#8cb85f';
-    return;
-  }
-  const greenPct = (correctCount / total) * 100;
-  fill.style.width = '100%';
-  fill.style.background = `linear-gradient(to right, #8cb85f ${greenPct}%, #c75b39 ${greenPct}%)`;
-}
-
 function startAutoAdvance() {
   const wrap = document.getElementById('auto-bar-wrap'), bar = document.getElementById('auto-bar');
   wrap.style.display = 'block'; bar.style.width = '100%'; bar.style.transition = 'none';
@@ -818,8 +791,7 @@ function nextQuestion() {
     const pool = filteredNotes.length > 0 ? filteredNotes : NOTES;
     current = pool[Math.floor(Math.random() * pool.length)];
   } else {
-    const pool = filteredNotes.length > 0 ? filteredNotes : NOTES;
-    current = pool[Math.floor(Math.random() * pool.length)];
+    current = questions[currentIndex];
   }
 
   moveHighlight(current.string, current.fret);
@@ -842,6 +814,9 @@ function nextQuestion() {
     drawMiniStaff(staffDiv, noteObj);
   });
 
+  if (currentMode !== 'race') {
+    document.getElementById('progress-fill').style.width = (currentIndex / TOTAL_QUESTIONS_COUNT * 100) + '%';
+  }
   if (interacted) setTimeout(() => playGuitar(current.freq), 300);
 }
 
@@ -869,7 +844,7 @@ function selectChoice(card, name) {
     document.querySelectorAll('.choice-card').forEach(c => { if (c.dataset.choice === current.name) c.classList.add('correct'); });
     document.getElementById('next-btn').disabled = false;
   }
-  if (currentMode !== 'race') { currentIndex++; updateAccuracyBar(); }
+  if (currentMode !== 'race') currentIndex++;
 }
 
 function resetQuiz(showSetup = true) {
@@ -889,8 +864,6 @@ function resetQuiz(showSetup = true) {
   document.getElementById('quiz-zone').style.display = 'block';
   document.getElementById('result-zone').style.display = 'none';
   correctCount = 0; wrongCount = 0; currentIndex = 0; answered = false; interacted = false;
-  const _pf = document.getElementById('progress-fill');
-  _pf.style.width = '0%'; _pf.style.background = '#8cb85f';
   const pool = filteredNotes.length > 0 ? filteredNotes : NOTES;
   questions = generateRandomQuizSet(pool, TOTAL_QUESTIONS_COUNT);
   document.getElementById('hint-text').innerHTML = '💡 Soruyu incele ve doğru notayı seç';
@@ -981,16 +954,12 @@ window.selectDuelRounds = n=>{
 function showOnly(id){
   ['setup-area','duel-setup-area','duel-waiting-area','duel-game-area','quiz-zone','result-zone']
     .forEach(x=>{ const e=document.getElementById(x); if(e) e.style.display='none'; });
-  const dsn=document.getElementById('duel-setup-nav'); if(dsn) dsn.style.display='none';
-  const sn=document.getElementById('setup-nav');
-  if(sn) sn.style.display = id==='setup-area' ? 'flex' : 'none';
   const t=document.getElementById(id); if(t) t.style.display='block';
 }
 
 /* ── Kurulum ── */
 window.showDuelSetup = ()=>{
   showOnly('duel-setup-area');
-  const dsn=document.getElementById('duel-setup-nav'); if(dsn) dsn.style.display='flex';
   loadOnlinePlayers();
 };
 window.hideDuelSetup = ()=>{
@@ -1029,7 +998,7 @@ function makeDuelQuestion(strings){
 
 /* ── Davet gönderme ── */
 window.sendDuelChallenge = async(toSid,toName)=>{
-  dStrings = new Set([1,2,3,4,5,6]); // Düellolarda adil olsun diye her zaman tüm teller
+  if(dStrings.size===0){alert('En az bir tel seçin.');return;}
   if(onlineUnsub){onlineUnsub();onlineUnsub=null;}
   myRole='host'; oppSid_=toSid; oppName_=toName;
   roomCode_=Math.floor(100000+Math.random()*900000).toString();
@@ -1093,8 +1062,6 @@ function checkHandoff(){
 
 /* ── Oyun başlat ── */
 function beginDuelGame(){
-  if(window.trackEnd)window.trackEnd();
-  if(window.trackStart)window.trackStart('duel');
   myScore_=0; oppScore_=0;
   document.getElementById('dscore-me-name').textContent=myName;
   document.getElementById('dscore-opp-name').textContent=oppName_;
@@ -1112,7 +1079,7 @@ function beginDuelGame(){
 
   statusUnsub=onValue(ref(db,`duel_rooms/${roomCode_}/status`),snap=>{
     const s=snap.val();
-    if(s==='abandoned'){if(window.trackEnd)window.trackEnd();cleanupDuel();alert('Rakibiniz oyundan ayrıldı.');showOnly('setup-area');}
+    if(s==='abandoned'){cleanupDuel();alert('Rakibiniz oyundan ayrıldı.');showOnly('setup-area');}
     if(s==='finished') endDuel();
   });
 
@@ -1180,7 +1147,6 @@ function duelAnswer(name,card,roundNum){
   document.querySelectorAll('#duel-choices .choice-card').forEach(c=>{c.classList.add('disabled');c.onclick=null;});
   const correct=name===currentRound_.noteName;
   card.classList.add(correct?'correct':'wrong');
-  if(window.trackLog)window.trackLog(correct, currentRound_.noteName, currentRound_.noteName+' ('+(currentRound_.string||'')+'. tel)');
   runTransaction(ref(db,`duel_rooms/${roomCode_}/round`),r=>{
     if(!r||r.num!==roundNum) return;
     if(correct){ if(r.winner) return; return{...r,winner:myRole,winnerName:myName,[myRole+'Done']:true}; }
@@ -1251,7 +1217,6 @@ function cleanupDuel(){
 
 /* ── Oyun sonu ── */
 function endDuel(){
-  if(window.trackEnd)window.trackEnd();
   cleanupDuel();
   const my=myScore_, op=oppScore_;
   let badge,comment;
@@ -1278,7 +1243,6 @@ function endDuel(){
 }
 
 window.leaveDuelGame = async()=>{
-  if(window.trackEnd)window.trackEnd();
   cleanupDuel();
   if(roomRef_) await update(roomRef_,{status:'abandoned'});
   showOnly('setup-area');
