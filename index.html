@@ -155,6 +155,23 @@
     .w-badge-grade { background: var(--brown); color: #fff; }
     .w-badge-score { background: #fff7e8; color: var(--gold); border: 1px solid #e8c97a; }
     .w-badge-rank  { background: var(--green-bg); color: var(--green); border: 1px solid #b0d890; }
+    .w-badge-mod {
+      background: linear-gradient(120deg, #5b2bb8, #9b3ec9 45%, #d4a843 100%);
+      color: #fff; border: none; position: relative; overflow: hidden;
+      box-shadow: 0 2px 8px rgba(91,43,184,.35);
+      text-shadow: 0 1px 1px rgba(0,0,0,.15);
+    }
+    .w-badge-mod::after {
+      content: ''; position: absolute; top: 0; left: -60%; width: 40%; height: 100%;
+      background: linear-gradient(120deg, transparent, rgba(255,255,255,.55), transparent);
+      transform: skewX(-20deg);
+      animation: mod-shimmer 2.8s ease-in-out infinite;
+    }
+    @keyframes mod-shimmer {
+      0%   { left: -60%; }
+      55%  { left: 130%; }
+      100% { left: 130%; }
+    }
     .welcome-name { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700; }
     
     .online-pill { font-size: .75rem; font-weight: 600; background: var(--green-bg); color: var(--green); padding: 5px 14px; border-radius: 20px; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(59,109,17,0.08); }
@@ -1124,8 +1141,8 @@ window.openRepertoire = async function(e) {
   const meObj = getMe();
   isTeacherView = !!(meObj && meObj.id === TEACHER_ID);
 
-  // Grade'i olmayan öğrenci eser listesine giremez
-  if (!isTeacherView && meObj) {
+  // Grade'i olmayan öğrenci eser listesine giremez (Moderatörler muaf)
+  if (!isTeacherView && meObj && !isModerator(meObj.id)) {
     const grades = Object.keys(repProgress[meObj.id] || {});
     if (!grades.length) {
       showLockTooltip('Grade fakiri olduğunuzdan eser listesine erişiminiz henüz açılmamış. Çok çalışırsanız bir gün bu bölüme girebilirsin.');
@@ -1468,12 +1485,17 @@ window.openAllStudentsView = async function() {
         : `background:transparent;border-color:${cat.color};color:${cat.color}`;
       return `<button class="cat-chip" style="${style}" onclick="event.stopPropagation();toggleCategory('${s.id}','${cat.id}',this)">${cat.emoji} ${cat.label}</button>`;
     }).join('');
+    const modOn = isModerator(s.id);
+    const modStyle = modOn
+      ? 'background:linear-gradient(135deg,#6e3bd1,#b8892a);color:#fff;border-color:transparent;'
+      : 'background:transparent;border-color:#6e3bd1;color:#6e3bd1;';
+    const modChip = `<button class="cat-chip" style="${modStyle}" onclick="event.stopPropagation();toggleModerator('${s.id}',this)">👑 ${modOn ? 'Moderatör' : 'Moderatör Yap'}</button>`;
     return `<div class="student-all-card">
       <div class="student-all-header" onclick="openStudentDetailFromAll('${s.id}')">
         <span>${hasGrades ? '' : '🔑 '}<strong>${s.name}</strong></span>
         <span class="ssc-pct">${hasGrades ? `Grade ${maxGrade} · ${score} puan` : 'Eser listesine eklenmemiş'}</span>
       </div>
-      <div class="cat-chips-row">${chipsHtml}</div>
+      <div class="cat-chips-row">${chipsHtml}${modChip}</div>
     </div>`;
   }).join('');
 };
@@ -1530,7 +1552,7 @@ function checkSectionAccess(sectionId, cardId, sid, opts) {
   if (!card) return;
   opts = opts || {};
 
-  if (sid === TEACHER_ID) {
+  if (hasFullAccess(sid)) {
     unlockCard(card, opts);
     return;
   }
@@ -1691,11 +1713,11 @@ function checkRepertoireAccess(sid) {
   if (!btn) return;
   const icon = document.getElementById('grade-listesi-icon');
   const grades = Object.keys(repProgress[sid] || {});
-  const isTeacher = sid === TEACHER_ID;
+  const isTeacher = hasFullAccess(sid);
 
   if (!isTeacher && grades.length === 0) {
     btn.classList.add('locked');
-    btn.dataset.lockedMsg = 'Grade fakiri olduğundan eser listesine erişimin henüz açılmamış. Çok çalışırsan bir gün bu bölüme girebilirsin. Not: Sanmıyoruz ama hadi hayırlısı.';
+    btn.dataset.lockedMsg = 'Grade fakiri olduğunuzdan eser listesine erişiminiz henüz açılmamış. Çok çalışırsanız bir gün bu bölüme girebilirsin.';
     if (icon) icon.textContent = '🔒';
     return;
   }
@@ -1732,7 +1754,7 @@ function checkRepertoireAccess(sid) {
 function checkBassAccess(sid) {
   const card = document.getElementById('bass-card');
   if (!card) return;
-  const hasBaseAccess = sid === TEACHER_ID || !!(studentCategories[sid] || {})['bas_gitar'];
+  const hasBaseAccess = hasFullAccess(sid) || !!(studentCategories[sid] || {})['bas_gitar'];
   if (!hasBaseAccess) {
     lockCard(card, { lockedDesc: 'Bu bölüm yalnızca Bas Gitar kategorisindeki öğrencilere açıktır.' });
     return;
@@ -1757,8 +1779,8 @@ function checkKulakAccess(sid) {
   const card = document.getElementById('kulak-card');
   if (!card) return;
 
-  // Öğretmen her zaman açık
-  if (sid === TEACHER_ID) {
+  // Öğretmen veya Moderatör her zaman açık
+  if (hasFullAccess(sid)) {
     unlockCard(card, {
       href: 'https://gitar.yunusgedik.com.tr/kulak',
       icon: '🎧',
@@ -2147,7 +2169,7 @@ window.updateWelcomeCard = async function(sid) {
   if (!maxGrade) {
     rankEl.textContent  = '🎸';
     labelEl.textContent = '';
-    badgesEl.innerHTML  = '';
+    badgesEl.innerHTML  = isModerator(sid) ? '<span class="w-badge w-badge-mod">👑 Moderatör</span>' : '';
     checkRepertoireAccess(sid);
     checkBassAccess(sid);
     checkBassV2Access(sid);
@@ -2171,6 +2193,7 @@ window.updateWelcomeCard = async function(sid) {
     <span class="w-badge w-badge-grade">Grade ${maxGrade}</span>
     <span class="w-badge w-badge-score">⭐ ${scoreDisplay} puan</span>
     ${rank <= 3 ? '<span class="w-badge w-badge-rank">🏆 İlk 3</span>' : ''}
+    ${isModerator(sid) ? '<span class="w-badge w-badge-mod">👑 Moderatör</span>' : ''}
     ${myCatBadges}
   `;
 
@@ -2205,6 +2228,7 @@ const CATEGORIES = [
 ];
 
 let studentCategories = {};
+let studentModerators = {};
 let catLoaded = false;
 
 async function loadCategories() {
@@ -2212,9 +2236,42 @@ async function loadCategories() {
   try {
     const snap = await get(ref(db, 'student_categories'));
     studentCategories = snap.exists() ? snap.val() : {};
+    const modSnap = await get(ref(db, 'moderators'));
+    studentModerators = modSnap.exists() ? modSnap.val() : {};
     catLoaded = true;
   } catch(e) { console.error('Kategoriler yüklenemedi:', e); }
 }
+
+function isModerator(sid) {
+  return !!(studentModerators && studentModerators[sid]);
+}
+
+// Öğretmen VEYA Moderatör → her zaman tam erişim
+function hasFullAccess(sid) {
+  return sid === TEACHER_ID || isModerator(sid);
+}
+
+// Öğretmen: moderatör yetkisini aç/kapat
+window.toggleModerator = async function(sid, btnEl) {
+  const newVal = !isModerator(sid);
+  studentModerators[sid] = newVal;
+
+  if (btnEl) {
+    btnEl.style.cssText = newVal
+      ? 'background:linear-gradient(135deg,#6e3bd1,#b8892a);color:#fff;border-color:transparent;'
+      : 'background:transparent;border-color:#6e3bd1;color:#6e3bd1;';
+    btnEl.textContent = newVal ? '👑 Moderatör' : '👑 Moderatör Yap';
+  }
+
+  try {
+    if (newVal) {
+      await set(ref(db, `moderators/${sid}`), true);
+    } else {
+      await remove(ref(db, `moderators/${sid}`));
+    }
+    showSaveToast();
+  } catch(e) { console.error('Moderatör yetkisi kaydedilemedi:', e); }
+};
 
 // Öğretmen: tek tıkla aç/kapat
 window.toggleCategory = async function(sid, catId, btnEl) {
@@ -2482,7 +2539,7 @@ if (window.me && window.me.id) {
   function canWrite() {
     const meObj = getMe();
     if (!meObj) return false;
-    if (meObj.id === TEACHER_ID) return true;
+    if (meObj.id === TEACHER_ID || isModerator(meObj.id)) return true;
     return getMyGrade() >= 1;
   }
 
@@ -2645,7 +2702,7 @@ if (window.me && window.me.id) {
       const writeable = canWrite();
       locked.style.display   = writeable ? 'none' : 'block';
       inputArea.style.display = writeable ? 'flex' : 'none';
-      wlDiv.style.display     = writeable && meObj.id !== TEACHER_ID ? 'flex' : 'none';
+      wlDiv.style.display     = writeable && meObj.id !== TEACHER_ID && !isModerator(meObj.id) ? 'flex' : 'none';
       updateWordLimit();
     }
 
@@ -2661,7 +2718,7 @@ if (window.me && window.me.id) {
 
     // Kelime limiti göster
     function updateWordLimit() {
-      if (!meObj || meObj.id === TEACHER_ID) return;
+      if (!meObj || meObj.id === TEACHER_ID || isModerator(meObj.id)) return;
       const rem = getRemainingWords(meObj.id);
       wlText.textContent = `${rem} / ${WORD_LIMIT} kelime kaldı`;
       wlDiv.className = 'chat-word-limit' + (rem < 50 ? ' danger' : rem < 150 ? ' warn' : '');
@@ -2679,7 +2736,7 @@ if (window.me && window.me.id) {
       const text = input.value.trim();
       if (!text || !meObj) return;
       const wc = getWordCount(text);
-      if (meObj.id !== TEACHER_ID) {
+      if (meObj.id !== TEACHER_ID && !isModerator(meObj.id)) {
         const rem = getRemainingWords(meObj.id);
         if (wc > rem) {
           input.style.borderColor = '#e24b4a';
@@ -2724,7 +2781,7 @@ if (window.me && window.me.id) {
       msgs.forEach(m => {
         const isMine    = m.sid === meObj.id;
         const isTeacherMsg = m.isTeacher;
-        const canDel    = meObj.id === TEACHER_ID || isMine;
+        const canDel    = meObj.id === TEACHER_ID || isModerator(meObj.id) || isMine;
         const div = document.createElement('div');
         div.className = `chat-msg ${isMine ? 'mine' : isTeacherMsg ? 'teacher-msg theirs' : 'theirs'}`;
         div.innerHTML = `
@@ -2887,7 +2944,7 @@ if (window.me && window.me.id) {
       recent.forEach(m => {
         const isMine = m.sid === meObj.id;
         const isTeacherMsg = m.sid === TEACHER_ID;
-        const canDel = meObj.id === TEACHER_ID || isMine;
+        const canDel = meObj.id === TEACHER_ID || isModerator(meObj.id) || isMine;
         const div = document.createElement('div');
         div.className = `chat-msg ${isMine ? 'mine' : isTeacherMsg ? 'teacher-msg theirs' : 'theirs'}`;
         div.innerHTML = `
