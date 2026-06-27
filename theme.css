@@ -1,0 +1,435 @@
+/* ═══════════════════════════════════════════════════════════════
+   THEME.CSS  –  Gitar Akademisi  |  Açık / Koyu Mod
+   ───────────────────────────────────────────────────────────────
+   Her sayfanın <head> içine, diğer stil etiketlerinden ÖNCE:
+     <link rel="stylesheet" href="theme.css">
+     <script src="theme.js"></script>   ← FOUC'u önler
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── 1. YUMUŞAK GEÇİŞLER ──────────────────────────────────── */
+*, *::before, *::after {
+  transition:
+    background-color .22s ease,
+    border-color     .22s ease,
+    color            .18s ease,
+    box-shadow       .22s ease !important;
+}
+/* Gitar/klavye SVG ve VexFlow porte'ye geçiş uygulanmasın */
+.guitar-wrap *,
+.choice-staff *,
+svg.vf-renderer,
+svg.vf-renderer * {
+  transition: none !important;
+}
+
+/* ── 2. ANA INDEX  –  :root CSS Değişkenleri ─────────────── */
+[data-theme="dark"] {
+  --cream:          #000000 !important;
+  --brown:          #e8ddd0 !important;
+  --gold:           #d4a843 !important;
+  --muted:          #907e6e !important;
+  --border:         #252015 !important;
+  --green:          #5aab28 !important;
+  --green-bg:       #081404 !important;
+  --red:            #e05555 !important;
+  --red-bg:         #1a0606 !important;
+  --orange:         #d47820 !important;
+  --orange-bg:      #1a1005 !important;
+  --orange-border:  #3a2812 !important;
+}
+
+/* ── 3. BODY  (tüm sayfalar) ──────────────────────────────── */
+[data-theme="dark"] body {
+  background: #000000 !important;
+  color: #e8ddd0 !important;
+}
+
+/* ── 4. ANA INDEX – Giriş ekranı ─────────────────────────── */
+[data-theme="dark"] #login-overlay {
+  background: rgba(0, 0, 0, 0.65) !important;
+}
+[data-theme="dark"] .login-card {
+  background: rgba(17, 14, 10, 0.96) !important;
+  border-color: #2e2820 !important;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.55) !important;
+}
+[data-theme="dark"] .login-title { color: var(--brown) !important; }
+[data-theme="dark"] .login-sub   { color: var(--muted) !important; }
+[data-theme="dark"] #pin-input {
+  background: #0a0805 !important;
+  border-color: #352d22 !important;
+  color: #e8ddd0 !important;
+}
+[data-theme="dark"] #pin-input:focus {
+  border-color: var(--gold) !important;
+  box-shadow: 0 0 0 3px rgba(212,168,67,.18) !important;
+}
+
+/* ── 5. ANA INDEX – Hoşgeldin çubuğu ────────────────────── */
+[data-theme="dark"] .welcome-bar {
+  background: #0e0b08 !important;
+  border-color: #252015 !important;
+}
+[data-theme="dark"] .welcome-name { color: #e8ddd0 !important; }
+[data-theme="dark"] .w-badge-score {
+  background: #1a1405 !important;
+  color: var(--gold) !important;
+  border-color: #3a3010 !important;
+}
+[data-theme="dark"] .w-badge-rank {
+  background: #081404 !important;
+  color: #5aab28 !important;
+  border-color: #1a3a0a !important;
+}
+[data-theme="dark"] .online-pill,
+[data-theme="dark"] .online-name-badge {
+  background: #081404 !important;
+  color: #5aab28 !important;
+  border-color: #1a3a0a !important;
+}
+
+/* ── 6. ANA INDEX – Navigasyon & sekmeler ───────────────── */
+[data-theme="dark"] .panel-subnav-btn {
+  background: #0e0b08 !important;
+  border-color: #252015 !important;
+  color: #907e6e !important;
+}
+[data-theme="dark"] .panel-subnav-btn.active {
+  background: var(--gold) !important;
+  color: #0a0805 !important;
+  border-color: var(--gold) !important;
+}
+
+/* ── 7. ANA INDEX – Ders & aktivite kartları ─────────────── */
+[data-theme="dark"] .student-all-card,
+[data-theme="dark"] .lesson-card,
+[data-theme="dark"] .activity-card {
+  background: #0e0b08 !important;
+  border-color: #252015 !important;
+}
+[data-theme="dark"] .panel-go-btn {
+  background: #081404 !important;
+  color: #5aab28 !important;
+  border-color: #1a3a0a !important;
+}
+[data-theme="dark"] .panel-go-btn.locked {
+  background: #111 !important;
+  border-color: #2a2520 !important;
+  color: #5a4a3a !important;
+}
+[data-theme="dark"] .lock-tooltip {
+  background: #1a1410 !important;
+  color: #e8ddd0 !important;
+}
+[data-theme="dark"] .lock-tooltip::before {
+  border-bottom-color: #1a1410 !important;
+}
+
+/* ── 8. ANA INDEX – Chat paneli ──────────────────────────── */
+[data-theme="dark"] #chat-panel {
+  background: #0e0b08 !important;
+  border-color: #252015 !important;
+}
+[data-theme="dark"] .chat-header {
+  background: #141008 !important;
+  border-color: #252015 !important;
+}
+[data-theme="dark"] .chat-header-title { color: #e8ddd0 !important; }
+[data-theme="dark"] .chat-header-close { color: #907e6e !important; }
+[data-theme="dark"] .chat-tabs { border-color: #252015 !important; }
+[data-theme="dark"] .chat-tab {
+  color: #907e6e !important;
+  background: transparent !important;
+}
+[data-theme="dark"] .chat-tab.active {
+  color: var(--gold) !important;
+  border-color: var(--gold) !important;
+}
+[data-theme="dark"] .chat-messages { background: #080605 !important; }
+[data-theme="dark"] .chat-msg-bubble {
+  background: #1a1508 !important;
+  border-color: #2a2010 !important;
+  color: #e8ddd0 !important;
+}
+[data-theme="dark"] .chat-msg.mine .chat-msg-bubble {
+  background: #1a1505 !important;
+  border-color: #3a2e10 !important;
+}
+[data-theme="dark"] .chat-input-area {
+  background: #0e0b08 !important;
+  border-color: #252015 !important;
+}
+[data-theme="dark"] .chat-input {
+  background: #141008 !important;
+  border-color: #2a2015 !important;
+  color: #e8ddd0 !important;
+}
+[data-theme="dark"] .chat-send-btn {
+  background: linear-gradient(135deg, #2a1e10, #3e2e18) !important;
+}
+[data-theme="dark"] .chat-word-limit {
+  background: #0e0b08 !important;
+  border-color: #252015 !important;
+  color: #907e6e !important;
+}
+[data-theme="dark"] .chat-locked {
+  background: #1a1005 !important;
+  border-color: #3a2010 !important;
+}
+[data-theme="dark"] .dm-list-item:hover,
+[data-theme="dark"] .dm-list-item.active { background: #1a1408 !important; }
+[data-theme="dark"] .dm-convo-header {
+  background: #0e0b08 !important;
+  border-color: #252015 !important;
+}
+[data-theme="dark"] .dm-item-name { color: #e8ddd0 !important; }
+
+/* ── 9. ALT SAYFALAR – Header ────────────────────────────── */
+[data-theme="dark"] header h1 { color: #e8ddd0 !important; }
+[data-theme="dark"] header p  { color: #7a6a55 !important; }
+
+/* ── 10. ALT SAYFALAR – Filtre kartı ────────────────────── */
+[data-theme="dark"] .filter-card {
+  background: #0e0b08 !important;
+  border-color: #252015 !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.35) !important;
+}
+[data-theme="dark"] .filter-title { color: #7a6a55 !important; }
+
+/* ── 11. ALT SAYFALAR – Tel/String butonları ─────────────── */
+[data-theme="dark"] .string-btn {
+  background: #141008 !important;
+  border-color: #352a1e !important;
+  color: #e0d0bc !important;
+}
+[data-theme="dark"] .string-btn.active {
+  background: #5a3e2b !important;
+  border-color: #7a5238 !important;
+  color: #fff !important;
+}
+
+/* ── 12. ALT SAYFALAR – Egzersiz kart alanı ─────────────── */
+[data-theme="dark"] .card {
+  background: #0e0b08 !important;
+  border-color: #252015 !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.35) !important;
+}
+[data-theme="dark"] .card-label { color: #7a6a55 !important; }
+
+/* ── 13. ALT SAYFALAR – Butonlar ────────────────────────── */
+[data-theme="dark"] .app-btn,
+[data-theme="dark"] .start-exercise-btn {
+  background: #1a1408 !important;
+  border-color: #3a2a18 !important;
+  color: #e0d0bc !important;
+}
+[data-theme="dark"] .btn-race,
+[data-theme="dark"] .start-race-btn {
+  background: #1a0808 !important;
+  border-color: #3a1010 !important;
+  color: #e05555 !important;
+}
+[data-theme="dark"] .btn-duel {
+  background: #120a1e !important;
+  border-color: #2e1a4a !important;
+  color: #a07adf !important;
+}
+[data-theme="dark"] .app-btn:disabled,
+[data-theme="dark"] .start-exercise-btn:disabled {
+  background: #141010 !important;
+  border-color: #1e1a18 !important;
+  color: #4a3a30 !important;
+}
+[data-theme="dark"] .back-btn,
+[data-theme="dark"] .back-to-menu-btn {
+  background: #0e0b08 !important;
+  border-color: #252015 !important;
+  color: #7a6a55 !important;
+}
+[data-theme="dark"] .ctrl-btn {
+  background: #0e0b08 !important;
+  border-color: #252015 !important;
+  color: #e0d0bc !important;
+}
+[data-theme="dark"] .ctrl-btn.primary {
+  background: #1a1408 !important;
+  border-color: #3a2a18 !important;
+}
+[data-theme="dark"] .ctrl-btn:disabled { opacity: 0.35 !important; }
+
+/* ── 14. ALT SAYFALAR – Soru, ipucu, mesaj alanları ──────── */
+[data-theme="dark"] .q-title  { color: #e8ddd0 !important; }
+[data-theme="dark"] .message  { color: #b09080 !important; }
+[data-theme="dark"] .hint-box {
+  background: #100d08 !important;
+  border-color: #2a2015 !important;
+  color: #e8ddd0 !important;
+}
+[data-theme="dark"] .hint-string-badge { background: #7a5238 !important; }
+[data-theme="dark"] .hint-fret-text {
+  background: #1a1408 !important;
+  color: #c4a070 !important;
+}
+
+/* ── 15. ALT SAYFALAR – Seçenekler (choice kartlar) ─────── */
+/* NOT: VexFlow porte içeriğine DOKUNULMAZ */
+[data-theme="dark"] .choice-card {
+  background: #0e0b08 !important;
+  border-color: #252015 !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
+}
+[data-theme="dark"] .choice-card.correct {
+  background: #081404 !important;
+  border-color: #2a5a10 !important;
+}
+[data-theme="dark"] .choice-card.wrong {
+  background: #1a0808 !important;
+  border-color: #5a1818 !important;
+}
+[data-theme="dark"] .choice-name { color: #e0d0bc !important; }
+
+/* ── 16. ALT SAYFALAR – Sayaç, progress, zamanlayıcı ──────── */
+[data-theme="dark"] .timer-badge {
+  background: #1a1408 !important;
+  border-color: #3a2a18 !important;
+  color: #c4a070 !important;
+}
+[data-theme="dark"] .timer-badge.race-mode {
+  background: #1a0808 !important;
+  border-color: #3a1010 !important;
+  color: #e05555 !important;
+}
+[data-theme="dark"] #timer-display {
+  background: #1a0808 !important;
+  border-color: #3a1010 !important;
+  color: #e05555 !important;
+}
+[data-theme="dark"] .progress-track {
+  background: #1a1510 !important;
+  border-color: #252015 !important;
+}
+[data-theme="dark"] #auto-bar-wrap { background: #1a1510 !important; }
+
+/* ── 17. ALT SAYFALAR – Sonuç ekranı ────────────────────── */
+[data-theme="dark"] .result-screen { color: #e8ddd0 !important; }
+[data-theme="dark"] .result-title  { color: #5aab28 !important; }
+[data-theme="dark"] .result-stats {
+  background: #100d08 !important;
+  border-color: #2a2015 !important;
+}
+[data-theme="dark"] .stat-row {
+  color: #e8ddd0 !important;
+  border-color: #252015 !important;
+}
+[data-theme="dark"] .stat-val      { color: #c4a070 !important; }
+[data-theme="dark"] .stat-val.correct-val { color: #5aab28 !important; }
+[data-theme="dark"] .stat-val.wrong-val   { color: #e05555 !important; }
+
+/* ── 18. ALT SAYFALAR – Navigasyon satırı ─────────────────── */
+[data-theme="dark"] .nav-row {
+  background: #0e0b08 !important;
+  border-color: #252015 !important;
+}
+[data-theme="dark"] .nav-btn {
+  background: #0e0b08 !important;
+  border-color: #252015 !important;
+  color: #907e6e !important;
+}
+[data-theme="dark"] .nav-btn.active,
+[data-theme="dark"] .nav-btn:focus {
+  background: #1a1408 !important;
+  color: #d4a843 !important;
+  border-color: #3a2a18 !important;
+}
+
+/* ── 19. ALT SAYFALAR – Site footer ──────────────────────── */
+[data-theme="dark"] footer,
+[data-theme="dark"] .site-footer {
+  color: #3a3028 !important;
+  border-color: #1e1a14 !important;
+}
+[data-theme="dark"] .site-footer a { color: #5a4a38 !important; }
+
+/* ── 20. ALT SAYFALAR – Listen butonu ────────────────────── */
+[data-theme="dark"] #listen-btn {
+  background: #0e0b08 !important;
+  border-color: #3a2a18 !important;
+  color: #c4a070 !important;
+}
+[data-theme="dark"] #listen-btn.playing {
+  background: #081404 !important;
+  border-color: #2a5a10 !important;
+  color: #5aab28 !important;
+}
+
+/* ── 21. SCROLLBAR (Webkit) ──────────────────────────────── */
+[data-theme="dark"] ::-webkit-scrollbar { width: 6px; height: 6px; }
+[data-theme="dark"] ::-webkit-scrollbar-track { background: #0a0806; }
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: #2e2418;
+  border-radius: 3px;
+}
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover { background: #4a3828; }
+
+/* ── 22. TEMA TOGGLE BUTONU ──────────────────────────────── */
+#theme-toggle-wrap {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#theme-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 5px 6px;
+  border-radius: 40px;
+  border: 1.5px solid rgba(184,137,42,0.35);
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(12px) saturate(1.3);
+  -webkit-backdrop-filter: blur(12px) saturate(1.3);
+  box-shadow: 0 4px 18px rgba(44, 31, 20, 0.16);
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all .25s ease;
+  outline: none;
+}
+
+[data-theme="dark"] #theme-toggle {
+  background: rgba(15, 10, 5, 0.85) !important;
+  border-color: rgba(212, 168, 67, 0.3) !important;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5) !important;
+}
+
+#theme-toggle:hover {
+  box-shadow: 0 6px 24px rgba(44, 31, 20, 0.22);
+  transform: translateY(-1px);
+}
+
+.th-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 1.15rem;
+  transition: all .25s ease;
+  opacity: 0.38;
+}
+
+.th-icon.th-active {
+  opacity: 1;
+  background: rgba(184, 137, 42, 0.15);
+  box-shadow: 0 2px 8px rgba(184, 137, 42, 0.22);
+}
+
+[data-theme="dark"] .th-icon.th-active {
+  background: rgba(212, 168, 67, 0.12) !important;
+  box-shadow: 0 2px 10px rgba(212, 168, 67, 0.18) !important;
+}

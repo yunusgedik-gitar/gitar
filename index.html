@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
+  <!-- ── TEMA SİSTEMİ ── -->
+  <link rel="stylesheet" href="theme.css">
+  <script src="theme.js"></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>🎸 Dr. Yunus GEDİK – Gitar Akademisi</title>
@@ -3714,6 +3717,15 @@ async function initLeaderboard() {
 // Chat başlatma — module script hazır olunca çağrılır
 window._chatInit = null; // module'dan set edilecek
 </script>
+
+
+<!-- ── TEMA TOGGLE ── -->
+<div id="theme-toggle-wrap">
+  <button id="theme-toggle" onclick="toggleTheme()" title="Koyu moda geç" aria-label="Koyu moda geç">
+    <span class="th-icon th-sun" title="Açık mod">☀️</span>
+    <span class="th-icon th-moon" title="Koyu mod">🌙</span>
+  </button>
+</div>
 
 </body>
 </html>
