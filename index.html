@@ -2239,6 +2239,7 @@ async function loadCategories() {
     const modSnap = await get(ref(db, 'moderators'));
     studentModerators = modSnap.exists() ? modSnap.val() : {};
     catLoaded = true;
+    if (window._refreshWordLimitUI) window._refreshWordLimitUI();
   } catch(e) { console.error('Kategoriler yüklenemedi:', e); }
 }
 
@@ -2708,6 +2709,7 @@ if (window.me && window.me.id) {
 
     // Hemen dene, repProgress dolmamışsa kısa bekle
     applyWriteAccess();
+    window._refreshWordLimitUI = applyWriteAccess;
     let _gradeCheck = 0;
     const _gradeInterval = setInterval(() => {
       if (getMyGrade() >= 1 || ++_gradeCheck > 20) {
