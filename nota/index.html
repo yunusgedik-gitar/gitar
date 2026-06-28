@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <!-- ── TEMA SİSTEMİ ── -->
   <link rel="stylesheet" href="/theme.css">
   <script src="/theme.js"></script>
   <meta charset="UTF-8" />
@@ -333,14 +332,8 @@ function endGame(){if(window.trackEnd)window.trackEnd();clearAutoTimer();const a
 function clearAutoTimer(){if(autoTimer){clearTimeout(autoTimer);autoTimer=null;}document.getElementById('progress-bar-wrap').style.display='none';}
 function startAutoAdvance(){const w=document.getElementById('progress-bar-wrap'),b=document.getElementById('progress-bar');w.style.display='block';b.style.width='100%';b.style.transition='none';requestAnimationFrame(()=>requestAnimationFrame(()=>{b.style.transition='width 1s linear';b.style.width='0%';}));autoTimer=setTimeout(()=>{clearAutoTimer();nextCard();},1000);}
 function manualNext(){if(currentMode==='race'&&timeLeft<=0)return;clearAutoTimer();nextCard();}
-function manualPrev(){
-  // Nota'da önceki soruya geri dönme henüz desteklenmiyor
-  // (history implementasyonu gerektirir)
-}
+function manualPrev(){}
 
-// Bir sonraki notayı seçer:
-// 1) Az önceki soruyla (current) aynı nota ASLA peş peşe gelmez (havuzda başka seçenek varsa).
-// 2) Daha önce yanlış yapılmış notalar, ağırlıklı rastgelelikle daha sık çıkar.
 function pickNextNote(){
   let pool=filteredNotes;
   if(current && pool.length>1){
@@ -388,7 +381,6 @@ const db = getDatabase(fbApp);
 const mySid  = localStorage.getItem('gitar_session');
 const myName = localStorage.getItem('gitar_student_name') || 'Öğrenci';
 
-// ── Performans takibi (süre / doğru-yanlış / hata kırılımı) ──
 const _tracker = createTracker({ db, ref, push, get, set });
 window.trackStart = (mode) => _tracker.start(mySid, 'nota', mode);
 window.trackLog   = (ok, key, label) => _tracker.log(ok, key, label);
@@ -397,7 +389,7 @@ window.trackEnd   = () => _tracker.end();
 
 let duelStrings     = new Set([1,2,3,4,5,6]);
 let duelRounds      = 5;
-let duelSecs        = 0; // 0 = tur bazlı; 40/50/60 = süre bazlı düello
+let duelSecs        = 0; 
 let myRole          = '';   
 let oppSid          = '';
 let oppName         = '';
@@ -426,7 +418,6 @@ const NOTES = [
 
 function shuf(a){return[...a].sort(()=>Math.random()-.5);}
 
-// HOSTUN TÜM SORULARI EN BAŞTA TEK SEFERDE ÜRETMESİ İÇİN FONKSİYON
 function buildQuestionDeck(strings, totalRounds) {
   const deck = {};
   const pool = NOTES.filter(n => strings.includes(n.string));
@@ -485,7 +476,7 @@ function loadOnlinePlayers(){
 }
 
 window.sendChallenge = async function(toSid, toName){
-  duelStrings = new Set([1,2,3,4,5,6]); // Düellolarda adil olsun diye her zaman tüm teller
+  duelStrings = new Set([1,2,3,4,5,6]);
   if(onlineListener){ onlineListener(); onlineListener=null; }
 
   myRole   = 'host';
@@ -493,9 +484,9 @@ window.sendChallenge = async function(toSid, toName){
   oppName  = toName;
   roomCode = rndCode();
 
-  // Host tüm turların sorularını hazırlar
-const totalQuestionsToBuild = duelSecs > 0 ? 50 : duelRounds;
-const questionDeck = buildQuestionDeck([...duelStrings], totalQuestionsToBuild);
+  // Süre modunda iki oyuncunun asenkron çözebileceği bol miktarda (60 adet) soru hazırlanır.
+  const totalQuestionsToBuild = duelSecs > 0 ? 60 : duelRounds;
+  const questionDeck = buildQuestionDeck([...duelStrings], totalQuestionsToBuild);
 
   await set(ref(db,`duel_rooms/${roomCode}`),{
     host:   {sid:mySid, name:myName},
@@ -504,7 +495,12 @@ const questionDeck = buildQuestionDeck([...duelStrings], totalQuestionsToBuild);
     config: {totalRounds: duelRounds, totalSecs: duelSecs, strings: [...duelStrings], questions: questionDeck},
     scores: {host:0, guest:0},
     currentRoundNum: 1,
-    roundState: { hostDone: false, guestDone: false, winner: null }
+    roundState: { hostDone: false, guestDone: false, winner: null },
+    // Her oyuncunun kendi soru ilerlemesini kaydetmek için progress alanı eklendi
+    progress: {
+      host: { currentRound: 1 },
+      guest: { currentRound: 1 }
+    }
   });
   onDisconnect(ref(db,`duel_rooms/${roomCode}`)).update({status:'abandoned'});
 
@@ -551,7 +547,7 @@ window.cancelChallenge = async function(){
   clearTimeout(challengeExpiry);
   if(oppSid) await remove(ref(db,`duel_challenges/${oppSid}`));
   if(roomCode) await remove(ref(db,`duel_rooms/${roomCode}`));
-  showArea('duel-setup-area');
+  showArea('setup-area');
   loadOnlinePlayers();
 };
 
@@ -604,35 +600,57 @@ function listenRound(){
     if(s==='finished') { endDuel(); }
   });
 
-  // Oda verisinin tamamını dinleyerek senkronize kalıyoruz
-  roundListener = onValue(ref(db,`duel_rooms/${roomCode}`), snap=>{
-    const room = snap.val();
-    if(!room || room.status === 'waiting') return;
+  // ── SÜRE BAZLI OYUN (ASENKRON YARIŞ) DİNLEYİCİSİ ──
+  if (duelSecs > 0) {
+    roundListener = onValue(ref(db,`duel_rooms/${roomCode}`), snap=>{
+      const room = snap.val();
+      if(!room || room.status === 'waiting') return;
 
-    const rNum = room.currentRoundNum;
-    const rState = room.roundState;
-    const questions = room.config.questions;
+      const questions = room.config.questions;
+      // Her oyuncu veritabanındaki kendi progress (soru numarası) alanını takip eder.
+      const myProgress = (room.progress && room.progress[myRole]) ? room.progress[myRole].currentRound : 1;
 
-    if (!questions || !questions[rNum]) return;
+      if (!questions || !questions[myProgress]) return;
 
-    // Eğer yeni bir tura geçildiyse arayüzü sıfırla ve soruyu bas
-    if(currentRoundNum !== rNum){
-      currentRoundNum = rNum;
-      currentQuestionData = questions[rNum];
-      showQuestion(rNum, currentQuestionData);
-    }
+      // Lokal soru numarası ile eşleşmiyorsa yeni soruyu ekrana bas
+      if(currentRoundNum !== myProgress){
+        currentRoundNum = myProgress;
+        currentQuestionData = questions[myProgress];
+        showQuestion(myProgress, currentQuestionData);
+      }
+    });
+  } 
+  // ── TUR BAZLI OYUN (SENKRONİZE) DİNLEYİCİSİ ──
+  else {
+    roundListener = onValue(ref(db,`duel_rooms/${roomCode}`), snap=>{
+      const room = snap.val();
+      if(!room || room.status === 'waiting') return;
 
-    // İki taraf da cevap verdiğinde veya bir kazanan çıktığında sonuç ekranını göster
-    if(rState && (rState.winner || (rState.hostDone && rState.guestDone))){
-      showRoundResult(rState, currentQuestionData);
-    }
-  });
+      const rNum = room.currentRoundNum;
+      const rState = room.roundState;
+      const questions = room.config.questions;
+
+      if (!questions || !questions[rNum]) return;
+
+      if(currentRoundNum !== rNum){
+        currentRoundNum = rNum;
+        currentQuestionData = questions[rNum];
+        showQuestion(rNum, currentQuestionData);
+      }
+
+      if(rState && (rState.winner || (rState.hostDone && rState.guestDone))){
+        showRoundResult(rState, currentQuestionData);
+      }
+    });
+  }
 }
 
 function showQuestion(rNum, qData){
   myAnswered = false;
   if(duelSecs === 0){
     document.getElementById('duel-round-label').textContent = `Tur ${rNum} / ${duelRounds}`;
+  } else {
+    document.getElementById('duel-round-label').textContent = `⏱ Soru ${rNum}`;
   }
   document.getElementById('duel-string-label').textContent = `Bu Nota Hangi Telde? (${qData.string}. Tel)`;
   document.getElementById('duel-feedback').textContent = '';
@@ -660,24 +678,75 @@ function duelAnswer(nota, btn, rNum){
   btn.classList.add(correct?'correct':'wrong');
   if(window.trackLog)window.trackLog(correct, currentQuestionData.string, currentQuestionData.notaAdi+' ('+currentQuestionData.string+'. tel)');
 
-  runTransaction(ref(db,`duel_rooms/${roomCode}`), room => {
-    if(!room) return room;
-    if(room.currentRoundNum !== rNum) return room; // Oyuncu geride kalmışsa işlemi pas geç
-    
-    if(!room.roundState) room.roundState = { hostDone: false, guestDone: false, winner: null };
+  // ── SÜRE BAZLI (ASENKRON) CEVAPLAMA MANTIĞI ──
+  if (duelSecs > 0) {
+    if (correct) {
+      document.getElementById('duel-feedback').textContent = '🏅 Doğru!';
+      document.getElementById('duel-feedback').className = 'duel-feedback iwin';
+      
+      // Doğru ise 0.5 saniye sonra kendi ilerlemesini ve skorunu bağımsız olarak günceller.
+      setTimeout(() => {
+        runTransaction(ref(db, `duel_rooms/${roomCode}`), room => {
+          if (!room) return room;
+          if (!room.scores) room.scores = { host: 0, guest: 0 };
+          if (!room.progress) room.progress = { host: { currentRound: 1 }, guest: { currentRound: 1 } };
+          
+          room.scores[myRole] = (room.scores[myRole] || 0) + 1;
+          room.progress[myRole].currentRound = (room.progress[myRole].currentRound || 1) + 1;
+          
+          return room;
+        });
+      }, 500);
 
-    // Kendi durumunu güncelle
-    room.roundState[myRole + 'Done'] = true;
+    } else {
+      // Yanlış cevapta yeşil renkle doğru olanı gösterir.
+      document.getElementById('duel-feedback').textContent = `✕ Yanlış! Doğrusu: ${currentQuestionData.notaAdi}`;
+      document.getElementById('duel-feedback').className = 'duel-feedback opwin';
+      
+      document.querySelectorAll('.dcbtn').forEach(b => {
+        if(b.textContent === currentQuestionData.notaAdi) b.classList.add('correct');
+      });
 
-    // Doğru bildiyse ve henüz o turun kazananı yoksa puanı kapar
-    if(correct && !room.roundState.winner){
-      room.roundState.winner = myRole;
-      room.roundState.winnerName = myName;
-      if(!room.scores) room.scores = {host:0, guest:0};
-      room.scores[myRole] = (room.scores[myRole] || 0) + 1;
+      // Şıkların altına bir sonraki soruya manuel geçebilmesi için "Sonraki Soru" butonu eklenir.
+      const box = document.getElementById('duel-choices');
+      const nextBtn = document.createElement('button');
+      nextBtn.className = 'app-btn primary';
+      nextBtn.style.gridColumn = 'span 2';
+      nextBtn.style.marginTop = '10px';
+      nextBtn.textContent = 'Sonraki Soru →';
+      nextBtn.onclick = () => {
+        nextBtn.disabled = true;
+        runTransaction(ref(db, `duel_rooms/${roomCode}`), room => {
+          if (!room) return room;
+          if (!room.progress) room.progress = { host: { currentRound: 1 }, guest: { currentRound: 1 } };
+          
+          // Yanlışta skor artmaz, sadece kendi soru numarası 1 ilerletilir.
+          room.progress[myRole].currentRound = (room.progress[myRole].currentRound || 1) + 1;
+          return room;
+        });
+      };
+      box.appendChild(nextBtn);
     }
-    return room;
-  });
+  } 
+  // ── TUR BAZLI (SENKRONİZE) CEVAPLAMA MANTIĞI ──
+  else {
+    runTransaction(ref(db,`duel_rooms/${roomCode}`), room => {
+      if(!room) return room;
+      if(room.currentRoundNum !== rNum) return room;
+      
+      if(!room.roundState) room.roundState = { hostDone: false, guestDone: false, winner: null };
+
+      room.roundState[myRole + 'Done'] = true;
+
+      if(correct && !room.roundState.winner){
+        room.roundState.winner = myRole;
+        room.roundState.winnerName = myName;
+        if(!room.scores) room.scores = {host:0, guest:0};
+        room.scores[myRole] = (room.scores[myRole] || 0) + 1;
+      }
+      return room;
+    });
+  }
 }
 
 function showRoundResult(rState, qData){
@@ -694,13 +763,12 @@ function showRoundResult(rState, qData){
   if(document.getElementById('duel-cd-wrap').style.display==='flex') return; 
   
   startCountdown(()=>{
-    // Sadece Host bir sonraki tura geçişi tetikler (Çift tetiklenme / yarış engellenir)
     if(myRole === 'host'){
       const nextNum = currentRoundNum + 1;
       runTransaction(ref(db,`duel_rooms/${roomCode}`), room => {
         if(!room) return room;
-        if(room.currentRoundNum !== currentRoundNum) return room; // Zaten güncellenmişse dokunma
-        const maxRounds = duelSecs > 0 ? 50 : duelRounds;
+        if(room.currentRoundNum !== currentRoundNum) return room; 
+        const maxRounds = duelSecs > 0 ? 60 : duelRounds;
         if(nextNum > maxRounds){
           room.status = 'finished';
         } else {
@@ -776,7 +844,6 @@ window.leaveGame = async function(){
   showArea('setup-area');
 };
 
-// ── SÜRE BAZLI DÜELLO ZAMANLAYICI ──
 let duelTimerInterval = null;
 let duelTimeLeft = 0;
 
