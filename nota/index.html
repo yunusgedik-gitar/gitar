@@ -230,10 +230,11 @@
 
 <div id="exercise-wrap" style="width:100%;max-width:550px;display:none;">
   <div id="exercise-area" style="display:block;">
-    <div class="top-bar">
+    <div class="nav-row between">
       <button class="back-btn" onclick="goBackToMenu()">← Menüye Dön</button>
-      <div id="timer-display">Kalan Süre: 40</div>
+      <button class="back-btn" onclick="location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
     </div>
+    <span class="practice-timer-box" id="timer-display" style="display:none;margin-bottom:.5rem;">Kalan Süre: 40</span>
     <div id="live-string-filter" class="string-buttons" style="margin-bottom:.8rem;">
       <button id="btn-all" class="string-btn all-btn active" onclick="toggleAllStrings()">Hepsi</button>
       <button class="string-btn active string-num-btn" data-string="1" onclick="toggleString(1)">①</button>
@@ -255,9 +256,8 @@
     <div id="feedback"></div>
     <div id="progress-bar-wrap"><div id="progress-bar"></div></div>
     <div class="controls">
-      <button class="controls-btn" onclick="resetQuiz()">↻ Tekrar</button>
-      <button class="controls-btn primary" id="next-btn" onclick="manualNext()" disabled>Sonraki Soru →</button>
-      <button class="controls-btn" onclick="location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
+      <button class="ctrl-btn" id="prev-btn" onclick="previousCard()" disabled>← Önceki</button>
+      <button class="ctrl-btn primary" id="next-btn" onclick="manualNext()" disabled>Sonraki Soru →</button>
     </div>
   </div>
 </div>
@@ -279,7 +279,7 @@ const NOTES=[
   {key:'a/5',freq:880.00,nota:'La', string:1},{key:'b/5',freq:987.77,nota:'Si', string:1},
 ];
 const ALL_NOTES=['Do','Re','Mi','Fa','Sol','La','Si'];
-const ERRORS=["Yazıklar olsun!","Kulaklarımız kanadı...","Sende hiç utanma yok mu yaa","Instagram'dan ekle beni seni engellim","Tüm başarılar Yunus Hocadan, bunun gibi hatalar ise senden..","Yunus Hoca bunu görmemiş olsun...","Gitarı yavaşça yere bırak...","Sen daha iyi enstrümanlara layıksın","Aynen knk aynen sensin","Iyyy yine mi hata","Ağır popçusun belli knk","Lâ havle..","Sen en iyisi flüt çal knk","Tekrar deneme, yeter.","Bir yerde bırakmak lazım sanki","Bir durun olsun beea","Sen öyle bil aynen","En sevmediğim öğrencim naber","Ex'den Next olur senden öğrenci olmaz :D"];
+const ERRORS = window.GITAR_ERRORS || [];
 function shuffle(a){return[...a].sort(()=>Math.random()-0.5);}
 function showArea(id){
   ['setup-area','duel-setup-area','duel-waiting-area','duel-game-area','exercise-wrap']
@@ -313,13 +313,41 @@ function drawNote(noteKey,cid='notation'){
 function toggleAllStrings(){const a=document.getElementById('btn-all'),n=document.querySelectorAll('.string-num-btn');selectedStrings=new Set([1,2,3,4,5,6]);a.classList.add('active');n.forEach(b=>b.classList.add('active'));if(typeof checkStartBtn==='function')checkStartBtn();if(currentMode==='practice')filteredNotes=NOTES.filter(n=>selectedStrings.has(n.string));}
 function toggleString(num){const b=document.querySelector(`.string-num-btn[data-string="${num}"]`),a=document.getElementById('btn-all');if(selectedStrings.has(num)){if(selectedStrings.size===1)return;selectedStrings.delete(num);b.classList.remove('active');}else{selectedStrings.add(num);b.classList.add('active');}selectedStrings.size===6?a.classList.add('active'):a.classList.remove('active');if(typeof checkStartBtn==='function')checkStartBtn();if(currentMode==='practice')filteredNotes=NOTES.filter(n=>selectedStrings.has(n.string));}
 function checkStartBtn(){const z=selectedStrings.size===0;document.getElementById('start-btn').disabled=z;document.getElementById('race-btn').disabled=z;}
-function startExercise(mode){filteredNotes=mode==='race'?NOTES.slice():NOTES.filter(n=>selectedStrings.has(n.string));if(!filteredNotes.length)return;if(window.trackEnd)window.trackEnd();currentMode=mode;if(window.trackStart)window.trackStart(mode);showArea('exercise-wrap');document.getElementById('live-string-filter').style.display=mode==='practice'?'flex':'none';if(mode==='race'){timeLeft=40;correctCount=0;document.getElementById('timer-display').style.display='inline-block';document.getElementById('timer-display').textContent='Kalan Süre: '+timeLeft;startGameTimer();}else document.getElementById('timer-display').style.display='none';nextCard();}
+function startExercise(mode){_cardHist=[];_cardIdx=-1;filteredNotes=mode==='race'?NOTES.slice():NOTES.filter(n=>selectedStrings.has(n.string));if(!filteredNotes.length)return;if(window.trackEnd)window.trackEnd();currentMode=mode;if(window.trackStart)window.trackStart(mode);showArea('exercise-wrap');document.getElementById('live-string-filter').style.display=mode==='practice'?'flex':'none';if(mode==='race'){timeLeft=40;correctCount=0;document.getElementById('timer-display').style.display='inline-block';document.getElementById('timer-display').textContent='Kalan Süre: '+timeLeft;startGameTimer();}else document.getElementById('timer-display').style.display='none';nextCard();}
 function goBackToMenu(){if(window.trackEnd)window.trackEnd();if(gameTimer){clearInterval(gameTimer);gameTimer=null;}clearAutoTimer();showArea('setup-area');}
-function resetQuiz(){if(gameTimer){clearInterval(gameTimer);gameTimer=null;}clearAutoTimer();startExercise(currentMode);}
+function resetQuiz(){_cardHist=[];_cardIdx=-1;if(gameTimer){clearInterval(gameTimer);gameTimer=null;}clearAutoTimer();startExercise(currentMode);}
 function startGameTimer(){if(gameTimer)clearInterval(gameTimer);gameTimer=setInterval(()=>{timeLeft--;if(timeLeft<=0){document.getElementById('timer-display').textContent='Süre Bitti!';clearInterval(gameTimer);endGame();}else document.getElementById('timer-display').textContent='Kalan Süre: '+timeLeft;},1000);}
 function endGame(){if(window.trackEnd)window.trackEnd();clearAutoTimer();const app=document.getElementById('exercise-area');let r='',c='';if(correctCount>=20){r='🏆 Master Gitarist 1 Numara!';c='İnanılmaz! Yunus Hoca gözyaşları içinde seni ayakta alkışlıyor! 🎸';}else if(correctCount>=15){r='🔥 Sahne Sanatçısı';c='Notalar tıkır tıkır çözülüyor!';}else if(correctCount>=10){r='⚡ Ritim Gitarist';c='Solo atamıyorsun ama notaları fena okumuyorsun hani.';}else if(correctCount>=5){r='🎸 Akustikçi Popçu';c='Sahilde "Akdeniz Akşamları" çalmaktan öteye geçemedin ama bir umut var!';}else{r='🐢 Kaplumbağa Gitarist';c='Gitarı yavaşça yere bırak ve notalara bir daha dokunma kanka...';}app.innerHTML=`<div class="result-card"><h2>Yarışma Tamamlandı! 🏁</h2><div class="result-rank">${r}</div><div class="result-score">${correctCount} Doğru</div><p class="result-text">"${c}"</p><button class="app-btn" onclick="location.reload()">Yeniden Dene 🔄</button></div>`;}
 function clearAutoTimer(){if(autoTimer){clearTimeout(autoTimer);autoTimer=null;}document.getElementById('progress-bar-wrap').style.display='none';}
 function startAutoAdvance(){const w=document.getElementById('progress-bar-wrap'),b=document.getElementById('progress-bar');w.style.display='block';b.style.width='100%';b.style.transition='none';requestAnimationFrame(()=>requestAnimationFrame(()=>{b.style.transition='width 1s linear';b.style.width='0%';}));autoTimer=setTimeout(()=>{clearAutoTimer();nextCard();},1000);}
+
+// ── Soru geçmişi — ← Önceki butonu için ──
+let _cardHist = [], _cardIdx = -1;
+
+function _showCard(note){
+  answered=false;
+  if(document.activeElement)document.activeElement.blur();
+  document.getElementById('feedback').textContent='';
+  document.getElementById('feedback').className='';
+  document.getElementById('next-btn').disabled=true;
+  const pb=document.getElementById('prev-btn');
+  if(pb) pb.disabled=_cardIdx<=0||currentMode==='race';
+  clearAutoTimer();
+  current=note;
+  document.getElementById('current-string-label').textContent=`Bu Nota Hangi Telde? (${current.string}. Tel Egzersizi)`;
+  const w=shuffle(ALL_NOTES.filter(n=>n!==current.nota)).slice(0,3),ch=shuffle([current.nota,...w]);
+  drawNote(current.key,'notation');
+  if(interacted)setTimeout(()=>playNote(current.freq),280);
+  const box=document.getElementById('choices');box.innerHTML='';
+  ch.forEach(n=>{const b=document.createElement('button');b.className='cbtn';b.textContent=n;b.onclick=()=>answer(n,b);box.appendChild(b);});
+}
+
+function previousCard(){
+  if(_cardIdx<=0||currentMode==='race')return;
+  _cardIdx--;
+  _showCard(_cardHist[_cardIdx]);
+}
+
 function manualNext(){if(currentMode==='race'&&timeLeft<=0)return;clearAutoTimer();nextCard();}
 
 // Bir sonraki notayı seçer:
@@ -341,17 +369,7 @@ function pickNextNote(){
   return pool[pool.length-1];
 }
 
-function nextCard(){if(currentMode==='race'&&timeLeft<=0)return;if(currentMode==='practice')filteredNotes=NOTES.filter(n=>selectedStrings.has(n.string));answered=false;if(document.activeElement)document.activeElement.blur();document.getElementById('feedback').textContent='';document.getElementById('feedback').className='';document.getElementById('next-btn').disabled=true;clearAutoTimer();current=pickNextNote();document.getElementById('current-string-label').textContent=`Bu Nota Hangi Telde? (${current.string}. Tel Egzersizi)`;const w=shuffle(ALL_NOTES.filter(n=>n!==current.nota)).slice(0,3),ch=shuffle([current.nota,...w]);drawNote(current.key,'notation');if(interacted)setTimeout(()=>playNote(current.freq),280);const box=document.getElementById('choices');box.innerHTML='';ch.forEach(n=>{const b=document.createElement('button');b.className='cbtn';b.textContent=n;b.onclick=()=>answer(n,b);box.appendChild(b);});}
-function replay(){interacted=true;document.getElementById('hint').style.display='none';if(current)playNote(current.freq);}
-function answer(n,btn){if(answered)return;if(currentMode==='race'&&timeLeft<=0)return;answered=true;interacted=true;document.getElementById('hint').style.display='none';document.querySelectorAll('.cbtn').forEach(b=>b.disabled=true);const fb=document.getElementById('feedback');document.getElementById('next-btn').disabled=false;if(n===current.nota){if(currentMode==='race')correctCount++;if(window.trackLog)window.trackLog(true);btn.className='cbtn correct';btn.blur();fb.textContent='✓ Doğru!';fb.className='ok';playNote(current.freq);startAutoAdvance();}else{missCounts[current.key]=(missCounts[current.key]||0)+1;if(window.trackLog)window.trackLog(false,current.key,current.nota+' ('+current.string+'. tel)');btn.className='cbtn wrong';fb.textContent='✗ '+ERRORS[Math.floor(Math.random()*ERRORS.length)]+' — Doğrusu: '+current.nota;fb.className='no';document.querySelectorAll('.cbtn').forEach(b=>{if(b.textContent===current.nota)b.className='cbtn correct';});}}
-</script>
-
-<script type="module">
-import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js';
-import {
-  getDatabase, ref, set, get, update, remove,
-  onValue, onDisconnect, runTransaction, push
-} from 'https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js';
+function nextCard(){if(currentMode==='race'&&timeLeft<=0)return;if(currentMode==='practice')filteredNotes=NOTES.filter(n=>selectedStrings.has(n.string));const _n=pickNextNote();_cardHist=_cardHist.slice(0,_cardIdx+1);_cardHist.push(_n);_cardIdx=_cardHist.length-1;_showCard(_n);} from 'https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js';
 import { createTracker } from '/game-tracker.js';
 
 const FIREBASE_CONFIG = {

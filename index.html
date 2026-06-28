@@ -508,6 +508,12 @@
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
         <button class="logout-btn" onclick="doLogout()">Çıkış Yap</button>
+        <div id="theme-toggle-wrap">
+          <button id="theme-toggle" onclick="toggleTheme()" title="Koyu moda geç" aria-label="Koyu moda geç">
+            <span class="th-icon th-sun">☀️</span>
+            <span class="th-icon th-moon">🌙</span>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -3719,13 +3725,6 @@ window._chatInit = null; // module'dan set edilecek
 </script>
 
 
-<!-- ── TEMA TOGGLE ── -->
-<div id="theme-toggle-wrap">
-  <button id="theme-toggle" onclick="toggleTheme()" title="Koyu moda geç" aria-label="Koyu moda geç">
-    <span class="th-icon th-sun" title="Açık mod">☀️</span>
-    <span class="th-icon th-moon" title="Koyu mod">🌙</span>
-  </button>
-</div>
 
 </body>
 </html>

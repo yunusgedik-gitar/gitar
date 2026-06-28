@@ -49,3 +49,27 @@ if (document.readyState === 'loading') {
 } else {
   _syncToggleBtn();
 }
+
+/* ── ORTAK YANLIŞLIK MESAJLARI — tüm oyunlar buradan okur ──
+   Güncelleme için sadece bu listeyi düzenle.                */
+window.GITAR_ERRORS = [
+  "Yazıklar olsun!",
+  "Kulaklarımız kanadı...",
+  "Sende hiç utanma yok mu yaa",
+  "Instagram'dan ekle beni seni engellim",
+  "Tüm başarılar Yunus Hocadan, bunun gibi hatalar ise senden..",
+  "Yunus Hoca bunu görmemiş olsun...",
+  "Gitarı yavaşça yere bırak...",
+  "Sen daha iyi enstrümanlara layıksın",
+  "Aynen knk aynen sensin",
+  "Iyyy yine mi hata",
+  "Ağır popçusun belli knk",
+  "Lâ havle..",
+  "Sen en iyisi flüt çal knk",
+  "Tekrar deneme, yeter.",
+  "Bir yerde bırakmak lazım sanki",
+  "Bir durun olsun beea",
+  "Sen öyle bil aynen",
+  "En sevmediğim öğrencim naber",
+  "Ex'den Next olur senden öğrenci olmaz :D"
+];
