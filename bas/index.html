@@ -1227,6 +1227,13 @@ function detectPitch(buffer, sampleRate) {
   return sampleRate / bestOffset;
 }
 
+function normalizeFrequencyToTarget(freq, target) {
+  let adjusted = freq;
+  while (adjusted > target * 1.5) adjusted /= 2;
+  while (adjusted < target / 1.5) adjusted *= 2;
+  return adjusted;
+}
+
 function startMicQuestion() {
   stopMicLoop();
   micDetectStreak = 0;
@@ -1238,7 +1245,8 @@ function startMicQuestion() {
       micAnalyser.getFloatTimeDomainData(micData);
       const freq = detectPitch(micData, micAudioCtx.sampleRate);
       if (freq) {
-        const cents = 1200 * Math.log2(freq / current.freq);
+        const matchedFreq = normalizeFrequencyToTarget(freq, current.freq);
+        const cents = 1200 * Math.log2(matchedFreq / current.freq);
         updateMicUi(Math.abs(cents) <= 35 ? 'Çok yakın, sesi sabit tut!' : 'Duyuyorum, hedefe yaklaş.', cents, freq);
         if (Math.abs(cents) <= 45) micDetectStreak++; else micDetectStreak = 0;
         if (micDetectStreak >= 4) selectPlayedPitch(freq);
