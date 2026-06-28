@@ -298,23 +298,23 @@
       .cbtn { font-size: 1.4rem; padding: 12px 6px; }
       .controls { flex-direction: column; gap: 8px; }
     }
-	.site-footer {
-  display: flex;
-  justify-content: center;
-  gap: 22px;
-  margin-top: 2.5rem;
-}
+    .site-footer {
+      display: flex;
+      justify-content: center;
+      gap: 22px;
+      margin-top: 2.5rem;
+    }
 
-.site-footer a {
-  color: #b0a392;
-  font-size: 2.2rem;
-  transition: all .2s ease;
-}
+    .site-footer a {
+      color: #b0a392;
+      font-size: 2.2rem;
+      transition: all .2s ease;
+    }
 
-.site-footer a:hover {
-  color: var(--gold);
-  transform: translateY(-2px);
-}
+    .site-footer a:hover {
+      color: var(--gold);
+      transform: translateY(-2px);
+    }
 
     /* ── DÜELLO STİLLERİ ── */
     #duel-setup-area, #duel-waiting-area, #duel-game-area { display: none; }
@@ -389,10 +389,10 @@
     <div id="online-badges-row"></div>
   </header>
 
-  <div id="app">    <div class="nav-row between">
+  <div id="app">
+    <div class="nav-row between">
       <div></div>
-      <div id="theme-toggle-wrap-setup">
-      </div>
+      <div id="theme-toggle-wrap-setup"></div>
       <button class="back-to-menu-btn" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
     </div>
     <div id="setup-area" class="filter-card">
@@ -411,10 +411,16 @@
       <div id="online-players-list" class="online-players-list">
         <div class="no-players-msg">Yükleniyor...</div>
       </div>
-      <div class="round-row">
-        <button class="round-btn active" data-rounds="5"  onclick="selectRounds(5)">5 Tur</button>
-        <button class="round-btn"        data-rounds="10" onclick="selectRounds(10)">10 Tur</button>
-        <button class="round-btn"        data-rounds="15" onclick="selectRounds(15)">15 Tur</button>
+      <div class="filter-title">Oyun Modu</div>
+      <div class="round-row" style="flex-wrap:wrap;">
+        <button class="round-btn active" data-rounds="5"  data-secs="0"  onclick="selectRounds(5,0)">5 Tur</button>
+        <button class="round-btn"        data-rounds="10" data-secs="0"  onclick="selectRounds(10,0)">10 Tur</button>
+        <button class="round-btn"        data-rounds="15" data-secs="0"  onclick="selectRounds(15,0)">15 Tur</button>
+      </div>
+      <div class="round-row" style="flex-wrap:wrap; margin-top:-4px;">
+        <button class="round-btn"        data-rounds="0"  data-secs="40" onclick="selectRounds(0,40)">⏱ 40sn</button>
+        <button class="round-btn"        data-rounds="0"  data-secs="50" onclick="selectRounds(0,50)">⏱ 50sn</button>
+        <button class="round-btn"        data-rounds="0"  data-secs="60" onclick="selectRounds(0,60)">⏱ 60sn</button>
       </div>
       <div class="string-buttons" style="margin-bottom:0;">
         <p style="width:100%;text-align:center;font-size:.8rem;color:#8a7860;margin:0;">🎸 Düellolarda adil olması için tüm teller kullanılır.</p>
@@ -463,12 +469,9 @@
     </div>
 
     <div id="exercise-area">
-      
       <div class="nav-row between">
         <button class="back-to-menu-btn" onclick="goBackToMenu()">← Menüye Dön</button>
-        <div id="theme-toggle-wrap">
-
-        </div>
+        <div id="theme-toggle-wrap"></div>
         <button class="back-to-menu-btn" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
       </div>
 
@@ -505,44 +508,30 @@
         <button class="ctrl-btn" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
       </div>
     </div>
-
   </div>
 
   <footer class="site-footer">
-  <a href="https://www.instagram.com/yunusgedik_/" target="_blank" aria-label="Instagram">
-    <i class="fa-brands fa-instagram"></i>
-  </a>
-
-  <a href="https://x.com/yunusgedik_" target="_blank" aria-label="X">
-    <i class="fa-brands fa-x-twitter"></i>
-  </a>
-
-  <a href="https://www.youtube.com/yunusgedik" target="_blank" aria-label="YouTube">
-    <i class="fa-brands fa-youtube"></i>
-  </a>
-</footer>
+    <a href="https://www.instagram.com/yunusgedik_/" target="_blank" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+    <a href="https://x.com/yunusgedik_" target="_blank" aria-label="X"><i class="fa-brands fa-x-twitter"></i></a>
+    <a href="https://www.youtube.com/yunusgedik" target="_blank" aria-label="YouTube"><i class="fa-brands fa-youtube"></i></a>
+  </footer>
 
   <script>
     const NOTES = [
       { key:'e/3', freq:164.81, sol:'⑥', stringVal:6, name:'Mi' },
       { key:'f/3', freq:174.61, sol:'⑥', stringVal:6, name:'Fa' },
       { key:'g/3', freq:196.00, sol:'⑥', stringVal:6, name:'Sol' },
-      
       { key:'a/3', freq:220.00, sol:'⑤', stringVal:5, name:'La' },
       { key:'b/3', freq:246.94, sol:'⑤', stringVal:5, name:'Si' },
       { key:'c/4', freq:261.63, sol:'⑤', stringVal:5, name:'Do' },
-      
       { key:'d/4', freq:293.66, sol:'④', stringVal:4, name:'Re' },
       { key:'e/4', freq:329.63, sol:'④', stringVal:4, name:'Mi' },
       { key:'f/4', freq:349.23, sol:'④', stringVal:4, name:'Fa' },
-      
       { key:'g/4', freq:392.00, sol:'③', stringVal:3, name:'Sol' },
       { key:'a/4', freq:440.00, sol:'③', stringVal:3, name:'La' },
-      
       { key:'b/4', freq:493.88, sol:'②', stringVal:2, name:'Si' },
       { key:'c/5', freq:523.25, sol:'②', stringVal:2, name:'Do' },
       { key:'d/5', freq:587.33, sol:'②', stringVal:2, name:'Re' },
-      
       { key:'e/5', freq:659.25, sol:'①', stringVal:1, name:'Mi' },
       { key:'f/5', freq:698.46, sol:'①', stringVal:1, name:'Fa' },
       { key:'g/5', freq:783.99, sol:'①', stringVal:1, name:'Sol' },
@@ -552,22 +541,22 @@
     
     const ALL_SOL = ['①','②','③','④','⑤','⑥'];
     
-    // Yanlış cevap mesajları shared-errors.js'den yüklenir (module bloğu window.ERR'yi atar)
     function getERR() { return window.ERR || ["Yanlış! Tekrar dene."]; }
 
     let selectedStrings = new Set([1, 2, 3, 4, 5, 6]);
     let filteredNotes = [];
-
     let audioCtx = null, current = null, answered = false, interacted = false;
     let autoTimer = null;
-    
     let currentMode = 'practice'; 
     let gameTimer = null;
     let timeLeft = 40;
     let correctCount = 0;
-    let STUDENTS = [
-      { id: 's01', name: 'Dr. Yunus GEDİK' }
-    ];
+
+    function showArea(id){
+      ['setup-area','duel-setup-area','duel-waiting-area','duel-game-area','exercise-area']
+        .forEach(x=>{const e=document.getElementById(x);if(e)e.style.display='none';});
+      const t=document.getElementById(id);if(t){t.style.display='block';t.scrollIntoView({behavior:'smooth'});}
+    }
 
     function toggleAllStrings() {
       const allBtn = document.getElementById('btn-all');
@@ -582,21 +571,15 @@
     function toggleString(num) {
       const btn = document.querySelector(`.string-num-btn[data-string="${num}"]`);
       const allBtn = document.getElementById('btn-all');
-
       if (selectedStrings.has(num)) {
-        if (selectedStrings.size === 1) return; // en az bir tel seçili kalmalı
+        if (selectedStrings.size === 1) return;
         selectedStrings.delete(num);
         btn.classList.remove('active');
       } else {
         selectedStrings.add(num);
         btn.classList.add('active');
       }
-
-      if (selectedStrings.size === 6) {
-        allBtn.classList.add('active');
-      } else {
-        allBtn.classList.remove('active');
-      }
+      if (selectedStrings.size === 6) { allBtn.classList.add('active'); } else { allBtn.classList.remove('active'); }
       checkStartButton();
       if (currentMode === 'practice') filteredNotes = NOTES.filter(n => selectedStrings.has(n.stringVal));
     }
@@ -617,11 +600,8 @@
       currentMode = mode;
       if (window.trackStart) window.trackStart(mode);
       prevSol = null;
-      document.getElementById('setup-area').style.display = 'none';
-      document.getElementById('exercise-area').style.display = 'block';
+      showArea('exercise-area');
       document.getElementById('live-string-filter').style.display = currentMode === 'practice' ? 'flex' : 'none';
-      const dsa=document.getElementById('duel-setup-area'), dwa=document.getElementById('duel-waiting-area'), dga=document.getElementById('duel-game-area');
-      if(dsa) dsa.style.display='none'; if(dwa) dwa.style.display='none'; if(dga) dga.style.display='none';
       
       if (currentMode === 'race') {
         timeLeft = 40;
@@ -632,36 +612,18 @@
       } else {
         document.getElementById('timer-display').style.display = 'none';
       }
-      
       nextCard();
-      document.getElementById('exercise-area').scrollIntoView({ behavior: 'smooth' });
     }
 
     function goBackToMenu() {
       if (window.trackEnd) window.trackEnd();
-      if (gameTimer) {
-        clearInterval(gameTimer);
-        gameTimer = null;
-      }
+      if (gameTimer) { clearInterval(gameTimer); gameTimer = null; }
       clearAutoTimer();
-      
-      document.getElementById('exercise-area').style.display = 'none';
-      document.getElementById('setup-area').style.display = 'block';
-      document.getElementById('setup-area').scrollIntoView({ behavior: 'smooth' });
-    }
-
-    function resetQuiz() {
-      if (gameTimer) {
-        clearInterval(gameTimer);
-        gameTimer = null;
-      }
-      clearAutoTimer();
-      startExercise(currentMode);
+      showArea('setup-area');
     }
 
     function startGameTimer() {
       if (gameTimer) clearInterval(gameTimer);
-      
       gameTimer = setInterval(() => {
         timeLeft--;
         if (timeLeft <= 0) {
@@ -678,9 +640,7 @@
       if (window.trackEnd) window.trackEnd();
       clearAutoTimer();
       const appContainer = document.getElementById('app');
-      
-      let rankName = "";
-      let comment = "";
+      let rankName = "", comment = "";
 
       if (correctCount >= 20) {
         rankName = "🏆 Master Gitarist 1 Numara!";
@@ -706,8 +666,7 @@
           <div class="result-score">${correctCount} Doğru</div>
           <p class="result-text">"${comment}"</p>
           <button class="start-exercise-btn" onclick="window.location.reload()">Yeniden Dene 🔄</button>
-        </div>
-      `;
+        </div>`;
     }
 
     function shuffle(a){ return [...a].sort(()=>Math.random()-0.5); }
@@ -733,8 +692,10 @@
           o.connect(g); g.connect(master); o.start(now); o.stop(now+2.2);
         });
         const btn=document.getElementById('listen-btn');
-        btn.classList.add('playing');
-        setTimeout(()=>btn.classList.remove('playing'),600);
+        if(btn) {
+          btn.classList.add('playing');
+          setTimeout(()=>btn.classList.remove('playing'),600);
+        }
       } catch(e){}
     }
 
@@ -802,18 +763,11 @@
       clearAutoTimer(); 
       nextCard(); 
     }
+    function manualPrev() {}
 
-    function manualPrev() {
-      // Tel'de önceki soruya geri dönme henüz desteklenmiyor
-    }
-
-    // Tel bazlı yanlış sayacı — soru seçiminde ağırlık olarak kullanılır
     let missCounts = {};
     let prevSol = null;
 
-    // Bir sonraki soru telini seçer:
-    // 1) Bir önceki soruyla aynı tel ASLA peş peşe gelmez (havuzda başka seçenek varsa).
-    // 2) Daha önce yanlış yapılmış teller, doğru yapılanlara göre 7 kat daha sık çıkar.
     function pickNextNote() {
       const availableSols = [...new Set(filteredNotes.map(n => n.sol))];
       let solCandidates = availableSols;
@@ -822,7 +776,7 @@
       }
       if (solCandidates.length === 0) solCandidates = availableSols;
 
-      const weights = solCandidates.map(s => 1 + 6 * (missCounts[s] || 0)); // yanlış başına +6 -> doğruya göre 7 kat
+      const weights = solCandidates.map(s => 1 + 6 * (missCounts[s] || 0));
       const total = weights.reduce((a, b) => a + b, 0);
       let r = Math.random() * total;
       let chosenSol = solCandidates[solCandidates.length - 1];
@@ -830,13 +784,10 @@
         r -= weights[i];
         if (r <= 0) { chosenSol = solCandidates[i]; break; }
       }
-
       const notePool = filteredNotes.filter(n => n.sol === chosenSol);
       return notePool[Math.floor(Math.random() * notePool.length)];
     }
 
-    // Doğru cevabı içeren, ALL_SOL sırasına göre YANAŞIK (ardışık) 4 telli bir blok döndürür.
-    // Örn. doğru cevap '③' ise: ①②③④, ②③④⑤, ③④⑤⑥ bloklarından biri rastgele seçilir.
     function pickAdjacentSolBlock(correctSol) {
       const idx = ALL_SOL.indexOf(correctSol);
       const blockSize = 4;
@@ -856,7 +807,6 @@
       if(document.activeElement) document.activeElement.blur();
       document.getElementById('feedback').textContent = '';
       document.getElementById('feedback').className = '';
-      
       document.getElementById('next-btn').disabled = true; 
       clearAutoTimer();
 
@@ -864,7 +814,6 @@
       prevSol = current.sol;
       
       document.getElementById('card-question-title').textContent = `"${current.name}" Notası Hangi Telde?`;
-
       const choices = pickAdjacentSolBlock(current.sol);
 
       drawNote(current.key);
@@ -890,13 +839,10 @@
       document.getElementById('hint').style.display='none';
       document.querySelectorAll('.cbtn').forEach(b=>b.disabled=true);
       const fb = document.getElementById('feedback');
-      
       document.getElementById('next-btn').disabled = false; 
       
       if(sol===current.sol){
-        if(currentMode === 'race') {
-          correctCount++; 
-        }
+        if(currentMode === 'race') { correctCount++; }
         if (window.trackLog) window.trackLog(true);
         btn.className='cbtn correct';
         btn.blur();
@@ -908,470 +854,508 @@
         missCounts[current.sol] = (missCounts[current.sol] || 0) + 1;
         if (window.trackLog) window.trackLog(false, current.sol, current.name+' → '+current.sol);
         btn.className='cbtn wrong';
-        
         const randomMsg = getERR()[Math.floor(Math.random() * getERR().length)];
         fb.textContent = '✗ ' + randomMsg + ' — Doğrusu: ' + current.sol;
-        
         fb.className='no';
         document.querySelectorAll('.cbtn').forEach(b=>{
           if(b.textContent===current.sol) b.className='cbtn correct';
         });
       }
     }
-
-    (function init() {
-      const sid = localStorage.getItem('gitar_session');
-      if (!sid) {
-        window.location.href = 'https://gitar.yunusgedik.com.tr/';
-        return;
-      }
-    })();
   </script>
 
   <script type="module">
-  import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js';
-  import {
-    getDatabase, ref, set, get, update, remove,
-    onValue, onDisconnect, runTransaction, push
-  } from 'https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js';
-  import { createTracker } from '/game-tracker.js';
-  import { ERRORS as _SHARED_ERRORS } from '/shared-errors.js';
-  window.ERR = _SHARED_ERRORS;
+    import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js';
+    import { getDatabase, ref, set, get, update, remove, onValue, onDisconnect, runTransaction, push } from 'https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js';
+    import { createTracker } from '/game-tracker.js';
+    import { ERRORS as _SHARED_ERRORS } from '/shared-errors.js';
+    window.ERR = _SHARED_ERRORS;
 
-  const FIREBASE_CONFIG = {
-    apiKey: "AIzaSyBkEd729B65y-NZIQ-sxScCgaEvlX-q7yA",
-    authDomain: "gitar-yunus.firebaseapp.com",
-    databaseURL: "https://gitar-yunus-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "gitar-yunus",
-    storageBucket: "gitar-yunus.firebasestorage.app",
-    messagingSenderId: "184803778782",
-    appId: "1:184803778782:web:8f9fbeb4fe625eb386e24f"
-  };
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyBkEd729B65y-NZIQ-sxScCgaEvlX-q7yA",
+      authDomain: "gitar-yunus.firebaseapp.com",
+      databaseURL: "https://gitar-yunus-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "gitar-yunus",
+      storageBucket: "gitar-yunus.firebasestorage.app",
+      messagingSenderId: "184803778782",
+      appId: "1:184803778782:web:8f9fbeb4fe625eb386e24f"
+    };
 
-  const fbApp = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
-  const db = getDatabase(fbApp);
+    const fbApp = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
+    const db = getDatabase(fbApp);
 
-  const mySid  = localStorage.getItem('gitar_session');
-  const myName = localStorage.getItem('gitar_student_name') || 'Öğrenci';
+    const mySid  = localStorage.getItem('gitar_session');
+    const myName = localStorage.getItem('gitar_student_name') || 'Öğrenci';
 
-  // ── Performans takibi (süre / doğru-yanlış / hata kırılımı) ──
-  const _tracker = createTracker({ db, ref, push, get, set });
-  window.trackStart = (mode) => _tracker.start(mySid, 'tel', mode);
-  window.trackLog   = (ok, key, label) => _tracker.log(ok, key, label);
-  window.trackEnd   = () => _tracker.end();
+    const _tracker = createTracker({ db, ref, push, get, set });
+    window.trackStart = (mode) => _tracker.start(mySid, 'tel', mode);
+    window.trackLog   = (ok, key, label) => _tracker.log(ok, key, label);
+    window.trackEnd   = () => _tracker.end();
 
+    let duelStrings     = new Set([1,2,3,4,5,6]);
+    let duelRounds      = 5;
+    let duelSecs        = 0; 
+    let myRole          = '';   
+    let oppSid          = '';
+    let oppName         = '';
+    let roomCode        = '';
+    let onlineListener  = null;
+    let roundListener   = null;
+    let challengeExpiry = null;
+    let myAnswered      = false;
+    let myScore_        = 0;
+    let oppScore_       = 0;
+    let cdTimer         = null;
+    let currentRoundNum = 0;
+    let currentQuestionData = null;
 
-  // Düello için tel/nota tanımları (üst scriptteki NOTES ile aynı)
-  const D_NOTES = [
-    {key:'e/3',freq:164.81,sol:'⑥',stringVal:6,name:'Mi'},{key:'f/3',freq:174.61,sol:'⑥',stringVal:6,name:'Fa'},{key:'g/3',freq:196.00,sol:'⑥',stringVal:6,name:'Sol'},
-    {key:'a/3',freq:220.00,sol:'⑤',stringVal:5,name:'La'},{key:'b/3',freq:246.94,sol:'⑤',stringVal:5,name:'Si'},{key:'c/4',freq:261.63,sol:'⑤',stringVal:5,name:'Do'},
-    {key:'d/4',freq:293.66,sol:'④',stringVal:4,name:'Re'},{key:'e/4',freq:329.63,sol:'④',stringVal:4,name:'Mi'},{key:'f/4',freq:349.23,sol:'④',stringVal:4,name:'Fa'},
-    {key:'g/4',freq:392.00,sol:'③',stringVal:3,name:'Sol'},{key:'a/4',freq:440.00,sol:'③',stringVal:3,name:'La'},
-    {key:'b/4',freq:493.88,sol:'②',stringVal:2,name:'Si'},{key:'c/5',freq:523.25,sol:'②',stringVal:2,name:'Do'},{key:'d/5',freq:587.33,sol:'②',stringVal:2,name:'Re'},
-    {key:'e/5',freq:659.25,sol:'①',stringVal:1,name:'Mi'},{key:'f/5',freq:698.46,sol:'①',stringVal:1,name:'Fa'},{key:'g/5',freq:783.99,sol:'①',stringVal:1,name:'Sol'},
-    {key:'a/5',freq:880.00,sol:'①',stringVal:1,name:'La'},{key:'b/5',freq:987.77,sol:'①',stringVal:1,name:'Si'},
-  ];
-  const D_ALL_SOL = ['①','②','③','④','⑤','⑥'];
+    function rndCode(){ return Math.floor(100000+Math.random()*900000).toString(); }
 
-  let duelStrings     = new Set([1,2,3,4,5,6]);
-  let duelRounds      = 5;
-  let myRole          = '';
-  let oppSid          = '';
-  let oppName         = '';
-  let roomCode        = '';
-  let onlineListener  = null;
-  let roundListener   = null;
-  let challengeExpiry = null;
-  let myAnswered      = false;
-  let myScore_        = 0;
-  let oppScore_       = 0;
-  let cdTimer         = null;
-  let currentRoundNum = 0;
-  let currentQuestionData = null;
-  let duelMissCounts  = {}; // tel bazlı, host'un kendi yanlış istatistiği — deck ağırlıklandırması için
+    function shuf(a){return[...a].sort(()=>Math.random()-.5);}
 
-  function rndCode(){ return Math.floor(100000+Math.random()*900000).toString(); }
-  function shuf(a){ return [...a].sort(()=>Math.random()-.5); }
+    function pickAdjacentSolBlock(correctSol) {
+      const idx = ALL_SOL.indexOf(correctSol);
+      const blockSize = 4;
+      const minStart = Math.max(0, idx - (blockSize - 1));
+      const maxStart = Math.min(idx, ALL_SOL.length - blockSize);
+      const possibleStarts = [];
+      for (let s = minStart; s <= maxStart; s++) possibleStarts.push(s);
+      const start = possibleStarts[Math.floor(Math.random() * possibleStarts.length)];
+      return ALL_SOL.slice(start, start + blockSize);
+    }
 
-  function showArea(id){
-    ['setup-area','duel-setup-area','duel-waiting-area','duel-game-area']
-      .forEach(x=>{ const e=document.getElementById(x); if(e) e.style.display='none'; });
-    const exA=document.getElementById('exercise-area'); if(exA) exA.style.display='none';
-    const t=document.getElementById(id);
-    if(t){ t.style.display='block'; t.scrollIntoView({behavior:'smooth'}); }
-  }
-  window.showArea = showArea;
-
-  window.dToggleAll = function(){
-    const a=document.getElementById('d-btn-all'), n=document.querySelectorAll('.d-str-btn');
-    if(duelStrings.size===6){ duelStrings.clear(); a.classList.remove('active'); n.forEach(b=>b.classList.remove('active')); }
-    else{ duelStrings=new Set([1,2,3,4,5,6]); a.classList.add('active'); n.forEach(b=>b.classList.add('active')); }
-  };
-  window.dToggleStr = function(num){
-    const b=document.querySelector(`.d-str-btn[data-string="${num}"]`), a=document.getElementById('d-btn-all');
-    if(duelStrings.has(num)){ duelStrings.delete(num); b.classList.remove('active'); }
-    else{ duelStrings.add(num); b.classList.add('active'); }
-    a.classList.toggle('active', duelStrings.size===6);
-  };
-  window.selectRounds = function(n){
-    duelRounds = n;
-    document.querySelectorAll('.round-btn').forEach(b=>b.classList.toggle('active', parseInt(b.dataset.rounds)===n));
-  };
-
-  window.showDuelSetup = function(){
-    showArea('duel-setup-area');
-    loadOnlinePlayers();
-  };
-
-  function loadOnlinePlayers(){
-    const listEl = document.getElementById('online-players-list');
-    if(onlineListener){ onlineListener(); onlineListener=null; }
-    onlineListener = onValue(ref(db,'online_users'), snap=>{
-      const users = snap.val() || {};
-      const others = Object.entries(users).filter(([sid])=>sid!==mySid);
-      if(!others.length){
-        listEl.innerHTML = '<div class="no-players-msg">Şu an başka online oyuncu yok. Birinin giriş yapmasını bekleyin.</div>';
-        return;
+    function buildQuestionDeck(strings, totalRounds) {
+      const deck = {};
+      const pool = NOTES.filter(n => strings.includes(n.stringVal));
+      for (let i = 1; i <= totalRounds; i++) {
+        const note = pool[Math.floor(Math.random() * pool.length)];
+        deck[i] = {
+          noteKey: note.key,
+          notaAdi: note.name,
+          freq: note.freq,
+          solAdi: note.sol,
+          string: note.stringVal,
+          choices: pickAdjacentSolBlock(note.sol)
+        };
       }
-      listEl.innerHTML = others.map(([sid,u])=>`
-        <div class="online-player-row">
-          <span><span class="online-dot"></span><span class="online-player-name">${u.name}</span></span>
-          <button class="challenge-btn" onclick="window.sendChallenge('${sid}','${u.name.replace(/'/g,"\\'")}')">⚔️ Meydan Oku</button>
-        </div>`).join('');
-    });
-  }
-
-  // Doğru cevabı içeren, D_ALL_SOL sırasına göre YANAŞIK (ardışık) 4 telli bir blok döndürür.
-  function pickAdjacentDuelSolBlock(correctSol){
-    const idx = D_ALL_SOL.indexOf(correctSol);
-    const blockSize = 4;
-    const minStart = Math.max(0, idx - (blockSize - 1));
-    const maxStart = Math.min(idx, D_ALL_SOL.length - blockSize);
-    const possibleStarts = [];
-    for(let s=minStart; s<=maxStart; s++) possibleStarts.push(s);
-    const start = possibleStarts[Math.floor(Math.random()*possibleStarts.length)];
-    return D_ALL_SOL.slice(start, start + blockSize);
-  }
-
-  // Bir sonraki soru telini seçer: önceki turla aynı tel gelmez, yanlış yapılan teller 7 kat daha sık çıkar.
-  function pickNextDuelSol(availableSols, prevSol){
-    let candidates = availableSols;
-    if(prevSol && availableSols.length > 1){
-      candidates = availableSols.filter(s => s !== prevSol);
+      return deck;
     }
-    if(candidates.length === 0) candidates = availableSols;
 
-    const weights = candidates.map(s => 1 + 6 * (duelMissCounts[s] || 0));
-    const total = weights.reduce((a,b)=>a+b, 0);
-    let r = Math.random() * total;
-    for(let i=0;i<candidates.length;i++){
-      r -= weights[i];
-      if(r <= 0) return candidates[i];
-    }
-    return candidates[candidates.length-1];
-  }
+    window.selectRounds = function(n, secs){
+      duelRounds = n;
+      duelSecs = secs || 0;
+      document.querySelectorAll('.round-btn').forEach(b => b.classList.toggle('active', parseInt(b.dataset.rounds)===n && parseInt(b.dataset.secs||0)===duelSecs));
+    };
 
-  // Host tüm turların sorularını en başta tek seferde üretir
-  function buildQuestionDeck(strings, totalRounds){
-    const deck = {};
-    const pool = D_NOTES.filter(n => strings.includes(n.stringVal));
-    const availableSols = [...new Set(pool.map(n => n.sol))];
-    let prevSol = null;
-    for(let i=1;i<=totalRounds;i++){
-      const chosenSol = pickNextDuelSol(availableSols, prevSol);
-      prevSol = chosenSol;
-      const notePool = pool.filter(n => n.sol === chosenSol);
-      const note = notePool[Math.floor(Math.random()*notePool.length)];
-      const choices = pickAdjacentDuelSolBlock(chosenSol);
-      deck[i] = {
-        noteKey: note.key,
-        notaAdi: note.sol,
-        noteName: note.name,
-        freq: note.freq,
-        stringVal: note.stringVal,
-        choices
-      };
-    }
-    return deck;
-  }
-
-  window.sendChallenge = async function(toSid, toName){
-    duelStrings = new Set([1,2,3,4,5,6]); // Düellolarda adil olsun diye her zaman tüm teller
-    if(onlineListener){ onlineListener(); onlineListener=null; }
-
-    myRole   = 'host';
-    oppSid   = toSid;
-    oppName  = toName;
-    roomCode = rndCode();
-
-    const questionDeck = buildQuestionDeck([...duelStrings], duelRounds);
-
-    await set(ref(db,`duel_rooms/${roomCode}`),{
-      host:   {sid:mySid, name:myName},
-      guest:  null,
-      status: 'waiting',
-      config: {totalRounds: duelRounds, strings: [...duelStrings], questions: questionDeck},
-      scores: {host:0, guest:0},
-      currentRoundNum: 1,
-      roundState: { hostDone:false, guestDone:false, winner:null }
-    });
-    onDisconnect(ref(db,`duel_rooms/${roomCode}`)).update({status:'abandoned'});
-
-    await set(ref(db,`duel_challenges/${toSid}`),{
-      fromSid: mySid, fromName: myName,
-      roomCode, status:'pending',
-      strings: [...duelStrings], totalRounds: duelRounds,
-      redirectTo: '/nota/'
-    });
-
-    document.getElementById('waiting-opp-name').textContent = toName;
-    showArea('duel-waiting-area');
-
-    const challengeRef = ref(db,`duel_challenges/${toSid}`);
-    const unsub = onValue(challengeRef, snap=>{
-      const c = snap.val();
-      if(!c) return;
-      if(c.status==='accepted'){
-        unsub();
-        clearTimeout(challengeExpiry);
-        oppName = toName;
-        beginGame();
-      } else if(c.status==='declined'){
-        unsub();
-        clearTimeout(challengeExpiry);
-        remove(ref(db,`duel_rooms/${roomCode}`));
-        alert(`${toName} daveti reddetti.`);
-        showArea('duel-setup-area');
-        loadOnlinePlayers();
-      }
-    });
-
-    challengeExpiry = setTimeout(async ()=>{
-      unsub();
-      await remove(ref(db,`duel_challenges/${toSid}`));
-      await remove(ref(db,`duel_rooms/${roomCode}`));
+    window.showDuelSetup = function(){
       showArea('duel-setup-area');
-      alert('Süre doldu, davet iptal edildi.');
       loadOnlinePlayers();
-    }, 30000);
-  };
+    };
 
-  window.cancelChallenge = async function(){
-    clearTimeout(challengeExpiry);
-    if(oppSid) await remove(ref(db,`duel_challenges/${oppSid}`));
-    if(roomCode) await remove(ref(db,`duel_rooms/${roomCode}`));
-    showArea('duel-setup-area');
-    loadOnlinePlayers();
-  };
-
-  function checkDuelHandoff(){
-    const raw = localStorage.getItem('gitar_duel_handoff');
-    if(!raw) return false;
-    localStorage.removeItem('gitar_duel_handoff');
-    try{
-      const h = JSON.parse(raw);
-      myRole      = 'guest';
-      roomCode    = h.roomCode;
-      oppSid      = h.oppSid;
-      oppName     = h.oppName;
-      duelStrings = new Set(h.strings);
-      duelRounds  = h.totalRounds;
-      beginGame();
-      return true;
-    }catch(e){ return false; }
-  }
-
-  function beginGame(){
-    if(window.trackEnd)window.trackEnd();
-    if(window.trackStart)window.trackStart('duel');
-    myScore_ = 0; oppScore_ = 0;
-    document.getElementById('dscore-me-name').textContent  = myName;
-    document.getElementById('dscore-opp-name').textContent = oppName;
-    document.getElementById('dscore-me').textContent  = '0';
-    document.getElementById('dscore-opp').textContent = '0';
-    showArea('duel-game-area');
-
-    onValue(ref(db,`duel_rooms/${roomCode}/scores`), snap=>{
-      const s = snap.val(); if(!s) return;
-      myScore_  = myRole==='host' ? s.host  : s.guest;
-      oppScore_ = myRole==='host' ? s.guest : s.host;
-      document.getElementById('dscore-me').textContent  = myScore_;
-      document.getElementById('dscore-opp').textContent = oppScore_;
-    });
-
-    listenRound();
-  }
-
-  function listenRound(){
-    if(roundListener){ roundListener(); }
-
-    onValue(ref(db,`duel_rooms/${roomCode}/status`), snap=>{
-      const s = snap.val();
-      if(s==='abandoned'){ handleAbandoned(); }
-      if(s==='finished'){ endDuel(); }
-    });
-
-    roundListener = onValue(ref(db,`duel_rooms/${roomCode}`), snap=>{
-      const room = snap.val();
-      if(!room || room.status==='waiting') return;
-
-      const rNum = room.currentRoundNum;
-      const rState = room.roundState;
-      const questions = room.config.questions;
-
-      if(!questions || !questions[rNum]) return;
-
-      if(currentRoundNum !== rNum){
-        currentRoundNum = rNum;
-        currentQuestionData = questions[rNum];
-        showQuestion(rNum, currentQuestionData);
-      }
-
-      if(rState && (rState.winner || (rState.hostDone && rState.guestDone))){
-        showRoundResult(rState, currentQuestionData);
-      }
-    });
-  }
-
-  function showQuestion(rNum, qData){
-    myAnswered = false;
-    document.getElementById('duel-round-label').textContent = `Tur ${rNum} / ${duelRounds}`;
-    document.getElementById('duel-string-label').textContent = `"${qData.noteName}" Notası Hangi Telde?`;
-    document.getElementById('duel-feedback').textContent = '';
-    document.getElementById('duel-feedback').className   = 'duel-feedback';
-    document.getElementById('duel-cd-wrap').style.display = 'none';
-
-    if(window.drawNote) window.drawNote(qData.noteKey, 'duel-notation');
-
-    const box = document.getElementById('duel-choices');
-    box.innerHTML = '';
-    qData.choices.forEach(sol=>{
-      const b = document.createElement('button');
-      b.className = 'dcbtn'; b.textContent = sol;
-      b.onclick = () => duelAnswer(sol, b, rNum);
-      box.appendChild(b);
-    });
-  }
-
-  function duelAnswer(sol, btn, rNum){
-    if(myAnswered) return;
-    myAnswered = true;
-    document.querySelectorAll('.dcbtn').forEach(b=>b.disabled=true);
-
-    const correct = sol === currentQuestionData.notaAdi;
-    btn.classList.add(correct ? 'correct' : 'wrong');
-    if(window.trackLog)window.trackLog(correct, currentQuestionData.notaAdi, currentQuestionData.noteName+' → '+currentQuestionData.notaAdi);
-    if(!correct){
-      duelMissCounts[currentQuestionData.notaAdi] = (duelMissCounts[currentQuestionData.notaAdi] || 0) + 1;
+    function loadOnlinePlayers(){
+      const listEl = document.getElementById('online-players-list');
+      if(onlineListener){ onlineListener(); onlineListener=null; }
+      onlineListener = onValue(ref(db,'online_users'), snap=>{
+        const users = snap.val() || {};
+        const others = Object.entries(users).filter(([sid])=>sid!==mySid);
+        if(!others.length){
+          listEl.innerHTML='<div class="no-players-msg">Şu an başka online oyuncu yok. Birinin giriş yapmasını bekleyin.</div>';
+          return;
+        }
+        listEl.innerHTML = others.map(([sid,u])=>`
+          <div class="online-player-row">
+            <span><span class="online-dot"></span><span class="online-player-name">${u.name}</span></span>
+            <button class="challenge-btn" onclick="window.sendChallenge('${sid}','${u.name.replace(/'/g,"\\'")}')">⚔️ Meydan Oku</button>
+          </div>`).join('');
+      });
     }
 
-    runTransaction(ref(db,`duel_rooms/${roomCode}`), room=>{
-      if(!room) return room;
-      if(room.currentRoundNum !== rNum) return room;
+    window.sendChallenge = async function(toSid, toName){
+      duelStrings = new Set([1,2,3,4,5,6]);
+      if(onlineListener){ onlineListener(); onlineListener=null; }
 
-      if(!room.roundState) room.roundState = { hostDone:false, guestDone:false, winner:null };
-      room.roundState[myRole+'Done'] = true;
+      myRole   = 'host';
+      oppSid   = toSid;
+      oppName  = toName;
+      roomCode = rndCode();
 
-      if(correct && !room.roundState.winner){
-        room.roundState.winner = myRole;
-        room.roundState.winnerName = myName;
-        if(!room.scores) room.scores = {host:0, guest:0};
-        room.scores[myRole] = (room.scores[myRole] || 0) + 1;
+      const totalQuestionsToBuild = duelSecs > 0 ? 60 : duelRounds;
+      const questionDeck = buildQuestionDeck([...duelStrings], totalQuestionsToBuild);
+
+      await set(ref(db,`duel_rooms/${roomCode}`),{
+        host:   {sid:mySid, name:myName},
+        guest:  null,
+        status: 'waiting',
+        config: {totalRounds: duelRounds, totalSecs: duelSecs, strings: [...duelStrings], questions: questionDeck},
+        scores: {host:0, guest:0},
+        currentRoundNum: 1,
+        roundState: { hostDone: false, guestDone: false, winner: null },
+        progress: {
+          host: { currentRound: 1 },
+          guest: { currentRound: 1 }
+        }
+      });
+      onDisconnect(ref(db,`duel_rooms/${roomCode}`)).update({status:'abandoned'});
+
+      await set(ref(db,`duel_challenges/${toSid}`),{
+        fromSid: mySid, fromName: myName,
+        roomCode, status:'pending',
+        strings: [...duelStrings], totalRounds: duelRounds, totalSecs: duelSecs,
+        redirectTo: '/tel/'
+      });
+
+      document.getElementById('waiting-opp-name').textContent = toName;
+      showArea('duel-waiting-area');
+
+      const challengeRef = ref(db,`duel_challenges/${toSid}`);
+      const unsub = onValue(challengeRef, snap=>{
+        const c = snap.val();
+        if(!c) return;
+        if(c.status==='accepted'){
+          unsub();
+          clearTimeout(challengeExpiry);
+          oppName = toName;
+          beginGame();
+        } else if(c.status==='declined'){
+          unsub();
+          clearTimeout(challengeExpiry);
+          remove(ref(db,`duel_rooms/${roomCode}`));
+          alert(`${toName} daveti reddetti.`);
+          showArea('duel-setup-area');
+          loadOnlinePlayers();
+        }
+      });
+
+      challengeExpiry = setTimeout(async ()=>{
+        unsub();
+        await remove(ref(db,`duel_challenges/${toSid}`));
+        await remove(ref(db,`duel_rooms/${roomCode}`));
+        showArea('duel-setup-area');
+        alert('Süre doldu, davet iptal edildi.');
+        loadOnlinePlayers();
+      }, 30000);
+    };
+
+    window.cancelChallenge = async function(){
+      clearTimeout(challengeExpiry);
+      if(oppSid) await remove(ref(db,`duel_challenges/${oppSid}`));
+      if(roomCode) await remove(ref(db,`duel_rooms/${roomCode}`));
+      showArea('setup-area');
+      loadOnlinePlayers();
+    };
+
+    function checkDuelHandoff(){
+      const raw = localStorage.getItem('gitar_duel_handoff');
+      if(!raw) return false;
+      localStorage.removeItem('gitar_duel_handoff');
+      try{
+        const h = JSON.parse(raw);
+        myRole      = 'guest';
+        roomCode    = h.roomCode;
+        oppSid      = h.oppSid;
+        oppName     = h.oppName;
+        duelStrings = new Set(h.strings);
+        duelRounds  = h.totalRounds;
+        duelSecs    = h.totalSecs || 0;
+        beginGame();
+        return true;
+      }catch(e){ return false; }
+    }
+
+    function beginGame(){
+      if(window.trackEnd)window.trackEnd();
+      if(window.trackStart)window.trackStart('duel');
+      myScore_ = 0; oppScore_ = 0;
+      document.getElementById('dscore-me-name').textContent  = myName;
+      document.getElementById('dscore-opp-name').textContent = oppName;
+      document.getElementById('dscore-me').textContent  = '0';
+      document.getElementById('dscore-opp').textContent = '0';
+      showArea('duel-game-area');
+
+      onValue(ref(db,`duel_rooms/${roomCode}/scores`), snap=>{
+        const s = snap.val(); if(!s) return;
+        myScore_  = myRole==='host' ? s.host  : s.guest;
+        oppScore_ = myRole==='host' ? s.guest : s.host;
+        document.getElementById('dscore-me').textContent  = myScore_;
+        document.getElementById('dscore-opp').textContent = oppScore_;
+      });
+
+      if(duelSecs > 0) startDuelTimer();
+      listenRound();
+    }
+
+    function listenRound(){
+      if(roundListener){ roundListener(); }
+
+      onValue(ref(db,`duel_rooms/${roomCode}/status`), snap=>{
+        const s = snap.val();
+        if(s==='abandoned'){ handleAbandoned(); }
+        if(s==='finished') { endDuel(); }
+      });
+
+      if (duelSecs > 0) {
+        roundListener = onValue(ref(db,`duel_rooms/${roomCode}`), snap=>{
+          const room = snap.val();
+          if(!room || room.status === 'waiting') return;
+
+          const questions = room.config.questions;
+          const myProgress = (room.progress && room.progress[myRole]) ? room.progress[myRole].currentRound : 1;
+
+          if (!questions || !questions[myProgress]) return;
+
+          if(currentRoundNum !== myProgress){
+            currentRoundNum = myProgress;
+            currentQuestionData = questions[myProgress];
+            showQuestion(myProgress, currentQuestionData);
+          }
+        });
+      } 
+      else {
+        roundListener = onValue(ref(db,`duel_rooms/${roomCode}`), snap=>{
+          const room = snap.val();
+          if(!room || room.status === 'waiting') return;
+
+          const rNum = room.currentRoundNum;
+          const rState = room.roundState;
+          const questions = room.config.questions;
+
+          if (!questions || !questions[rNum]) return;
+
+          if(currentRoundNum !== rNum){
+            currentRoundNum = rNum;
+            currentQuestionData = questions[rNum];
+            showQuestion(rNum, currentQuestionData);
+          }
+
+          if(rState && (rState.winner || (rState.hostDone && rState.guestDone))){
+            showRoundResult(rState, currentQuestionData);
+          }
+        });
       }
-      return room;
-    });
-  }
+    }
 
-  function showRoundResult(rState, qData){
-    document.querySelectorAll('.dcbtn').forEach(b=>{
-      b.disabled=true; b.onclick=null;
-      if(b.textContent===qData.notaAdi) b.classList.add('correct');
-    });
+    function showQuestion(rNum, qData){
+      myAnswered = false;
+      if(duelSecs === 0){
+        document.getElementById('duel-round-label').textContent = `Tur ${rNum} / ${duelRounds}`;
+      } else {
+        document.getElementById('duel-round-label').textContent = `⏱ Soru ${rNum}`;
+      }
+      document.getElementById('duel-string-label').textContent = `"${qData.notaAdi}" Notası Hangi Telde?`;
+      document.getElementById('duel-feedback').textContent = '';
+      document.getElementById('duel-feedback').className   = 'duel-feedback';
+      document.getElementById('duel-cd-wrap').style.display = 'none';
 
-    const fb = document.getElementById('duel-feedback');
-    if(rState.winner===myRole){ fb.textContent='🏅 Sen kazandın!'; fb.className='duel-feedback iwin'; }
-    else if(rState.winner){ fb.textContent=`😤 ${rState.winnerName} daha hızlıydı!`; fb.className='duel-feedback opwin'; }
-    else{ fb.textContent='😅 İkisi de yanlış! Puan yok.'; fb.className='duel-feedback nobody'; }
+      if(window.drawNote) window.drawNote(qData.noteKey,'duel-notation');
 
-    if(document.getElementById('duel-cd-wrap').style.display==='flex') return;
+      const box=document.getElementById('duel-choices');
+      box.innerHTML='';
+      qData.choices.forEach(sol=>{
+        const b=document.createElement('button');
+        b.className='dcbtn'; b.textContent=sol;
+        b.onclick=()=>duelAnswer(sol,b, rNum);
+        box.appendChild(b);
+      });
+    }
 
-    startCountdown(()=>{
-      if(myRole==='host'){
-        const nextNum = currentRoundNum + 1;
-        runTransaction(ref(db,`duel_rooms/${roomCode}`), room=>{
+    function duelAnswer(sol, btn, rNum){
+      if(myAnswered) return;
+      myAnswered=true;
+      document.querySelectorAll('.dcbtn').forEach(b=>b.disabled=true);
+
+      const correct = sol === currentQuestionData.solAdi;
+      btn.classList.add(correct?'correct':'wrong');
+      if(window.trackLog) window.trackLog(correct, currentQuestionData.solAdi, currentQuestionData.notaAdi+' → '+currentQuestionData.solAdi);
+
+      if (duelSecs > 0) {
+        if (correct) {
+          document.getElementById('duel-feedback').textContent = '🏅 Doğru!';
+          document.getElementById('duel-feedback').className = 'duel-feedback iwin';
+          
+          setTimeout(() => {
+            runTransaction(ref(db, `duel_rooms/${roomCode}`), room => {
+              if (!room) return room;
+              if (!room.scores) room.scores = { host: 0, guest: 0 };
+              if (!room.progress) room.progress = { host: { currentRound: 1 }, guest: { currentRound: 1 } };
+              
+              room.scores[myRole] = (room.scores[myRole] || 0) + 1;
+              room.progress[myRole].currentRound = (room.progress[myRole].currentRound || 1) + 1;
+              return room;
+            });
+          }, 500);
+        } else {
+          document.getElementById('duel-feedback').textContent = `✕ Yanlış! Doğrusu: ${currentQuestionData.solAdi}`;
+          document.getElementById('duel-feedback').className = 'duel-feedback opwin';
+          
+          document.querySelectorAll('.dcbtn').forEach(b => {
+            if(b.textContent === currentQuestionData.solAdi) b.classList.add('correct');
+          });
+
+          const box = document.getElementById('duel-choices');
+          const nextBtn = document.createElement('button');
+          nextBtn.className = 'app-btn';
+          nextBtn.style.gridColumn = 'span 2';
+          nextBtn.style.marginTop = '10px';
+          nextBtn.textContent = 'Sonraki Soru →';
+          nextBtn.onclick = () => {
+            nextBtn.disabled = true;
+            runTransaction(ref(db, `duel_rooms/${roomCode}`), room => {
+              if (!room) return room;
+              if (!room.progress) room.progress = { host: { currentRound: 1 }, guest: { currentRound: 1 } };
+              room.progress[myRole].currentRound = (room.progress[myRole].currentRound || 1) + 1;
+              return room;
+            });
+          };
+          box.appendChild(nextBtn);
+        }
+      } 
+      else {
+        runTransaction(ref(db,`duel_rooms/${roomCode}`), room => {
           if(!room) return room;
-          if(room.currentRoundNum !== currentRoundNum) return room;
-          if(nextNum > duelRounds){
-            room.status = 'finished';
-          } else {
-            room.currentRoundNum = nextNum;
-            room.roundState = { hostDone:false, guestDone:false, winner:null };
+          if(room.currentRoundNum !== rNum) return room;
+          if(!room.roundState) room.roundState = { hostDone: false, guestDone: false, winner: null };
+
+          room.roundState[myRole + 'Done'] = true;
+
+          if(correct && !room.roundState.winner){
+            room.roundState.winner = myRole;
+            room.roundState.winnerName = myName;
+            if(!room.scores) room.scores = {host:0, guest:0};
+            room.scores[myRole] = (room.scores[myRole] || 0) + 1;
           }
           return room;
         });
       }
-    });
-  }
+    }
 
-  function startCountdown(onDone){
-    if(cdTimer) clearInterval(cdTimer);
-    let n=3;
-    const wrap=document.getElementById('duel-cd-wrap'), el=document.getElementById('duel-cd-num');
-    wrap.style.display='flex'; setCd(el,n);
-    cdTimer = setInterval(()=>{
-      n--;
-      if(n<=0){ clearInterval(cdTimer); wrap.style.display='none'; if(onDone) onDone(); }
-      else setCd(el,n);
-    },1000);
-  }
-  function setCd(el,n){ el.textContent=n; el.classList.remove('duel-cd'); void el.offsetWidth; el.classList.add('duel-cd'); }
+    function showRoundResult(rState, qData){
+      document.querySelectorAll('.dcbtn').forEach(b=>{
+        b.disabled=true; b.onclick=null;
+        if(b.textContent===qData.solAdi) b.classList.add('correct');
+      });
+      
+      const fb=document.getElementById('duel-feedback');
+      if(rState.winner===myRole){ fb.textContent='🏅 Sen kazandın!'; fb.className='duel-feedback iwin'; }
+      else if(rState.winner)    { fb.textContent=`😤 ${rState.winnerName} daha hızlıydı!`; fb.className='duel-feedback opwin'; }
+      else                     { fb.textContent='😅 İkisi de yanlış! Puan yok.'; fb.className='duel-feedback nobody'; }
 
-  function endDuel(){
-    if(window.trackEnd)window.trackEnd();
-    if(cdTimer) clearInterval(cdTimer);
-    if(roundListener){ roundListener(); roundListener=null; }
+      if(document.getElementById('duel-cd-wrap').style.display==='flex') return; 
+      
+      startCountdown(()=>{
+        if(myRole === 'host'){
+          const nextNum = currentRoundNum + 1;
+          runTransaction(ref(db,`duel_rooms/${roomCode}`), room => {
+            if(!room) return room;
+            if(room.currentRoundNum !== currentRoundNum) return room; 
+            const maxRounds = duelSecs > 0 ? 60 : duelRounds;
+            if(nextNum > maxRounds){
+              room.status = 'finished';
+            } else {
+              room.currentRoundNum = nextNum;
+              room.roundState = { hostDone: false, guestDone: false, winner: null };
+            }
+            return room;
+          });
+        }
+      });
+    }
 
-    const myFinal = myScore_, oppFinal = oppScore_;
-    let winBadge, comment;
-    if(myFinal>oppFinal){ winBadge=`🏆 Kazanan: ${myName}`; comment=`${myName} notaları daha hızlı okudu! ${oppName} daha çok çalışmalı 💪`; }
-    else if(oppFinal>myFinal){ winBadge=`🏆 Kazanan: ${oppName}`; comment=`${oppName} bu sefer daha hızlıydı! Bir dahaki sefere ${myName} 🎸`; }
-    else{ winBadge='🤝 Beraberlik!'; comment='İkisi de aynı seviyede! Yunus Hoca ikinizden de memnun 🎵'; }
+    function startCountdown(onDone){
+      if(cdTimer) clearInterval(cdTimer);
+      let n=3;
+      const wrap=document.getElementById('duel-cd-wrap'),el=document.getElementById('duel-cd-num');
+      wrap.style.display='flex'; setCd(el,n);
+      cdTimer=setInterval(()=>{
+        n--;
+        if(n<=0){ clearInterval(cdTimer); wrap.style.display='none'; if(onDone)onDone(); }
+        else setCd(el,n);
+      },1000);
+    }
+    function setCd(el,n){el.textContent=n;el.classList.remove('duel-cd');void el.offsetWidth;el.classList.add('duel-cd');}
 
-    const mc = myFinal>=oppFinal ? 'win' : 'lose', oc = oppFinal>=myFinal ? 'win' : 'lose';
-    document.getElementById('app').innerHTML = `
-      <div class="duel-result">
-        <h2>⚔️ Düello Bitti!</h2>
-        <div class="winner-badge">${winBadge}</div>
-        <div class="final-scores">
-          <div class="fsc-player"><div class="fsc-name">${myName}</div><div class="fsc-num ${mc}">${myFinal}</div></div>
-          <div class="fsc-vs">VS</div>
-          <div class="fsc-player"><div class="fsc-name">${oppName}</div><div class="fsc-num ${oc}">${oppFinal}</div></div>
-        </div>
-        <p class="duel-comment">"${comment}"</p>
-        <div class="result-btns">
-          <button class="app-btn btn-duel" onclick="location.reload()">🔄 Tekrar Oyna</button>
-          <button class="app-btn" onclick="location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
-        </div>
-      </div>`;
-  }
+    function endDuel(){
+      if(window.trackEnd)window.trackEnd();
+      if(cdTimer) clearInterval(cdTimer);
+      if(duelTimerInterval) clearInterval(duelTimerInterval);
+      if(roundListener){ roundListener(); roundListener=null; }
 
-  function handleAbandoned(){
-    if(window.trackEnd)window.trackEnd();
-    if(cdTimer) clearInterval(cdTimer);
-    alert('Rakibiniz oyundan ayrıldı.');
-    showArea('setup-area');
-  }
+      const myFinal  = myScore_;
+      const oppFinal = oppScore_;
+      let winBadge, comment;
+      if(myFinal>oppFinal){ winBadge=`🏆 Kazanan: ${myName}`; comment=`${myName} telleri daha hızlı bildi! ${oppName} daha çok çalışmalı 💪`; }
+      else if(oppFinal>myFinal){ winBadge=`🏆 Kazanan: ${oppName}`; comment=`${oppName} bu sefer daha hızlıydı! Bir dahaki sefere ${myName} 🎸`; }
+      else{ winBadge='🤝 Beraberlik!'; comment='İkisi de telleri çok iyi tanıyor! Yunus Hoca ikinizden de memnun 🎵'; }
 
-  window.leaveGame = async function(){
-    if(window.trackEnd)window.trackEnd();
-    if(cdTimer) clearInterval(cdTimer);
-    if(roundListener && roomCode){ roundListener(); roundListener=null; }
-    if(roomCode) await update(ref(db,`duel_rooms/${roomCode}`),{status:'abandoned'});
-    showArea('setup-area');
-  };
+      const mc=myFinal>=oppFinal?'win':'lose', oc=oppFinal>=myFinal?'win':'lose';
+      const gameLabel = duelSecs > 0 ? `⏱ ${duelSecs} Saniyelik Yarış` : `${duelRounds} Tur`;
+      document.getElementById('app').innerHTML=`
+        <div class="duel-result">
+          <h2>⚔️ Düello Bitti!</h2>
+          <div class="duel-mode-badge" style="font-size:0.9rem;color:#7b5ea7;margin-bottom:0.5rem;font-weight:700;">${gameLabel}</div>
+          <div class="winner-badge">${winBadge}</div>
+          <div class="final-scores">
+            <div class="fsc-player"><div class="fsc-name">${myName}</div><div class="fsc-num ${mc}">${myFinal}</div></div>
+            <div class="fsc-vs">VS</div>
+            <div class="fsc-player"><div class="fsc-name">${oppName}</div><div class="fsc-num ${oc}">${oppFinal}</div></div>
+          </div>
+          <p class="duel-comment">"${comment}"</p>
+          <div class="result-btns">
+            <button class="app-btn btn-duel" onclick="location.reload()">🔄 Tekrar Oyna</button>
+            <button class="app-btn" onclick="location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
+          </div>
+        </div>`;
+    }
 
-  checkDuelHandoff();
+    function handleAbandoned(){
+      if(window.trackEnd)window.trackEnd();
+      if(cdTimer) clearInterval(cdTimer);
+      if(duelTimerInterval) clearInterval(duelTimerInterval);
+      alert('Rakibiniz oyundan ayrıldı.');
+      showArea('setup-area');
+    }
+
+    window.leaveGame = async function(){
+      if(window.trackEnd)window.trackEnd();
+      if(cdTimer) clearInterval(cdTimer);
+      if(duelTimerInterval) clearInterval(duelTimerInterval);
+      if(roundListener&&roomCode){ roundListener(); roundListener=null; }
+      if(roomCode) await update(ref(db,`duel_rooms/${roomCode}`),{status:'abandoned'});
+      showArea('setup-area');
+    };
+
+    let duelTimerInterval = null;
+    let duelTimeLeft = 0;
+
+    function startDuelTimer(){
+      duelTimeLeft = duelSecs;
+      if(duelTimerInterval) clearInterval(duelTimerInterval);
+      updateDuelTimerBadge();
+      duelTimerInterval = setInterval(()=>{
+        duelTimeLeft--;
+        updateDuelTimerBadge();
+        if(duelTimeLeft <= 0){
+          clearInterval(duelTimerInterval);
+          if(myRole==='host'){
+            update(ref(db,`duel_rooms/${roomCode}`),{status:'finished'});
+          }
+        }
+      }, 1000);
+    }
+
+    function updateDuelTimerBadge(){
+      const badge = document.getElementById('duel-round-label');
+      if(badge) badge.textContent = `⏱ ${duelTimeLeft}sn`;
+    }
+
+    checkDuelHandoff();
   </script>
-<script type="module" src="/live-bar.js"></script>
+
+  <script>
+    (function(){
+      const sid=localStorage.getItem('gitar_session');
+      if(!sid){ location.href='https://gitar.yunusgedik.com.tr/'; return; }
+    })();
+  </script>
+  <script type="module" src="/live-bar.js"></script>
 </body>
 </html>
