@@ -1534,6 +1534,7 @@ const ALL_GRADES_FOR_SECTIONS = [1,2,3,4,5,6,7,8];
 
 const SECTION_DEFS = [
   { id: 'repertoire', cardId: 'repertoire-card', label: 'Eser Listesi',  emoji: '📜' },
+  { id: 'akor',       cardId: 'akor-card',       label: 'Akor Dinleme', emoji: '🎶' },
   { id: 'kulak',      cardId: 'kulak-card',       label: 'Kulak Eğitimi', emoji: '🎧' },
   { id: 'klavye',     cardId: 'klavye-card',      label: 'Klavye Alıştırması', emoji: '🎛️' },
   { id: 'nota',       cardId: 'nota-card',        label: 'Nota Okuma',   emoji: '🎵' },
@@ -1844,6 +1845,16 @@ function checkKulakAccess(sid) {
   } else {
     lockCard(card, { lockedDesc: 'Bu bölüm henüz erişiminize açılmamış.' });
   }
+}
+
+// ===== Akor Dinleme: yalnızca "Bölümler" panelinden ayar yapılmışsa kısıtlanır =====
+function checkAkorAccess(sid) {
+  checkSectionAccess('akor', 'akor-card', sid, {
+    href: 'https://gitar.yunusgedik.com.tr/akor', icon: '🎶',
+    unlockedDesc: 'Duyduğun akorun hangi akora ait olduğunu tanı, kulağını akorlarla geliştir.',
+    badgeText: 'Aktif', badgeClass: 'badge badge-new',
+    lockedDesc: 'Bu bölüm henüz erişiminize açılmamış.'
+  });
 }
 
 // ===== Klavye / Nota / Tel / Deneysel: yalnızca "Bölümler" panelinden ayar yapılmışsa kısıtlanır =====
@@ -2157,6 +2168,7 @@ window.updateWelcomeCard = async function(sid) {
     checkBassAccess(sid);
     checkBassV2Access(sid);
     checkKulakAccess(sid);
+    checkAkorAccess(sid);
     checkKlavyeAccess(sid);
     checkNotaAccess(sid);
     checkTelAccess(sid);
@@ -2184,6 +2196,7 @@ window.updateWelcomeCard = async function(sid) {
     checkBassAccess(sid);
     checkBassV2Access(sid);
     checkKulakAccess(sid);
+    checkAkorAccess(sid);
     checkKlavyeAccess(sid);
     checkNotaAccess(sid);
     checkTelAccess(sid);
@@ -2211,6 +2224,7 @@ window.updateWelcomeCard = async function(sid) {
   checkBassAccess(sid);
   checkBassV2Access(sid);
   checkKulakAccess(sid);
+    checkAkorAccess(sid);
   checkKlavyeAccess(sid);
   checkNotaAccess(sid);
   checkTelAccess(sid);
