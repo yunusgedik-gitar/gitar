@@ -645,3 +645,150 @@ html body {
   color: #907e6e !important;
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   EK DÜZELTMELER v4  –  Eser Listesi (Repertuar) Paneli
+   Haber akışı (#27) ile aynı mantık: koyu zemin + sıcak/altın yazı.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── 33. Üst sekmeler – Mode toggle, Grade tabları ─────────── */
+[data-theme="dark"] .rep-mode-toggle {
+  background: #0e0b08 !important;
+  border-color: #252015 !important;
+}
+[data-theme="dark"] .rep-mode-btn { color: #907e6e !important; }
+[data-theme="dark"] .rep-mode-btn.active {
+  background: var(--gold) !important;
+  color: #0a0805 !important;
+}
+
+[data-theme="dark"] .grade-tab {
+  background: #0e0b08 !important;
+  border-color: #252015 !important;
+  color: #907e6e !important;
+}
+[data-theme="dark"] .grade-tab:hover {
+  border-color: var(--gold) !important;
+  color: #e8ddd0 !important;
+}
+[data-theme="dark"] .grade-tab.active {
+  background: #5a3e2b !important;
+  border-color: #7a5238 !important;
+  color: #fff !important;
+}
+[data-theme="dark"] .grade-tab.lb-tab {
+  background: #1a1408 !important;
+  border-color: var(--gold) !important;
+  color: var(--gold) !important;
+}
+[data-theme="dark"] .grade-tab.lb-tab.active {
+  background: var(--gold) !important;
+  color: #0a0805 !important;
+}
+[data-theme="dark"] .lb-tab-btn {
+  background: #0e0b08 !important;
+  border-color: #252015 !important;
+  color: #907e6e !important;
+}
+[data-theme="dark"] .lb-tab-btn.active {
+  background: #5aab28 !important;
+  border-color: #5aab28 !important;
+  color: #08140a !important;
+}
+[data-theme="dark"] .lb-metric-tabs .lb-tab-btn.active {
+  background: #3b6d8c !important;
+  border-color: #3b6d8c !important;
+  color: #fff !important;
+}
+
+/* ── 34. İlerleme özeti (progress-summary) ──────────────────── */
+[data-theme="dark"] .progress-summary {
+  background: #0e0b08 !important;
+  border-color: #252015 !important;
+  box-shadow: 0 2px 14px rgba(0,0,0,0.35) !important;
+}
+[data-theme="dark"] .progress-summary-title { color: #e8ddd0 !important; }
+[data-theme="dark"] .progress-bar-track {
+  background: #1a1510 !important;
+  border-color: #252015 !important;
+}
+
+/* ── 35. Eser satırları (piece-row) ─────────────────────────── */
+[data-theme="dark"] .piece-row {
+  background: #0e0b08 !important;
+  border-color: #252015 !important;
+  color: #e8ddd0 !important;
+}
+[data-theme="dark"] .piece-row.done {
+  background: #081404 !important;
+  border-color: #1a3a0a !important;
+}
+[data-theme="dark"] .piece-row.decode {
+  background: #1a1005 !important;
+  border-color: #3a2812 !important;
+}
+[data-theme="dark"] .piece-check { border-color: #3a2e1e !important; }
+[data-theme="dark"] .piece-status { color: #7a6a55 !important; }
+[data-theme="dark"] .piece-action-btn {
+  background: #0e0b08 !important;
+  border-color: #252015 !important;
+  color: #907e6e !important;
+}
+[data-theme="dark"] .piece-action-btn.decode-action {
+  border-color: #3a2812 !important;
+  color: #d47820 !important;
+}
+[data-theme="dark"] .piece-drag-handle { color: #907e6e !important; }
+
+/* ── 36. Öğrenci seçim kartları (student-select-card) ───────── */
+[data-theme="dark"] .student-select-card {
+  background: #0e0b08 !important;
+  border-color: #252015 !important;
+  color: #e8ddd0 !important;
+}
+[data-theme="dark"] .student-select-card:hover { border-color: var(--gold) !important; }
+[data-theme="dark"] .student-select-card.active {
+  background: #5a3e2b !important;
+  border-color: #7a5238 !important;
+  color: #fff !important;
+}
+[data-theme="dark"] .student-select-card .ssc-pct { color: #907e6e !important; }
+
+/* ── 37. Liderlik tablosu satırları (lb-row) ────────────────── */
+[data-theme="dark"] .lb-row {
+  background: #0e0b08 !important;
+  border-color: #252015 !important;
+  color: #e8ddd0 !important;
+}
+[data-theme="dark"] .lb-row.me {
+  background: #1a1408 !important;
+  border-color: var(--gold) !important;
+}
+[data-theme="dark"] .lb-name .lb-grade,
+[data-theme="dark"] .lb-status { color: #907e6e !important; }
+[data-theme="dark"] .lb-value,
+[data-theme="dark"] .lb-pct { color: var(--gold) !important; }
+
+/* ── 38. Bölüm başlıkları / panel-go-btn kilitli durum ──────── */
+[data-theme="dark"] .section-title { color: #e8ddd0 !important; }
+[data-theme="dark"] .panel-go-btn.locked {
+  background: #111 !important;
+  border-color: #2a2520 !important;
+  color: #5a4a3a !important;
+}
+
+/* ── 39. Kıskanma rozetleri (envy) – koyu modda da okunaklı ─── */
+[data-theme="dark"] .envy-btn {
+  background: #1a0808 !important;
+  border-color: #5a1818 !important;
+  color: #e05555 !important;
+}
+[data-theme="dark"] .envy-btn:hover { background: #2a0a0a !important; }
+[data-theme="dark"] .envy-lb-count,
+[data-theme="dark"] .envy-count-badge,
+[data-theme="dark"] #envy-notification {
+  background: #1a0808 !important;
+  border-color: #5a1818 !important;
+  color: #e05555 !important;
+}
+[data-theme="dark"] .envy-notif-names { color: #e05555 !important; }
+
