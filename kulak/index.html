@@ -610,10 +610,10 @@
     </div>
 
     <!-- Düello Setup Area Navigasyon Satırı (Çerçevenin Dışında) -->
-<div id="duel-setup-nav" class="nav-row between" style="display:none;">
-  <button class="back-to-menu-btn" onclick="backToMenu()">← Menüye Dön</button>
-  <button class="back-to-menu-btn" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
-</div>
+    <div id="duel-setup-nav" class="nav-row between" style="display:none;">
+      <button class="back-to-menu-btn" onclick="backToMenu()">← Menüye Dön</button>
+      <button class="back-to-menu-btn" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
+    </div>
 
     <!-- Düello Setup Area -->
     <div id="duel-setup-area" class="filter-card">
@@ -654,7 +654,6 @@
 
     <!-- Düello Game Area -->
     <div id="duel-game-area">
-      <!-- İstek 1: Düello Modu İçin Eklenen Navigasyon Barı -->
       <div class="nav-row between">
         <button class="back-to-menu-btn" onclick="leaveGame()">← Çık</button>
         <button class="back-to-menu-btn" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
@@ -1037,8 +1036,6 @@
       answered = false;
       const q = currentQuestions[currentQIndex];
 
-      // Race mode timer display is handled by updateRaceTimerDisplay()
-
       const choicesDiv = document.getElementById('choices');
       choicesDiv.innerHTML = '';
       q.choices.forEach(note => {
@@ -1318,7 +1315,7 @@
   let duelAudioCtx    = null;
   let duelMissCounts  = {};
 
-  function rndCode(){ return Math.floor(100000+Math.random()*900000).toString(); }
+  function rndCode()){ return Math.floor(100000+Math.random()*900000).toString(); }
   function shuf(a){ return [...a].sort(()=>Math.random()-.5); }
 
   function showArea(id){
@@ -1327,7 +1324,6 @@
     const exA=document.getElementById('exercise-area'); if(exA) exA.style.display='none';
     const rs=document.getElementById('result-screen'); if(rs) rs.style.display='none';
     
-    // İlişkili navigasyon satırlarını aç
     if(id === 'setup-area') document.getElementById('setup-nav').style.display = 'flex';
     if(id === 'duel-setup-area') document.getElementById('duel-setup-nav').style.display = 'flex';
 
