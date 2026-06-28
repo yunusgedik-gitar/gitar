@@ -21,6 +21,7 @@ export const ERRORS = [
   "Iyyy yine mi hata",
   "Ağır popçusun belli knk",
   "Lâ havle..",
+  "Herkez hata yapabilir ama sen biraz abarttın",
   "Sen en iyisi flüt çal knk",
   "Tekrar deneme, yeter.",
   "Bir yerde bırakmak lazım sanki",
