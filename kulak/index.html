@@ -1,529 +1,90 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <!-- ── TEMA SİSTEMİ ── -->
   <link rel="stylesheet" href="/theme.css">
   <script src="/theme.js"></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
-  <title>Kulak Eğitimi – Nota Dinleme</title>
+  <title>Nota Okuma Egzersizi – Klasik Gitar</title>
   <script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.2/build/cjs/vexflow.js"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Lato:wght@300;400;700&display=swap');
-
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;1,400&family=Lato:wght@300;400;700&display=swap');
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     body {
-      font-family: 'Lato', sans-serif;
-      background: #faf6ed;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 1.2rem 1rem 2rem;
-      color: #5a3e2b;
+      font-family: 'Lato', sans-serif; background: #faf6ed; min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 1.4rem 1rem 2.5rem; color: #5a3e2b; overflow-x: hidden;
     }
+    header { text-align: center; margin-bottom: 1.2rem; }
+    header h1 { font-family: 'Playfair Display', serif; font-size: 1.45rem; font-weight: 600; color: #5a3e2b; }
+    header p  { font-size: 0.8rem; color: #b09070; margin-top: 0.3rem; font-style: italic; }
+    #app { width: 100%; max-width: 550px; }
 
-    header {
-      text-align: center;
-      margin-bottom: 0.5rem;
-    }
-
-    header h1 {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.35rem;
-      font-weight: 600;
-      color: #5a3e2b;
-    }
-
-    header p {
-      font-size: 0.8rem;
-      color: #b09070;
-      margin-top: 0.3rem;
-      font-style: italic;
-    }
-
-    #app-wrap {
-      width: 100%;
-      max-width: 600px;
-    }
-
-    /* ── NAVİGASYON SATIRI STİLİ ── */
-    .nav-row {
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
-      margin-bottom: 0.5rem;
-      width: 100%;
-    }
-
-    .nav-row.between {
-      justify-content: space-between;
-    }
-
-    /* ── SETUP AREA STİLLERİ ── */
     .filter-card {
-      background: #fff;
-      border: 1.5px solid #e8e0d5;
-      border-radius: 20px;
-      padding: 1rem;
-      margin-bottom: 1rem;
-      box-shadow: 0 4px 20px rgba(90,62,43,0.04);
-      text-align: center;
+      background: #fff; border: 1.5px solid #e8e0d5; border-radius: 20px;
+      padding: 1rem; margin-bottom: 1rem; box-shadow: 0 4px 20px rgba(90,62,43,0.04); text-align: center;
     }
-
-    .filter-title {
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: #b09070;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 0.75rem;
-    }
-
-    .string-buttons {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-bottom: 0.85rem;
-    }
-
-    .string-btn {
-      width: 42px;
-      height: 42px;
-      border-radius: 50%;
-      border: 1.5px solid #d4c4b0;
-      background: #fff;
-      color: #5a3e2b;
-      font-size: 1.1rem;
-      font-weight: 700;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.15s ease;
-      position: relative;
-    }
-    .string-btn[data-note]:not(.active) { opacity: .45; }
-    .string-btn[data-note]:not(.active)::after {
+    .filter-title { font-size: 0.85rem; font-weight: 700; color: #b09070; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem; }
+    .string-buttons { display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 0.85rem; }
+    .string-btn { width: 42px; height: 42px; border-radius: 50%; border: 1.5px solid #d4c4b0; background: #fff; color: #5a3e2b; font-size: 1.1rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s ease; position: relative; }
+    .string-btn.all-btn { width: auto; padding: 0 16px; border-radius: 20px; font-size: 0.9rem; }
+    .string-btn.active { background: #5a3e2b; border-color: #5a3e2b; color: #fff; box-shadow: 0 4px 10px rgba(90,62,43,0.2); }
+    .string-num-btn:not(.active) { opacity: .45; }
+    .string-num-btn:not(.active)::after {
       content: '✕'; position: absolute; top: -4px; right: -4px;
       width: 16px; height: 16px; background: #c0392b; color: #fff;
       border-radius: 50%; font-size: .62rem; font-weight: 900;
       display: flex; align-items: center; justify-content: center;
       box-shadow: 0 1px 3px rgba(0,0,0,.3);
     }
-
-    .string-btn.all-btn {
-      width: auto;
-      height: 42px;
-      padding: 0 16px;
-      border-radius: 20px;
-      font-size: 0.9rem;
-    }
-
-    .string-btn.active {
-      background: #5a3e2b;
-      border-color: #5a3e2b;
-      color: #fff;
-      box-shadow: 0 4px 10px rgba(90,62,43,0.2);
-    }
-
-    .action-buttons-wrap {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .start-exercise-btn {
-      width: 100%;
-      padding: 10px;
-      font-size: 0.95rem;
-      font-weight: 700;
-      border-radius: 12px;
-      border: 1.5px solid #d4a373;
-      background: #f5e6d3;
-      color: #5a3e2b;
-      cursor: pointer;
-      transition: all 0.12s;
-    }
-
-    .start-race-btn {
-      border: 1.5px solid #e24b4a;
-      background: #fdf0f0;
-      color: #a32d2d;
-    }
-
-    .start-exercise-btn:disabled {
-      background: #f5f5f5;
-      border-color: #ddd;
-      color: #aaa;
-      cursor: not-allowed;
-    }
-
-    .back-to-menu-btn {
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: #b09070;
-      background: #fff;
-      border: 1.5px solid #e8e0d5;
-      padding: 6px 14px;
-      border-radius: 30px;
-      cursor: pointer;
-      font-family: inherit;
-      transition: all 0.12s;
-      box-shadow: 0 2px 8px rgba(90,62,43,0.02);
-      margin-bottom: 0;
-      display: inline-block;
-    }
-
-    @media (hover: hover) {
-      .start-exercise-btn:hover:not(:disabled) { background: #ebd3b8; }
-      .back-to-menu-btn:hover { background: #f5e6d3; border-color: #d4c4b0; color: #5a3e2b; }
-    }
-
-    /* ── EXERCISE AREA STİLLERİ ── */
-    #setup-area { display: block; }
-    #exercise-area { display: none; }
-
-    .card {
-      background: #fff;
-      border: 1.5px solid #e8e0d5;
-      border-radius: 20px;
-      padding: 1.1rem 1.1rem 0.9rem;
-      margin-bottom: 0.85rem;
-      box-shadow: 0 4px 20px rgba(90,62,43,0.04);
-    }
-
-    .speaker-wrap {
-      width: 100%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin: 0 auto 0.5rem;
-    }
-
-    .speaker-wrap svg {
-      display: block;
-      width: 100%;
-      max-width: 440px;
-      height: auto;
-      cursor: pointer;
-    }
-
-    #speaker-group {
-      transition: transform 0.15s ease;
-    }
-
-    #speaker-group:active {
-      transform: scale(0.96);
-    }
-
-    .sound-wave {
-      opacity: 0;
-      transform-origin: 230px 106px;
-    }
-
-    .speaker-wrap.playing .sound-wave-1 {
-      animation: waveOut 1s ease-out infinite;
-    }
-    .speaker-wrap.playing .sound-wave-2 {
-      animation: waveOut 1s ease-out 0.2s infinite;
-    }
-    .speaker-wrap.playing .sound-wave-3 {
-      animation: waveOut 1s ease-out 0.4s infinite;
-    }
-
-    @keyframes waveOut {
-      0%   { opacity: 0;   transform: scale(0.85); }
-      25%  { opacity: 0.9; }
-      100% { opacity: 0;   transform: scale(1.15); }
-    }
-
-    .speaker-wrap.playing #speaker-cone {
-      animation: speakerPulse 0.3s ease-in-out infinite alternate;
-    }
-
-    @keyframes speakerPulse {
-      0%   { transform: translateX(0); }
-      100% { transform: translateX(3px); }
-    }
-
-    .timer-badge {
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: #8b5a2b;
-      background: #f5e6d3;
-      padding: 5px 12px;
-      border-radius: 12px;
-      border: 1px solid #e8d5c0;
-    }
-
-    .q-title {
-      text-align: center;
-      font-size: 1.1rem;
-      font-weight: 700;
-      margin-bottom: 0.5rem;
-      color: #5a3e2b;
-    }
-
-    .q-title-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      margin-bottom: 0.5rem;
-    }
-
-    .q-title-row .q-title {
-      flex: 1;
-      margin-bottom: 0;
-    }
-
-    .practice-timer-box {
-      font-size: 0.8rem;
-      font-weight: 700;
-      color: #8b5a2b;
-      background: #f5e6d3;
-      border: 1px solid #e8d5c0;
-      border-radius: 12px;
-      padding: 5px 12px;
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
-
-    .choices {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 1rem;
-    }
-
-    .choice-card {
-      background: #fff;
-      border: 2px solid #e8e0d5;
-      border-radius: 16px;
-      padding: 8px 10px 6px;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      position: relative;
-      box-shadow: 0 2px 8px rgba(90,62,43,0.03);
-      overflow: visible;
-      -webkit-tap-highlight-color: transparent;
-      outline: none;
-    }
-
-    .choice-staff {
-      width: 110px;
-      height: 115px;
-      margin: 4px 0 0;
-      overflow: visible;
-    }
-
-    .choice-staff svg {
-      max-width: 100%;
-      height: auto;
-      overflow: visible;
-    }
-
-    @media (hover: hover) {
-      .choice-card:hover:not(.disabled):not(.correct):not(.wrong) {
-        border-color: #d4a373;
-        transform: translateY(-3px);
-        box-shadow: 0 8px 20px rgba(90,62,43,0.1);
-      }
-    }
-
-    .choice-card:active:not(.disabled) {
-      transform: scale(0.98);
-    }
-
-    .choice-card.correct {
-      background: #eaf3de;
-      border-color: #6b8c42;
-      color: #3b6d11;
-    }
-
-    .choice-card.wrong {
-      background: #fdf0f0;
-      border-color: #c75b39;
-      color: #a32d2d;
-    }
-
-    .choice-card.disabled {
-      cursor: default;
-      opacity: 0.92;
-    }
-
-    @media (max-width: 420px) {
-      .choices { gap: 8px; }
-      .choice-card { padding: 10px 6px; }
-      .choice-staff { width: 90px; height: 100px; }
-    }
-
-    .message {
-      text-align: center;
-      font-size: 0.9rem;
-      font-weight: 700;
-      color: #8b6b4e;
-      margin-bottom: 0.65rem;
-      min-height: 22px;
-    }
-
-    #auto-bar-wrap {
-      height: 3px;
-      background: #e0ddd6;
-      border-radius: 2px;
-      margin-bottom: 0.65rem;
-      overflow: hidden;
-      display: none;
-    }
-
-    #auto-bar {
-      height: 100%;
-      width: 100%;
-      background: #6b8c42;
-      border-radius: 2px;
-      transition: width 1.4s linear;
-    }
-
-    .progress-area {
-      display: flex;
-      align-items: center;
-      margin-bottom: 1.2rem;
-    }
-
-    .progress-track {
-      flex: 1;
-      height: 10px;
-      background: #ede6d8;
-      border-radius: 5px;
-      overflow: hidden;
-      border: 1px solid #e0d8c8;
-    }
-
-    .progress-fill {
-      height: 100%;
-      width: 0%;
-      background: #8cb85f;
-      border-radius: 5px;
-      transition: width 0.4s ease;
-    }
-
-    .controls {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-
-    .ctrl-btn {
-      padding: 11px;
-      font-size: 0.85rem;
-      font-weight: 700;
-      border-radius: 12px;
-      border: 1.5px solid #d4c4b0;
-      background: #fff;
-      color: #5a3e2b;
-      cursor: pointer;
-      font-family: inherit;
-      transition: all 0.15s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 5px;
-    }
-
-    .ctrl-btn.primary {
-      background: #f5e6d3;
-      border-color: #d4a373;
-    }
-
-    .ctrl-btn:disabled {
-      opacity: 0.45;
-      cursor: not-allowed;
-    }
-
-    .result-screen {
-      display: none;
-      text-align: center;
-      padding: 1.5rem 1rem;
-    }
-
-    .result-title {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.8rem;
-      color: #6b8c42;
-      margin-bottom: 1rem;
-    }
-
-    .result-stats {
-      background: #fdfaf4;
-      border: 1.5px dashed #d4c4b0;
-      border-radius: 16px;
-      padding: 1.2rem;
-      margin-bottom: 1.5rem;
-      text-align: left;
-    }
-
-    .stat-row {
-      display: flex;
-      justify-content: space-between;
-      font-size: 1.1rem;
-      padding: 8px 0;
-      border-bottom: 1px dashed #e8e0d5;
-      color: #5a3e2b;
-    }
-
-    .stat-row:last-child {
-      border-bottom: none;
-    }
-
-    .stat-val {
-      font-weight: 700;
-      color: #8b5a2b;
-    }
-
-    .stat-val.correct-val {
-      color: #6b8c42;
-    }
-
-    .stat-val.wrong-val {
-      color: #c75b39;
-    }
-
-    .result-screen .controls {
-      display: flex;
-      gap: 8px;
-    }
-
-    .site-footer {
-      display: flex;
-      justify-content: center;
-      gap: 22px;
-      margin-top: 2.5rem;
-    }
-
-    .site-footer a {
-      color: #b0a392;
-      font-size: 2.2rem;
-      transition: all .2s ease;
-    }
-
-    @media (hover: hover) {
-      .site-footer a:hover { color: #d4a373; transform: translateY(-2px); }
-    }
-
-    /* ── DÜELLO STİLLERİ ── */
-    #duel-setup-area, #duel-waiting-area, #duel-game-area { display: none; }
+    .action-buttons-wrap { display: flex; flex-direction: column; gap: 10px; }
     .app-btn { width: 100%; padding: 10px; font-size: 0.95rem; font-weight: 700; border-radius: 12px; border: 1.5px solid #d4a373; background: #f5e6d3; color: #5a3e2b; cursor: pointer; transition: all 0.12s; font-family: inherit; }
+    .btn-race { border-color: #e24b4a; background: #fdf0f0; color: #a32d2d; }
     .btn-duel { border-color: #7b5ea7; background: #f3eeff; color: #4a2d8a; }
-    @media (hover:hover) { .app-btn:hover:not(:disabled) { filter: brightness(0.95); } }
+    .app-btn:disabled { background: #f5f5f5; border-color: #ddd; color: #aaa; cursor: not-allowed; }
+    @media (hover:hover) {
+      .app-btn:hover:not(:disabled) { filter: brightness(0.95); }
+      .back-btn:hover { background: #f5e6d3; }
+      .ctrl-btn:hover:not(:disabled) { background: #f5e6d3; }
+      .ctrl-btn.primary:hover:not(:disabled) { background: #ebd3b8; }
+    }
+    .back-btn { font-size: 0.85rem; font-weight: 700; color: #b09070; background: #fff; border: 1.5px solid #e8e0d5; padding: 6px 14px; border-radius: 30px; cursor: pointer; font-family: inherit; transition: all 0.12s; }
     .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem; min-height: 38px; }
+
+    /* Egzersiz */
+    #exercise-area { display: none; text-align: center; }
+    #timer-display { font-size: 1rem; font-weight: 700; color: #e24b4a; background: #fdf0f0; border: 1.5px solid #f9d5d5; padding: 6px 16px; border-radius: 30px; display: none; }
+    .card { background: #fff; border: 1.5px solid #e8e0d5; border-radius: 20px; padding: 1.25rem 1.25rem 0.5rem; margin-bottom: 0.85rem; display: flex; flex-direction: column; align-items: center; box-shadow: 0 4px 20px rgba(90,62,43,0.04); }
+    .card-top { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 0.25rem; }
+    .card-label { font-size: 0.8rem; color: #b09070; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+    #listen-btn { display: flex; align-items: center; gap: 5px; font-size: 0.8rem; padding: 6px 14px; border-radius: 10px; border: 1.5px solid #d4c4b0; background: #fff; color: #5a3e2b; font-weight: 700; cursor: pointer; font-family: inherit; transition: all 0.12s; }
+    #listen-btn.playing { border-color: #6b8c42; color: #3b6d11; background: #eaf3de; }
+    #notation { width: 100%; display: flex; justify-content: center; overflow: hidden; }
+    #notation svg { max-width: 100%; }
+    #hint { font-size: 0.78rem; color: #b09070; text-align: center; margin-bottom: 1rem; font-style: italic; }
+    .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 0.75rem; }
+    .cbtn { padding: 14px 10px; font-size: 1.8rem; font-weight: 700; border-radius: 14px; border: 1.5px solid #d4c4b0; background: #fff; color: #5a3e2b; cursor: pointer; font-family: inherit; transition: all 0.12s; -webkit-tap-highlight-color: transparent; outline: none; }
+    .cbtn:active:not(:disabled) { transform: scale(0.97); }
+    .cbtn.correct { background: #eaf3de; border-color: #6b8c42; color: #3b6d11; }
+    .cbtn.wrong   { background: #fdf0f0; border-color: #e24b4a; color: #a32d2d; }
+    .cbtn:disabled { cursor: default; transform: none; }
+    #feedback { text-align: center; font-size: 0.92rem; font-weight: 700; min-height: 22px; margin-bottom: 0.6rem; }
+    #feedback.ok { color: #3b6d11; } #feedback.no { color: #a32d2d; }
+    #progress-bar-wrap { height: 5px; background: #ede6d8; border-radius: 3px; margin-bottom: 0.8rem; overflow: hidden; display: none; }
+    #progress-bar { height: 100%; width: 100%; background: linear-gradient(90deg,#8cb85f,#52a050); border-radius: 3px; transition: width 0.5s linear; }
+    .controls { display: flex; gap: 10px; margin-top: 0.85rem; }
+    .controls-btn { flex: 1; padding: 12px; font-size: 0.9rem; font-weight: 700; border-radius: 12px; border: 1.5px solid #d4c4b0; background: #fff; color: #5a3e2b; cursor: pointer; font-family: inherit; transition: all 0.12s; }
+    .controls-btn.primary { background: #f5e6d3; border-color: #d4a373; }
+    .controls-btn:disabled { background: #f5f5f5; border-color: #e0e0e0; color: #b0b0b0; cursor: not-allowed; }
+    .result-card { background: #fff; border: 2px solid #d4a373; border-radius: 20px; padding: 2.2rem 1.5rem; text-align: center; }
+    .result-card h2 { font-family:'Playfair Display',serif; font-size: 1.6rem; color: #5a3e2b; margin-bottom: 0.5rem; }
+    .result-rank { font-size: 1.25rem; font-weight: 700; color: #d4a373; background: #faf6ed; display: inline-block; padding: 6px 18px; border-radius: 30px; margin-top: 0.5rem; }
+    .result-score { font-size: 3.5rem; font-weight: 700; color: #6b8c42; margin: 0.8rem 0; }
+    .result-text { font-size: 0.95rem; color: #5a3e2b; margin-bottom: 1.5rem; font-style: italic; line-height: 1.4rem; padding: 0 10px; }
+
+    /* DÜELLO STİLLERİ */
+    #duel-setup-area, #duel-waiting-area, #duel-game-area { display: none; }
     .online-players-list { margin-bottom: 1rem; }
     .online-player-row {
       display: flex; align-items: center; justify-content: space-between;
@@ -539,41 +100,31 @@
     }
     .challenge-btn:hover { background: #e8deff; }
     .no-players-msg { color: #b09070; font-size: 0.9rem; font-style: italic; padding: 1rem 0; }
-    
-    .round-row { display: flex; gap: 8px; justify-content: center; margin-bottom: 1rem; flex-wrap: wrap; }
+    .round-row { display: flex; gap: 8px; justify-content: center; margin-bottom: 1rem; }
     .round-btn { padding: 7px 18px; border-radius: 20px; border: 1.5px solid #d4c4b0; background: #fff; color: #5a3e2b; font-size: 0.88rem; font-weight: 700; cursor: pointer; font-family: inherit; }
     .round-btn.active { background: #7b5ea7; border-color: #7b5ea7; color: #fff; }
-    
     .waiting-card { background: #fff; border: 2px solid #7b5ea7; border-radius: 20px; padding: 2rem 1.5rem; text-align: center; margin-bottom: 1rem; }
     .waiting-name { font-family: 'Playfair Display', serif; font-size: 1.4rem; color: #5a3e2b; margin-bottom: 0.5rem; }
     .waiting-sub { font-size: 0.9rem; color: #b09070; margin-bottom: 1.5rem; }
     .spinner { width: 40px; height: 40px; border: 3px solid #e8e0d5; border-top-color: #7b5ea7; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 1rem; }
     @keyframes spin { to { transform: rotate(360deg); } }
-    
     .duel-top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; }
     .duel-round-badge { font-size: 0.85rem; font-weight: 700; color: #7b5ea7; background: #f3eeff; border: 1.5px solid #c8b4f0; padding: 5px 14px; border-radius: 30px; }
-    .duel-timer-badge { font-size: 0.85rem; font-weight: 700; color: #e24b4a; background: #fdf0f0; border: 1.5px solid #f2b8b8; padding: 5px 14px; border-radius: 30px; }
-    
     .duel-scores { display: flex; gap: 10px; margin-bottom: 0.6rem; }
     .duel-score-box { flex: 1; background: #fff; border: 1.5px solid #e8e0d5; border-radius: 14px; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; }
     .duel-score-box.me  { border-color: #f0c88e; background: #fffaf3; }
     .duel-score-box.opp { border-color: #c8b4f0; background: #f9f5ff; }
     .dscore-name { font-size: 0.82rem; font-weight: 700; color: #5a3e2b; max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .dscore-num  { font-size: 1.4rem; font-weight: 700; color: #5a3e2b; }
-    .duel-note-card { margin-bottom: 0.6rem; padding: 1rem 1rem 0.4rem; text-align: center; }
-    .duel-speaker-wrap { width: 100%; display: flex; justify-content: center; align-items: center; margin: 0 auto 0.5rem; }
-    .duel-speaker-wrap svg { display: block; width: 100%; max-width: 380px; height: auto; cursor: pointer; }
+    .duel-note-card { margin-bottom: 0.6rem; padding: 1rem 1rem 0.4rem; }
+    #duel-notation { width: 100%; display: flex; justify-content: center; overflow: hidden; }
+    #duel-notation svg { max-width: 100%; }
     .duel-choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 0.5rem; }
-    .duel-choice-card {
-      background: #fff; border: 2px solid #e8e0d5; border-radius: 16px; padding: 8px 10px 6px;
-      cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center;
-      box-shadow: 0 2px 8px rgba(90,62,43,0.03); -webkit-tap-highlight-color: transparent; outline: none;
-    }
-    .duel-choice-staff { width: 100px; height: 105px; margin: 4px 0 0; overflow: visible; }
-    .duel-choice-staff svg { max-width: 100%; height: auto; overflow: visible; }
-    .duel-choice-card.correct { background: #eaf3de; border-color: #6b8c42; }
-    .duel-choice-card.wrong   { background: #fdf0f0; border-color: #c75b39; }
-    .duel-choice-card.disabled { cursor: default; opacity: 0.85; }
+    .dcbtn { padding: 14px 8px; font-size: 1.7rem; font-weight: 700; border-radius: 14px; border: 1.5px solid #d4c4b0; background: #fff; color: #5a3e2b; cursor: pointer; font-family: inherit; transition: all 0.1s; -webkit-tap-highlight-color: transparent; outline: none; }
+    .dcbtn:active:not(:disabled) { transform: scale(0.96); }
+    .dcbtn.correct { background: #eaf3de; border-color: #6b8c42; color: #3b6d11; }
+    .dcbtn.wrong   { background: #fdf0f0; border-color: #e24b4a; color: #a32d2d; }
+    .dcbtn:disabled { cursor: default; opacity: 0.7; transform: none; }
     .duel-feedback { text-align: center; min-height: 28px; font-size: 0.95rem; font-weight: 700; color: #5a3e2b; margin-bottom: 0.3rem; }
     .duel-feedback.iwin  { color: #3b6d11; } .duel-feedback.opwin { color: #a32d2d; } .duel-feedback.nobody { color: #888; }
     .duel-countdown-wrap { display: none; justify-content: center; padding: 0.4rem 0; }
@@ -590,1272 +141,616 @@
     .fsc-vs    { font-size: 1rem; font-weight: 700; color: #d4c4b0; }
     .duel-comment { font-size: 0.9rem; color: #5a3e2b; font-style: italic; margin-bottom: 1.5rem; line-height: 1.5; padding: 0 8px; }
     .result-btns { display: flex; gap: 10px; }
+    @media (max-width:400px) { .cbtn{font-size:1.6rem;padding:12px 6px;} .controls{flex-direction:column;gap:8px;} }
+    .site-footer { display:flex; justify-content:center; gap:22px; margin-top:2.5rem; }
+    .site-footer a { color:#b0a392; font-size:2.2rem; transition:all .2s ease; }
+    .site-footer a:hover { transform:translateY(-2px); }
     #online-badges-row { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 10px; }
     .online-name-badge { font-size: .72rem; font-weight: 600; background: #eaf4e0; color: #3b6d11; padding: 4px 11px; border-radius: 20px; display: inline-flex; align-items: center; gap: 5px; border: 1px solid #b0d890; white-space: nowrap; }
   </style>
 </head>
 <body>
-  <header>
-    <h1>🎵 Kulak Eğitimi</h1>
-    <div id="online-badges-row"></div>
-  </header>
-  <div id="app-wrap">
-    <!-- Setup Area Navigasyon Satırı -->
-	<div id="setup-nav" class="nav-row">
-		<button class="back-to-menu-btn" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
-	</div>
 
-    <!-- Setup Area -->
-    <div id="setup-area" class="filter-card">
-      <div class="action-buttons-wrap">
-        <button class="start-exercise-btn" id="startBtn" onclick="startExercise('practice')">Egzersize Başla (Zamansız) 🎯</button>
-        <button class="start-exercise-btn start-race-btn" id="raceBtn" onclick="startExercise('race')">Yarışmaya Başla (40 Saniye) 🏆</button>
-        <button class="app-btn btn-duel" onclick="showDuelSetup()">⚔️ Online Düello</button>
-      </div>
+<header>
+  <h1>🎸 Nota Okuma Egzersizi</h1>
+  <div id="online-badges-row"></div>
+</header>
+
+<div id="app">
+  <div class="nav-row between">
+    <div></div>
+    <div id="theme-toggle-wrap">
     </div>
-
-    <!-- Düello Setup Area Navigasyon Satırı -->
-    <div id="duel-setup-nav" class="nav-row between" style="display:none;">
-      <button class="back-to-menu-btn" onclick="backToMenu()">← Menüye Dön</button>
-      <button class="back-to-menu-btn" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
-    </div>
-
-    <!-- Düello Setup Area -->
-    <div id="duel-setup-area" class="filter-card">
-      <div class="top-bar" style="margin-bottom:.8rem;">
-        <h2 style="font-family:'Playfair Display',serif;font-size:1.1rem;">⚔️ Online Düello Yapılandırması</h2>
-      </div>
-      
-      <div class="filter-title">Oyun Modu (Tur)</div>
-      <div class="round-row">
-        <button class="round-btn active" data-rounds="5"  onclick="selectRounds(5)">5 Tur</button>
-        <button class="round-btn"        data-rounds="10" onclick="selectRounds(10)">10 Tur</button>
-        <button class="round-btn"        data-rounds="15" onclick="selectRounds(15)">15 Tur</button>
-      </div>
-
-      <div class="filter-title">Oyun Modu (Zaman Limiti)</div>
-      <div class="round-row">
-        <button class="round-btn" data-time="0"  onclick="selectDuelTime(0)">⏳ Zamansız</button>
-        <button class="round-btn" data-time="40" onclick="selectDuelTime(40)">⏱ 40sn</button>
-        <button class="round-btn" data-time="50" onclick="selectDuelTime(50)">⏱ 50sn</button>
-        <button class="round-btn" data-time="60" onclick="selectDuelTime(60)">⏱ 60sn</button>
-      </div>
-
-      <div class="filter-title" style="margin-top:1.2rem;">Online Oyuncular</div>
-      <div id="online-players-list" class="online-players-list">
-        <div class="no-players-msg">Yükleniyor...</div>
-      </div>
-      
-      <div class="filter-title">Çalışılacak Notalar</div>
-      <p style="text-align:center;font-size:.8rem;color:#8a7860;margin:0 0 8px;">🎵 Düellolarda adil olması için tüm notalar kullanılır.</p>
-      <div class="string-buttons" style="margin-bottom:0; display:none;">
-        <button id="d-btn-all" class="string-btn all-btn active" onclick="dToggleAll()">Hepsi</button>
-      </div>
-      <div class="string-buttons" id="duel-note-buttons" style="margin-top:8px; display:none;"></div>
-    </div>
-
-    <!-- Düello Waiting Area -->
-    <div id="duel-waiting-area" class="filter-card">
-      <div class="top-bar" style="margin-bottom:.8rem;">
-        <h2 style="font-family:'Playfair Display',serif;font-size:1.1rem;">⚔️ Davet Gönderildi</h2>
-        <button class="back-to-menu-btn" style="margin-bottom:0;" onclick="cancelChallenge()">✕ İptal</button>
-      </div>
-      <div class="waiting-card">
-        <div class="spinner"></div>
-        <div class="waiting-name" id="waiting-opp-name">Rakip</div>
-        <div class="waiting-sub" id="waiting-details-label">daveti kabul etmesi bekleniyor...</div>
-      </div>
-      <p style="font-size:.8rem;color:#b09070;text-align:center;">Rakibiniz daveti reddederse veya 30 saniye içinde cevap vermezse otomatik iptal olur.</p>
-    </div>
-
-    <!-- Düello Game Area -->
-    <div id="duel-game-area">
-      <div class="nav-row between">
-        <button class="back-to-menu-btn" onclick="leaveGame()">← Çık</button>
-        <button class="back-to-menu-btn" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
-      </div>
-      
-      <div class="duel-top-bar">
-        <div class="duel-timer-badge" id="duel-timer-label" style="display:none;">⏱ --sn</div>
-        <div class="duel-round-badge" id="duel-round-label">Tur 1 / 5</div>
-      </div>
-      <div class="duel-scores">
-        <div class="duel-score-box me">
-          <span class="dscore-name" id="dscore-me-name">Sen</span>
-          <span class="dscore-num"  id="dscore-me">0</span>
-        </div>
-        <div class="duel-score-box opp">
-          <span class="dscore-name" id="dscore-opp-name">Rakip</span>
-          <span class="dscore-num"  id="dscore-opp">0</span>
-        </div>
-      </div>
-      <div class="card duel-note-card">
-        <div class="q-title" style="margin-bottom:0.3rem;">Bu duyduğunuz ses hangi notaya ait?</div>
-        <div class="duel-speaker-wrap" id="duel-speaker-wrap" onclick="duelPlaySound()">
-          <svg viewBox="60 0 400 210" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
-            <defs>
-              <linearGradient id="dSpGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#2a1a0e"/>
-                <stop offset="100%" stop-color="#1a0f06"/>
-              </linearGradient>
-              <filter id="dWaveGlow" x="-80%" y="-80%" width="260%" height="260%">
-                <feGaussianBlur stdDeviation="2.5" result="blur"/>
-                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-              </filter>
-            </defs>
-            <rect x="62" y="32" width="392" height="148" rx="5" fill="url(#dSpGrad)" stroke="#3a2010" stroke-width="1.5"/>
-            <rect x="62" y="32" width="392" height="3" rx="1" fill="#c8a050" opacity="0.5"/>
-            <rect x="62" y="177" width="392" height="3" rx="1" fill="#c8a050" opacity="0.5"/>
-            <g id="duel-speaker-group">
-              <g id="duel-speaker-cone">
-                <rect x="140" y="76" width="24" height="50" fill="#f0e0b0" stroke="#c0a040" stroke-width="1.5"/>
-                <polygon points="164,76 210,46 210,156 164,126" fill="#f0e0b0" stroke="#c0a040" stroke-width="1.5" stroke-linejoin="round"/>
-              </g>
-              <path class="sound-wave sound-wave-1" d="M 232 76 A 50 50 0 0 1 232 136" fill="none" stroke="#f4d03f" stroke-width="4" stroke-linecap="round" filter="url(#dWaveGlow)"/>
-              <path class="sound-wave sound-wave-2" d="M 255 60 A 72 72 0 0 1 255 152" fill="none" stroke="#f4d03f" stroke-width="4" stroke-linecap="round" filter="url(#dWaveGlow)"/>
-              <path class="sound-wave sound-wave-3" d="M 278 44 A 95 95 0 0 1 278 168" fill="none" stroke="#f4d03f" stroke-width="4" stroke-linecap="round" filter="url(#dWaveGlow)"/>
-            </g>
-            <text x="258" y="200" text-anchor="middle" fill="#8b6b4e" font-size="13" font-weight="700" font-family="Lato,sans-serif">Dinlemek için dokun</text>
-          </svg>
-        </div>
-      </div>
-      <div class="duel-choices" id="duel-choices"></div>
-      <div class="duel-feedback" id="duel-feedback"></div>
-      <div class="duel-countdown-wrap" id="duel-cd-wrap">
-        <div class="duel-cd" id="duel-cd-num">3</div>
-      </div>
-    </div>
-
-    <!-- Exercise Area -->
-    <div id="exercise-area">
-      <div class="nav-row between">
-        <button class="back-to-menu-btn" onclick="backToMenu()">← Menüye Dön</button>
-        <button class="back-to-menu-btn" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
-      </div>
-
-      <div id="live-note-filter" class="string-buttons" style="margin-bottom:.8rem;">
-        <button id="btn-all" class="string-btn all-btn active" onclick="toggleAll()">Hepsi</button>
-        <div id="note-buttons" style="display:contents;"></div>
-      </div>
-
-      <div class="card">
-        <div class="q-title-row">
-          <div class="q-title">Bu duyduğunuz ses hangi notaya ait?</div>
-          <span class="practice-timer-box" id="practice-timer-box" style="display:none;">Süre: 0sn</span>
-        </div>
-
-        <div class="speaker-wrap" id="speaker-wrap" onclick="playSound()">
-          <svg viewBox="60 0 400 210" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
-            <defs>
-              <linearGradient id="spGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#2a1a0e"/>
-                <stop offset="100%" stop-color="#1a0f06"/>
-              </linearGradient>
-              <filter id="waveGlow" x="-80%" y="-80%" width="260%" height="260%">
-                <feGaussianBlur stdDeviation="2.5" result="blur"/>
-                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-              </filter>
-            </defs>
-
-            <rect x="62" y="32" width="392" height="148" rx="5" fill="url(#spGrad)" stroke="#3a2010" stroke-width="1.5"/>
-            <rect x="62" y="32" width="392" height="3" rx="1" fill="#c8a050" opacity="0.5"/>
-            <rect x="62" y="177" width="392" height="3" rx="1" fill="#c8a050" opacity="0.5"/>
-
-            <g id="speaker-group">
-              <g id="speaker-cone">
-                <rect x="140" y="76" width="24" height="50" fill="#f0e0b0" stroke="#c0a040" stroke-width="1.5"/>
-                <polygon points="164,76 210,46 210,156 164,126" fill="#f0e0b0" stroke="#c0a040" stroke-width="1.5" stroke-linejoin="round"/>
-              </g>
-              <path class="sound-wave sound-wave-1" d="M 232 76 A 50 50 0 0 1 232 136" fill="none" stroke="#f4d03f" stroke-width="4" stroke-linecap="round" filter="url(#waveGlow)"/>
-              <path class="sound-wave sound-wave-2" d="M 255 60 A 72 72 0 0 1 255 152" fill="none" stroke="#f4d03f" stroke-width="4" stroke-linecap="round" filter="url(#waveGlow)"/>
-              <path class="sound-wave sound-wave-3" d="M 278 44 A 95 95 0 0 1 278 168" fill="none" stroke="#f4d03f" stroke-width="4" stroke-linecap="round" filter="url(#waveGlow)"/>
-            </g>
-
-            <text x="258" y="200" text-anchor="middle" fill="#8b6b4e" font-size="13" font-weight="700" font-family="Lato,sans-serif">Dinlemek için dokun</text>
-          </svg>
-        </div>
-
-        <div class="message" id="message"></div>
-
-        <div id="auto-bar-wrap"><div id="auto-bar"></div></div>
-
-        <div class="choices" id="choices"></div>
-
-        <div class="progress-area">
-          <div class="progress-track">
-            <div class="progress-fill" id="progress-fill"></div>
-          </div>
-          <span class="timer-badge" id="timer-badge" style="display:none;"></span>
-        </div>
-
-        <div class="controls">
-          <button class="ctrl-btn" id="prevBtn" onclick="previousQ()">← Önceki</button>
-          <button class="ctrl-btn" id="nextBtn" onclick="nextQ()">Sonraki Soru →</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Result Screen -->
-    <div class="result-screen" id="result-screen">
-      <h2 class="result-title">🎉 Test Tamamlandı!</h2>
-      <div class="result-stats" id="result-stats"></div>
-      <p style="color:#8b6b4e; font-weight:700; margin-bottom:1.5rem; text-align:center;" id="result-comment"></p>
-      <div class="controls">
-        <button class="ctrl-btn" onclick="backToMenu()">← Menüye Dön</button>
-        <button class="ctrl-btn primary" onclick="restartExercise()">🔄 Tekrar Başla</button>
-      </div>
+    <button class="back-btn" onclick="location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
+  </div>
+  <div id="setup-area" class="filter-card">
+    <div class="action-buttons-wrap">
+      <button id="start-btn" class="app-btn" onclick="startExercise('practice')">Egzersize Başla (Serbest) 🎯</button>
+      <button id="race-btn"  class="app-btn btn-race" onclick="startExercise('race')">Yarışmaya Başla (40 Saniye) 🏆</button>
+      <button class="app-btn btn-duel" onclick="showDuelSetup()">⚔️ Online Düello</button>
     </div>
   </div>
 
-  <footer class="site-footer">
-    <a href="https://www.instagram.com/yunusgedik_/" target="_blank" aria-label="Instagram">
-      <i class="fa-brands fa-instagram"></i>
-    </a>
-    <a href="https://x.com/yunusgedik_" target="_blank" aria-label="X">
-      <i class="fa-brands fa-x-twitter"></i>
-    </a>
-    <a href="https://www.youtube.com/yunusgedik" target="_blank" aria-label="YouTube">
-      <i class="fa-brands fa-youtube"></i>
-    </a>
-  </footer>
+  <div id="duel-setup-area" class="filter-card">
+    <div class="top-bar" style="margin-bottom:.8rem;">
+      <h2 style="font-family:'Playfair Display',serif;font-size:1.1rem;">⚔️ Online Düello</h2>
+      <button class="back-btn" onclick="showArea('setup-area')">← Geri</button>
+    </div>
+    <div id="online-players-list" class="online-players-list"></div>
+    <div class="filter-title">Tur Sayısı</div>
+    <div class="round-row">
+      <button class="round-btn active" data-rounds="5" onclick="selectRounds(5)">5 Tur</button>
+      <button class="round-btn" data-rounds="10" onclick="selectRounds(10)">10 Tur</button>
+      <button class="round-btn" data-rounds="15" onclick="selectRounds(15)">15 Tur</button>
+    </div>
+    <div class="string-buttons" style="margin-bottom:0;">
+      <p style="width:100%;text-align:center;font-size:.8rem;color:#8a7860;margin:0;">🎸 Düellolarda adil olması için tüm teller kullanılır.</p>
+    </div>
+  </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/js/all.min.js"></script>
-  <script>
-    const NOTES = {
-      'C4': { freq: 261.63, key: 'c/4', line: -1 },
-      'D4': { freq: 293.66, key: 'd/4', line: -0.5 },
-      'E4': { freq: 329.63, key: 'e/4', line: 0 },
-      'F4': { freq: 349.23, key: 'f/4', line: 0.5 },
-      'G4': { freq: 392.00, key: 'g/4', line: 1 },
-      'A4': { freq: 440.00, key: 'a/4', line: 1.5 },
-      'B4': { freq: 493.88, key: 'b/4', line: 2 }
+  <div id="duel-waiting-area" class="filter-card">
+    <div class="top-bar" style="margin-bottom:.8rem;">
+      <h2 style="font-family:'Playfair Display',serif;font-size:1.1rem;">⚔️ Davet Gönderildi</h2>
+      <button class="back-btn" onclick="cancelChallenge()">✕ İptal</button>
+    </div>
+    <div class="waiting-card">
+      <div class="spinner"></div>
+      <div class="waiting-name" id="waiting-opp-name">Rakip</div>
+      <div class="waiting-sub">daveti kabul etmesi bekleniyor...</div>
+    </div>
+    <p style="font-size:.8rem;color:#b09070;text-align:center;">Rakibiniz daveti reddederse veya 30 saniye içinde cevap vermezse otomatik iptal olur.</p>
+  </div>
+
+  <div id="duel-game-area">
+    <div class="duel-top-bar">
+      <button class="back-btn" onclick="leaveGame()">← Çık</button>
+      <div class="duel-round-badge" id="duel-round-label">Tur 1 / 5</div>
+    </div>
+    <div class="duel-scores">
+      <div class="duel-score-box me">
+        <span class="dscore-name" id="dscore-me-name">Sen</span>
+        <span class="dscore-num"  id="dscore-me">0</span>
+      </div>
+      <div class="duel-score-box opp">
+        <span class="dscore-name" id="dscore-opp-name">Rakip</span>
+        <span class="dscore-num"  id="dscore-opp">0</span>
+      </div>
+    </div>
+    <div class="card duel-note-card vf-card">
+      <div class="card-top">
+        <span class="card-label" id="duel-string-label">Bu Hangi Nota?</span>
+      </div>
+      <div id="duel-notation"></div>
+    </div>
+    <div class="duel-choices" id="duel-choices"></div>
+    <div class="duel-feedback" id="duel-feedback"></div>
+    <div class="duel-countdown-wrap" id="duel-cd-wrap">
+      <div class="duel-cd" id="duel-cd-num">3</div>
+    </div>
+  </div>
+</div>
+
+<div id="exercise-wrap" style="width:100%;max-width:550px;display:none;">
+  <div id="exercise-area" style="display:block;">
+    <div class="nav-row between">
+      <button class="back-btn" onclick="goBackToMenu()">← Menüye Dön</button>
+      <button class="back-btn" onclick="location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
+    </div>
+    <div id="live-string-filter" class="string-buttons" style="margin-bottom:.8rem;">
+      <button id="btn-all" class="string-btn all-btn active" onclick="toggleAllStrings()">Hepsi</button>
+      <button class="string-btn active string-num-btn" data-string="1" onclick="toggleString(1)">①</button>
+      <button class="string-btn active string-num-btn" data-string="2" onclick="toggleString(2)">②</button>
+      <button class="string-btn active string-num-btn" data-string="3" onclick="toggleString(3)">③</button>
+      <button class="string-btn active string-num-btn" data-string="4" onclick="toggleString(4)">④</button>
+      <button class="string-btn active string-num-btn" data-string="5" onclick="toggleString(5)">⑤</button>
+      <button class="string-btn active string-num-btn" data-string="6" onclick="toggleString(6)">⑥</button>
+    </div>
+    <div class="card vf-card">
+      <div class="card-top">
+        <span id="current-string-label" class="card-label">Bu Hangi Nota?</span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div id="timer-display" style="display:none;">Kalan Süre: 40</div>
+          <button id="listen-btn" onclick="replay()">🔊 Dinle</button>
+        </div>
+      </div>
+      <div id="notation"></div>
+    </div>
+    <p id="hint">🔊 Notayı duymak için "Dinle" tuşuna basın</p>
+    <div class="choices" id="choices"></div>
+    <div id="feedback"></div>
+    <div id="progress-bar-wrap"><div id="progress-bar"></div></div>
+    <div class="controls">
+      <button class="controls-btn" id="prev-btn" onclick="manualPrev()" disabled>← Önceki</button>
+      <button class="controls-btn primary" id="next-btn" onclick="manualNext()" disabled>Sonraki Soru →</button>
+      <button class="controls-btn" onclick="location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <a href="https://www.instagram.com/yunusgedik_/" target="_blank"><i class="fa-brands fa-instagram"></i></a>
+  <a href="https://x.com/yunusgedik_" target="_blank"><i class="fa-brands fa-x-twitter"></i></a>
+  <a href="https://www.youtube.com/yunusgedik" target="_blank"><i class="fa-brands fa-youtube"></i></a>
+</footer>
+
+<script>
+const NOTES=[
+  {key:'e/3',freq:164.81,nota:'Mi', string:6},{key:'f/3',freq:174.61,nota:'Fa', string:6},{key:'g/3',freq:196.00,nota:'Sol',string:6},
+  {key:'a/3',freq:220.00,nota:'La', string:5},{key:'b/3',freq:246.94,nota:'Si', string:5},{key:'c/4',freq:261.63,nota:'Do', string:5},
+  {key:'d/4',freq:293.66,nota:'Re', string:4},{key:'e/4',freq:329.63,nota:'Mi', string:4},{key:'f/4',freq:349.23,nota:'Fa', string:4},
+  {key:'g/4',freq:392.00,nota:'Sol',string:3},{key:'a/4',freq:440.00,nota:'La', string:3},
+  {key:'b/4',freq:493.88,nota:'Si', string:2},{key:'c/5',freq:523.25,nota:'Do', string:2},{key:'d/5',freq:587.33,nota:'Re', string:2},
+  {key:'e/5',freq:659.25,nota:'Mi', string:1},{key:'f/5',freq:698.46,nota:'Fa', string:1},{key:'g/5',freq:783.99,nota:'Sol',string:1},
+  {key:'a/5',freq:880.00,nota:'La', string:1},{key:'b/5',freq:987.77,nota:'Si', string:1},
+];
+const ALL_NOTES=['Do','Re','Mi','Fa','Sol','La','Si'];
+function getERR() { return window.ERR || ["Yanlış! Tekrar dene."]; }
+function shuffle(a){return[...a].sort(()=>Math.random()-0.5);}
+function showArea(id){
+  ['setup-area','duel-setup-area','duel-waiting-area','duel-game-area','exercise-wrap']
+    .forEach(x=>{const e=document.getElementById(x);if(e)e.style.display='none';});
+  const t=document.getElementById(id);if(t){t.style.display='block';t.scrollIntoView({behavior:'smooth'});}
+}
+let selectedStrings=new Set([1,2,3,4,5,6]),filteredNotes=[];
+let current=null,answered=false,interacted=false,autoTimer=null,currentMode='practice',gameTimer=null,timeLeft=40,correctCount=0;
+let missCounts={};
+let audioCtx=null;
+function getAudio(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();return audioCtx;}
+function playNote(freq){
+  try{const ctx=getAudio();if(ctx.state==='suspended')ctx.resume();
+  const m=ctx.createGain(),now=ctx.currentTime;
+  m.gain.setValueAtTime(0,now);m.gain.linearRampToValueAtTime(0.55,now+0.006);m.gain.exponentialRampToValueAtTime(0.001,now+2.2);m.connect(ctx.destination);
+  [[1,.5],[2,.28],[3,.12],[4,.06]].forEach(([k,v])=>{const o=ctx.createOscillator(),g=ctx.createGain();o.type='sine';o.frequency.value=freq*k;g.gain.value=v;o.connect(g);g.connect(m);o.start(now);o.stop(now+2.2);});
+  const b=document.getElementById('listen-btn');if(b){b.classList.add('playing');setTimeout(()=>b.classList.remove('playing'),600);}}catch(e){}
+}
+function drawNote(noteKey,cid='notation'){
+  const {Renderer,Stave,StaveNote,Voice,Formatter}=Vex.Flow;
+  const c=document.getElementById(cid);c.innerHTML='';
+  const cw=c.offsetWidth||500,H=160;
+  const r=new Renderer(c,Renderer.Backends.SVG);r.resize(cw,H);
+  const ctx=r.getContext();ctx.scale(1.45,1.45);
+  const sw=cw/1.45,stW=Math.min(180,sw-40),stX=(sw-stW)/2;
+  const st=new Stave(stX,-10,stW);st.addClef('treble');st.setContext(ctx).draw();
+  const sn=new StaveNote({keys:[noteKey],duration:'w'});sn.setXShift(30);
+  const v=new Voice({num_beats:4,beat_value:4});v.addTickables([sn]);
+  new Formatter().joinVoices([v]).format([v],stW-45);v.draw(ctx,st);
+}
+function toggleAllStrings(){const a=document.getElementById('btn-all'),n=document.querySelectorAll('.string-num-btn');selectedStrings=new Set([1,2,3,4,5,6]);a.classList.add('active');n.forEach(b=>b.classList.add('active'));if(typeof checkStartBtn==='function')checkStartBtn();if(currentMode==='practice')filteredNotes=NOTES.filter(n=>selectedStrings.has(n.string));}
+function toggleString(num){const b=document.querySelector(`.string-num-btn[data-string="${num}"]`),a=document.getElementById('btn-all');if(selectedStrings.has(num)){if(selectedStrings.size===1)return;selectedStrings.delete(num);b.classList.remove('active');}else{selectedStrings.add(num);b.classList.add('active');}selectedStrings.size===6?a.classList.add('active'):a.classList.remove('active');if(typeof checkStartBtn==='function')checkStartBtn();if(currentMode==='practice')filteredNotes=NOTES.filter(n=>selectedStrings.has(n.string));}
+function checkStartBtn(){const z=selectedStrings.size===0;document.getElementById('start-btn').disabled=z;document.getElementById('race-btn').disabled=z;}
+function startExercise(mode){filteredNotes=mode==='race'?NOTES.slice():NOTES.filter(n=>selectedStrings.has(n.string));if(!filteredNotes.length)return;if(window.trackEnd)window.trackEnd();currentMode=mode;if(window.trackStart)window.trackStart(mode);showArea('exercise-wrap');document.getElementById('live-string-filter').style.display=mode==='practice'?'flex':'none';if(mode==='race'){timeLeft=40;correctCount=0;document.getElementById('timer-display').style.display='inline-block';document.getElementById('timer-display').textContent='Kalan Süre: '+timeLeft;startGameTimer();}else document.getElementById('timer-display').style.display='none';nextCard();}
+function goBackToMenu(){if(window.trackEnd)window.trackEnd();if(gameTimer){clearInterval(gameTimer);gameTimer=null;}clearAutoTimer();showArea('setup-area');}
+function resetQuiz(){if(gameTimer){clearInterval(gameTimer);gameTimer=null;}clearAutoTimer();startExercise(currentMode);}
+function startGameTimer(){if(gameTimer)clearInterval(gameTimer);gameTimer=setInterval(()=>{timeLeft--;if(timeLeft<=0){document.getElementById('timer-display').textContent='Süre Bitti!';clearInterval(gameTimer);endGame();}else document.getElementById('timer-display').textContent='Kalan Süre: '+timeLeft;},1000);}
+function endGame(){if(window.trackEnd)window.trackEnd();clearAutoTimer();const app=document.getElementById('exercise-area');let r='',c='';if(correctCount>=20){r='🏆 Master Gitarist 1 Numara!';c='İnanılmaz! Yunus Hoca gözyaşları içinde seni ayakta alkışlıyor! 🎸';}else if(correctCount>=15){r='🔥 Sahne Sanatçısı';c='Notalar tıkır tıkır çözülüyor!';}else if(correctCount>=10){r='⚡ Ritim Gitarist';c='Solo atamıyorsun ama notaları fena okumuyorsun hani.';}else if(correctCount>=5){r='🎸 Akustikçi Popçu';c='Sahilde "Akdeniz Akşamları" çalmaktan öteye geçemedin ama bir umut var!';}else{r='🐢 Kaplumbağa Gitarist';c='Gitarı yavaşça yere bırak ve notalara bir daha dokunma kanka...';}app.innerHTML=`<div class="result-card"><h2>Yarışma Tamamlandı! 🏁</h2><div class="result-rank">${r}</div><div class="result-score">${correctCount} Doğru</div><p class="result-text">"${c}"</p><button class="app-btn" onclick="location.reload()">Yeniden Dene 🔄</button></div>`;}
+function clearAutoTimer(){if(autoTimer){clearTimeout(autoTimer);autoTimer=null;}document.getElementById('progress-bar-wrap').style.display='none';}
+function startAutoAdvance(){const w=document.getElementById('progress-bar-wrap'),b=document.getElementById('progress-bar');w.style.display='block';b.style.width='100%';b.style.transition='none';requestAnimationFrame(()=>requestAnimationFrame(()=>{b.style.transition='width 1s linear';b.style.width='0%';}));autoTimer=setTimeout(()=>{clearAutoTimer();nextCard();},1000);}
+function manualNext(){if(currentMode==='race'&&timeLeft<=0)return;clearAutoTimer();nextCard();}
+function manualPrev(){}
+
+function pickNextNote(){
+  let pool=filteredNotes;
+  if(current && pool.length>1){
+    pool=pool.filter(n=>n.key!==current.key);
+  }
+  if(pool.length===0) pool=filteredNotes;
+  const weights=pool.map(n=>1+2*(missCounts[n.key]||0));
+  const total=weights.reduce((a,b)=>a+b,0);
+  let r=Math.random()*total;
+  for(let i=0;i<pool.length;i++){
+    r-=weights[i];
+    if(r<=0) return pool[i];
+  }
+  return pool[pool.length-1];
+}
+
+function nextCard(){if(currentMode==='race'&&timeLeft<=0)return;if(currentMode==='practice')filteredNotes=NOTES.filter(n=>selectedStrings.has(n.string));answered=false;if(document.activeElement)document.activeElement.blur();document.getElementById('feedback').textContent='';document.getElementById('feedback').className='';document.getElementById('next-btn').disabled=true;clearAutoTimer();current=pickNextNote();document.getElementById('current-string-label').textContent=`Bu Nota Hangi Telde? (${current.string}. Tel Egzersizi)`;const w=shuffle(ALL_NOTES.filter(n=>n!==current.nota)).slice(0,3),ch=shuffle([current.nota,...w]);drawNote(current.key,'notation');if(interacted)setTimeout(()=>playNote(current.freq),280);const box=document.getElementById('choices');box.innerHTML='';ch.forEach(n=>{const b=document.createElement('button');b.className='cbtn';b.textContent=n;b.onclick=()=>answer(n,b);box.appendChild(b);});}
+function replay(){interacted=true;document.getElementById('hint').style.display='none';if(current)playNote(current.freq);}
+function answer(n,btn){if(answered)return;if(currentMode==='race'&&timeLeft<=0)return;answered=true;interacted=true;document.getElementById('hint').style.display='none';document.querySelectorAll('.cbtn').forEach(b=>b.disabled=true);const fb=document.getElementById('feedback');document.getElementById('next-btn').disabled=false;if(n===current.nota){if(currentMode==='race')correctCount++;if(window.trackLog)window.trackLog(true);btn.className='cbtn correct';btn.blur();fb.textContent='✓ Doğru!';fb.className='ok';playNote(current.freq);startAutoAdvance();}else{missCounts[current.key]=(missCounts[current.key]||0)+1;if(window.trackLog)window.trackLog(false,current.key,current.nota+' ('+current.string+'. tel)');btn.className='cbtn wrong';fb.textContent='✗ '+getERR()[Math.floor(Math.random()*getERR().length)]+' — Doğrusu: '+current.nota;fb.className='no';document.querySelectorAll('.cbtn').forEach(b=>{if(b.textContent===current.nota)b.className='cbtn correct';});}}
+</script>
+
+<script type="module">
+import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js';
+import {
+  getDatabase, ref, set, get, update, remove,
+  onValue, onDisconnect, runTransaction, push
+} from 'https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js';
+import { createTracker } from '/game-tracker.js';
+import { ERRORS as _SHARED_ERRORS } from '/shared-errors.js';
+window.ERR = _SHARED_ERRORS;
+
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBkEd729B65y-NZIQ-sxScCgaEvlX-q7yA",
+  authDomain: "gitar-yunus.firebaseapp.com",
+  databaseURL: "https://gitar-yunus-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "gitar-yunus",
+  storageBucket: "gitar-yunus.firebasestorage.app",
+  messagingSenderId: "184803778782",
+  appId: "1:184803778782:web:8f9fbeb4fe625eb386e24f"
+};
+
+const fbApp = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
+const db = getDatabase(fbApp);
+
+const mySid  = localStorage.getItem('gitar_session');
+const myName = localStorage.getItem('gitar_student_name') || 'Öğrenci';
+
+const _tracker = createTracker({ db, ref, push, get, set });
+window.trackStart = (mode) => _tracker.start(mySid, 'nota', mode);
+window.trackLog   = (ok, key, label) => _tracker.log(ok, key, label);
+window.trackEnd   = () => _tracker.end();
+
+
+let duelStrings     = new Set([1,2,3,4,5,6]);
+let duelRounds      = 5;
+let myRole          = '';   
+let oppSid          = '';
+let oppName         = '';
+let roomCode        = '';
+let onlineListener  = null;
+let roundListener   = null;
+let challengeExpiry = null;
+let myAnswered      = false;
+let myScore_        = 0;
+let oppScore_       = 0;
+let cdTimer         = null;
+let currentRoundNum = 0;
+let currentQuestionData = null;
+
+function rndCode(){ return Math.floor(100000+Math.random()*900000).toString(); }
+const ALL_NOTES = ['Do','Re','Mi','Fa','Sol','La','Si'];
+const NOTES = [
+  {key:'e/3',freq:164.81,nota:'Mi', string:6},{key:'f/3',freq:174.61,nota:'Fa', string:6},{key:'g/3',freq:196.00,nota:'Sol',string:6},
+  {key:'a/3',freq:220.00,nota:'La', string:5},{key:'b/3',freq:246.94,nota:'Si', string:5},{key:'c/4',freq:261.63,nota:'Do', string:5},
+  {key:'d/4',freq:293.66,nota:'Re', string:4},{key:'e/4',freq:329.63,nota:'Mi', string:4},{key:'f/4',freq:349.23,nota:'Fa', string:4},
+  {key:'g/4',freq:392.00,nota:'Sol',string:3},{key:'a/4',freq:440.00,nota:'La', string:3},
+  {key:'b/4',freq:493.88,nota:'Si', string:2},{key:'c/5',freq:523.25,nota:'Do', string:2},{key:'d/5',freq:587.33,nota:'Re', string:2},
+  {key:'e/5',freq:659.25,nota:'Mi', string:1},{key:'f/5',freq:698.46,nota:'Fa', string:1},{key:'g/5',freq:783.99,nota:'Sol',string:1},
+  {key:'a/5',freq:880.00,nota:'La', string:1},{key:'b/5',freq:987.77,nota:'Si', string:1},
+];
+
+function shuf(a){return[...a].sort(()=>Math.random()-.5);}
+
+function buildQuestionDeck(strings, totalRounds) {
+  const deck = {};
+  const pool = NOTES.filter(n => strings.includes(n.string));
+  for (let i = 1; i <= totalRounds; i++) {
+    const note = pool[Math.floor(Math.random() * pool.length)];
+    const wrong = shuf(ALL_NOTES.filter(n => n !== note.nota)).slice(0, 3);
+    deck[i] = {
+      noteKey: note.key,
+      notaAdi: note.nota,
+      freq: note.freq,
+      string: note.string,
+      choices: shuf([note.nota, ...wrong])
     };
-
-    const NOTE_NAMES = ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4'];
-    const NOTE_LABELS = ['Do', 'Re', 'Mi', 'Fa', 'Sol', 'La', 'Si'];
-
-    let selectedNotes = [...NOTE_NAMES];
-    let currentQuestions = [];
-    let currentQIndex = 0;
-    let correct = 0;
-    let wrong = 0;
-    let answered = false;
-    let audioContext;
-    let currentMode = 'practice';
-    let activeNotePool = [...NOTE_NAMES];
-    let timeLeft = 0;
-    let raceTimer = null;
-
-    function initSetupPanel() {
-      const btnContainer = document.getElementById('note-buttons');
-      btnContainer.innerHTML = '';
-
-      NOTE_NAMES.forEach((note, idx) => {
-        const btn = document.createElement('button');
-        btn.className = 'string-btn active';
-        btn.textContent = NOTE_LABELS[idx];
-        btn.dataset.note = note;
-        btn.onclick = (e) => toggleNote(note, btn, e);
-        btnContainer.appendChild(btn);
-      });
-    }
-
-    function drawMiniStaff(div, noteName) {
-      div.innerHTML = '';
-      try {
-        const noteData = NOTES[noteName];
-        const { Renderer, Stave, StaveNote, Voice, Formatter } = Vex.Flow;
-        const renderer = new Renderer(div, Renderer.Backends.SVG);
-        renderer.resize(110, 115);
-        const ctx = renderer.getContext();
-        const stave = new Stave(0, -10, 110);
-        stave.addClef('treble').setContext(ctx).draw();
-        const note = new StaveNote({ keys: [noteData.key], duration: 'w' });
-        if (note.keyProps && note.keyProps[0]) {
-          note.keyProps[0].line = noteData.line;
-          note.keyProps[0].clef = 'treble';
-        }
-        const voice = new Voice({ num_beats: 4, beat_value: 4 });
-        voice.addTickables([note]);
-        new Formatter().joinVoices([voice]).format([voice], 85);
-        voice.draw(ctx, stave);
-        const s = div.querySelector('svg');
-        if (s) { s.style.width = '100%'; s.style.height = 'auto'; }
-      } catch (e) { console.log(e); }
-    }
-
-    function toggleAll() {
-      selectedNotes = [...NOTE_NAMES];
-      document.querySelectorAll('.string-btn[data-note]').forEach(btn => {
-        btn.classList.add('active');
-      });
-      document.querySelector('.all-btn').classList.add('active');
-    }
-
-    function toggleNote(note, btn, e) {
-      e.preventDefault();
-      if (selectedNotes.includes(note)) {
-        if (selectedNotes.length === 1) return;
-        selectedNotes = selectedNotes.filter(n => n !== note);
-        btn.classList.remove('active');
-      } else {
-        selectedNotes.push(note);
-        btn.classList.add('active');
-      }
-      document.querySelector('.all-btn').classList.toggle('active', selectedNotes.length === NOTE_NAMES.length);
-    }
-
-    function shuffleArr(arr) {
-      return [...arr].sort(() => Math.random() - 0.5);
-    }
-
-    let missCounts = {};
-
-    function pickNextQuestionNote(pool, prevNote) {
-      let candidates = pool;
-      if (prevNote && pool.length > 1) {
-        candidates = pool.filter(n => n !== prevNote);
-      }
-      if (candidates.length === 0) candidates = pool;
-
-      const weights = candidates.map(n => 1 + 6 * (missCounts[n] || 0));
-      const total = weights.reduce((a, b) => a + b, 0);
-      let r = Math.random() * total;
-      for (let i = 0; i < candidates.length; i++) {
-        r -= weights[i];
-        if (r <= 0) return candidates[i];
-      }
-      return candidates[candidates.length - 1];
-    }
-
-    function pickAdjacentChoiceBlock(correctNote) {
-      const idx = NOTE_NAMES.indexOf(correctNote);
-      const blockSize = 4;
-      const minStart = Math.max(0, idx - (blockSize - 1));
-      const maxStart = Math.min(idx, NOTE_NAMES.length - blockSize);
-      const possibleStarts = [];
-      for (let s = minStart; s <= maxStart; s++) possibleStarts.push(s);
-      const start = possibleStarts[Math.floor(Math.random() * possibleStarts.length)];
-      return NOTE_NAMES.slice(start, start + blockSize);
-    }
-
-    function clearRaceTimer() {
-      if (raceTimer) { clearInterval(raceTimer); raceTimer = null; }
-    }
-
-    let practiceTimer = null;
-    let practiceSeconds = 0;
-
-    function clearPracticeTimer() {
-      if (practiceTimer) { clearInterval(practiceTimer); practiceTimer = null; }
-    }
-
-	function updatePracticeTimerDisplay() {
-      const box = document.getElementById('practice-timer-box');
-      if (!box) return;
-      const m = Math.floor(practiceSeconds / 60);
-      const s = practiceSeconds % 60;
-      const mm = String(m).padStart(2, '0');
-      const ss = String(s).padStart(2, '0');
-      box.textContent = 'Süre: ' + mm + ':' + ss;
-    }
-
-    function startPracticeTimer() {
-      clearPracticeTimer();
-      practiceSeconds = 0;
-      const box = document.getElementById('practice-timer-box');
-      if (box) box.style.display = '';
-      updatePracticeTimerDisplay();
-      practiceTimer = setInterval(() => {
-        practiceSeconds++;
-        updatePracticeTimerDisplay();
-      }, 1000);
-    }
-
-    function updateRaceTimerDisplay() {
-      const badge = document.getElementById('timer-badge');
-      badge.style.display = '';
-      badge.textContent = '⏱ ' + timeLeft + 'sn';
-      const pct = Math.max(0, Math.min(100, (timeLeft / 40) * 100));
-      const fill = document.getElementById('progress-fill');
-      fill.style.background = '#8cb85f';
-      fill.style.width = pct + '%';
-    }
-
-    function updateAccuracyBar() {
-      const fill = document.getElementById('progress-fill');
-      const total = correct + wrong;
-      if (total === 0) {
-        fill.style.width = '0%';
-        fill.style.background = '#8cb85f';
-        return;
-      }
-      const greenPct = (correct / total) * 100;
-      fill.style.width = '100%';
-      fill.style.background = `linear-gradient(to right, #8cb85f ${greenPct}%, #c75b39 ${greenPct}%)`;
-    }
-
-    function startExercise(mode) {
-      currentMode = mode || 'practice';
-      activeNotePool = currentMode === 'race' ? [...NOTE_NAMES] : selectedNotes;
-
-      if (activeNotePool.length === 0) {
-        alert('Lütfen en az bir nota seçin!');
-        return;
-      }
-
-      currentQuestions = [];
-      const firstNote = pickNextQuestionNote(activeNotePool, null);
-      currentQuestions.push({ correctNote: firstNote, choices: shuffleArr(pickAdjacentChoiceBlock(firstNote)) });
-
-      currentQIndex = 0;
-      correct = 0;
-      wrong = 0;
-      document.getElementById('progress-fill').style.width = '0%';
-      document.getElementById('progress-fill').style.background = '#8cb85f';
-      document.getElementById('timer-badge').style.display = currentMode === 'race' ? '' : 'none';
-      if (window.trackEnd) window.trackEnd();
-      if (window.trackStart) window.trackStart(currentMode);
-      
-      document.getElementById('setup-nav').style.display = 'none';
-      document.getElementById('setup-area').style.display = 'none';
-      document.getElementById('exercise-area').style.display = 'block';
-      document.getElementById('result-screen').style.display = 'none';
-      document.getElementById('live-note-filter').style.display = currentMode === 'practice' ? 'flex' : 'none';
-
-      clearRaceTimer();
-      clearPracticeTimer();
-      if (currentMode === 'race') {
-        document.getElementById('practice-timer-box').style.display = 'none';
-        timeLeft = 40;
-        updateRaceTimerDisplay();
-        raceTimer = setInterval(() => {
-          timeLeft--;
-          if (timeLeft <= 0) {
-            timeLeft = 0;
-            updateRaceTimerDisplay();
-            clearRaceTimer();
-            clearAutoTimer();
-            showResults();
-          } else {
-            updateRaceTimerDisplay();
-          }
-        }, 1000);
-      } else {
-        startPracticeTimer();
-      }
-      showQuestion();
-    }
-
-    function showQuestion() {
-      clearAutoTimer();
-      answered = false;
-      const q = currentQuestions[currentQIndex];
-
-      const choicesDiv = document.getElementById('choices');
-      choicesDiv.innerHTML = '';
-      q.choices.forEach(note => {
-        const card = document.createElement('div');
-        card.className = 'choice-card vf-card';
-        card.dataset.note = note;
-        card.onclick = () => answerQuestion(note, card);
-        const staffDiv = document.createElement('div');
-        staffDiv.className = 'choice-staff';
-        card.appendChild(staffDiv);
-        choicesDiv.appendChild(card);
-        drawMiniStaff(staffDiv, note);
-      });
-
-      document.getElementById('message').textContent = '';
-      updateControls();
-      setTimeout(() => playSound(), 300);
-    }
-
-    function playSound() {
-      const q = currentQuestions[currentQIndex];
-      const frequency = NOTES[q.correctNote].freq;
-      if (!audioContext) {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      }
-      const ctx = audioContext;
-      const now = ctx.currentTime;
-      const duration = 1;
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.frequency.value = frequency;
-      osc.type = 'sine';
-
-      gain.gain.setValueAtTime(0, now);
-      gain.gain.linearRampToValueAtTime(0.3, now + 0.05);
-      gain.gain.linearRampToValueAtTime(0, now + duration - 0.05);
-
-      osc.start(now);
-      osc.stop(now + duration);
-
-      const wrap = document.getElementById('speaker-wrap');
-      wrap.classList.add('playing');
-      setTimeout(() => { wrap.classList.remove('playing'); }, duration * 1000);
-    }
-
-    let autoTimer = null;
-
-    function clearAutoTimer() {
-      if (autoTimer) { clearTimeout(autoTimer); autoTimer = null; }
-      const wrap = document.getElementById('auto-bar-wrap');
-      wrap.style.display = 'none';
-    }
-
-    function startAutoAdvance() {
-      const wrap = document.getElementById('auto-bar-wrap'), bar = document.getElementById('auto-bar');
-      wrap.style.display = 'block';
-      bar.style.transition = 'none';
-      bar.style.width = '100%';
-      requestAnimationFrame(() => requestAnimationFrame(() => {
-        bar.style.transition = 'width 1.4s linear';
-        bar.style.width = '0%';
-      }));
-      autoTimer = setTimeout(() => { clearAutoTimer(); nextQ(); }, 1400);
-    }
-
-    function answerQuestion(note, card) {
-      if (answered) return;
-      answered = true;
-      const q = currentQuestions[currentQIndex];
-      const isCorrect = note === q.correctNote;
-
-      if (isCorrect) {
-        correct++;
-        if (window.trackLog) window.trackLog(true);
-        card.classList.add('correct');
-        document.getElementById('message').textContent = '✅ Doğru!';
-        document.getElementById('message').style.color = '#3b6d11';
-      } else {
-        wrong++;
-        missCounts[q.correctNote] = (missCounts[q.correctNote] || 0) + 1;
-        if (window.trackLog) window.trackLog(false, q.correctNote, q.correctNote);
-        card.classList.add('wrong');
-        const correctCard = document.querySelector(`#choices [data-note="${q.correctNote}"]`);
-        if (correctCard) correctCard.classList.add('correct');
-        document.getElementById('message').textContent = '❌ Yanlış!';
-        document.getElementById('message').style.color = '#a32d2d';
-      }
-
-      document.querySelectorAll('.choice-card').forEach(c => {
-        c.classList.add('disabled');
-        c.onclick = null;
-      });
-
-      if (currentMode !== 'race') updateAccuracyBar();
-      updateControls();
-
-      if (currentMode === 'race') {
-        if (timeLeft > 0) {
-          autoTimer = setTimeout(() => { clearAutoTimer(); nextQ(); }, isCorrect ? 650 : 900);
-        } else {
-          autoTimer = setTimeout(() => { showResults(); }, 400);
-        }
-      } else if (isCorrect) {
-        startAutoAdvance();
-      }
-    }
-
-    function updateControls() {
-      if (currentMode === 'race') {
-        document.getElementById('prevBtn').disabled = true;
-        document.getElementById('nextBtn').disabled = true;
-        return;
-      }
-      const isPrevDisabled = currentQIndex === 0;
-
-      document.getElementById('prevBtn').disabled = isPrevDisabled;
-      document.getElementById('nextBtn').disabled = !answered;
-    }
-
-    function previousQ() {
-      if (currentQIndex > 0) {
-        clearAutoTimer();
-        currentQIndex--;
-        showQuestion();
-      }
-    }
-
-    function nextQ() {
-      clearAutoTimer();
-      if (currentMode === 'race') {
-        if (timeLeft <= 0) { showResults(); return; }
-        const prevNote = currentQuestions[currentQIndex].correctNote;
-        const correctNote = pickNextQuestionNote(activeNotePool, prevNote);
-        currentQuestions.push({ correctNote, choices: shuffleArr(pickAdjacentChoiceBlock(correctNote)) });
-        currentQIndex++;
-        showQuestion();
-        return;
-      }
-      const prevNote = currentQuestions[currentQIndex].correctNote;
-      const pool = selectedNotes.length > 0 ? selectedNotes : NOTE_NAMES;
-      const correctNote = pickNextQuestionNote(pool, prevNote);
-      currentQuestions.push({ correctNote, choices: shuffleArr(pickAdjacentChoiceBlock(correctNote)) });
-      currentQIndex++;
-      showQuestion();
-    }
-
-    function showResults() {
-      clearRaceTimer();
-      clearPracticeTimer();
-      if (window.trackEnd) window.trackEnd();
-      document.getElementById('exercise-area').style.display = 'none';
-      document.getElementById('result-screen').style.display = 'block';
-
-      const total = currentQuestions.length;
-      const accuracy = Math.round((correct / total) * 100);
-      let rank = '';
-
-      if (accuracy === 100) rank = '🌟 Mükemmel!';
-      else if (accuracy >= 80) rank = '⭐ Çok İyi!';
-      else if (accuracy >= 60) rank = '👍 İyi!';
-      else if (accuracy >= 40) rank = '💪 Daha Çalış!';
-      else rank = '📚 Tekrar Başla!';
-
-      document.getElementById('result-comment').textContent = 'Bravo! Kulağını geliştirmeye devam et 🎵';
-
-      const statsDiv = document.getElementById('result-stats');
-      statsDiv.innerHTML = `
-        <div class="stat-row">
-          <span>Toplam Soru:</span>
-          <span class="stat-val">${total}</span>
-        </div>
-        <div class="stat-row">
-          <span>Doğru:</span>
-          <span class="stat-val correct-val">${correct}</span>
-        </div>
-        <div class="stat-row">
-          <span>Yanlış:</span>
-          <span class="stat-val wrong-val">${wrong}</span>
-        </div>
-        <div class="stat-row">
-          <span>Başarı Oranı:</span>
-          <span class="stat-val">${accuracy}%</span>
-        </div>
-        <div class="stat-row">
-          <span>Derece:</span>
-          <span class="stat-val">${rank}</span>
-        </div>
-      `;
-    }
-
-    function restartExercise() {
-      clearRaceTimer();
-      clearPracticeTimer();
-      document.getElementById('setup-nav').style.display = 'flex';
-      document.getElementById('setup-area').style.display = 'block';
-      document.getElementById('result-screen').style.display = 'none';
-      const dsn=document.getElementById('duel-setup-nav'), dsa=document.getElementById('duel-setup-area'), dwa=document.getElementById('duel-waiting-area'), dga=document.getElementById('duel-game-area');
-      if(dsn) dsn.style.display='none'; if(dsa) dsa.style.display='none'; if(dwa) dwa.style.display='none'; if(dga) dga.style.display='none';
-      initSetupPanel();
-    }
-
-    function backToMenu() {
-      if (window.trackEnd) window.trackEnd();
-      clearRaceTimer();
-      clearPracticeTimer();
-      clearAutoTimer();
-      document.getElementById('setup-nav').style.display = 'flex';
-      document.getElementById('setup-area').style.display = 'block';
-      document.getElementById('exercise-area').style.display = 'none';
-      document.getElementById('result-screen').style.display = 'none';
-      const dsn=document.getElementById('duel-setup-nav'), dsa=document.getElementById('duel-setup-area'), dwa=document.getElementById('duel-waiting-area'), dga=document.getElementById('duel-game-area');
-      if(dsn) dsn.style.display='none'; if(dsa) dsa.style.display='none'; if(dwa) dwa.style.display='none'; if(dga) dga.style.display='none';
-      initSetupPanel();
-    }
-
-    initSetupPanel();
-  </script>
-
-  <script type="module">
-  import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js';
-  import {
-    getDatabase, ref, set, get, update, remove,
-    onValue, onDisconnect, runTransaction, push
-  } from 'https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js';
-  import { createTracker } from '/game-tracker.js';
-
-  const FIREBASE_CONFIG = {
-    apiKey: "AIzaSyBkEd729B65y-NZIQ-sxScCgaEvlX-q7yA",
-    authDomain: "gitar-yunus.firebaseapp.com",
-    databaseURL: "https://gitar-yunus-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "gitar-yunus",
-    storageBucket: "gitar-yunus.firebasestorage.app",
-    messagingSenderId: "184803778782",
-    appId: "1:184803778782:web:8f9fbeb4fe625eb386e24f"
-  };
-
-  const fbApp = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
-  const db = getDatabase(fbApp);
-
-  const mySid  = localStorage.getItem('gitar_session');
-  const myName = localStorage.getItem('gitar_student_name') || 'Öğrenci';
-
-  const _tracker = createTracker({ db, ref, push, get, set });
-  window.trackStart = (mode) => _tracker.start(mySid, 'kulak', mode);
-  window.trackLog   = (ok, key, label) => _tracker.log(ok, key, label);
-  window.trackEnd   = () => _tracker.end();
-
-  const D_NOTES = {
-    'C4': { freq: 261.63, key: 'c/4', line: -1, label: 'Do' },
-    'D4': { freq: 293.66, key: 'd/4', line: -0.5, label: 'Re' },
-    'E4': { freq: 329.63, key: 'e/4', line: 0,  label: 'Mi' },
-    'F4': { freq: 349.23, key: 'f/4', line: 0.5,label: 'Fa' },
-    'G4': { freq: 392.00, key: 'g/4', line: 1,  label: 'Sol' },
-    'A4': { freq: 440.00, key: 'a/4', line: 1.5,label: 'La' },
-    'B4': { freq: 493.88, key: 'b/4', line: 2,  label: 'Si' }
-  };
-  const D_NOTE_NAMES = ['C4','D4','E4','F4','G4','A4','B4'];
-
-  let duelNotes       = new Set(D_NOTE_NAMES);
-  let duelRounds      = 5;
-  let duelMaxTime     = 0; // 0 = Zamansız
-  let myRole          = '';
-  let oppSid          = '';
-  let oppName         = '';
-  let roomCode        = '';
-  let onlineListener  = null;
-  let roundListener   = null;
-  let challengeExpiry = null;
-  let myAnswered      = false;
-  let myScore_        = 0;
-  let oppScore_       = 0;
-  let cdTimer         = null;
-  let gamePlayTimer   = null; 
-  let currentRoundNum = 0;
-  let currentQuestionData = null;
-  let duelAudioCtx    = null;
-  let duelMissCounts  = {};
-
-  function rndCode(){ return Math.floor(100000+Math.random()*900000).toString(); }
-  function shuf(a){ return [...a].sort(()=>Math.random()-.5); }
-
-  function showArea(id){
-    ['setup-nav', 'setup-area', 'duel-setup-nav', 'duel-setup-area', 'duel-waiting-area', 'duel-game-area']
-      .forEach(x=>{ const e=document.getElementById(x); if(e) e.style.display='none'; });
-    const exA=document.getElementById('exercise-area'); if(exA) exA.style.display='none';
-    const rs=document.getElementById('result-screen'); if(rs) rs.style.display='none';
-    
-    if(id === 'setup-area') document.getElementById('setup-nav').style.display = 'flex';
-    if(id === 'duel-setup-area') document.getElementById('duel-setup-nav').style.display = 'flex';
-
-    const t=document.getElementById(id);
-    if(t){ t.style.display='block'; t.scrollIntoView({behavior:'smooth'}); }
   }
-  window.showArea = showArea;
+  return deck;
+}
 
-  function initDuelNotePanel(){
-    const c = document.getElementById('duel-note-buttons');
-    if(!c) return;
-    c.innerHTML = '';
-    D_NOTE_NAMES.forEach(note=>{
-      const btn = document.createElement('button');
-      btn.className = 'string-btn d-note-btn active';
-      btn.textContent = D_NOTES[note].label;
-      btn.dataset.note = note;
-      btn.onclick = () => dToggleNote(note, btn);
-      c.appendChild(btn);
-    });
-  }
+window.dToggleAll = function(){
+  const a=document.getElementById('d-btn-all'),n=document.querySelectorAll('.d-str-btn');
+  if(duelStrings.size===6){duelStrings.clear();a.classList.remove('active');n.forEach(b=>b.classList.remove('active'));}
+  else{duelStrings=new Set([1,2,3,4,5,6]);a.classList.add('active');n.forEach(b=>b.classList.add('active'));}
+};
+window.dToggleStr = function(num){
+  const b=document.querySelector(`.d-str-btn[data-string="${num}"]`),a=document.getElementById('d-btn-all');
+  if(duelStrings.has(num)){duelStrings.delete(num);b.classList.remove('active');}
+  else{duelStrings.add(num);b.classList.add('active');}
+  duelStrings.size===6?a.classList.add('active'):a.classList.remove('active');
+};
+window.selectRounds = function(n){
+  duelRounds=n;
+  document.querySelectorAll('.round-btn').forEach(b=>b.classList.toggle('active', parseInt(b.dataset.rounds)===n));
+};
 
-  window.dToggleAll = function(){
-    const a=document.getElementById('d-btn-all'), n=document.querySelectorAll('.d-note-btn');
-    if(duelNotes.size===D_NOTE_NAMES.length){
-      duelNotes.clear(); a.classList.remove('active'); n.forEach(b=>b.classList.remove('active'));
-    } else {
-      duelNotes = new Set(D_NOTE_NAMES); a.classList.add('active'); n.forEach(b=>b.classList.add('active'));
-    }
-  };
-  window.dToggleNote = function(note, btn){
-    const a=document.getElementById('d-btn-all');
-    if(duelNotes.has(note)){ duelNotes.delete(note); btn.classList.remove('active'); }
-    else { duelNotes.add(note); btn.classList.add('active'); }
-    a.classList.toggle('active', duelNotes.size===D_NOTE_NAMES.length);
-  };
-  
-  window.selectRounds = function(n){
-    duelRounds = n;
-    document.querySelectorAll('[data-rounds]').forEach(b=>b.classList.toggle('active', parseInt(b.dataset.rounds)===n));
-  };
+window.showDuelSetup = function(){
+  showArea('duel-setup-area');
+  loadOnlinePlayers();
+};
 
-  window.selectDuelTime = function(seconds){
-    duelMaxTime = seconds;
-    document.querySelectorAll('[data-time]').forEach(b=>b.classList.toggle('active', parseInt(b.dataset.time)===seconds));
-  };
-
-  window.showDuelSetup = function(){
-    initDuelNotePanel();
-    showArea('duel-setup-area');
-    loadOnlinePlayers();
-  };
-
-  function loadOnlinePlayers(){
-    const listEl = document.getElementById('online-players-list');
-    if(onlineListener){ onlineListener(); onlineListener=null; }
-    onlineListener = onValue(ref(db,'online_users'), snap=>{
-      const users = snap.val() || {};
-      const others = Object.entries(users).filter(([sid])=>sid!==mySid);
-      if(!others.length){
-        listEl.innerHTML = '<div class="no-players-msg">Şu an başka online oyuncu yok. Birinin giriş yapmasını bekleyin.</div>';
-        return;
-      }
-      listEl.innerHTML = others.map(([sid,u])=>`
-        <div class="online-player-row">
-          <span><span class="online-dot"></span><span class="online-player-name">${u.name}</span></span>
-          <button class="challenge-btn" onclick="window.sendChallenge('${sid}','${u.name.replace(/'/g,"\\'")}')">⚔️ Meydan Oku</button>
-        </div>`).join('');
-    });
-  }
-
-  function pickAdjacentDuelBlock(correctNote){
-    const idx = D_NOTE_NAMES.indexOf(correctNote);
-    const blockSize = 4;
-    const minStart = Math.max(0, idx - (blockSize - 1));
-    const maxStart = Math.min(idx, D_NOTE_NAMES.length - blockSize);
-    const possibleStarts = [];
-    for(let s=minStart; s<=maxStart; s++) possibleStarts.push(s);
-    const start = possibleStarts[Math.floor(Math.random()*possibleStarts.length)];
-    return D_NOTE_NAMES.slice(start, start + blockSize);
-  }
-
-  function pickNextDuelNote(pool, prevNote){
-    let candidates = pool;
-    if(prevNote && pool.length > 1){
-      candidates = pool.filter(n => n !== prevNote);
-    }
-    if(candidates.length === 0) candidates = pool;
-
-    const weights = candidates.map(n => 1 + 6 * (duelMissCounts[n] || 0));
-    const total = weights.reduce((a,b)=>a+b, 0);
-    let r = Math.random() * total;
-    for(let i=0;i<candidates.length;i++){
-      r -= weights[i];
-      if(r <= 0) return candidates[i];
-    }
-    return candidates[candidates.length-1];
-  }
-
-  function buildQuestionDeck(notes, totalRounds){
-    const deck = {};
-    const pool = notes.length ? notes : D_NOTE_NAMES;
-    let prevNote = null;
-    for(let i=1;i<=totalRounds;i++){
-      const noteName = pickNextDuelNote(pool, prevNote);
-      prevNote = noteName;
-      const choices = shuf(pickAdjacentDuelBlock(noteName));
-      deck[i] = {
-        noteName,
-        noteKey: D_NOTES[noteName].key,
-        freq: D_NOTES[noteName].freq,
-        choices
-      };
-    }
-    return deck;
-  }
-
-  window.sendChallenge = async function(toSid, toName){
-    duelNotes = new Set(D_NOTE_NAMES);
-    if(onlineListener){ onlineListener(); onlineListener=null; }
-
-    myRole   = 'host';
-    oppSid   = toSid;
-    oppName  = toName;
-    roomCode = rndCode();
-
-    const questionDeck = buildQuestionDeck([...duelNotes], duelRounds);
-
-    await set(ref(db,`duel_rooms/${roomCode}`),{
-      host:   {sid:mySid, name:myName},
-      guest:  null,
-      status: 'waiting',
-      config: {totalRounds: duelRounds, maxTime: duelMaxTime, notes: [...duelNotes], questions: questionDeck},
-      scores: {host:0, guest:0},
-      currentRoundNum: 1,
-      roundState: { hostDone:false, guestDone:false, winner:null }
-    });
-    onDisconnect(ref(db,`duel_rooms/${roomCode}`)).update({status:'abandoned'});
-
-    await set(ref(db,`duel_challenges/${toSid}`),{
-      fromSid: mySid, fromName: myName,
-      roomCode, status:'pending',
-      notes: [...duelNotes], totalRounds: duelRounds, maxTime: duelMaxTime,
-      redirectTo: '/kulak/'
-    });
-
-    document.getElementById('waiting-opp-name').textContent = toName;
-    const modeInfo = duelMaxTime > 0 ? `(${duelRounds} Tur / ${duelMaxTime}sn Süreli)` : `(${duelRounds} Tur / Zamansız)`;
-    document.getElementById('waiting-details-label').textContent = `${modeInfo} daveti kabul etmesi bekleniyor...`;
-    showArea('duel-waiting-area');
-
-    const challengeRef = ref(db,`duel_challenges/${toSid}`);
-    const unsub = onValue(challengeRef, snap=>{
-      const c = snap.val();
-      if(!c) return;
-      if(c.status==='accepted'){
-        unsub();
-        clearTimeout(challengeExpiry);
-        oppName = toName;
-        beginGame();
-      } else if(c.status==='declined'){
-        unsub();
-        clearTimeout(challengeExpiry);
-        remove(ref(db,`duel_rooms/${roomCode}`));
-        alert(`${toName} daveti reddetti.`);
-        showArea('duel-setup-area');
-        loadOnlinePlayers();
-      }
-    });
-
-    challengeExpiry = setTimeout(async ()=>{
-      unsub();
-      await remove(ref(db,`duel_challenges/${toSid}`));
-      await remove(ref(db,`duel_rooms/${roomCode}`));
-      showArea('duel-setup-area');
-      alert('Süre doldu, davet iptal edildi.');
-      loadOnlinePlayers();
-    }, 30000);
-  };
-
-  window.cancelChallenge = async function(){
-    clearTimeout(challengeExpiry);
-    if(oppSid) await remove(ref(db,`duel_challenges/${oppSid}`));
-    if(roomCode) await remove(ref(db,`duel_rooms/${roomCode}`));
-    showArea('duel-setup-area');
-    loadOnlinePlayers();
-  };
-
-  function checkDuelHandoff(){
-    const raw = localStorage.getItem('gitar_duel_handoff');
-    if(!raw) return false;
-    localStorage.removeItem('gitar_duel_handoff');
-    try{
-      const h = JSON.parse(raw);
-      myRole      = 'guest';
-      roomCode    = h.roomCode;
-      oppSid      = h.oppSid;
-      oppName     = h.oppName;
-      duelNotes   = new Set(h.notes || D_NOTE_NAMES);
-      duelRounds  = h.totalRounds;
-      duelMaxTime = h.maxTime || 0;
-      beginGame();
-      return true;
-    }catch(e){ return false; }
-  }
-
-  function beginGame(){
-    if(window.trackEnd)window.trackEnd();
-    if(window.trackStart)window.trackStart('duel');
-    myScore_ = 0; oppScore_ = 0;
-    document.getElementById('dscore-me-name').textContent  = myName;
-    document.getElementById('dscore-opp-name').textContent = oppName;
-    document.getElementById('dscore-me').textContent  = '0';
-    document.getElementById('dscore-opp').textContent = '0';
-    showArea('duel-game-area');
-
-    onValue(ref(db,`duel_rooms/${roomCode}/scores`), snap=>{
-      const s = snap.val(); if(!s) return;
-      myScore_  = myRole==='host' ? s.host  : s.guest;
-      oppScore_ = myRole==='host' ? s.guest : s.host;
-      document.getElementById('dscore-me').textContent  = myScore_;
-      document.getElementById('dscore-opp').textContent = oppScore_;
-    });
-
-    listenRound();
-  }
-
-  function stopGamePlayTimer() {
-    if(gamePlayTimer) { clearInterval(gamePlayTimer); gamePlayTimer = null; }
-  }
-
-  function startGamePlayTimer(startSec, rNum) {
-    stopGamePlayTimer();
-    const lbl = document.getElementById('duel-timer-label');
-    if(duelMaxTime <= 0) {
-      lbl.style.display = 'none';
+function loadOnlinePlayers(){
+  const listEl = document.getElementById('online-players-list');
+  if(onlineListener){ onlineListener(); onlineListener=null; }
+  onlineListener = onValue(ref(db,'online_users'), snap=>{
+    const users = snap.val() || {};
+    const others = Object.entries(users).filter(([sid])=>sid!==mySid);
+    if(!others.length){
+      listEl.innerHTML='<div class="no-players-msg">Şu an başka online oyuncu yok. Birinin giriş yapmasını bekleyin.</div>';
       return;
     }
-    lbl.style.display = 'block';
-    let rem = startSec;
-    lbl.textContent = `⏱ ${rem}sn`;
+    listEl.innerHTML = others.map(([sid,u])=>`
+      <div class="online-player-row">
+        <span><span class="online-dot"></span><span class="online-player-name">${u.name}</span></span>
+        <button class="challenge-btn" onclick="window.sendChallenge('${sid}','${u.name.replace(/'/g,"\\'")}')">⚔️ Meydan Oku</button>
+      </div>`).join('');
+  });
+}
 
-    gamePlayTimer = setInterval(() => {
-      rem--;
-      if(rem <= 0) {
-        lbl.textContent = `⏱ 0sn`;
-        stopGamePlayTimer();
-        // Süre bittiğinde otomatik yanlış tetikle
-        if(!myAnswered) {
-          forceWrongAnswer(rNum);
-        }
-      } else {
-        lbl.textContent = `⏱ ${rem}sn`;
-      }
-    }, 1000);
-  }
+window.sendChallenge = async function(toSid, toName){
+  duelStrings = new Set([1,2,3,4,5,6]);
+  if(onlineListener){ onlineListener(); onlineListener=null; }
 
-  function forceWrongAnswer(rNum) {
-    myAnswered = true;
-    document.querySelectorAll('.duel-choice-card').forEach(c=>{ c.classList.add('disabled'); c.onclick=null; });
-    document.getElementById('duel-feedback').textContent = '⏰ Süre Doldu!';
+  myRole   = 'host';
+  oppSid   = toSid;
+  oppName  = toName;
+  roomCode = rndCode();
+
+  const questionDeck = buildQuestionDeck([...duelStrings], duelRounds);
+
+  await set(ref(db,`duel_rooms/${roomCode}`),{
+    host:   {sid:mySid, name:myName},
+    guest:  null,
+    status: 'waiting',
+    config: {totalRounds: duelRounds, strings: [...duelStrings], questions: questionDeck},
+    scores: {host:0, guest:0},
+    currentRoundNum: 1,
+    roundState: { hostDone: false, guestDone: false, winner: null }
+  });
+  onDisconnect(ref(db,`duel_rooms/${roomCode}`)).update({status:'abandoned'});
+
+  await set(ref(db,`duel_challenges/${toSid}`),{
+    fromSid: mySid, fromName: myName,
+    roomCode, status:'pending',
+    strings: [...duelStrings], totalRounds: duelRounds,
+    redirectTo: '/nota/'
+  });
+
+  document.getElementById('waiting-opp-name').textContent = toName;
+  showArea('duel-waiting-area');
+
+  const challengeRef = ref(db,`duel_challenges/${toSid}`);
+  const unsub = onValue(challengeRef, snap=>{
+    const c = snap.val();
+    if(!c) return;
+    if(c.status==='accepted'){
+      unsub();
+      clearTimeout(challengeExpiry);
+      oppName = toName;
+      beginGame();
+    } else if(c.status==='declined'){
+      unsub();
+      clearTimeout(challengeExpiry);
+      remove(ref(db,`duel_rooms/${roomCode}`));
+      alert(`${toName} daveti reddetti.`);
+      showArea('duel-setup-area');
+      loadOnlinePlayers();
+    }
+  });
+
+  challengeExpiry = setTimeout(async ()=>{
+    unsub();
+    await remove(ref(db,`duel_challenges/${toSid}`));
+    await remove(ref(db,`duel_rooms/${roomCode}`));
+    showArea('duel-setup-area');
+    alert('Süre doldu, davet iptal edildi.');
+    loadOnlinePlayers();
+  }, 30000);
+};
+
+window.cancelChallenge = async function(){
+  clearTimeout(challengeExpiry);
+  if(oppSid) await remove(ref(db,`duel_challenges/${oppSid}`));
+  if(roomCode) await remove(ref(db,`duel_rooms/${roomCode}`));
+  showArea('setup-area');
+  loadOnlinePlayers();
+};
+
+function checkDuelHandoff(){
+  const raw = localStorage.getItem('gitar_duel_handoff');
+  if(!raw) return false;
+  localStorage.removeItem('gitar_duel_handoff');
+  try{
+    const h = JSON.parse(raw);
+    myRole      = 'guest';
+    roomCode    = h.roomCode;
+    oppSid      = h.oppSid;
+    oppName     = h.oppName;
+    duelStrings = new Set(h.strings);
+    duelRounds  = h.totalRounds;
+    beginGame();
+    return true;
+  }catch(e){ return false; }
+}
+
+function beginGame(){
+  if(window.trackEnd)window.trackEnd();
+  if(window.trackStart)window.trackStart('duel');
+  myScore_ = 0; oppScore_ = 0;
+  document.getElementById('dscore-me-name').textContent  = myName;
+  document.getElementById('dscore-opp-name').textContent = oppName;
+  document.getElementById('dscore-me').textContent  = '0';
+  document.getElementById('dscore-opp').textContent = '0';
+  showArea('duel-game-area');
+
+  onValue(ref(db,`duel_rooms/${roomCode}/scores`), snap=>{
+    const s = snap.val(); if(!s) return;
+    myScore_  = myRole==='host' ? s.host  : s.guest;
+    oppScore_ = myRole==='host' ? s.guest : s.host;
+    document.getElementById('dscore-me').textContent  = myScore_;
+    document.getElementById('dscore-opp').textContent = oppScore_;
+  });
+
+  listenRound();
+}
+
+function listenRound(){
+  if(roundListener){ roundListener(); }
+
+  onValue(ref(db,`duel_rooms/${roomCode}/status`), snap=>{
+    const s = snap.val();
+    if(s==='abandoned'){ handleAbandoned(); }
+    if(s==='finished') { endDuel(); }
+  });
+
+  roundListener = onValue(ref(db,`duel_rooms/${roomCode}`), snap=>{
+    const room = snap.val();
+    if(!room || room.status === 'waiting') return;
+
+    const rNum = room.currentRoundNum;
+    const rState = room.roundState;
+    const questions = room.config.questions;
+
+    if (!questions || !questions[rNum]) return;
+
+    if(currentRoundNum !== rNum){
+      currentRoundNum = rNum;
+      currentQuestionData = questions[rNum];
+      showQuestion(rNum, currentQuestionData);
+    }
+
+    if(rState && (rState.winner || (rState.hostDone && rState.guestDone))){
+      showRoundResult(rState, currentQuestionData);
+    }
+  });
+}
+
+function showQuestion(rNum, qData){
+  myAnswered = false;
+  document.getElementById('duel-round-label').textContent = `Tur ${rNum} / ${duelRounds}`;
+  document.getElementById('duel-string-label').textContent = `Bu Nota Hangi Telde? (${qData.string}. Tel)`;
+  document.getElementById('duel-feedback').textContent = '';
+  document.getElementById('duel-feedback').className   = 'duel-feedback';
+  document.getElementById('duel-cd-wrap').style.display = 'none';
+
+  if(window.drawNote) window.drawNote(qData.noteKey,'duel-notation');
+
+  const box=document.getElementById('duel-choices');
+  box.innerHTML='';
+  qData.choices.forEach(nota=>{
+    const b=document.createElement('button');
+    b.className='dcbtn'; b.textContent=nota;
+    b.onclick=()=>duelAnswer(nota,b, rNum);
+    box.appendChild(b);
+  });
+}
+
+function duelAnswer(nota, btn, rNum){
+  if(myAnswered) return;
+  myAnswered=true;
+  document.querySelectorAll('.dcbtn').forEach(b=>b.disabled=true);
+
+  const correct = nota === currentQuestionData.notaAdi;
+  btn.classList.add(correct?'correct':'wrong');
+  if(window.trackLog)window.trackLog(correct, currentQuestionData.string, currentQuestionData.notaAdi+' ('+currentQuestionData.string+'. tel)');
+
+  runTransaction(ref(db,`duel_rooms/${roomCode}`), room => {
+    if(!room) return room;
+    if(room.currentRoundNum !== rNum) return room;
     
-    runTransaction(ref(db,`duel_rooms/${roomCode}`), room=>{
-      if(!room) return room;
-      if(room.currentRoundNum !== rNum) return room;
-      if(!room.roundState) room.roundState = { hostDone:false, guestDone:false, winner:null };
-      room.roundState[myRole+'Done'] = true;
-      return room;
-    });
-  }
+    if(!room.roundState) room.roundState = { hostDone: false, guestDone: false, winner: null };
 
-  function listenRound(){
-    if(roundListener){ roundListener(); }
+    room.roundState[myRole + 'Done'] = true;
 
-    onValue(ref(db,`duel_rooms/${roomCode}/status`), snap=>{
-      const s = snap.val();
-      if(s==='abandoned'){ handleAbandoned(); }
-      if(s==='finished'){ endDuel(); }
-    });
-
-    roundListener = onValue(ref(db,`duel_rooms/${roomCode}`), snap=>{
-      const room = snap.val();
-      if(!room || room.status==='waiting') return;
-
-      const rNum = room.currentRoundNum;
-      const rState = room.roundState;
-      const questions = room.config.questions;
-      duelMaxTime = room.config.maxTime || 0;
-
-      if(!questions || !questions[rNum]) return;
-
-      if(currentRoundNum !== rNum){
-        currentRoundNum = rNum;
-        currentQuestionData = questions[rNum];
-        showDuelQuestion(rNum, currentQuestionData);
-        startGamePlayTimer(duelMaxTime, rNum);
-      }
-
-      if(rState && (rState.winner || (rState.hostDone && rState.guestDone))){
-        stopGamePlayTimer();
-        showRoundResult(rState, currentQuestionData);
-      }
-    });
-  }
-
-  function drawDuelStaff(div, noteName){
-    div.innerHTML = '';
-    try{
-      const noteData = D_NOTES[noteName];
-      const { Renderer, Stave, StaveNote, Voice, Formatter } = Vex.Flow;
-      const renderer = new Renderer(div, Renderer.Backends.SVG);
-      renderer.resize(100, 105);
-      const ctx = renderer.getContext();
-      const stave = new Stave(0, -10, 100);
-      stave.addClef('treble').setContext(ctx).draw();
-      const note = new StaveNote({ keys:[noteData.key], duration:'w' });
-      if(note.keyProps && note.keyProps[0]){
-        note.keyProps[0].line = noteData.line;
-        note.keyProps[0].clef = 'treble';
-      }
-      const voice = new Voice({ num_beats:4, beat_value:4 });
-      voice.addTickables([note]);
-      new Formatter().joinVoices([voice]).format([voice], 75);
-      voice.draw(ctx, stave);
-      const s = div.querySelector('svg');
-      if(s){ s.style.width='100%'; s.style.height='auto'; }
-    }catch(e){ console.log(e); }
-  }
-
-  function duelPlaySound(){
-    if(!currentQuestionData) return;
-    const frequency = currentQuestionData.freq;
-    if(!duelAudioCtx){ duelAudioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
-    const ctx = duelAudioCtx;
-    const now = ctx.currentTime;
-    const duration = 1;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.frequency.value = frequency;
-    osc.type = 'sine';
-    gain.gain.setValueAtTime(0, now);
-    gain.gain.linearRampToValueAtTime(0.3, now+0.05);
-    gain.gain.linearRampToValueAtTime(0, now+duration-0.05);
-    osc.start(now);
-    osc.stop(now+duration);
-
-    const wrap = document.getElementById('duel-speaker-wrap');
-    if(wrap){
-      wrap.classList.add('playing');
-      setTimeout(()=>wrap.classList.remove('playing'), duration*1000);
+    if(correct && !room.roundState.winner){
+      room.roundState.winner = myRole;
+      room.roundState.winnerName = myName;
+      if(!room.scores) room.scores = {host:0, guest:0};
+      room.scores[myRole] = (room.scores[myRole] || 0) + 1;
     }
-  }
-  window.duelPlaySound = duelPlaySound;
+    return room;
+  });
+}
 
-  function showDuelQuestion(rNum, qData){
-    myAnswered = false;
-    document.getElementById('duel-round-label').textContent = `Tur ${rNum} / ${duelRounds}`;
-    document.getElementById('duel-feedback').textContent = '';
-    document.getElementById('duel-feedback').className   = 'duel-feedback';
-    document.getElementById('duel-cd-wrap').style.display = 'none';
+function showRoundResult(rState, qData){
+  document.querySelectorAll('.dcbtn').forEach(b=>{
+    b.disabled=true; b.onclick=null;
+    if(b.textContent===qData.notaAdi) b.classList.add('correct');
+  });
+  
+  const fb=document.getElementById('duel-feedback');
+  if(rState.winner===myRole){ fb.textContent='🏅 Sen kazandın!'; fb.className='duel-feedback iwin'; }
+  else if(rState.winner)    { fb.textContent=`😤 ${rState.winnerName} daha hızlıydı!`; fb.className='duel-feedback opwin'; }
+  else                     { fb.textContent='😅 İkisi de yanlış! Puan yok.'; fb.className='duel-feedback nobody'; }
 
-    const box = document.getElementById('duel-choices');
-    box.innerHTML = '';
-    qData.choices.forEach(noteName=>{
-      const card = document.createElement('div');
-      card.className = 'duel-choice-card vf-card';
-      card.dataset.note = noteName;
-      card.onclick = () => duelAnswer(noteName, card, rNum);
-      const staffDiv = document.createElement('div');
-      staffDiv.className = 'duel-choice-staff';
-      card.appendChild(staffDiv);
-      box.appendChild(card);
-      drawDuelStaff(staffDiv, noteName);
-    });
-
-    setTimeout(()=>duelPlaySound(), 300);
-  }
-
-  function duelAnswer(noteName, card, rNum){
-    if(myAnswered) return;
-    myAnswered = true;
-    stopGamePlayTimer();
-    document.querySelectorAll('.duel-choice-card').forEach(c=>{ c.classList.add('disabled'); c.onclick=null; });
-
-    const correct = noteName === currentQuestionData.noteName;
-    card.classList.add(correct ? 'correct' : 'wrong');
-    if(window.trackLog)window.trackLog(correct, currentQuestionData.noteName, currentQuestionData.noteName);
-    if(!correct){
-      duelMissCounts[currentQuestionData.noteName] = (duelMissCounts[currentQuestionData.noteName] || 0) + 1;
+  if(document.getElementById('duel-cd-wrap').style.display==='flex') return; 
+  
+  startCountdown(()=>{
+    if(myRole === 'host'){
+      const nextNum = currentRoundNum + 1;
+      runTransaction(ref(db,`duel_rooms/${roomCode}`), room => {
+        if(!room) return room;
+        if(room.currentRoundNum !== currentRoundNum) return room; 
+        if(nextNum > duelRounds){
+          room.status = 'finished';
+        } else {
+          room.currentRoundNum = nextNum;
+          room.roundState = { hostDone: false, guestDone: false, winner: null };
+        }
+        return room;
+      });
     }
+  });
+}
 
-    runTransaction(ref(db,`duel_rooms/${roomCode}`), room=>{
-      if(!room) return room;
-      if(room.currentRoundNum !== rNum) return room;
+function startCountdown(onDone){
+  if(cdTimer) clearInterval(cdTimer);
+  let n=3;
+  const wrap=document.getElementById('duel-cd-wrap'),el=document.getElementById('duel-cd-num');
+  wrap.style.display='flex'; setCd(el,n);
+  cdTimer=setInterval(()=>{
+    n--;
+    if(n<=0){ clearInterval(cdTimer); wrap.style.display='none'; if(onDone)onDone(); }
+    else setCd(el,n);
+  },1000);
+}
+function setCd(el,n){el.textContent=n;el.classList.remove('duel-cd');void el.offsetWidth;el.classList.add('duel-cd');}
 
-      if(!room.roundState) room.roundState = { hostDone:false, guestDone:false, winner:null };
-      room.roundState[myRole+'Done'] = true;
+function endDuel(){
+  if(window.trackEnd)window.trackEnd();
+  if(cdTimer) clearInterval(cdTimer);
+  if(roundListener){ roundListener(); roundListener=null; }
 
-      if(correct && !room.roundState.winner){
-        room.roundState.winner = myRole;
-        room.roundState.winnerName = myName;
-        if(!room.scores) room.scores = {host:0, guest:0};
-        room.scores[myRole] = (room.scores[myRole] || 0) + 1;
-      }
-      return room;
-    });
-  }
+  const myFinal  = myScore_;
+  const oppFinal = oppScore_;
+  let winBadge, comment;
+  if(myFinal>oppFinal){ winBadge=`🏆 Kazanan: ${myName}`; comment=`${myName} notaları daha hızlı okudu! ${oppName} daha çok çalışmalı 💪`; }
+  else if(oppFinal>myFinal){ winBadge=`🏆 Kazanan: ${oppName}`; comment=`${oppName} bu sefer daha hızlıydı! Bir dahaki sefere ${myName} 🎸`; }
+  else{ winBadge='🤝 Beraberlik!'; comment='İkisi de aynı seviyede! Yunus Hoca ikinizden de memnun 🎵'; }
 
-  function showRoundResult(rState, qData){
-    document.querySelectorAll('.duel-choice-card').forEach(c=>{
-      c.classList.add('disabled'); c.onclick=null;
-      if(c.dataset.note === qData.noteName) c.classList.add('correct');
-    });
+  const mc=myFinal>=oppFinal?'win':'lose', oc=oppFinal>=myFinal?'win':'lose';
+  document.getElementById('app').innerHTML=`
+    <div class="duel-result">
+      <h2>⚔️ Düello Bitti!</h2>
+      <div class="winner-badge">${winBadge}</div>
+      <div class="final-scores">
+        <div class="fsc-player"><div class="fsc-name">${myName}</div><div class="fsc-num ${mc}">${myFinal}</div></div>
+        <div class="fsc-vs">VS</div>
+        <div class="fsc-player"><div class="fsc-name">${oppName}</div><div class="fsc-num ${oc}">${oppFinal}</div></div>
+      </div>
+      <p class="duel-comment">"${comment}"</p>
+      <div class="result-btns">
+        <button class="app-btn btn-duel" onclick="location.reload()">🔄 Tekrar Oyna</button>
+        <button class="app-btn" onclick="location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
+      </div>
+    </div>`;
+}
 
-    const fb = document.getElementById('duel-feedback');
-    if(rState.winner===myRole){ fb.textContent='🏅 Sen kazandın!'; fb.className='duel-feedback iwin'; }
-    else if(rState.winner){ fb.textContent=`😤 ${rState.winnerName} daha hızlıydı!`; fb.className='duel-feedback opwin'; }
-    else{ 
-      if(fb.textContent !== 'Açelya Süre Doldu!') {
-        fb.textContent='😅 İkisi de yanlış veya süre bitti! Puan yok.'; fb.className='duel-feedback nobody'; 
-      }
-    }
+function handleAbandoned(){
+  if(window.trackEnd)window.trackEnd();
+  if(cdTimer) clearInterval(cdTimer);
+  alert('Rakibiniz oyundan ayrıldı.');
+  showArea('setup-area');
+}
 
-    if(document.getElementById('duel-cd-wrap').style.display==='flex') return;
+window.leaveGame = async function(){
+  if(window.trackEnd)window.trackEnd();
+  if(cdTimer) clearInterval(cdTimer);
+  if(roundListener&&roomCode){ roundListener(); roundListener=null; }
+  if(roomCode) await update(ref(db,`duel_rooms/${roomCode}`),{status:'abandoned'});
+  showArea('setup-area');
+};
 
-    startCountdown(()=>{
-      if(myRole==='host'){
-        const nextNum = currentRoundNum + 1;
-        runTransaction(ref(db,`duel_rooms/${roomCode}`), room=>{
-          if(!room) return room;
-          if(room.currentRoundNum !== currentRoundNum) return room;
-          if(nextNum > duelRounds){
-            room.status = 'finished';
-          } else {
-            room.currentRoundNum = nextNum;
-            room.roundState = { hostDone:false, guestDone:false, winner:null };
-          }
-          return room;
-        });
-      }
-    });
-  }
+checkDuelHandoff();
+</script>
 
-  function startCountdown(onDone){
-    if(cdTimer) clearInterval(cdTimer);
-    let n=3;
-    const wrap=document.getElementById('duel-cd-wrap'), el=document.getElementById('duel-cd-num');
-    wrap.style.display='flex'; setCd(el,n);
-    cdTimer = setInterval(()=>{
-      n--;
-      if(n<=0){ clearInterval(cdTimer); wrap.style.display='none'; if(onDone) onDone(); }
-      else setCd(el,n);
-    },1000);
-  }
-  function setCd(el,n){ el.textContent=n; el.classList.remove('duel-cd'); void el.offsetWidth; el.classList.add('duel-cd'); }
-
-  function endDuel(){
-    if(window.trackEnd)window.trackEnd();
-    if(cdTimer) clearInterval(cdTimer);
-    stopGamePlayTimer();
-    if(roundListener){ roundListener(); roundListener=null; }
-
-    const myFinal = myScore_, oppFinal = oppScore_;
-    let winBadge, comment;
-    if(myFinal>oppFinal){ winBadge=`🏆 Kazanan: ${myName}`; comment=`${myName} kulağıyla notaları daha hızlı tanıdı! ${oppName} daha çok çalışmalı 💪`; }
-    else if(oppFinal>myFinal){ winBadge=`🏆 Kazanan: ${oppName}`; comment=`${oppName} bu sefer daha hızlıydı! Bir dahaki sefere ${myName} 🎵`; }
-    else{ winBadge='🤝 Beraberlik!'; comment='İkisi de aynı seviyede! Yunus Hoca ikinizden de memnun 🎵'; }
-
-    const mc = myFinal>=oppFinal ? 'win' : 'lose', oc = oppFinal>=myFinal ? 'win' : 'lose';
-    document.getElementById('app-wrap').innerHTML = `
-      <div class="duel-result">
-        <h2>⚔️ Düello Bitti!</h2>
-        <div class="winner-badge">${winBadge}</div>
-        <div class="final-scores">
-          <div class="fsc-player"><div class="fsc-name">${myName}</div><div class="fsc-num ${mc}">${myFinal}</div></div>
-          <div class="fsc-vs">VS</div>
-          <div class="fsc-player"><div class="fsc-name">${oppName}</div><div class="fsc-num ${oc}">${oppFinal}</div></div>
-        </div>
-        <p class="duel-comment">"${comment}"</p>
-        <div class="result-btns">
-          <button class="app-btn btn-duel" onclick="location.reload()">🔄 Tekrar Oyna</button>
-          <button class="app-btn" onclick="location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
-        </div>
-      </div>`;
-  }
-
-  function handleAbandoned(){
-    if(window.trackEnd)window.trackEnd();
-    if(cdTimer) clearInterval(cdTimer);
-    stopGamePlayTimer();
-    alert('Rakibiniz oyundan ayrıldı.');
-    showArea('setup-area');
-  }
-
-  window.leaveGame = async function(){
-    if(window.trackEnd)window.trackEnd();
-    if(cdTimer) clearInterval(cdTimer);
-    stopGamePlayTimer();
-    if(roundListener && roomCode){ roundListener(); roundListener=null; }
-    if(roomCode) await update(ref(db,`duel_rooms/${roomCode}`),{status:'abandoned'});
-    showArea('setup-area');
-  };
-
-  checkDuelHandoff();
-  </script>
-
-  <script>
-  (function(){
-    const sid = localStorage.getItem('gitar_session');
-    if(!sid){ location.href='https://gitar.yunusgedik.com.tr/'; return; }
-  })();
-  </script>
-  <script type="module" src="/live-bar.js"></script>
+<script>
+(function(){
+  const sid=localStorage.getItem('gitar_session');
+  if(!sid){ location.href='https://gitar.yunusgedik.com.tr/'; return; }
+  document.getElementById('exercise-wrap').style.display='none';
+})();
+</script>
+<script type="module" src="/live-bar.js"></script>
 </body>
 </html>
