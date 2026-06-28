@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
   <!-- ── TEMA SİSTEMİ ── -->
@@ -348,7 +348,9 @@
 
   <div id="setup-area">
 
-    <div style="display:flex; justify-content:flex-end; margin-bottom:0.5rem;">
+    <div class="nav-row between" style="margin-bottom:0.5rem;">
+      <div></div>
+      <div><button id="theme-toggle" onclick="toggleTheme()" title="Temayı Değiştir" aria-label="Temayı Değiştir"><span class="th-icon th-sun th-active">☀️</span><span class="th-icon th-moon">🌙</span></button></div>
       <button class="back-to-menu-btn" style="margin-bottom:0;" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
     </div>
 
@@ -363,7 +365,7 @@
           <span class="mode-label">Klavye'den Nota'ya</span>
         </div>
         <div class="mode-card" id="mode-card-mic" onclick="selectQuizMode('notadan-klavyeye-mic')">
-          <span class="mode-icon">🎼 ➜ 🎸</span>
+          <span class="mode-icon">🎙️ 🎸</span>
           <span class="mode-label">Gitar ile Çal</span>
         </div>
       </div>
@@ -563,8 +565,10 @@
 
     <!-- Klavyeden-Notaya görünümü -->
     <div id="view-k2n" style="display:none;">
-      <div class="top-bar-exercise">
+      <div class="nav-row between" style="margin-bottom:0.5rem;">
         <button class="back-to-menu-btn" onclick="goBackToMenu()">← Menüye Dön</button>
+        <div><button class="theme-toggle-btn" onclick="toggleTheme()" title="Temayı Değiştir" aria-label="Temayı Değiştir"><span class="th-icon th-sun th-active">☀️</span><span class="th-icon th-moon">🌙</span></button></div>
+        <button class="back-to-menu-btn" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
       </div>
       <div class="card">
         <div class="card-top">
@@ -633,8 +637,10 @@
 
     <!-- Notadan-Klavyeye görünümü -->
     <div id="view-n2k" style="display:none;">
-      <div class="top-bar-exercise">
+      <div class="nav-row between" style="margin-bottom:0.5rem;">
         <button class="back-to-menu-btn" onclick="goBackToMenu()">← Menüye Dön</button>
+        <div><button class="theme-toggle-btn" onclick="toggleTheme()" title="Temayı Değiştir" aria-label="Temayı Değiştir"><span class="th-icon th-sun th-active">☀️</span><span class="th-icon th-moon">🌙</span></button></div>
+        <button class="back-to-menu-btn" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
       </div>
       <div class="question-staff-card">
         <div class="card-top" style="width: 100%;">
@@ -715,10 +721,10 @@
     <p id="result-comment" style="color:#8b6b4e; font-weight:700; margin-bottom:1.5rem;"></p>
   </div>
 
-  <div class="controls" id="exercise-controls" style="display:none;">
+  <div class="controls" id="exercise-controls" style="display:grid; grid-template-columns:1fr 2fr; gap:8px;">
+    <button class="ctrl-btn" id="prev-btn" onclick="manualPrev()" disabled>← Önceki</button>
     <button class="ctrl-btn primary" id="next-btn" onclick="manualNext()" disabled>Sonraki Soru →</button>
-       
- </div>
+  </div>
 </div>
 
 <footer class="site-footer">
@@ -759,27 +765,7 @@ const NOTES = [
 const ALL_POSITIONS = [...NOTES].sort((a, b) => a.freq - b.freq).map(n => n.id);
 
 const ROMAN_FRETS = { 0:'Boş Tel', 1:'I. Perde', 2:'II. Perde', 3:'III. Perde', 4:'IV. Perde' };
-const ERR = [
-  "Yazıklar olsun!",
-  "Kulaklarımız kanadı...",
-  "Sende hiç utanma yok mu yaa",
-  "Instagram'dan ekle beni seni engellim",
-  "Tüm başarılar Yunus Hocadan, bunun gibi hatalar ise senden..",
-  "Yunus Hoca bunu görmemiş olsun...",
-  "Gitarı yavaşça yere bırak...",
-  "Sen daha iyi enstrümanlara layıksın",
-  "Aynen knk aynen sensin",
-  "Iyyy yine mi hata",
-  "Ağır popçusun belli knk",
-  "Lâ havle..",
-  "Sen en iyisi flüt çal knk",
-  "Tekrar deneme, yeter.",
-  "Bir yerde bırakmak lazım sanki",
-  "Bir durun olsun beea",
-  "Sen öyle bil aynen",
-  "En sevmediğim öğrencim naber",
-  "Ex'den Next olur senden öğrenci olmaz :D"
-];
+function getERR() { return window.ERR || ["Yanlış! Tekrar dene."]; }
 
 const FRET_CX = { 0:116, 1:155, 2:243, 3:328, 4:412 };
 // Klavyeden-Notaya görünümü tel Y koordinatları (132 yükseklik svg)
@@ -1315,7 +1301,7 @@ function handleFretClick(element, stringNum, fretNum) {
     missCounts[current.id] = (missCounts[current.id] || 0) + 1;
     if (window.trackLog) window.trackLog(false, current.id, current.name+' ('+current.string+'. tel, '+ROMAN_FRETS[current.fret]+')');
     createFeedbackCircle(element, cx, cy, '#c75b39');
-    msg.textContent = '✗ ' + ERR[Math.floor(Math.random() * ERR.length)] + ' — Doğrusu: ' + current.string + '. Tel - ' + ROMAN_FRETS[current.fret] + ` (${current.name})`;
+    msg.textContent = '✗ ' + getERR()[Math.floor(Math.random() * getERR().length)] + ' — Doğrusu: ' + current.string + '. Tel - ' + ROMAN_FRETS[current.fret] + ` (${current.name})`;
     msg.style.color = '#c75b39';
     wrongCount++;
     showCorrectTarget();
@@ -1347,7 +1333,7 @@ function selectChoice(card, name) {
     if (window.trackLog) window.trackLog(false, current.id, current.name+' ('+current.string+'. tel, '+ROMAN_FRETS[current.fret]+')');
     card.classList.add('wrong');
     card.blur();
-    msg.textContent = '✗ ' + ERR[Math.floor(Math.random() * ERR.length)] + ' — Doğrusu: ' + current.name;
+    msg.textContent = '✗ ' + getERR()[Math.floor(Math.random() * getERR().length)] + ' — Doğrusu: ' + current.name;
     msg.style.color = '#c75b39';
     wrongCount++;
     document.querySelectorAll('.choice-card').forEach(c => { if (c.dataset.choice === current.name) c.classList.add('correct'); });
@@ -1384,6 +1370,13 @@ function manualNext() {
   if (currentMode === 'race' && timeLeft <= 0) return;
   clearAutoTimer();
   nextQuestion();
+}
+function manualPrev() { /* Geçmiş soru kaydı şu an yok */ }
+function updateNavBtns() {
+  const nb = document.getElementById('next-btn');
+  const pb = document.getElementById('prev-btn');
+  if (nb) nb.disabled = !answered;
+  if (pb) pb.disabled = true;
 }
 
 function showFinalResults() {
@@ -1466,7 +1459,7 @@ function nextQuestion() {
     dot.style.display = 'none'; qtxt.style.display = 'none';
   }
 
-  if (currentMode === 'practice' && currentIndex >= TOTAL_QUESTIONS_COUNT) { showFinalResults(); return; }
+  // Practice modu sınırsız — sonsuz egzersiz
 
   current = pickNextQuestionPosition(filteredNotes);
   prevPositionId = current.id;
@@ -1494,7 +1487,7 @@ function nextQuestion() {
 
   if (currentMode === 'practice') {
     document.getElementById('progress-fill').parentElement.parentElement.style.display = 'block';
-    document.getElementById('progress-fill').style.width = (currentIndex / TOTAL_QUESTIONS_COUNT * 100) + '%';
+    // sonsuz modda progress bar gizli kalır
   } else {
     document.getElementById('progress-fill').parentElement.parentElement.style.display = 'none';
   }
@@ -1508,6 +1501,8 @@ import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.14
 import { getDatabase, ref, get, set, update, remove, onValue, onDisconnect, runTransaction, push }
   from 'https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js';
 import { createTracker } from '/game-tracker.js';
+import { ERRORS as _SE } from '/shared-errors.js';
+window.ERR = _SE;
 
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyBkEd729B65y-NZIQ-sxScCgaEvlX-q7yA",
