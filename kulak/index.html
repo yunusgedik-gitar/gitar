@@ -44,6 +44,13 @@
       font-style: italic;
     }
 
+    header p {
+      font-size: 0.8rem;
+      color: #b09070;
+      margin-top: 0.3rem;
+      font-style: italic;
+    }
+
     #app-wrap {
       width: 100%;
       max-width: 600px;
@@ -576,6 +583,7 @@
     @keyframes cdPop { 0%{transform:scale(1.4);opacity:0.5} 100%{transform:scale(1);opacity:1} }
     .duel-result { background: #fff; border: 2px solid #7b5ea7; border-radius: 20px; padding: 2rem 1.5rem; text-align: center; box-shadow: 0 8px 30px rgba(123,94,167,0.12); }
     .duel-result h2 { font-family:'Playfair Display',serif; font-size: 1.5rem; color: #5a3e2b; margin-bottom: 0.6rem; }
+    .duel-mode-badge { font-size: 0.85rem; font-weight: 700; color: #7b5ea7; background: #f3eeff; border: 1.5px solid #c8b4f0; display: inline-block; padding: 5px 14px; border-radius: 30px; margin-bottom: 0.6rem; }
     .winner-badge { font-size: 1.1rem; font-weight: 700; color: #fff; background: linear-gradient(135deg,#7b5ea7,#5a3e8a); display: inline-block; padding: 8px 24px; border-radius: 30px; margin-bottom: 1rem; }
     .final-scores { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 1rem; }
     .fsc-player { text-align: center; }
@@ -591,7 +599,8 @@
 </head>
 <body>
   <header>
-    <h1>🎵 Kulak Eğitimi</h1>
+    <h1>🎵 Kulak Eğitimi – Nota Dinleme</h1>
+    <p>Duyduğun sesi tanı, kulağını eğit!</p>
     <div id="online-badges-row"></div>
   </header>
   <div id="app-wrap">
@@ -624,11 +633,16 @@
       <div id="online-players-list" class="online-players-list">
         <div class="no-players-msg">Yükleniyor...</div>
       </div>
-      <div class="filter-title">Tur Sayısı</div>
-      <div class="round-row">
-        <button class="round-btn active" data-rounds="5"  onclick="selectRounds(5)">5 Tur</button>
-        <button class="round-btn"        data-rounds="10" onclick="selectRounds(10)">10 Tur</button>
-        <button class="round-btn"        data-rounds="15" onclick="selectRounds(15)">15 Tur</button>
+      <div class="filter-title">Oyun Modu</div>
+      <div class="round-row" style="flex-wrap:wrap;">
+        <button class="round-btn active" data-rounds="5"  data-secs="0"  onclick="selectRounds(5,0)">5 Tur</button>
+        <button class="round-btn"        data-rounds="10" data-secs="0"  onclick="selectRounds(10,0)">10 Tur</button>
+        <button class="round-btn"        data-rounds="15" data-secs="0"  onclick="selectRounds(15,0)">15 Tur</button>
+      </div>
+      <div class="round-row" style="flex-wrap:wrap; margin-top:-4px;">
+        <button class="round-btn"        data-rounds="0"  data-secs="40" onclick="selectRounds(0,40)">⏱ 40sn</button>
+        <button class="round-btn"        data-rounds="0"  data-secs="50" onclick="selectRounds(0,50)">⏱ 50sn</button>
+        <button class="round-btn"        data-rounds="0"  data-secs="60" onclick="selectRounds(0,60)">⏱ 60sn</button>
       </div>
       <div class="filter-title">Çalışılacak Notalar</div>
       <p style="text-align:center;font-size:.8rem;color:#8a7860;margin:0 0 8px;">🎵 Düellolarda adil olması için tüm notalar kullanılır.</p>
@@ -1302,6 +1316,7 @@
 
   let duelNotes       = new Set(D_NOTE_NAMES);
   let duelRounds      = 5;
+  let duelSecs        = 0;
   let myRole          = '';
   let oppSid          = '';
   let oppName         = '';
@@ -1364,9 +1379,10 @@
     else { duelNotes.add(note); btn.classList.add('active'); }
     a.classList.toggle('active', duelNotes.size===D_NOTE_NAMES.length);
   };
-  window.selectRounds = function(n){
+  window.selectRounds = function(n, secs){
     duelRounds = n;
-    document.querySelectorAll('.round-btn').forEach(b=>b.classList.toggle('active', parseInt(b.dataset.rounds)===n));
+    duelSecs = secs || 0;
+    document.querySelectorAll('.round-btn').forEach(b=>b.classList.toggle('active', parseInt(b.dataset.rounds)===n && parseInt(b.dataset.secs||0)===duelSecs));
   };
 
   window.showDuelSetup = function(){
@@ -1448,23 +1464,29 @@
     oppName  = toName;
     roomCode = rndCode();
 
-    const questionDeck = buildQuestionDeck([...duelNotes], duelRounds);
+    // Süre modunda asenkron çözülebilecek bol soru (60 adet), tur modunda duelRounds kadar
+    const totalQuestionsToBuild = duelSecs > 0 ? 60 : duelRounds;
+    const questionDeck = buildQuestionDeck([...duelNotes], totalQuestionsToBuild);
 
     await set(ref(db,`duel_rooms/${roomCode}`),{
       host:   {sid:mySid, name:myName},
       guest:  null,
       status: 'waiting',
-      config: {totalRounds: duelRounds, notes: [...duelNotes], questions: questionDeck},
+      config: {totalRounds: duelRounds, totalSecs: duelSecs, notes: [...duelNotes], questions: questionDeck},
       scores: {host:0, guest:0},
       currentRoundNum: 1,
-      roundState: { hostDone:false, guestDone:false, winner:null }
+      roundState: { hostDone:false, guestDone:false, winner:null },
+      progress: {
+        host: { currentRound: 1 },
+        guest: { currentRound: 1 }
+      }
     });
     onDisconnect(ref(db,`duel_rooms/${roomCode}`)).update({status:'abandoned'});
 
     await set(ref(db,`duel_challenges/${toSid}`),{
       fromSid: mySid, fromName: myName,
       roomCode, status:'pending',
-      notes: [...duelNotes], totalRounds: duelRounds,
+      notes: [...duelNotes], totalRounds: duelRounds, totalSecs: duelSecs,
       redirectTo: '/kulak/'
     });
 
@@ -1520,6 +1542,7 @@
       oppName     = h.oppName;
       duelNotes   = new Set(h.notes || D_NOTE_NAMES);
       duelRounds  = h.totalRounds;
+      duelSecs    = h.totalSecs || 0;
       beginGame();
       return true;
     }catch(e){ return false; }
@@ -1543,6 +1566,7 @@
       document.getElementById('dscore-opp').textContent = oppScore_;
     });
 
+    if(duelSecs > 0) startDuelTimer();
     listenRound();
   }
 
@@ -1555,26 +1579,47 @@
       if(s==='finished'){ endDuel(); }
     });
 
-    roundListener = onValue(ref(db,`duel_rooms/${roomCode}`), snap=>{
-      const room = snap.val();
-      if(!room || room.status==='waiting') return;
+    // ── SÜRE BAZLI OYUN (ASENKRON YARIŞ) DİNLEYİCİSİ ──
+    if (duelSecs > 0) {
+      roundListener = onValue(ref(db,`duel_rooms/${roomCode}`), snap=>{
+        const room = snap.val();
+        if(!room || room.status === 'waiting') return;
 
-      const rNum = room.currentRoundNum;
-      const rState = room.roundState;
-      const questions = room.config.questions;
+        const questions = room.config.questions;
+        const myProgress = (room.progress && room.progress[myRole]) ? room.progress[myRole].currentRound : 1;
 
-      if(!questions || !questions[rNum]) return;
+        if (!questions || !questions[myProgress]) return;
 
-      if(currentRoundNum !== rNum){
-        currentRoundNum = rNum;
-        currentQuestionData = questions[rNum];
-        showDuelQuestion(rNum, currentQuestionData);
-      }
+        if(currentRoundNum !== myProgress){
+          currentRoundNum = myProgress;
+          currentQuestionData = questions[myProgress];
+          showDuelQuestion(myProgress, currentQuestionData);
+        }
+      });
+    }
+    // ── TUR BAZLI OYUN (SENKRONİZE) DİNLEYİCİSİ ──
+    else {
+      roundListener = onValue(ref(db,`duel_rooms/${roomCode}`), snap=>{
+        const room = snap.val();
+        if(!room || room.status==='waiting') return;
 
-      if(rState && (rState.winner || (rState.hostDone && rState.guestDone))){
-        showRoundResult(rState, currentQuestionData);
-      }
-    });
+        const rNum = room.currentRoundNum;
+        const rState = room.roundState;
+        const questions = room.config.questions;
+
+        if(!questions || !questions[rNum]) return;
+
+        if(currentRoundNum !== rNum){
+          currentRoundNum = rNum;
+          currentQuestionData = questions[rNum];
+          showDuelQuestion(rNum, currentQuestionData);
+        }
+
+        if(rState && (rState.winner || (rState.hostDone && rState.guestDone))){
+          showRoundResult(rState, currentQuestionData);
+        }
+      });
+    }
   }
 
   function drawDuelStaff(div, noteName){
@@ -1630,7 +1675,11 @@
 
   function showDuelQuestion(rNum, qData){
     myAnswered = false;
-    document.getElementById('duel-round-label').textContent = `Tur ${rNum} / ${duelRounds}`;
+    if(duelSecs === 0){
+      document.getElementById('duel-round-label').textContent = `Tur ${rNum} / ${duelRounds}`;
+    } else {
+      document.getElementById('duel-round-label').textContent = `⏱ Soru ${rNum}`;
+    }
     document.getElementById('duel-feedback').textContent = '';
     document.getElementById('duel-feedback').className   = 'duel-feedback';
     document.getElementById('duel-cd-wrap').style.display = 'none';
@@ -1664,21 +1713,69 @@
       duelMissCounts[currentQuestionData.noteName] = (duelMissCounts[currentQuestionData.noteName] || 0) + 1;
     }
 
-    runTransaction(ref(db,`duel_rooms/${roomCode}`), room=>{
-      if(!room) return room;
-      if(room.currentRoundNum !== rNum) return room;
+    // ── SÜRE BAZLI (ASENKRON) CEVAPLAMA MANTIĞI ──
+    if (duelSecs > 0) {
+      if (correct) {
+        document.getElementById('duel-feedback').textContent = '🏅 Doğru!';
+        document.getElementById('duel-feedback').className = 'duel-feedback iwin';
 
-      if(!room.roundState) room.roundState = { hostDone:false, guestDone:false, winner:null };
-      room.roundState[myRole+'Done'] = true;
+        setTimeout(() => {
+          runTransaction(ref(db, `duel_rooms/${roomCode}`), room => {
+            if (!room) return room;
+            if (!room.scores) room.scores = { host: 0, guest: 0 };
+            if (!room.progress) room.progress = { host: { currentRound: 1 }, guest: { currentRound: 1 } };
 
-      if(correct && !room.roundState.winner){
-        room.roundState.winner = myRole;
-        room.roundState.winnerName = myName;
-        if(!room.scores) room.scores = {host:0, guest:0};
-        room.scores[myRole] = (room.scores[myRole] || 0) + 1;
+            room.scores[myRole] = (room.scores[myRole] || 0) + 1;
+            room.progress[myRole].currentRound = (room.progress[myRole].currentRound || 1) + 1;
+
+            return room;
+          });
+        }, 500);
+
+      } else {
+        document.getElementById('duel-feedback').textContent = `✕ Yanlış! Doğrusu: ${currentQuestionData.noteName}`;
+        document.getElementById('duel-feedback').className = 'duel-feedback opwin';
+
+        document.querySelectorAll('.duel-choice-card').forEach(c => {
+          if(c.dataset.note === currentQuestionData.noteName) c.classList.add('correct');
+        });
+
+        const box = document.getElementById('duel-choices');
+        const nextBtn = document.createElement('button');
+        nextBtn.className = 'app-btn btn-duel';
+        nextBtn.style.gridColumn = 'span 2';
+        nextBtn.style.marginTop = '10px';
+        nextBtn.textContent = 'Sonraki Soru →';
+        nextBtn.onclick = () => {
+          nextBtn.disabled = true;
+          runTransaction(ref(db, `duel_rooms/${roomCode}`), room => {
+            if (!room) return room;
+            if (!room.progress) room.progress = { host: { currentRound: 1 }, guest: { currentRound: 1 } };
+            room.progress[myRole].currentRound = (room.progress[myRole].currentRound || 1) + 1;
+            return room;
+          });
+        };
+        box.appendChild(nextBtn);
       }
-      return room;
-    });
+    }
+    // ── TUR BAZLI (SENKRONİZE) CEVAPLAMA MANTIĞI ──
+    else {
+      runTransaction(ref(db,`duel_rooms/${roomCode}`), room=>{
+        if(!room) return room;
+        if(room.currentRoundNum !== rNum) return room;
+
+        if(!room.roundState) room.roundState = { hostDone:false, guestDone:false, winner:null };
+        room.roundState[myRole+'Done'] = true;
+
+        if(correct && !room.roundState.winner){
+          room.roundState.winner = myRole;
+          room.roundState.winnerName = myName;
+          if(!room.scores) room.scores = {host:0, guest:0};
+          room.scores[myRole] = (room.scores[myRole] || 0) + 1;
+        }
+        return room;
+      });
+    }
   }
 
   function showRoundResult(rState, qData){
@@ -1725,9 +1822,34 @@
   }
   function setCd(el,n){ el.textContent=n; el.classList.remove('duel-cd'); void el.offsetWidth; el.classList.add('duel-cd'); }
 
+  let duelTimerInterval = null;
+  let duelTimeLeft = 0;
+
+  function startDuelTimer(){
+    duelTimeLeft = duelSecs;
+    if(duelTimerInterval) clearInterval(duelTimerInterval);
+    updateDuelTimerBadge();
+    duelTimerInterval = setInterval(()=>{
+      duelTimeLeft--;
+      updateDuelTimerBadge();
+      if(duelTimeLeft <= 0){
+        clearInterval(duelTimerInterval);
+        if(myRole==='host'){
+          update(ref(db,`duel_rooms/${roomCode}`),{status:'finished'});
+        }
+      }
+    }, 1000);
+  }
+
+  function updateDuelTimerBadge(){
+    const badge = document.getElementById('duel-round-label');
+    if(badge) badge.textContent = `⏱ ${duelTimeLeft}sn`;
+  }
+
   function endDuel(){
     if(window.trackEnd)window.trackEnd();
     if(cdTimer) clearInterval(cdTimer);
+    if(duelTimerInterval) clearInterval(duelTimerInterval);
     if(roundListener){ roundListener(); roundListener=null; }
 
     const myFinal = myScore_, oppFinal = oppScore_;
@@ -1737,9 +1859,11 @@
     else{ winBadge='🤝 Beraberlik!'; comment='İkisi de aynı seviyede! Yunus Hoca ikinizden de memnun 🎵'; }
 
     const mc = myFinal>=oppFinal ? 'win' : 'lose', oc = oppFinal>=myFinal ? 'win' : 'lose';
+    const gameLabel = duelSecs > 0 ? `⏱ ${duelSecs} Saniyelik Yarış` : `${duelRounds} Tur`;
     document.getElementById('app-wrap').innerHTML = `
       <div class="duel-result">
         <h2>⚔️ Düello Bitti!</h2>
+        <div class="duel-mode-badge">${gameLabel}</div>
         <div class="winner-badge">${winBadge}</div>
         <div class="final-scores">
           <div class="fsc-player"><div class="fsc-name">${myName}</div><div class="fsc-num ${mc}">${myFinal}</div></div>
@@ -1757,6 +1881,7 @@
   function handleAbandoned(){
     if(window.trackEnd)window.trackEnd();
     if(cdTimer) clearInterval(cdTimer);
+    if(duelTimerInterval) clearInterval(duelTimerInterval);
     alert('Rakibiniz oyundan ayrıldı.');
     showArea('setup-area');
   }
@@ -1764,6 +1889,7 @@
   window.leaveGame = async function(){
     if(window.trackEnd)window.trackEnd();
     if(cdTimer) clearInterval(cdTimer);
+    if(duelTimerInterval) clearInterval(duelTimerInterval);
     if(roundListener && roomCode){ roundListener(); roundListener=null; }
     if(roomCode) await update(ref(db,`duel_rooms/${roomCode}`),{status:'abandoned'});
     showArea('setup-area');
