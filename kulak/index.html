@@ -1043,7 +1043,7 @@
       choicesDiv.innerHTML = '';
       q.choices.forEach(note => {
         const card = document.createElement('div');
-        card.className = 'choice-card';
+        card.className = 'choice-card vf-card';
         card.dataset.note = note;
         card.onclick = () => answerQuestion(note, card);
         const staffDiv = document.createElement('div');
@@ -1646,7 +1646,7 @@
     box.innerHTML = '';
     qData.choices.forEach(noteName=>{
       const card = document.createElement('div');
-      card.className = 'duel-choice-card';
+      card.className = 'duel-choice-card vf-card';
       card.dataset.note = noteName;
       card.onclick = () => duelAnswer(noteName, card, rNum);
       const staffDiv = document.createElement('div');

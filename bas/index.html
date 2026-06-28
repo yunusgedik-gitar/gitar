@@ -1330,7 +1330,7 @@ function nextQuestion() {
     box.innerHTML = '';
     choices.forEach(noteObj => {
       const card = document.createElement('div');
-      card.className = 'choice-card'; card.dataset.choice = noteObj.name;
+      card.className = 'choice-card vf-card'; card.dataset.choice = noteObj.name;
       card.onclick = () => selectChoice(card, noteObj.name);
       const staffDiv = document.createElement('div'); staffDiv.className = 'choice-staff';
       card.appendChild(staffDiv);

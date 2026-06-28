@@ -158,10 +158,10 @@
 </header>
 
 <div id="app">
+  <div class="nav-row">
+    <button class="back-btn" onclick="location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
+  </div>
   <div id="setup-area" class="filter-card">
-    <div style="display:flex;justify-content:flex-end;margin-bottom:.5rem;">
-      <button class="back-btn" onclick="location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
-    </div>
     <div class="action-buttons-wrap">
       <button id="start-btn" class="app-btn" onclick="startExercise('practice')">Egzersize Başla (Zamansız) 🎯</button>
       <button id="race-btn"  class="app-btn btn-race" onclick="startExercise('race')">Yarışmaya Başla (40 Saniye) 🏆</button>
@@ -214,7 +214,7 @@
         <span class="dscore-num"  id="dscore-opp">0</span>
       </div>
     </div>
-    <div class="card duel-note-card">
+    <div class="card duel-note-card vf-card">
       <div class="card-top">
         <span class="card-label" id="duel-string-label">Bu Hangi Nota?</span>
       </div>
@@ -243,7 +243,7 @@
       <button class="string-btn active string-num-btn" data-string="5" onclick="toggleString(5)">⑤</button>
       <button class="string-btn active string-num-btn" data-string="6" onclick="toggleString(6)">⑥</button>
     </div>
-    <div class="card">
+    <div class="card vf-card">
       <div class="card-top">
         <span id="current-string-label" class="card-label">Bu Hangi Nota?</span>
         <button id="listen-btn" onclick="replay()">🔊 Dinle</button>

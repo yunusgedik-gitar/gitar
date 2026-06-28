@@ -433,3 +433,70 @@ svg.vf-renderer * {
   background: rgba(212, 168, 67, 0.12) !important;
   box-shadow: 0 2px 10px rgba(212, 168, 67, 0.18) !important;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   EK DÜZELTMELER  –  v2
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── 23. AÇIK MOD – Tüm sayfa arkaplanları tek renge hizala ──
+   Ana sayfa #EAF6FF kullanıyor; sub-sayfalar krem (#faf6ed).
+   html body kullanarak sub-sayfa stillerini override ediyoruz. */
+html body {
+  background: #EAF6FF;
+}
+/* Ana sayfa zaten --cream: #EAF6FF kullanıyor, değişken korunur.
+   Koyu modda body:000000 override'ı !important ile önce gelir.  */
+
+/* ── 24. .nav-row – Evrensel navigasyon satırı ────────────────
+   kulak'ta vardı, diğer sayfalara da theme.css üzerinden ver. */
+.nav-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  width: 100%;
+}
+.nav-row.between {
+  justify-content: space-between;
+}
+
+/* ── 25. VexFlow PORTE KARTLARI – Her modda beyaz kalır ───────
+   Müzik notası, PORTE ve cevap seçenekleri:
+   Koyu modda da beyaz zemin, siyah notalar okunabilir olsun.
+   .vf-card  → HTML'e eklenmiş: nota/tel/bas/kulak main & duel
+   .choice-card, .duel-choice-card → JS'te oluşturulan seçenekler */
+[data-theme="dark"] .vf-card,
+[data-theme="dark"] .choice-card,
+[data-theme="dark"] .duel-choice-card {
+  background: #ffffff !important;
+  border-color: #e8e0d5 !important;
+  box-shadow: 0 4px 20px rgba(90,62,43,0.05) !important;
+}
+
+/* Kart içi metin de orijinal renginde kalsın */
+[data-theme="dark"] .vf-card .card-label,
+[data-theme="dark"] .vf-card .card-top,
+[data-theme="dark"] .vf-card .card-top button,
+[data-theme="dark"] .choice-card .choice-name {
+  color: #5a3e2b !important;
+}
+
+/* VexFlow SVG içindeki yollar (stroke, fill) zaten hardcoded siyah;
+   transition iptal edilerek gereksiz animasyon da önleniyor. */
+[data-theme="dark"] .vf-card svg *,
+[data-theme="dark"] .choice-card svg *,
+[data-theme="dark"] .duel-choice-card svg * {
+  transition: none !important;
+}
+
+/* choice-card seçim durumları da orijinal renklerini korusun */
+[data-theme="dark"] .choice-card.correct,
+[data-theme="dark"] .duel-choice-card.correct {
+  background: #eaf3de !important;
+  border-color: #6b8c42 !important;
+}
+[data-theme="dark"] .choice-card.wrong,
+[data-theme="dark"] .duel-choice-card.wrong {
+  background: #fdf0f0 !important;
+  border-color: #c75b39 !important;
+}
