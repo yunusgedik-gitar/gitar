@@ -389,7 +389,14 @@
     <div id="online-badges-row"></div>
   </header>
 
-  <div id="app">    <div class="nav-row">
+  <div id="app">    <div class="nav-row between">
+      <div></div>
+      <div id="theme-toggle-wrap-setup">
+        <button id="theme-toggle" onclick="toggleTheme()" title="Temayı Değiştir" aria-label="Temayı Değiştir">
+          <span class="th-icon th-sun th-active">☀️</span>
+          <span class="th-icon th-moon">🌙</span>
+        </button>
+      </div>
       <button class="back-to-menu-btn" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
     </div>
     <div id="setup-area" class="filter-card">
@@ -463,9 +470,14 @@
       
       <div class="nav-row between">
         <button class="back-to-menu-btn" onclick="goBackToMenu()">← Menüye Dön</button>
+        <div id="theme-toggle-wrap">
+          <button class="theme-toggle-btn" onclick="toggleTheme()" title="Temayı Değiştir" aria-label="Temayı Değiştir">
+            <span class="th-icon th-sun th-active">☀️</span>
+            <span class="th-icon th-moon">🌙</span>
+          </button>
+        </div>
         <button class="back-to-menu-btn" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
       </div>
-      <span class="practice-timer-box" id="timer-display" style="display:none;margin-bottom:.5rem;">Kalan Süre: 40</span>
 
       <div id="live-string-filter" class="string-buttons" style="margin-bottom:.8rem;">
         <button id="btn-all" class="string-btn all-btn active" onclick="toggleAllStrings()">HEPSİ</button>
@@ -480,7 +492,10 @@
       <div class="card vf-card">
         <div class="card-top">
           <span id="card-question-title" class="card-label">Bu Nota Hangi Telde?</span>
-          <button id="listen-btn" onclick="replay()">🔊 Dinle</button>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div id="timer-display" style="display:none;">Kalan Süre: 40</div>
+            <button id="listen-btn" onclick="replay()">🔊 Dinle</button>
+          </div>
         </div>
         <div id="notation"></div>
       </div>
@@ -492,8 +507,9 @@
       <div id="progress-bar-wrap"><div id="progress-bar"></div></div>
       
       <div class="controls">
-        <button class="ctrl-btn" id="prev-btn" onclick="previousCard()" disabled>← Önceki</button>
+        <button class="ctrl-btn" id="prev-btn" onclick="manualPrev()" disabled>← Önceki</button>
         <button class="ctrl-btn primary" id="next-btn" onclick="manualNext()" disabled>Sonraki Soru →</button>
+        <button class="ctrl-btn" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
       </div>
     </div>
 
@@ -543,7 +559,8 @@
     
     const ALL_SOL = ['①','②','③','④','⑤','⑥'];
     
-    const ERROR_MESSAGES = window.GITAR_ERRORS || [];
+    // Yanlış cevap mesajları shared-errors.js'den yüklenir (module bloğu window.ERR'yi atar)
+    function getERR() { return window.ERR || ["Yanlış! Tekrar dene."]; }
 
     let selectedStrings = new Set([1, 2, 3, 4, 5, 6]);
     let filteredNotes = [];
@@ -600,7 +617,6 @@
     }
 
     function startExercise(mode) {
-      _cardHist=[]; _cardIdx=-1;
       filteredNotes = mode === 'race' ? NOTES.slice() : NOTES.filter(n => selectedStrings.has(n.stringVal));
       if (filteredNotes.length === 0) return;
       if (window.trackEnd) window.trackEnd();
@@ -642,7 +658,6 @@
     }
 
     function resetQuiz() {
-      _cardHist=[]; _cardIdx=-1;
       if (gameTimer) {
         clearInterval(gameTimer);
         gameTimer = null;
@@ -795,6 +810,10 @@
       nextCard(); 
     }
 
+    function manualPrev() {
+      // Tel'de önceki soruya geri dönme henüz desteklenmiyor
+    }
+
     // Tel bazlı yanlış sayacı — soru seçiminde ağırlık olarak kullanılır
     let missCounts = {};
     let prevSol = null;
@@ -836,42 +855,6 @@
       return ALL_SOL.slice(start, start + blockSize);
     }
 
-
-    // ── Soru geçmişi — ← Önceki butonu için ──
-    let _cardHist = [], _cardIdx = -1;
-
-    function _showCard(note){
-      answered = false;
-      if(document.activeElement) document.activeElement.blur();
-      document.getElementById('feedback').textContent = '';
-      document.getElementById('feedback').className = '';
-      document.getElementById('next-btn').disabled = true;
-      const pb = document.getElementById('prev-btn');
-      if(pb) pb.disabled = _cardIdx <= 0 || currentMode === 'race';
-      clearAutoTimer();
-      current = note;
-      prevSol = current.sol;
-      document.getElementById('card-question-title').textContent = `"${current.name}" Notası Hangi Telde?`;
-      const choices = pickAdjacentSolBlock(current.sol);
-      drawNote(current.key);
-      if(interacted) setTimeout(()=>playNote(current.freq), 280);
-      const box = document.getElementById('choices');
-      box.innerHTML = '';
-      choices.forEach(sol=>{
-        const btn = document.createElement('button');
-        btn.className = 'cbtn';
-        btn.textContent = sol;
-        btn.onclick = ()=>answer(sol, btn);
-        box.appendChild(btn);
-      });
-    }
-
-    function previousCard(){
-      if(_cardIdx <= 0 || currentMode === 'race') return;
-      _cardIdx--;
-      _showCard(_cardHist[_cardIdx]);
-    }
-
     function nextCard(){
       if (currentMode === 'race' && timeLeft <= 0) return;
       if (currentMode === 'practice') filteredNotes = NOTES.filter(n => selectedStrings.has(n.stringVal));
@@ -884,11 +867,7 @@
       document.getElementById('next-btn').disabled = true; 
       clearAutoTimer();
 
-      const _nextNote = pickNextNote();
-      _cardHist = _cardHist.slice(0, _cardIdx+1);
-      _cardHist.push(_nextNote);
-      _cardIdx = _cardHist.length - 1;
-      current = _nextNote;
+      current = pickNextNote();
       prevSol = current.sol;
       
       document.getElementById('card-question-title').textContent = `"${current.name}" Notası Hangi Telde?`;
@@ -937,7 +916,7 @@
         if (window.trackLog) window.trackLog(false, current.sol, current.name+' → '+current.sol);
         btn.className='cbtn wrong';
         
-        const randomMsg = ERROR_MESSAGES[Math.floor(Math.random() * ERROR_MESSAGES.length)];
+        const randomMsg = getERR()[Math.floor(Math.random() * getERR().length)];
         fb.textContent = '✗ ' + randomMsg + ' — Doğrusu: ' + current.sol;
         
         fb.className='no';
@@ -963,6 +942,8 @@
     onValue, onDisconnect, runTransaction, push
   } from 'https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js';
   import { createTracker } from '/game-tracker.js';
+  import { ERRORS as _SHARED_ERRORS } from '/shared-errors.js';
+  window.ERR = _SHARED_ERRORS;
 
   const FIREBASE_CONFIG = {
     apiKey: "AIzaSyBkEd729B65y-NZIQ-sxScCgaEvlX-q7yA",

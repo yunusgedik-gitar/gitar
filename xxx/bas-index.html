@@ -1,0 +1,2217 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <!-- ── TEMA SİSTEMİ ── -->
+  <link rel="stylesheet" href="/theme.css">
+  <script src="/theme.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+  <title>Bas Gitar Klavyesi</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Lato:wght@300;400;700&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body { font-family: 'Lato', sans-serif; background: #faf6ed; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 1.2rem 1rem 2rem; color: #5a3e2b; }
+    header { text-align: center; margin-bottom: 0.5rem; }
+    header h1 { font-family: 'Playfair Display', serif; font-size: 1.35rem; font-weight: 600; color: #5a3e2b; }
+    #app-wrap { width: 100%; max-width: 600px; }
+
+    /* ── TEL SEÇİM / FİLTRE PANELİ STİLLERİ ── */
+    .filter-card {
+      background: #fff;
+      border: 1.5px solid #e8e0d5;
+      border-radius: 20px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 4px 20px rgba(90,62,43,0.04);
+      text-align: center;
+    }
+    .filter-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #b09070;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.75rem;
+    }
+    .string-buttons {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 0.85rem;
+    }
+    .string-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: 1.5px solid #d4c4b0;
+      background: #fff;
+      color: #5a3e2b;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+      position: relative;
+    }
+    .string-num-btn:not(.active) { opacity: .45; }
+    .string-num-btn:not(.active)::after {
+      content: '✕'; position: absolute; top: -4px; right: -4px;
+      width: 16px; height: 16px; background: #c0392b; color: #fff;
+      border-radius: 50%; font-size: .62rem; font-weight: 900;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,.3);
+    }
+    .string-btn.all-btn {
+      width: auto;
+      height: 42px;
+      padding: 0 16px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+    }
+    .string-btn.active {
+      background: #5a3e2b;
+      border-color: #5a3e2b;
+      color: #fff;
+      box-shadow: 0 4px 10px rgba(90,62,43,0.2);
+    }
+    .action-buttons-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .start-exercise-btn {
+      width: 100%;
+      padding: 10px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      border-radius: 12px;
+      border: 1.5px solid #d4a373;
+      background: #f5e6d3;
+      color: #5a3e2b;
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+    .start-race-btn {
+      border: 1.5px solid #e24b4a;
+      background: #fdf0f0;
+      color: #a32d2d;
+    }
+    .start-exercise-btn:disabled {
+      background: #f5f5f5;
+      border-color: #ddd;
+      color: #aaa;
+      cursor: not-allowed;
+    }
+    .back-to-menu-btn {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #b09070;
+      background: #fff;
+      border: 1.5px solid #e8e0d5;
+      padding: 6px 14px;
+      border-radius: 30px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.12s;
+      box-shadow: 0 2px 8px rgba(90,62,43,0.02);
+    }
+
+    /* ── MOD SEÇİM KARTLARI ── */
+    .mode-select-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 0.85rem;
+    }
+    .mode-card {
+      background: #fff;
+      border: 2px solid #e8e0d5;
+      border-radius: 16px;
+      padding: 14px 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: center;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .mode-card .mode-icon { font-size: 1.6rem; margin-bottom: 6px; display: block; }
+    .mode-card .mode-label { font-size: 0.82rem; font-weight: 700; color: #5a3e2b; line-height: 1.3; }
+    .mode-card.active { border-color: #d4a373; background: #fdf6ec; box-shadow: 0 4px 14px rgba(212,163,115,0.25); }
+    @media (hover: hover) {
+      .mode-card:hover:not(.active) { border-color: #d4c4b0; transform: translateY(-2px); }
+    }
+
+    /* ── OYUN VE KART STİLLERİ ── */
+    .card { background: #fff; border: 1.5px solid #e8e0d5; border-radius: 20px; padding: 1.1rem 1.1rem 0.9rem; margin-bottom: 0.85rem; box-shadow: 0 4px 20px rgba(90,62,43,0.04); }
+    .card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; gap: 8px; }
+
+    #listen-btn { display: flex; align-items: center; gap: 5px; font-size: 0.8rem; padding: 6px 14px; border-radius: 20px; border: 1.5px solid #d4a373; background: #fff; color: #8b5a2b; cursor: pointer; font-family: inherit; font-weight: 600; transition: all 0.2s; }
+    #listen-btn.playing { background: #eaf3de; border-color: #6b8c42; color: #3b6d11; }
+
+    @media (hover: hover) {
+      #listen-btn:hover { background: #f5e6d3; }
+      .ctrl-btn:hover { background: #f5e6d3; border-color: #c4a88a; }
+      .ctrl-btn.primary:hover { background: #ebd3b8; }
+      .start-exercise-btn:hover:not(:disabled) { background: #ebd3b8; }
+      .start-race-btn:hover:not(:disabled) { background: #f9d5d5; }
+      .back-to-menu-btn:hover { background: #f5e6d3; border-color: #d4c4b0; color: #5a3e2b; }
+    }
+
+    .timer-badge { font-size: 0.85rem; font-weight: 700; color: #8b5a2b; background: #f5e6d3; padding: 5px 12px; border-radius: 12px; border: 1px solid #e8d5c0; white-space: nowrap; }
+
+    .hint-box { text-align: center; font-size: 1.15rem; font-weight: 700; color: #5a3e2b; margin-bottom: 1rem; display: flex; align-items: center; justify-content: center; gap: 8px; background: #fdfaf4; padding: 8px 12px; border-radius: 12px; border: 1px dashed #d4c4b0; }
+    .hint-string-badge { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: #8b5a2b; color: #fff; border-radius: 50%; font-size: 0.95rem; font-weight: 700; }
+    .hint-fret-text { color: #b37d4e; background: #f5e6d3; padding: 2px 10px; border-radius: 6px; }
+
+    .guitar-wrap { width: 100%; display: flex; justify-content: center; align-items: center; margin: 0 auto 0.5rem; }
+    .guitar-wrap svg { display: block; width: 100%; max-width: 480px; height: auto; overflow: visible; }
+
+    .fret-btn { cursor: pointer; transition: fill 0.15s, stroke 0.15s; -webkit-tap-highlight-color: transparent; }
+    .fret-btn.disabled { cursor: default; pointer-events: none; }
+
+    .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1rem; }
+    .choice-card { background: #fff; border: 2px solid #e8e0d5; border-radius: 16px; padding: 8px 10px 6px; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; position: relative; box-shadow: 0 2px 8px rgba(90,62,43,0.03); overflow: visible; -webkit-tap-highlight-color: transparent; outline: none; }
+    @media (hover: hover) {
+      .choice-card:hover:not(.disabled):not(.correct):not(.wrong) { border-color: #d4a373; transform: translateY(-3px); box-shadow: 0 8px 20px rgba(90,62,43,0.1); }
+    }
+    .choice-card:active:not(.disabled) { transform: scale(0.98); }
+    .choice-staff { width: 110px; height: 115px; margin: 4px 0 0; overflow: visible; }
+    .choice-staff svg { max-width: 100%; height: auto; overflow: visible; }
+    .choice-card.correct { background: #eaf3de; border-color: #6b8c42; }
+    .choice-card.wrong { background: #fdf0f0; border-color: #c75b39; }
+    .choice-card.disabled { cursor: default; opacity: 0.92; }
+
+    /* ── NOTADAN KLAVYEYE: BÜYÜK NOTA KARTI ── */
+    .question-staff-card {
+      background: #fff;
+      border: 1.5px solid #e8e0d5;
+      border-radius: 20px;
+      padding: 1.5rem 1rem;
+      margin-bottom: 0.85rem;
+      box-shadow: 0 4px 20px rgba(90,62,43,0.04);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    #question-staff {
+      width: 300px;
+      height: 110px;
+      overflow: visible;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    #question-staff svg { width: 100%; height: 100%; overflow: visible; }
+
+    .message { text-align: center; font-size: 0.9rem; font-weight: 700; color: #8b6b4e; margin-bottom: 0.65rem; min-height: 22px; padding: 0 5px; }
+
+    #auto-bar-wrap { height: 3px; background: #e0ddd6; border-radius: 2px; margin-bottom: 0.65rem; overflow: hidden; display: none; }
+    #auto-bar { height: 100%; width: 100%; background: #6b8c42; border-radius: 2px; transition: width 1s linear; }
+
+    .progress-area { display: flex; align-items: center; margin-bottom: 1.2rem; }
+    .progress-track { flex: 1; height: 10px; background: #ede6d8; border-radius: 5px; overflow: hidden; border: 1px solid #e0d8c8; }
+    .progress-fill { height: 100%; width: 0%; background: #8cb85f; border-radius: 5px; transition: width 0.4s ease; }
+
+    .controls { display: grid; grid-template-columns: 1fr; gap: 8px; }
+    .ctrl-btn { padding: 11px; font-size: 0.85rem; font-weight: 700; border-radius: 12px; border: 1.5px solid #d4c4b0; background: #fff; color: #5a3e2b; cursor: pointer; font-family: inherit; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 5px; width: 100%; }
+    .ctrl-btn.primary { background: #f5e6d3; border-color: #d4a373; }
+    .ctrl-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .result-screen { display: none; text-align: center; padding: 1.5rem 1rem; }
+    .result-title { font-family: 'Playfair Display', serif; font-size: 1.8rem; color: #6b8c42; margin-bottom: 1rem; }
+    .result-stats { background: #fdfaf4; border: 1.5px dashed #d4c4b0; border-radius: 16px; padding: 1.2rem; margin-bottom: 1.5rem; text-align: left; }
+    .stat-row { display: flex; justify-content: space-between; font-size: 1.1rem; padding: 8px 0; border-bottom: 1px dashed #e8e0d5; color: #5a3e2b; }
+    .stat-row:last-child { border-bottom: none; }
+    .stat-val { font-weight: 700; color: #8b5a2b; }
+    .stat-val.correct-val { color: #6b8c42; }
+    .stat-val.wrong-val { color: #c75b39; }
+
+    @media (max-width: 420px) {
+      .choices { gap: 8px; }
+      .choice-card { padding: 10px 6px; }
+      .choice-staff { width: 90px; height: 100px; }
+    }
+    .site-footer {
+      display: flex;
+      justify-content: center;
+      gap: 22px;
+      margin-top: 2.5rem;
+    }
+    .site-footer a {
+      color: #b0a392;
+      font-size: 2.2rem;
+      transition: all .2s ease;
+    }
+    .site-footer a:hover {
+      color: #d4a373;
+      transform: translateY(-2px);
+    }
+
+    /* ── DÜELLO STİLLERİ ── */
+    #duel-setup-area, #duel-waiting-area, #duel-game-area { display: none; }
+    .app-btn { width: 100%; padding: 10px; font-size: 0.95rem; font-weight: 700; border-radius: 12px; border: 1.5px solid #d4a373; background: #f5e6d3; color: #5a3e2b; cursor: pointer; transition: all 0.12s; font-family: inherit; }
+    .btn-duel { border-color: #7b5ea7; background: #f3eeff; color: #4a2d8a; }
+    @media (hover:hover) { .app-btn:hover:not(:disabled) { filter: brightness(0.95); } }
+    .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem; min-height: 38px; }
+    .online-players-list { margin-bottom: 1rem; }
+    .online-player-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 12px; border-radius: 12px; border: 1.5px solid #e8e0d5;
+      background: #fff; margin-bottom: 8px; transition: border-color 0.12s;
+    }
+    .online-player-name { font-weight: 700; color: #5a3e2b; font-size: 0.95rem; }
+    .online-dot { width: 9px; height: 9px; border-radius: 50%; background: #52a050; display: inline-block; margin-right: 7px; }
+    .challenge-btn {
+      font-size: 0.8rem; font-weight: 700; padding: 6px 14px; border-radius: 20px;
+      border: 1.5px solid #7b5ea7; background: #f3eeff; color: #4a2d8a;
+      cursor: pointer; font-family: inherit; transition: all 0.12s; white-space: nowrap;
+    }
+    .challenge-btn:hover { background: #e8deff; }
+    .no-players-msg { color: #b09070; font-size: 0.9rem; font-style: italic; padding: 1rem 0; }
+    .round-row { display: flex; gap: 8px; justify-content: center; margin-bottom: 1rem; }
+    .round-btn { padding: 7px 18px; border-radius: 20px; border: 1.5px solid #d4c4b0; background: #fff; color: #5a3e2b; font-size: 0.88rem; font-weight: 700; cursor: pointer; font-family: inherit; }
+    .round-btn.active { background: #7b5ea7; border-color: #7b5ea7; color: #fff; }
+    .waiting-card { background: #fff; border: 2px solid #7b5ea7; border-radius: 20px; padding: 2rem 1.5rem; text-align: center; margin-bottom: 1rem; }
+    .waiting-name { font-family: 'Playfair Display', serif; font-size: 1.4rem; color: #5a3e2b; margin-bottom: 0.5rem; }
+    .waiting-sub { font-size: 0.9rem; color: #b09070; margin-bottom: 1.5rem; }
+    .spinner { width: 40px; height: 40px; border: 3px solid #e8e0d5; border-top-color: #7b5ea7; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 1rem; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .duel-top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; }
+    .duel-round-badge { font-size: 0.85rem; font-weight: 700; color: #7b5ea7; background: #f3eeff; border: 1.5px solid #c8b4f0; padding: 5px 14px; border-radius: 30px; }
+    .duel-scores { display: flex; gap: 10px; margin-bottom: 0.6rem; }
+    .duel-score-box { flex: 1; background: #fff; border: 1.5px solid #e8e0d5; border-radius: 14px; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; }
+    .duel-score-box.me  { border-color: #f0c88e; background: #fffaf3; }
+    .duel-score-box.opp { border-color: #c8b4f0; background: #f9f5ff; }
+    .dscore-name { font-size: 0.82rem; font-weight: 700; color: #5a3e2b; max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .dscore-num  { font-size: 1.4rem; font-weight: 700; color: #5a3e2b; }
+    .duel-note-card { margin-bottom: 0.6rem; padding: 1rem 1rem 0.4rem; }
+    #duel-notation { width: 100%; display: flex; justify-content: center; overflow: hidden; }
+    #duel-notation svg { max-width: 100%; }
+    .duel-choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 0.5rem; }
+    .dcbtn { padding: 14px 8px; font-size: 1.05rem; font-weight: 700; border-radius: 14px; border: 1.5px solid #d4c4b0; background: #fff; color: #5a3e2b; cursor: pointer; font-family: inherit; transition: all 0.1s; -webkit-tap-highlight-color: transparent; outline: none; }
+    .dcbtn:active:not(:disabled) { transform: scale(0.96); }
+    .dcbtn.correct { background: #eaf3de; border-color: #6b8c42; color: #3b6d11; }
+    .dcbtn.wrong   { background: #fdf0f0; border-color: #e24b4a; color: #a32d2d; }
+    .dcbtn:disabled { cursor: default; opacity: 0.7; transform: none; }
+    .duel-guitar-wrap { width: 100%; display: flex; justify-content: center; align-items: center; margin: 0 auto 0.5rem; }
+    .duel-guitar-wrap svg { display: block; width: 100%; max-width: 480px; height: auto; overflow: visible; }
+    .duel-feedback { text-align: center; min-height: 28px; font-size: 0.95rem; font-weight: 700; color: #5a3e2b; margin-bottom: 0.3rem; }
+    .duel-feedback.iwin  { color: #3b6d11; } .duel-feedback.opwin { color: #a32d2d; } .duel-feedback.nobody { color: #888; }
+    .duel-countdown-wrap { display: none; justify-content: center; padding: 0.4rem 0; }
+    .duel-cd { width: 52px; height: 52px; border-radius: 50%; border: 3px solid #7b5ea7; background: #f3eeff; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: 700; color: #7b5ea7; animation: cdPop 0.3s ease; }
+    @keyframes cdPop { 0%{transform:scale(1.4);opacity:0.5} 100%{transform:scale(1);opacity:1} }
+    .duel-result { background: #fff; border: 2px solid #7b5ea7; border-radius: 20px; padding: 2rem 1.5rem; text-align: center; box-shadow: 0 8px 30px rgba(123,94,167,0.12); }
+    .duel-result h2 { font-family:'Playfair Display',serif; font-size: 1.5rem; color: #5a3e2b; margin-bottom: 0.6rem; }
+    .winner-badge { font-size: 1.1rem; font-weight: 700; color: #fff; background: linear-gradient(135deg,#7b5ea7,#5a3e8a); display: inline-block; padding: 8px 24px; border-radius: 30px; margin-bottom: 1rem; }
+    .final-scores { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 1rem; }
+    .fsc-player { text-align: center; }
+    .fsc-name  { font-size: 0.85rem; font-weight: 700; color: #b09070; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
+    .fsc-num   { font-size: 3.2rem; font-weight: 700; }
+    .fsc-num.win { color: #6b8c42; } .fsc-num.lose { color: #ccc; }
+    .fsc-vs    { font-size: 1rem; font-weight: 700; color: #d4c4b0; }
+    .duel-comment { font-size: 0.9rem; color: #5a3e2b; font-style: italic; margin-bottom: 1.5rem; line-height: 1.5; padding: 0 8px; }
+    .result-btns { display: flex; gap: 10px; }
+    .duel-mode-badge { font-size: 0.78rem; font-weight: 700; color: #8b5a2b; background: #f5e6d3; padding: 4px 10px; border-radius: 10px; border: 1px solid #e8d5c0; display: inline-block; margin-bottom: 0.6rem; }
+    #online-badges-row { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 10px; }
+    .online-name-badge { font-size: .72rem; font-weight: 600; background: #eaf4e0; color: #3b6d11; padding: 4px 11px; border-radius: 20px; display: inline-flex; align-items: center; gap: 5px; border: 1px solid #b0d890; white-space: nowrap; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🎸 Bas Gitar Klavyesi</h1>
+  <div id="online-badges-row"></div>
+</header>
+
+<div id="app-wrap">
+
+  <div id="setup-area">
+
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+      <div></div>
+      <div id="theme-toggle-wrap">
+        <button id="theme-toggle" onclick="toggleTheme()" title="Temayı Değiştir" aria-label="Temayı Değiştir">
+          <span class="th-icon th-sun th-active">☀️</span>
+          <span class="th-icon th-moon">🌙</span>
+        </button>
+      </div>
+      <button class="back-to-menu-btn" style="margin-bottom:0;" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
+    </div>
+
+    <div class="filter-card">
+            <div class="mode-select-row">
+        <div class="mode-card active" id="mode-card-n2k" onclick="selectQuizMode('notadan-klavyeye')">
+          <span class="mode-icon">🎼 ➜ 🎸</span>
+          <span class="mode-label">Notadan Klavye'ye</span>
+        </div>
+        <div class="mode-card" id="mode-card-k2n" onclick="selectQuizMode('klavyeden-notaya')">
+          <span class="mode-icon">🎸 ➜ 🎼</span>
+          <span class="mode-label">Klavye'den Nota'ya</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="filter-card">
+      <div class="action-buttons-wrap">
+        <button id="start-btn" class="start-exercise-btn" onclick="startExercise('practice')">Egzersize Başla (Zamansız) 🎯</button>
+        <button id="race-btn" class="start-exercise-btn start-race-btn" onclick="startExercise('race')">Yarışmaya Başla (40 Saniye) 🏆</button>
+        <button class="app-btn btn-duel" onclick="window.showDuelSetup()">⚔️ Online Düello</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── DÜELLO SETUP ── -->
+  <div id="duel-setup-area" class="filter-card">
+    <div class="top-bar" style="margin-bottom:.8rem;">
+      <h2 style="font-family:'Playfair Display',serif;font-size:1.1rem;">⚔️ Online Düello</h2>
+      <button class="back-to-menu-btn" onclick="showArea('setup-area')">← Geri</button>
+    </div>
+    <div id="duel-online-players-list" class="online-players-list">
+      <div class="no-players-msg">Yükleniyor...</div>
+    </div>
+       <div class="mode-select-row">
+      <div class="mode-card active" id="d-mode-card-n2k" onclick="dSelectMode('notadan-klavyeye')">
+        <span class="mode-icon">🎼 ➜ 🎸</span>
+        <span class="mode-label">Notadan Klavye'ye</span>
+      </div>
+      <div class="mode-card" id="d-mode-card-k2n" onclick="dSelectMode('klavyeden-notaya')">
+        <span class="mode-icon">🎸 ➜ 🎼</span>
+        <span class="mode-label">Klavye'den Nota'ya</span>
+      </div>
+    </div>
+    <div class="filter-title">Oyun Modu</div>
+    <div class="round-row" style="flex-wrap:wrap;">
+      <button class="round-btn active" data-rounds="5"   data-secs="0"  onclick="selectRounds(5,0)">5 Tur</button>
+      <button class="round-btn"        data-rounds="10"  data-secs="0"  onclick="selectRounds(10,0)">10 Tur</button>
+      <button class="round-btn"        data-rounds="15"  data-secs="0"  onclick="selectRounds(15,0)">15 Tur</button>
+    </div>
+    <div class="round-row" style="flex-wrap:wrap; margin-top:-4px;">
+      <button class="round-btn"        data-rounds="0"   data-secs="40" onclick="selectRounds(0,40)">⏱ 40sn</button>
+      <button class="round-btn"        data-rounds="0"   data-secs="50" onclick="selectRounds(0,50)">⏱ 50sn</button>
+      <button class="round-btn"        data-rounds="0"   data-secs="60" onclick="selectRounds(0,60)">⏱ 60sn</button>
+    </div>
+        <div class="string-buttons" style="margin-bottom:0;">
+      <p style="width:100%;text-align:center;font-size:.8rem;color:#8a7860;margin:0;">🎸 Düellolarda adil olması için tüm teller kullanılır.</p>
+    </div>
+  </div>
+
+  <!-- ── DÜELLO BEKLEME ── -->
+  <div id="duel-waiting-area" class="filter-card">
+    <div class="top-bar" style="margin-bottom:.8rem;">
+      <h2 style="font-family:'Playfair Display',serif;font-size:1.1rem;">⚔️ Davet Gönderildi</h2>
+      <button class="back-to-menu-btn" onclick="cancelChallenge()">✕ İptal</button>
+    </div>
+    <div class="waiting-card">
+      <div class="spinner"></div>
+      <div class="waiting-name" id="waiting-opp-name">Rakip</div>
+      <div class="waiting-sub">daveti kabul etmesi bekleniyor...</div>
+    </div>
+    <p style="font-size:.8rem;color:#b09070;text-align:center;">Rakibiniz daveti reddederse veya 30 saniye içinde cevap vermezse otomatik iptal olur.</p>
+  </div>
+
+  <!-- ── DÜELLO OYUN ── -->
+  <div id="duel-game-area">
+    <div class="duel-top-bar">
+      <button class="back-to-menu-btn" onclick="leaveGame()">← Çık</button>
+      <div class="duel-round-badge" id="duel-round-label">Tur 1 / 5</div>
+    </div>
+    <div class="duel-scores">
+      <div class="duel-score-box me">
+        <span class="dscore-name" id="dscore-me-name">Sen</span>
+        <span class="dscore-num"  id="dscore-me">0</span>
+      </div>
+      <div class="duel-score-box opp">
+        <span class="dscore-name" id="dscore-opp-name">Rakip</span>
+        <span class="dscore-num"  id="dscore-opp">0</span>
+      </div>
+    </div>
+
+    <!-- Klavyeden-Notaya modu görünümü: porte yok, klavye highlight + nota kartları -->
+    <div id="duel-view-k2n" style="display:none;">
+      <div class="card duel-note-card">
+        <div class="hint-box" id="duel-hint-text">
+          💡 <span class="hint-string-badge">1</span> . Tel – <span class="hint-fret-text">I. Perde</span>
+        </div>
+        <div class="duel-guitar-wrap">
+          <svg id="duel-guitar-svg-k2n" viewBox="60 0 400 132" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+            <defs>
+              <linearGradient id="dfbGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#2a1a0e"/>
+                <stop offset="100%" stop-color="#1a0f06"/>
+              </linearGradient>
+              <linearGradient id="dnutGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#f0e0b0"/>
+                <stop offset="100%" stop-color="#c8a050"/>
+              </linearGradient>
+              <filter id="dDotGlow" x="-80%" y="-80%" width="260%" height="260%">
+                <feGaussianBlur stdDeviation="3.5" result="blur"/>
+                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+            </defs>
+            <rect x="62" y="24" width="392" height="96" rx="5" fill="url(#dfbGrad)" stroke="#3a2010" stroke-width="1.5"/>
+            <rect x="62" y="24" width="392" height="3" rx="1" fill="#c8a050" opacity="0.5"/>
+            <rect x="62" y="117" width="392" height="3" rx="1" fill="#c8a050" opacity="0.5"/>
+            <rect x="112" y="22" width="8" height="100" rx="2" fill="url(#dnutGrad)" stroke="#c0a040" stroke-width="0.8"/>
+            <rect x="198" y="24" width="4" height="96" rx="1" fill="#b0b8b0" opacity="0.85"/>
+            <rect x="285" y="24" width="4" height="96" rx="1" fill="#b0b8b0" opacity="0.85"/>
+            <rect x="370" y="24" width="4" height="96" rx="1" fill="#b0b8b0" opacity="0.85"/>
+            <rect x="450" y="24" width="4" height="96" rx="1" fill="#b0b8b0" opacity="0.85"/>
+            <text x="155" y="14" text-anchor="middle" fill="#8b6b4e" font-size="12" font-weight="700" font-family="Lato,sans-serif">I</text>
+            <text x="243" y="14" text-anchor="middle" fill="#8b6b4e" font-size="12" font-weight="700" font-family="Lato,sans-serif">II</text>
+            <text x="328" y="14" text-anchor="middle" fill="#8b6b4e" font-size="12" font-weight="700" font-family="Lato,sans-serif">III</text>
+            <text x="412" y="14" text-anchor="middle" fill="#8b6b4e" font-size="12" font-weight="700" font-family="Lato,sans-serif">IV</text>
+            <line x1="70" y1="36"  x2="454" y2="36"  stroke="#e8d09a" stroke-width="0.9" opacity="0.95"/>
+            <line x1="70" y1="60"  x2="454" y2="60"  stroke="#e0c880" stroke-width="1.5" opacity="0.95"/>
+            <line x1="70" y1="84"  x2="454" y2="84"  stroke="#c8a84a" stroke-width="2.1" opacity="0.95"/>
+            <line x1="70" y1="108" x2="454" y2="108" stroke="#a87820" stroke-width="2.8" opacity="0.95"/>
+            <circle cx="93" cy="36"  r="10" fill="#fff8ef" stroke="#d4a373" stroke-width="1.2"/>
+            <text   x="93" y="40"  text-anchor="middle" fill="#5a3e2b" font-size="10" font-weight="700" font-family="Lato,sans-serif">1</text>
+            <circle cx="93" cy="60"  r="10" fill="#fff8ef" stroke="#d4a373" stroke-width="1.2"/>
+            <text   x="93" y="64"  text-anchor="middle" fill="#5a3e2b" font-size="10" font-weight="700" font-family="Lato,sans-serif">2</text>
+            <circle cx="93" cy="84"  r="10" fill="#fff8ef" stroke="#d4a373" stroke-width="1.2"/>
+            <text   x="93" y="88" text-anchor="middle" fill="#5a3e2b" font-size="10" font-weight="700" font-family="Lato,sans-serif">3</text>
+            <circle cx="93" cy="108" r="10" fill="#fff8ef" stroke="#d4a373" stroke-width="1.2"/>
+            <text   x="93" y="112" text-anchor="middle" fill="#5a3e2b" font-size="10" font-weight="700" font-family="Lato,sans-serif">4</text>
+            <circle id="duel-fret-highlight" cx="0" cy="0" r="14" fill="#f4d03f" stroke="#d4ac0d" stroke-width="2.5" filter="url(#dDotGlow)" opacity="0.95" style="display:none;pointer-events:none;"/>
+            <text id="duel-fret-highlight-q" x="0" y="0" text-anchor="middle" dominant-baseline="central" fill="#5a3000" font-size="11" font-weight="700" font-family="Lato,sans-serif" style="display:none;pointer-events:none;">?</text>
+          </svg>
+        </div>
+      </div>
+      <div class="duel-choices" id="duel-choices-k2n"></div>
+    </div>
+
+    <!-- Notadan-Klavyeye modu görünümü: porte gösterimi + tıklanabilir klavye -->
+    <div id="duel-view-n2k" style="display:none;">
+      <div class="question-staff-card">
+        <div id="duel-question-staff"></div>
+      </div>
+      <div class="card">
+        <div class="duel-guitar-wrap">
+          <svg id="duel-guitar-svg-n2k" viewBox="60 0 400 160" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+            <defs>
+              <linearGradient id="dfbGrad2" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#2a1a0e"/>
+                <stop offset="100%" stop-color="#1a0f06"/>
+              </linearGradient>
+              <linearGradient id="dnutGrad2" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#f0e0b0"/>
+                <stop offset="100%" stop-color="#c8a050"/>
+              </linearGradient>
+              <filter id="dDotGlow2" x="-80%" y="-80%" width="260%" height="260%">
+                <feGaussianBlur stdDeviation="4" result="blur"/>
+                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+            </defs>
+            <rect x="62" y="24" width="392" height="120" rx="6" fill="url(#dfbGrad2)" stroke="#3a2010" stroke-width="1.5"/>
+            <rect x="62" y="24" width="392" height="3" rx="1" fill="#c8a050" opacity="0.5"/>
+            <rect x="62" y="141" width="392" height="3" rx="1" fill="#c8a050" opacity="0.5"/>
+            <rect x="112" y="22" width="8" height="124" rx="2" fill="url(#dnutGrad2)" stroke="#c0a040" stroke-width="0.8"/>
+            <rect x="198" y="24" width="4" height="120" rx="1" fill="#b0b8b0" opacity="0.85"/>
+            <rect x="285" y="24" width="4" height="120" rx="1" fill="#b0b8b0" opacity="0.85"/>
+            <rect x="370" y="24" width="4" height="120" rx="1" fill="#b0b8b0" opacity="0.85"/>
+            <rect x="450" y="24" width="4" height="120" rx="1" fill="#b0b8b0" opacity="0.85"/>
+            <text x="155" y="14" text-anchor="middle" fill="#8b6b4e" font-size="12" font-weight="700" font-family="Lato,sans-serif">I</text>
+            <text x="243" y="14" text-anchor="middle" fill="#8b6b4e" font-size="12" font-weight="700" font-family="Lato,sans-serif">II</text>
+            <text x="328" y="14" text-anchor="middle" fill="#8b6b4e" font-size="12" font-weight="700" font-family="Lato,sans-serif">III</text>
+            <text x="412" y="14" text-anchor="middle" fill="#8b6b4e" font-size="12" font-weight="700" font-family="Lato,sans-serif">IV</text>
+            <line x1="70" y1="40"  x2="454" y2="40"  stroke="#e8d09a" stroke-width="1.0" opacity="0.95"/>
+            <line x1="70" y1="68"  x2="454" y2="68"  stroke="#e0c880" stroke-width="1.6" opacity="0.95"/>
+            <line x1="70" y1="96"  x2="454" y2="96"  stroke="#c8a84a" stroke-width="2.2" opacity="0.95"/>
+            <line x1="70" y1="124" x2="454" y2="124" stroke="#a87820" stroke-width="3.0" opacity="0.95"/>
+            <g id="duel-fret-buttons-group"></g>
+            <circle id="duel-fret-highlight-n2k" cx="0" cy="0" r="16" fill="#f4d03f" stroke="#d4ac0d" stroke-width="2.5" filter="url(#dDotGlow2)" opacity="0.95" style="display:none;pointer-events:none;"/>
+            <text id="duel-fret-highlight-q-n2k" x="0" y="0" text-anchor="middle" dominant-baseline="central" fill="#5a3000" font-size="12" font-weight="700" font-family="Lato,sans-serif" style="display:none;pointer-events:none;">?</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="duel-feedback" id="duel-feedback"></div>
+    <div class="duel-countdown-wrap" id="duel-cd-wrap">
+      <div class="duel-cd" id="duel-cd-num">3</div>
+    </div>
+  </div>
+
+  <div id="exercise-area" style="display:none;">
+
+    <div id="live-string-filter" class="string-buttons" style="margin-bottom:.8rem;">
+      <button id="btn-all" class="string-btn all-btn active" onclick="toggleAllStrings()">Hepsi</button>
+      <button class="string-btn active string-num-btn" data-string="1" onclick="toggleString(1)">①</button>
+      <button class="string-btn active string-num-btn" data-string="2" onclick="toggleString(2)">②</button>
+      <button class="string-btn active string-num-btn" data-string="3" onclick="toggleString(3)">③</button>
+      <button class="string-btn active string-num-btn" data-string="4" onclick="toggleString(4)">④</button>
+    </div>
+
+    <!-- Klavyeden-Notaya görünümü -->
+    <div id="view-k2n" style="display:none;">
+      <div class="nav-row between" style="margin-bottom:0.5rem;">
+        <button class="back-to-menu-btn" onclick="goBackToMenu()">← Menüye Dön</button>
+        <div id="theme-toggle-wrap-k2n">
+          <button class="theme-toggle-btn" onclick="toggleTheme()" title="Temayı Değiştir" aria-label="Temayı Değiştir">
+            <span class="th-icon th-sun th-active">☀️</span>
+            <span class="th-icon th-moon">🌙</span>
+          </button>
+        </div>
+        <button class="back-to-menu-btn" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
+      </div>
+      <div class="card">
+        <div class="card-top">
+          <button id="listen-btn" onclick="replay()">🔊 Dinle</button>
+          <div class="timer-badge" id="timer-display">Süre: 00:00</div>
+        </div>
+
+        <div class="hint-box" id="hint-text">
+          💡 <span class="hint-string-badge">1</span> . Tel – <span class="hint-fret-text">I. Perde</span>
+        </div>
+
+        <div class="guitar-wrap">
+          <svg id="guitar-svg-k2n" viewBox="60 0 400 132" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+            <defs>
+              <linearGradient id="fbGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#2a1a0e"/>
+                <stop offset="100%" stop-color="#1a0f06"/>
+              </linearGradient>
+              <linearGradient id="nutGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#f0e0b0"/>
+                <stop offset="100%" stop-color="#c8a050"/>
+              </linearGradient>
+              <filter id="dotGlow" x="-80%" y="-80%" width="260%" height="260%">
+                <feGaussianBlur stdDeviation="3.5" result="blur"/>
+                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+            </defs>
+
+            <rect x="62" y="24" width="392" height="96" rx="5" fill="url(#fbGrad)" stroke="#3a2010" stroke-width="1.5"/>
+            <rect x="62" y="24" width="392" height="3" rx="1" fill="#c8a050" opacity="0.5"/>
+            <rect x="62" y="117" width="392" height="3" rx="1" fill="#c8a050" opacity="0.5"/>
+
+            <rect x="112" y="22" width="8" height="100" rx="2" fill="url(#nutGrad)" stroke="#c0a040" stroke-width="0.8"/>
+            <rect x="198" y="24" width="4" height="96" rx="1" fill="#b0b8b0" opacity="0.85"/>
+            <rect x="285" y="24" width="4" height="96" rx="1" fill="#b0b8b0" opacity="0.85"/>
+            <rect x="370" y="24" width="4" height="96" rx="1" fill="#b0b8b0" opacity="0.85"/>
+            <rect x="450" y="24" width="4" height="96" rx="1" fill="#b0b8b0" opacity="0.85"/>
+
+            <text x="155" y="14" text-anchor="middle" fill="#8b6b4e" font-size="12" font-weight="700" font-family="Lato,sans-serif">I</text>
+            <text x="243" y="14" text-anchor="middle" fill="#8b6b4e" font-size="12" font-weight="700" font-family="Lato,sans-serif">II</text>
+            <text x="328" y="14" text-anchor="middle" fill="#8b6b4e" font-size="12" font-weight="700" font-family="Lato,sans-serif">III</text>
+            <text x="412" y="14" text-anchor="middle" fill="#8b6b4e" font-size="12" font-weight="700" font-family="Lato,sans-serif">IV</text>
+
+            <line x1="70" y1="36"  x2="454" y2="36"  stroke="#e8d09a" stroke-width="0.9" opacity="0.95"/>
+            <line x1="70" y1="60"  x2="454" y2="60"  stroke="#e0c880" stroke-width="1.5" opacity="0.95"/>
+            <line x1="70" y1="84"  x2="454" y2="84"  stroke="#c8a84a" stroke-width="2.1" opacity="0.95"/>
+            <line x1="70" y1="108" x2="454" y2="108" stroke="#a87820" stroke-width="2.8" opacity="0.95"/>
+
+            <circle cx="93" cy="36"  r="10" fill="#fff8ef" stroke="#d4a373" stroke-width="1.2"/>
+            <text   x="93" y="40"  text-anchor="middle" fill="#5a3e2b" font-size="10" font-weight="700" font-family="Lato,sans-serif">1</text>
+            <circle cx="93" cy="60"  r="10" fill="#fff8ef" stroke="#d4a373" stroke-width="1.2"/>
+            <text   x="93" y="64"  text-anchor="middle" fill="#5a3e2b" font-size="10" font-weight="700" font-family="Lato,sans-serif">2</text>
+            <circle cx="93" cy="84"  r="10" fill="#fff8ef" stroke="#d4a373" stroke-width="1.2"/>
+            <text   x="93" y="88" text-anchor="middle" fill="#5a3e2b" font-size="10" font-weight="700" font-family="Lato,sans-serif">3</text>
+            <circle cx="93" cy="108" r="10" fill="#fff8ef" stroke="#d4a373" stroke-width="1.2"/>
+            <text   x="93" y="112" text-anchor="middle" fill="#5a3e2b" font-size="10" font-weight="700" font-family="Lato,sans-serif">4</text>
+
+            <circle id="fret-highlight" cx="0" cy="0" r="14" fill="#f4d03f" stroke="#d4ac0d" stroke-width="2.5" filter="url(#dotGlow)" opacity="0.95" style="display:none;pointer-events:none;"/>
+            <text id="fret-highlight-q" x="0" y="0" text-anchor="middle" dominant-baseline="central" fill="#5a3000" font-size="11" font-weight="700" font-family="Lato,sans-serif" style="display:none;pointer-events:none;">?</text>
+          </svg>
+        </div>
+      </div>
+
+      <div class="choices" id="choices"></div>
+    </div>
+
+    <!-- Notadan-Klavyeye görünümü -->
+    <div id="view-n2k" style="display:none;">
+      <div class="nav-row between" style="margin-bottom:0.5rem;">
+        <button class="back-to-menu-btn" onclick="goBackToMenu()">← Menüye Dön</button>
+        <div id="theme-toggle-wrap-n2k">
+          <button class="theme-toggle-btn" onclick="toggleTheme()" title="Temayı Değiştir" aria-label="Temayı Değiştir">
+            <span class="th-icon th-sun th-active">☀️</span>
+            <span class="th-icon th-moon">🌙</span>
+          </button>
+        </div>
+        <button class="back-to-menu-btn" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
+      </div>
+      <div class="question-staff-card">
+        <div class="card-top" style="width: 100%;">
+          <button id="listen-btn-n2k" onclick="replay()">🔊 Dinle</button>
+          <div class="timer-badge" id="timer-display-n2k">Süre: 00:00</div>
+        </div>
+        <div id="question-staff"></div>
+      </div>
+
+      <div class="card">
+        <div class="guitar-wrap">
+          <svg id="guitar-svg-n2k" viewBox="60 0 400 160" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+            <defs>
+              <linearGradient id="fbGrad2" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#2a1a0e"/>
+                <stop offset="100%" stop-color="#1a0f06"/>
+              </linearGradient>
+              <linearGradient id="nutGrad2" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#f0e0b0"/>
+                <stop offset="100%" stop-color="#c8a050"/>
+              </linearGradient>
+              <filter id="dotGlow2" x="-80%" y="-80%" width="260%" height="260%">
+                <feGaussianBlur stdDeviation="4" result="blur"/>
+                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+            </defs>
+
+            <rect x="62" y="24" width="392" height="120" rx="6" fill="url(#fbGrad2)" stroke="#3a2010" stroke-width="1.5"/>
+            <rect x="62" y="24" width="392" height="3" rx="1" fill="#c8a050" opacity="0.5"/>
+            <rect x="62" y="141" width="392" height="3" rx="1" fill="#c8a050" opacity="0.5"/>
+
+            <rect x="112" y="22" width="8" height="124" rx="2" fill="url(#nutGrad2)" stroke="#c0a040" stroke-width="0.8"/>
+            <rect x="198" y="24" width="4" height="120" rx="1" fill="#b0b8b0" opacity="0.85"/>
+            <rect x="285" y="24" width="4" height="120" rx="1" fill="#b0b8b0" opacity="0.85"/>
+            <rect x="370" y="24" width="4" height="120" rx="1" fill="#b0b8b0" opacity="0.85"/>
+            <rect x="450" y="24" width="4" height="120" rx="1" fill="#b0b8b0" opacity="0.85"/>
+
+            <text x="155" y="14" text-anchor="middle" fill="#8b6b4e" font-size="12" font-weight="700" font-family="Lato,sans-serif">I</text>
+            <text x="243" y="14" text-anchor="middle" fill="#8b6b4e" font-size="12" font-weight="700" font-family="Lato,sans-serif">II</text>
+            <text x="328" y="14" text-anchor="middle" fill="#8b6b4e" font-size="12" font-weight="700" font-family="Lato,sans-serif">III</text>
+            <text x="412" y="14" text-anchor="middle" fill="#8b6b4e" font-size="12" font-weight="700" font-family="Lato,sans-serif">IV</text>
+
+            <line x1="70" y1="40"  x2="454" y2="40"  stroke="#e8d09a" stroke-width="1.0" opacity="0.95"/>
+            <line x1="70" y1="68"  x2="454" y2="68"  stroke="#e0c880" stroke-width="1.6" opacity="0.95"/>
+            <line x1="70" y1="96"  x2="454" y2="96"  stroke="#c8a84a" stroke-width="2.2" opacity="0.95"/>
+            <line x1="70" y1="124" x2="454" y2="124" stroke="#a87820" stroke-width="3.0" opacity="0.95"/>
+
+            <g id="fret-buttons-group"></g>
+
+            <circle id="fret-highlight-n2k" cx="0" cy="0" r="16" fill="#f4d03f" stroke="#d4ac0d" stroke-width="2.5" filter="url(#dotGlow2)" opacity="0.95" style="display:none;pointer-events:none;"/>
+            <text id="fret-highlight-q-n2k" x="0" y="0" text-anchor="middle" dominant-baseline="central" fill="#5a3000" font-size="12" font-weight="700" font-family="Lato,sans-serif" style="display:none;pointer-events:none;">?</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="message" id="message">🎵 Doğru cevabı seç ve öğrenmeye devam et!</div>
+    <div id="auto-bar-wrap"><div id="auto-bar"></div></div>
+
+    <div class="progress-area">
+      <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+    </div>
+  </div>
+
+  <div id="result-zone" class="result-screen">
+    <h2 class="result-title">🎉 Test Tamamlandı!</h2>
+    <div class="result-stats" id="result-stats">
+      <div class="stat-row"><span>Toplam Süre:</span><span class="stat-val" id="res-time">00:00</span></div>
+      <div class="stat-row"><span>Doğru Cevap:</span><span class="stat-val correct-val" id="res-correct">0</span></div>
+      <div class="stat-row"><span>Yanlış Cevap:</span><span class="stat-val wrong-val" id="res-wrong">0</span></div>
+    </div>
+    <p id="result-comment" style="color:#8b6b4e; font-weight:700; margin-bottom:1.5rem;"></p>
+  </div>
+
+  <div class="controls" id="exercise-controls" style="display:none;">
+    <button class="ctrl-btn" id="prev-btn" onclick="manualPrev()" disabled>← Önceki</button>
+    <button class="ctrl-btn primary" id="next-btn" onclick="manualNext()" disabled>Sonraki Soru →</button>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <a href="https://www.instagram.com/yunusgedik_/" target="_blank" aria-label="Instagram">
+    <i class="fa-brands fa-instagram"></i>
+  </a>
+  <a href="https://x.com/yunusgedik_" target="_blank" aria-label="X">
+    <i class="fa-brands fa-x-twitter"></i>
+  </a>
+  <a href="https://www.youtube.com/yunusgedik" target="_blank" aria-label="YouTube">
+    <i class="fa-brands fa-youtube"></i>
+  </a>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.2/build/cjs/vexflow.js"></script>
+<script>
+(function() {
+  const sid = localStorage.getItem('gitar_session');
+  if (!sid) window.location.href = 'https://gitar.yunusgedik.com.tr/';
+})();
+
+const NOTES = [
+  { id:'s1f0', string:1, fret:0, name:'Sol', freq:98.00,  key:'g/3' },
+  { id:'s1f2', string:1, fret:2, name:'La',  freq:110.00, key:'a/3' },
+  { id:'s2f0', string:2, fret:0, name:'Re',  freq:73.42,  key:'d/3' },
+  { id:'s2f2', string:2, fret:2, name:'Mi',  freq:82.41,  key:'e/3' },
+  { id:'s2f3', string:2, fret:3, name:'Fa',  freq:87.31,  key:'f/3' },
+  { id:'s3f0', string:3, fret:0, name:'La',  freq:55.00,  key:'a/2' },
+  { id:'s3f2', string:3, fret:2, name:'Si',  freq:61.74,  key:'b/2' },
+  { id:'s3f3', string:3, fret:3, name:'Do',  freq:65.41,  key:'c/3' },
+  { id:'s4f0', string:4, fret:0, name:'Mi',  freq:41.20,  key:'e/2' },
+  { id:'s4f1', string:4, fret:1, name:'Fa',  freq:43.65,  key:'f/2' },
+  { id:'s4f3', string:4, fret:3, name:'Sol', freq:49.00,  key:'g/2' }
+];
+
+// Klavyedeki doğal sıraya göre (frekans küçükten büyüğe) tüm pozisyonların id listesi.
+// "Yanaşık şık bloğu" (Klavyeden-Notaya modu) bu sıra üzerinden seçilir.
+const ALL_POSITIONS = [...NOTES].sort((a, b) => a.freq - b.freq).map(n => n.id);
+
+const ROMAN_FRETS = { 0:'Boş Tel', 1:'I. Perde', 2:'II. Perde', 3:'III. Perde', 4:'IV. Perde' };
+// Yanlış cevap mesajları shared-errors.js'den yüklenir (module bloğu window.ERR'yi atar)
+// Lazy getter olarak kullanılır — answer sırasında window.ERR hazır olacaktır
+function getERR() { return window.ERR || ["Yanlış! Tekrar dene."]; }
+
+const FRET_CX = { 0:116, 1:155, 2:243, 3:328, 4:412 };
+// Klavyeden-Notaya görünümü tel Y koordinatları (132 yükseklik svg)
+const STRING_CY_K2N = { 1:36, 2:60, 3:84, 4:108 };
+// Notadan-Klavyeye görünümü tel Y koordinatları (160 yükseklik svg, interaktif tıklama alanı için)
+const STRING_CY_N2K = { 1:40, 2:68, 3:96, 4:124 };
+const TOTAL_QUESTIONS_COUNT = 12;
+
+const ALL_FRETS_MAP = [
+  { string: 1, fret: 0 }, { string: 1, fret: 1 }, { string: 1, fret: 2 }, { string: 1, fret: 3 }, { string: 1, fret: 4 },
+  { string: 2, fret: 0 }, { string: 2, fret: 1 }, { string: 2, fret: 2 }, { string: 2, fret: 3 }, { string: 2, fret: 4 },
+  { string: 3, fret: 0 }, { string: 3, fret: 1 }, { string: 3, fret: 2 }, { string: 3, fret: 3 }, { string: 3, fret: 4 },
+  { string: 4, fret: 0 }, { string: 4, fret: 1 }, { string: 4, fret: 2 }, { string: 4, fret: 3 }, { string: 4, fret: 4 }
+];
+
+let audioCtx=null, current=null, answered=false, interacted=false, autoTimer=null;
+let correctCount=0, wrongCount=0, startTime=null, timerInterval=null;
+
+let selectedStrings = new Set([1, 2, 3, 4]);
+let filteredNotes = [];
+let currentMode = 'practice';      // 'practice' | 'race'
+let quizType = 'notadan-klavyeye'; // 'notadan-klavyeye' | 'klavyeden-notaya'
+let gameTimer = null;
+let timeLeft = 40;
+let currentIndex = 0;
+
+function shuffle(a) { return [...a].sort(() => Math.random() - 0.5); }
+
+// Pozisyon bazlı yanlış sayacı — soru seçiminde ağırlık olarak kullanılır
+let missCounts = {};
+let prevPositionId = null;
+
+// Bir sonraki soru pozisyonunu seçer:
+// 1) Bir önceki soruyla aynı pozisyon (tel+perde) ASLA peş peşe gelmez (havuzda başka seçenek varsa).
+//    Not: Aynı isimli farklı pozisyonlar (örn. Sol③ ve Sol①) ardışık SAYILMAZ, sadece tıpatıp aynı pozisyon sayılır.
+// 2) Daha önce yanlış yapılmış pozisyonlar, doğru yapılanlara göre 7 kat daha sık çıkar.
+function pickNextQuestionPosition(pool) {
+  let candidates = pool;
+  if (prevPositionId && pool.length > 1) {
+    candidates = pool.filter(n => n.id !== prevPositionId);
+  }
+  if (candidates.length === 0) candidates = pool;
+
+  const weights = candidates.map(n => 1 + 6 * (missCounts[n.id] || 0)); // yanlış başına +6 -> doğruya göre 7 kat
+  const total = weights.reduce((a, b) => a + b, 0);
+  let r = Math.random() * total;
+  for (let i = 0; i < candidates.length; i++) {
+    r -= weights[i];
+    if (r <= 0) return candidates[i];
+  }
+  return candidates[candidates.length - 1];
+}
+
+// Doğru cevabı içeren, ALL_POSITIONS (klavye sırasına göre) YANAŞIK (ardışık) bir pozisyon bloğu döndürür.
+// Sadece Klavyeden-Notaya modunda (çoktan seçmeli kartlar) kullanılır.
+// Blok içinde nota ADI asla tekrar etmez (örn. Sol③ ve Sol① aynı blokta birlikte çıkamaz) — gerekirse blok küçültülür.
+function pickAdjacentChoiceBlock(correctId, pool) {
+  const poolIds = new Set(pool.map(n => n.id));
+  const availablePositions = ALL_POSITIONS.filter(id => poolIds.has(id));
+  const idx = availablePositions.indexOf(correctId);
+  const maxBlockSize = Math.min(4, availablePositions.length);
+
+  for (let blockSize = maxBlockSize; blockSize >= 1; blockSize--) {
+    const minStart = Math.max(0, idx - (blockSize - 1));
+    const maxStart = Math.min(idx, availablePositions.length - blockSize);
+    const possibleStarts = [];
+    for (let s = minStart; s <= maxStart; s++) {
+      const blockIds = availablePositions.slice(s, s + blockSize);
+      const blockNames = blockIds.map(id => NOTES.find(n => n.id === id).name);
+      if (new Set(blockNames).size === blockNames.length) {
+        possibleStarts.push(s);
+      }
+    }
+    if (possibleStarts.length > 0) {
+      const start = possibleStarts[Math.floor(Math.random() * possibleStarts.length)];
+      const blockIds = availablePositions.slice(start, start + blockSize);
+      return blockIds.map(id => NOTES.find(n => n.id === id));
+    }
+  }
+  return [NOTES.find(n => n.id === correctId)];
+}
+
+// ── MOD SEÇİMİ (setup ekranı) ──
+function selectQuizMode(mode) {
+  quizType = mode;
+  document.getElementById('mode-card-n2k').classList.toggle('active', mode === 'notadan-klavyeye');
+  document.getElementById('mode-card-k2n').classList.toggle('active', mode === 'klavyeden-notaya');
+}
+
+function toggleAllStrings() {
+  const allBtn = document.getElementById('btn-all');
+  const numBtns = document.querySelectorAll('.string-num-btn');
+  selectedStrings = new Set([1, 2, 3, 4]);
+  allBtn.classList.add('active');
+  numBtns.forEach(b => b.classList.add('active'));
+  checkStartButton();
+  if (currentMode === 'practice') filteredNotes = NOTES.filter(n => selectedStrings.has(n.string));
+}
+
+function toggleString(num) {
+  const btn = document.querySelector(`.string-num-btn[data-string="${num}"]`);
+  const allBtn = document.getElementById('btn-all');
+  if (selectedStrings.has(num)) {
+    if (selectedStrings.size === 1) return; // en az bir tel seçili kalmalı
+    selectedStrings.delete(num);
+    btn.classList.remove('active');
+  } else {
+    selectedStrings.add(num);
+    btn.classList.add('active');
+  }
+  if (selectedStrings.size === 4) {
+    allBtn.classList.add('active');
+  } else {
+    allBtn.classList.remove('active');
+  }
+  checkStartButton();
+  if (currentMode === 'practice') filteredNotes = NOTES.filter(n => selectedStrings.has(n.string));
+}
+
+function checkStartButton() {
+  const startBtn = document.getElementById('start-btn');
+  const raceBtn = document.getElementById('race-btn');
+  const isZero = selectedStrings.size === 0;
+  startBtn.disabled = isZero;
+  raceBtn.disabled = isZero;
+}
+
+function startExercise(mode) {
+  filteredNotes = mode === 'race' ? NOTES.slice() : NOTES.filter(n => selectedStrings.has(n.string));
+  if (filteredNotes.length === 0) return;
+  if (window.trackEnd) window.trackEnd();
+
+  currentMode = mode;
+  if (window.trackStart) window.trackStart(mode + '-' + quizType);
+  prevPositionId = null;
+  document.getElementById('setup-area').style.display = 'none';
+  document.getElementById('exercise-area').style.display = 'block';
+  document.getElementById('live-string-filter').style.display = currentMode === 'practice' ? 'flex' : 'none';
+  document.getElementById('exercise-controls').style.display = 'grid';
+  document.getElementById('result-zone').style.display = 'none';
+
+  document.getElementById('view-k2n').style.display = quizType === 'klavyeden-notaya' ? 'block' : 'none';
+  document.getElementById('view-n2k').style.display = quizType === 'notadan-klavyeye' ? 'block' : 'none';
+
+  if (quizType === 'notadan-klavyeye') buildGuitarInteraction();
+
+  correctCount = 0;
+  wrongCount = 0;
+  currentIndex = 0;
+  answered = false;
+
+  if (currentMode === 'race') {
+    timeLeft = 40;
+    setTimerText('Kalan Süre: ' + timeLeft);
+    startGameTimer();
+  } else {
+    setTimerText('Süre: 00:00');
+    startTimer();
+  }
+
+  nextQuestion();
+}
+
+function setTimerText(txt) {
+  const a = document.getElementById('timer-display');
+  const b = document.getElementById('timer-display-n2k');
+  if (a) a.textContent = txt;
+  if (b) b.textContent = txt;
+}
+
+function goBackToMenu() {
+  if (window.trackEnd) window.trackEnd();
+  if (timerInterval) clearInterval(timerInterval);
+  if (gameTimer) clearInterval(gameTimer);
+  clearAutoTimer();
+  document.getElementById('exercise-area').style.display = 'none';
+  document.getElementById('exercise-controls').style.display = 'none';
+  document.getElementById('result-zone').style.display = 'none';
+  document.getElementById('setup-area').style.display = 'block';
+}
+
+function startGameTimer() {
+  if (gameTimer) clearInterval(gameTimer);
+  gameTimer = setInterval(() => {
+    timeLeft--;
+    if (timeLeft <= 0) {
+      setTimerText('Süre Bitti!');
+      clearInterval(gameTimer);
+      showFinalResults();
+    } else {
+      setTimerText('Kalan Süre: ' + timeLeft);
+    }
+  }, 1000);
+}
+
+function getAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function playGuitar(freq) {
+  try {
+    const ctx = getAudio();
+    if (ctx.state === 'suspended') ctx.resume();
+    const now = ctx.currentTime;
+    const master = ctx.createGain();
+    master.connect(ctx.destination);
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass'; filter.frequency.value = freq * 2.8; filter.Q.value = 0.7;
+    filter.connect(master);
+
+    const osc = ctx.createOscillator(); osc.type = 'triangle'; osc.frequency.value = freq;
+    const og = ctx.createGain();
+    og.gain.setValueAtTime(0, now); og.gain.linearRampToValueAtTime(0.45, now + 0.006); og.gain.exponentialRampToValueAtTime(0.001, now + 2.2);
+    osc.connect(og); og.connect(filter); osc.start(now); osc.stop(now + 2.2);
+
+    const sine = ctx.createOscillator(); sine.type = 'sine'; sine.frequency.value = freq;
+    const sg = ctx.createGain();
+    sg.gain.setValueAtTime(0, now); sg.gain.linearRampToValueAtTime(0.25, now + 0.006); sg.gain.exponentialRampToValueAtTime(0.001, now + 1.8);
+    sine.connect(sg); sg.connect(filter); sine.start(now); sine.stop(now + 1.8);
+
+    [2, 3, 4].forEach(h => {
+      const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = freq * h;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(0.1 / h, now + 0.005); g.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+      o.connect(g); g.connect(filter); o.start(now); o.stop(now + 1.2);
+    });
+
+    master.gain.setValueAtTime(0.75, now); master.gain.exponentialRampToValueAtTime(0.001, now + 2.5);
+    const btn = document.getElementById(quizType === 'notadan-klavyeye' ? 'listen-btn-n2k' : 'listen-btn');
+    if (btn) { btn.classList.add('playing'); setTimeout(() => btn.classList.remove('playing'), 700); }
+  } catch(e) {}
+}
+
+function replay() { interacted = true; if (current) playGuitar(current.freq); }
+
+// ── KLAVYEDEN-NOTAYA: highlight + mini porte kartları ──
+function moveHighlight(stringN, fretN) {
+  const cx = FRET_CX[fretN], cy = STRING_CY_K2N[stringN];
+  const dot = document.getElementById('fret-highlight');
+  const qtxt = document.getElementById('fret-highlight-q');
+  dot.setAttribute('cx', cx); dot.setAttribute('cy', cy);
+  qtxt.setAttribute('x', cx); qtxt.setAttribute('y', cy);
+  dot.style.display = ''; qtxt.style.display = '';
+}
+
+function drawMiniStaff(div, noteObj) {
+  div.innerHTML = '';
+  try {
+    const { Renderer, Stave, StaveNote, Voice, Formatter } = Vex.Flow;
+    const renderer = new Renderer(div, Renderer.Backends.SVG);
+    renderer.resize(110, 115);
+    const ctx = renderer.getContext();
+    const stave = new Stave(0, -10, 110);
+    stave.addClef('bass').setContext(ctx).draw();
+    const note = new StaveNote({ keys: [noteObj.key], clef: 'bass', duration: 'w' });
+    const voice = new Voice({ num_beats: 4, beat_value: 4 });
+    voice.addTickables([note]);
+    new Formatter().joinVoices([voice]).format([voice], 85);
+    voice.draw(ctx, stave);
+  } catch(e) { console.log(e); }
+}
+
+// ── NOTADAN-KLAVYEYE: büyük porte + tıklanabilir klavye ──
+function buildGuitarInteraction() {
+  const group = document.getElementById('fret-buttons-group');
+  group.innerHTML = '';
+
+  ALL_FRETS_MAP.forEach(item => {
+    const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    g.setAttribute("class", "fret-btn");
+    g.setAttribute("data-string", item.string);
+    g.setAttribute("data-fret", item.fret);
+
+    let clickArea;
+    if (item.fret === 0) {
+      clickArea = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      clickArea.setAttribute("cx", 93);
+      clickArea.setAttribute("cy", STRING_CY_N2K[item.string]);
+      clickArea.setAttribute("r", 12);
+      clickArea.setAttribute("fill", "#fff8ef");
+      clickArea.setAttribute("stroke", "#d4a373");
+      clickArea.setAttribute("stroke-width", "1.5");
+
+      const txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      txt.setAttribute("x", 93);
+      txt.setAttribute("y", STRING_CY_N2K[item.string] + 4);
+      txt.setAttribute("text-anchor", "middle");
+      txt.setAttribute("fill", "#5a3e2b");
+      txt.setAttribute("font-size", "11");
+      txt.setAttribute("font-weight", "700");
+      txt.setAttribute("font-family", "Lato,sans-serif");
+      txt.textContent = item.string;
+
+      g.appendChild(clickArea);
+      g.appendChild(txt);
+    } else {
+      clickArea = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      let width = 0, x = 0;
+      if (item.fret === 1) { x = 116; width = 82; }
+      else if (item.fret === 2) { x = 198; width = 87; }
+      else if (item.fret === 3) { x = 285; width = 85; }
+      else if (item.fret === 4) { x = 370; width = 80; }
+
+      clickArea.setAttribute("x", x);
+      clickArea.setAttribute("y", STRING_CY_N2K[item.string] - 14);
+      clickArea.setAttribute("width", width);
+      clickArea.setAttribute("height", 28);
+      clickArea.setAttribute("fill", "transparent");
+
+      const centerCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      let cx = x + (width / 2);
+      centerCircle.setAttribute("cx", cx);
+      centerCircle.setAttribute("cy", STRING_CY_N2K[item.string]);
+      centerCircle.setAttribute("r", 4);
+      centerCircle.setAttribute("fill", "#b0b8b0");
+      centerCircle.setAttribute("opacity", "0.35");
+
+      g.appendChild(clickArea);
+      g.appendChild(centerCircle);
+    }
+
+    g.onclick = () => handleFretClick(g, item.string, item.fret);
+    group.appendChild(g);
+  });
+}
+
+function drawQuestionStaff(noteObj) {
+  const div = document.getElementById('question-staff');
+  div.innerHTML = '';
+  try {
+    const { Renderer, Stave, StaveNote, Voice, Formatter } = Vex.Flow;
+    const renderer = new Renderer(div, Renderer.Backends.SVG);
+    renderer.resize(300, 130);
+    const ctx = renderer.getContext();
+    ctx.scale(1.8, 1.8);
+    const stave = new Stave(10, -20, 140);
+    stave.addClef('bass').setContext(ctx).draw();
+    const note = new StaveNote({ keys: [noteObj.key], clef: 'bass', duration: 'w' });
+    const voice = new Voice({ num_beats: 4, beat_value: 4 });
+    voice.addTickables([note]);
+    new Formatter().joinVoices([voice]).format([voice], 80);
+    voice.draw(ctx, stave);
+  } catch(e) { console.log(e); }
+}
+
+function showCorrectTarget() {
+  let cx = 0, cy = STRING_CY_N2K[current.string];
+  if (current.fret === 0) {
+    cx = 93;
+  } else {
+    let x = 0, width = 0;
+    if (current.fret === 1) { x = 116; width = 82; }
+    else if (current.fret === 2) { x = 198; width = 87; }
+    else if (current.fret === 3) { x = 285; width = 85; }
+    else if (current.fret === 4) { x = 370; width = 80; }
+    cx = x + (width / 2);
+  }
+
+  const dot = document.getElementById('fret-highlight-n2k');
+  const qtxt = document.getElementById('fret-highlight-q-n2k');
+  dot.setAttribute('cx', cx); dot.setAttribute('cy', cy);
+  qtxt.setAttribute('x', cx); qtxt.setAttribute('y', cy);
+  dot.style.display = ''; qtxt.style.display = '';
+}
+
+function createFeedbackCircle(parentG, cx, cy, color) {
+  const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+  circle.setAttribute("class", "fret-feedback");
+  circle.setAttribute("cx", cx);
+  circle.setAttribute("cy", cy);
+  circle.setAttribute("r", 14);
+  circle.setAttribute("fill", color);
+  circle.setAttribute("opacity", "0.9");
+  circle.setAttribute("filter", "url(#dotGlow2)");
+  parentG.appendChild(circle);
+}
+
+function handleFretClick(element, stringNum, fretNum) {
+  if (answered) return;
+  if (currentMode === 'race' && timeLeft <= 0) return;
+
+  answered = true; interacted = true;
+  document.querySelectorAll('#view-n2k .fret-btn').forEach(g => g.classList.add('disabled'));
+  const msg = document.getElementById('message');
+
+  let cx = 0, cy = STRING_CY_N2K[stringNum];
+  if (fretNum === 0) {
+    cx = 93;
+  } else {
+    let x = 0, width = 0;
+    if (fretNum === 1) { x = 116; width = 82; }
+    else if (fretNum === 2) { x = 198; width = 87; }
+    else if (fretNum === 3) { x = 285; width = 85; }
+    else if (fretNum === 4) { x = 370; width = 80; }
+    cx = x + (width / 2);
+  }
+
+  const clickedNoteObj = NOTES.find(n => n.string === stringNum && n.fret === fretNum);
+
+  if (clickedNoteObj && clickedNoteObj.name === current.name) {
+    createFeedbackCircle(element, cx, cy, '#6b8c42');
+    msg.textContent = `✓ Doğru! ${current.name} notası, ${stringNum}. Tel - ${ROMAN_FRETS[fretNum]}`;
+    msg.style.color = '#6b8c42';
+    playGuitar(current.freq);
+    correctCount++;
+    if (window.trackLog) window.trackLog(true);
+    document.getElementById('next-btn').disabled = false;
+    startAutoAdvance();
+  } else {
+    missCounts[current.id] = (missCounts[current.id] || 0) + 1;
+    if (window.trackLog) window.trackLog(false, current.id, current.name+' ('+current.string+'. tel, '+ROMAN_FRETS[current.fret]+')');
+    createFeedbackCircle(element, cx, cy, '#c75b39');
+    msg.textContent = '✗ ' + getERR()[Math.floor(Math.random() * getERR().length)] + ' — Doğrusu: ' + current.string + '. Tel - ' + ROMAN_FRETS[current.fret] + ` (${current.name})`;
+    msg.style.color = '#c75b39';
+    wrongCount++;
+    showCorrectTarget();
+    document.getElementById('next-btn').disabled = false;
+  }
+
+  if (currentMode === 'practice') currentIndex++;
+}
+
+function selectChoice(card, name) {
+  if (answered) return;
+  if (currentMode === 'race' && timeLeft <= 0) return;
+
+  answered = true; interacted = true;
+  document.querySelectorAll('.choice-card').forEach(c => { c.classList.add('disabled'); c.onclick = null; });
+  const msg = document.getElementById('message');
+
+  if (name === current.name) {
+    card.classList.add('correct');
+    card.blur();
+    msg.textContent = '✓ Doğru! İyi iş çıkardın, devam et!'; msg.style.color = '#6b8c42';
+    playGuitar(current.freq);
+    correctCount++;
+    if (window.trackLog) window.trackLog(true);
+    document.getElementById('next-btn').disabled = false;
+    startAutoAdvance();
+  } else {
+    missCounts[current.id] = (missCounts[current.id] || 0) + 1;
+    if (window.trackLog) window.trackLog(false, current.id, current.name+' ('+current.string+'. tel, '+ROMAN_FRETS[current.fret]+')');
+    card.classList.add('wrong');
+    card.blur();
+    msg.textContent = '✗ ' + getERR()[Math.floor(Math.random() * getERR().length)] + ' — Doğrusu: ' + current.name;
+    msg.style.color = '#c75b39';
+    wrongCount++;
+    document.querySelectorAll('.choice-card').forEach(c => { if (c.dataset.choice === current.name) c.classList.add('correct'); });
+    document.getElementById('next-btn').disabled = false;
+  }
+
+  if (currentMode === 'practice') currentIndex++;
+}
+
+function startTimer() {
+  startTime = Date.now();
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    const s = Math.floor((Date.now() - startTime) / 1000);
+    setTimerText('Süre: ' + String(Math.floor(s / 60)).padStart(2,'0') + ':' + String(s % 60).padStart(2,'0'));
+  }, 1000);
+}
+
+function clearAutoTimer() {
+  if (autoTimer) { clearTimeout(autoTimer); autoTimer = null; }
+  document.getElementById('auto-bar-wrap').style.display = 'none';
+}
+
+function startAutoAdvance() {
+  const wrap = document.getElementById('auto-bar-wrap'), bar = document.getElementById('auto-bar');
+  wrap.style.display = 'block'; bar.style.width = '100%'; bar.style.transition = 'none';
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    bar.style.transition = 'width 1s linear'; bar.style.width = '0%';
+  }));
+  autoTimer = setTimeout(() => { clearAutoTimer(); nextQuestion(); }, 1000);
+}
+
+function manualNext() {
+  if (currentMode === 'race' && timeLeft <= 0) return;
+  clearAutoTimer();
+  nextQuestion();
+}
+
+function manualPrev() {
+  // Bas'ta geçmiş soruya geri dönme özelliği yok (klavye/nota bağlı),
+  // bu nedenle buton sadece görünümde bulunur ve race dışında etkin olur.
+  // Gerçek "önceki" implementasyonu gerekiyorsa soru geçmişi tutulmalıdır.
+  if (currentMode === 'race') return;
+  // Henüz geçmiş soru kaydı yok — önümüzdeki versiyonda eklenebilir
+}
+
+function updateNavBtns() {
+  const prevBtn = document.getElementById('prev-btn');
+  const nextBtn = document.getElementById('next-btn');
+  if (!prevBtn || !nextBtn) return;
+  if (currentMode === 'race') {
+    prevBtn.disabled = true;
+    nextBtn.disabled = true;
+  } else {
+    prevBtn.disabled = true; // geçmiş soru yok
+    nextBtn.disabled = !answered;
+  }
+}
+
+function showFinalResults() {
+  if (window.trackEnd) window.trackEnd();
+  if (timerInterval) clearInterval(timerInterval);
+  if (gameTimer) clearInterval(gameTimer);
+  clearAutoTimer();
+
+  document.getElementById('exercise-area').style.display = 'none';
+  document.getElementById('exercise-controls').style.display = 'none';
+  document.getElementById('result-zone').style.display = 'block';
+
+  const statsBox = document.getElementById('result-stats');
+  const commentTxt = document.getElementById('result-comment');
+
+  if (currentMode === 'race') {
+    document.querySelector('.result-title').textContent = "Yarışma Tamamlandı! 🏁";
+    let rankName = "";
+    let comment = "";
+
+    if (correctCount >= 20) {
+      rankName = "🏆 Master Basçı 1 Numara!";
+      comment = "İnanılmaz! Parmaklar ve kulak uçuyor! Yunus Hoca gözyaşları içinde seni ayakta alkışlıyor! 🎸";
+    } else if (correctCount >= 15) {
+      rankName = "🔥 Sahne Sanatçısı";
+      comment = "Notalar tıkır tıkır çözülüyor, gözler ve duyum hızlandı! Artık kulis kartını hak ettin kanka.";
+    } else if (correctCount >= 10) {
+      rankName = "⚡ Groove Basçı";
+      comment = "Solo atamıyorsun belki ama harika groove tutuyorsun hani! Bir tık daha hızlansan solist seni fark edecek.";
+    } else if (correctCount >= 5) {
+      rankName = "🎸 Sahildeki Akustikçi";
+      comment = "Sahilde 'Akdeniz Akşamları'na bas bas eşlik etmekten öteye geçemedin ama bir umut var kanka!";
+    } else {
+      rankName = "🐢 Kaplumbağa Basçı";
+      comment = "Gitarı yavaşça yere bırak ve tellere bir daha dokunma kanka... Hızın tam evlere şenlik!";
+    }
+
+    statsBox.innerHTML = `
+      <div class="stat-row"><span>Unvan:</span><span class="stat-val" style="color:#d4a373">${rankName}</span></div>
+      <div class="stat-row"><span>Doğru Cevap:</span><span class="stat-val correct-val">${correctCount} Doğru</span></div>
+    `;
+    commentTxt.innerHTML = `"${comment}"`;
+  } else {
+    document.querySelector('.result-title').textContent = "🎉 Test Tamamlandı!";
+    const s = Math.floor((Date.now() - startTime) / 1000);
+    const mins = Math.floor(s / 60), secs = s % 60;
+    statsBox.innerHTML = `
+      <div class="stat-row"><span>Toplam Süre:</span><span class="stat-val">${mins > 0 ? mins + ' dk ' + secs + ' sn' : secs + ' sn'}</span></div>
+      <div class="stat-row"><span>Doğru Cevap:</span><span class="stat-val correct-val">${correctCount}</span></div>
+      <div class="stat-row"><span>Yanlış Cevap:</span><span class="stat-val wrong-val">${wrongCount}</span></div>
+    `;
+    commentTxt.textContent = "Bravo! Ekran görüntüsü al ve grupta paylaş 🎸";
+  }
+}
+
+function nextQuestion() {
+  if (currentMode === 'race' && timeLeft <= 0) return;
+
+  clearAutoTimer(); answered = false;
+  if (document.activeElement) document.activeElement.blur();
+  document.getElementById('message').textContent = quizType === 'notadan-klavyeye'
+    ? '🎵 Notayı incele ve klavye üzerinde doğru perdeye bas!'
+    : '🎵 Doğru cevabı seç ve öğrenmeye devam et!';
+  document.getElementById('message').style.color = '#8b6b4e';
+  document.getElementById('next-btn').disabled = true;
+  updateNavBtns();
+
+  if (quizType === 'notadan-klavyeye') {
+    document.querySelectorAll('#view-n2k .fret-btn').forEach(g => {
+      g.classList.remove('disabled');
+      const feedback = g.querySelector('.fret-feedback');
+      if (feedback) feedback.remove();
+    });
+    const dot = document.getElementById('fret-highlight-n2k');
+    const qtxt = document.getElementById('fret-highlight-q-n2k');
+    dot.style.display = 'none'; qtxt.style.display = 'none';
+  }
+
+  if (currentMode === 'practice' && currentIndex >= TOTAL_QUESTIONS_COUNT) {
+    // Sınır yok — sonsuz egzersiz modu
+  }
+
+  current = pickNextQuestionPosition(filteredNotes);
+  prevPositionId = current.id;
+
+  if (quizType === 'klavyeden-notaya') {
+    moveHighlight(current.string, current.fret);
+    document.getElementById('hint-text').innerHTML = `💡 <span class="hint-string-badge">${current.string}</span> . Tel – <span class="hint-fret-text">${ROMAN_FRETS[current.fret]}</span>`;
+
+    const choices = pickAdjacentChoiceBlock(current.id, filteredNotes);
+    const box = document.getElementById('choices');
+    box.innerHTML = '';
+    choices.forEach(noteObj => {
+      const card = document.createElement('div');
+      card.className = 'choice-card vf-card'; card.dataset.choice = noteObj.name;
+      card.onclick = () => selectChoice(card, noteObj.name);
+      const staffDiv = document.createElement('div'); staffDiv.className = 'choice-staff';
+      card.appendChild(staffDiv);
+      box.appendChild(card);
+      drawMiniStaff(staffDiv, noteObj);
+    });
+  } else {
+    drawQuestionStaff(current);
+  }
+
+  if (currentMode === 'practice') {
+    document.getElementById('progress-fill').parentElement.parentElement.style.display = 'block';
+    document.getElementById('progress-fill').style.width = (currentIndex / TOTAL_QUESTIONS_COUNT * 100) + '%';
+  } else {
+    document.getElementById('progress-fill').parentElement.parentElement.style.display = 'none';
+  }
+
+  if (interacted) setTimeout(() => playGuitar(current.freq), 300);
+}
+</script>
+
+<script type="module">
+import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js';
+import { getDatabase, ref, get, set, update, remove, onValue, onDisconnect, runTransaction, push }
+  from 'https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js';
+import { createTracker } from '/game-tracker.js';
+import { ERRORS as _SHARED_ERRORS } from '/shared-errors.js';
+// Inline script'teki ERR değişkenini güncelle
+window.ERR = _SHARED_ERRORS;
+
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBkEd729B65y-NZIQ-sxScCgaEvlX-q7yA",
+  authDomain: "gitar-yunus.firebaseapp.com",
+  databaseURL: "https://gitar-yunus-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "gitar-yunus",
+  storageBucket: "gitar-yunus.firebasestorage.app",
+  messagingSenderId: "184803778782",
+  appId: "1:184803778782:web:8f9fbeb4fe625eb386e24f"
+};
+
+const fbApp = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
+const db    = getDatabase(fbApp);
+
+const mySid  = localStorage.getItem('gitar_session');
+const myName = localStorage.getItem('gitar_student_name') || 'Öğrenci';
+
+// ── Performans takibi (süre / doğru-yanlış / hata kırılımı) ──
+const _tracker = createTracker({ db, ref, push, get, set });
+window.trackStart = (mode) => _tracker.start(mySid, 'bas', mode);
+window.trackLog   = (ok, key, label) => _tracker.log(ok, key, label);
+window.trackEnd   = () => _tracker.end();
+
+
+// Düello için nota tanımları (üst scriptteki NOTES ile aynı)
+const D_NOTES = [
+  { id:'s1f0', string:1, fret:0, name:'Sol', freq:98.00,  key:'g/3' },
+  { id:'s1f2', string:1, fret:2, name:'La',  freq:110.00, key:'a/3' },
+  { id:'s2f0', string:2, fret:0, name:'Re',  freq:73.42,  key:'d/3' },
+  { id:'s2f2', string:2, fret:2, name:'Mi',  freq:82.41,  key:'e/3' },
+  { id:'s2f3', string:2, fret:3, name:'Fa',  freq:87.31,  key:'f/3' },
+  { id:'s3f0', string:3, fret:0, name:'La',  freq:55.00,  key:'a/2' },
+  { id:'s3f2', string:3, fret:2, name:'Si',  freq:61.74,  key:'b/2' },
+  { id:'s3f3', string:3, fret:3, name:'Do',  freq:65.41,  key:'c/3' },
+  { id:'s4f0', string:4, fret:0, name:'Mi',  freq:41.20,  key:'e/2' },
+  { id:'s4f1', string:4, fret:1, name:'Fa',  freq:43.65,  key:'f/2' },
+  { id:'s4f3', string:4, fret:3, name:'Sol', freq:49.00,  key:'g/2' }
+];
+const D_ALL_POSITIONS = [...D_NOTES].sort((a,b) => a.freq - b.freq).map(n => n.id);
+
+const D_FRET_CX     = { 0:116, 1:155, 2:243, 3:328, 4:412 };
+const D_STRING_CY_K2N = { 1:36,  2:60,  3:84,  4:108 };
+const D_STRING_CY_N2K = { 1:40,  2:68,  3:96,  4:124 };
+
+const D_ALL_FRETS_MAP = [
+  { string:1, fret:0 },{ string:1, fret:1 },{ string:1, fret:2 },{ string:1, fret:3 },{ string:1, fret:4 },
+  { string:2, fret:0 },{ string:2, fret:1 },{ string:2, fret:2 },{ string:2, fret:3 },{ string:2, fret:4 },
+  { string:3, fret:0 },{ string:3, fret:1 },{ string:3, fret:2 },{ string:3, fret:3 },{ string:3, fret:4 },
+  { string:4, fret:0 },{ string:4, fret:1 },{ string:4, fret:2 },{ string:4, fret:3 },{ string:4, fret:4 }
+];
+
+const D_ROMAN_FRETS = { 0:'Boş Tel', 1:'I. Perde', 2:'II. Perde', 3:'III. Perde', 4:'IV. Perde' };
+
+let duelStrings     = new Set([1,2,3,4]);
+let duelRounds      = 5;
+let duelSecs        = 0; // 0 = tur bazlı; 40/50/60 = süre bazlı düello
+let duelMode        = 'notadan-klavyeye'; // 'notadan-klavyeye' | 'klavyeden-notaya'
+let myRole          = '';
+let oppSid          = '';
+let oppName         = '';
+let roomCode        = '';
+let onlineListener  = null;
+let roundListener   = null;
+let challengeExpiry = null;
+let myAnswered      = false;
+let myScore_        = 0;
+let oppScore_       = 0;
+let cdTimer         = null;
+let currentRoundNum = 0;
+let currentQuestionData = null;
+let duelMissCounts  = {};
+let duelAudioCtx    = null;
+
+function rndCode(){ return Math.floor(100000+Math.random()*900000).toString(); }
+function shuf(a){ return [...a].sort(()=>Math.random()-.5); }
+
+// ── ALAN GÖSTERİM ──
+function showArea(id){
+  ['setup-area','duel-setup-area','duel-waiting-area','duel-game-area']
+    .forEach(x=>{ const e=document.getElementById(x); if(e) e.style.display='none'; });
+  const exA=document.getElementById('exercise-area'); if(exA) exA.style.display='none';
+  const res=document.getElementById('result-zone'); if(res) res.style.display='none';
+  const ctrl=document.getElementById('exercise-controls'); if(ctrl) ctrl.style.display='none';
+  const t=document.getElementById(id);
+  if(t){ t.style.display='block'; t.scrollIntoView({behavior:'smooth'}); }
+}
+window.showArea = showArea;
+
+// ── DÜELLO SETUP KONTROLLERI ──
+window.dSelectMode = function(mode){
+  duelMode = mode;
+  document.getElementById('d-mode-card-n2k').classList.toggle('active', mode==='notadan-klavyeye');
+  document.getElementById('d-mode-card-k2n').classList.toggle('active', mode==='klavyeden-notaya');
+};
+window.dToggleAll = function(){
+  const a=document.getElementById('d-btn-all'), n=document.querySelectorAll('.d-str-btn');
+  if(duelStrings.size===4){ duelStrings.clear(); a.classList.remove('active'); n.forEach(b=>b.classList.remove('active')); }
+  else{ duelStrings=new Set([1,2,3,4]); a.classList.add('active'); n.forEach(b=>b.classList.add('active')); }
+};
+window.dToggleStr = function(num){
+  const b=document.querySelector(`.d-str-btn[data-string="${num}"]`), a=document.getElementById('d-btn-all');
+  if(duelStrings.has(num)){ duelStrings.delete(num); b.classList.remove('active'); }
+  else{ duelStrings.add(num); b.classList.add('active'); }
+  a.classList.toggle('active', duelStrings.size===4);
+};
+window.selectRounds = function(n, secs){
+  duelRounds = n;
+  duelSecs   = secs || 0;
+  document.querySelectorAll('.round-btn').forEach(b=>{
+    const br=parseInt(b.dataset.rounds||0), bs=parseInt(b.dataset.secs||0);
+    b.classList.toggle('active', br===n && bs===duelSecs);
+  });
+};
+window.showDuelSetup = function(){
+  showArea('duel-setup-area');
+  loadOnlinePlayers();
+};
+
+// ── ONLINE OYUNCU LİSTESİ ──
+function loadOnlinePlayers(){
+  const listEl = document.getElementById('duel-online-players-list');
+  if(onlineListener){ onlineListener(); onlineListener=null; }
+  onlineListener = onValue(ref(db,'online_users'), snap=>{
+    const users = snap.val() || {};
+    const others = Object.entries(users).filter(([sid])=>sid!==mySid);
+    if(!others.length){
+      listEl.innerHTML='<div class="no-players-msg">Şu an başka online öğrenci yok. Birinin giriş yapmasını bekleyin.</div>';
+      return;
+    }
+    listEl.innerHTML = others.map(([sid,u])=>`
+      <div class="online-player-row">
+        <span><span class="online-dot"></span><span class="online-player-name">${u.name}</span></span>
+        <button class="challenge-btn" onclick="window.sendChallenge('${sid}','${u.name.replace(/'/g,"\\'")}')">⚔️ Meydan Oku</button>
+      </div>`).join('');
+  });
+}
+
+// Setup ekranındaki online listesi (salt gösterim)
+onValue(ref(db,'online_users'), snap=>{
+  const users = snap.val() || {};
+  const others = Object.entries(users).filter(([sid])=>sid!==mySid);
+  const listEl = document.getElementById('online-players-list');
+  if(!listEl) return;
+  if(!others.length){
+    listEl.innerHTML='<div class="no-players-msg">Şu an başka online öğrenci yok.</div>';
+    return;
+  }
+  listEl.innerHTML = others.map(([,u])=>`
+    <div class="online-player-row">
+      <span><span class="online-dot"></span><span class="online-player-name">${u.name}</span></span>
+      <span style="font-size:.8rem;color:#b09070;">online</span>
+    </div>`).join('');
+});
+
+// ── SORU DESTESİ ÜRET (HOST) ──
+function pickNextDuelPos(pool, prevId){
+  let candidates = pool;
+  if(prevId && pool.length > 1) candidates = pool.filter(n => n.id !== prevId);
+  if(!candidates.length) candidates = pool;
+  const weights = candidates.map(n => 1 + 6*(duelMissCounts[n.id]||0));
+  const total = weights.reduce((a,b)=>a+b,0);
+  let r = Math.random()*total;
+  for(let i=0;i<candidates.length;i++){ r-=weights[i]; if(r<=0) return candidates[i]; }
+  return candidates[candidates.length-1];
+}
+
+function pickAdjacentDuelBlock(correctId, pool){
+  const poolIds = new Set(pool.map(n=>n.id));
+  const avail = D_ALL_POSITIONS.filter(id=>poolIds.has(id));
+  const idx = avail.indexOf(correctId);
+  const maxSize = Math.min(4, avail.length);
+  for(let bs=maxSize; bs>=1; bs--){
+    const minS = Math.max(0, idx-(bs-1));
+    const maxS = Math.min(idx, avail.length-bs);
+    const starts=[];
+    for(let s=minS;s<=maxS;s++){
+      const names = avail.slice(s,s+bs).map(id=>D_NOTES.find(n=>n.id===id).name);
+      if(new Set(names).size===names.length) starts.push(s);
+    }
+    if(starts.length){
+      const start = starts[Math.floor(Math.random()*starts.length)];
+      return avail.slice(start, start+bs).map(id=>D_NOTES.find(n=>n.id===id));
+    }
+  }
+  return [D_NOTES.find(n=>n.id===correctId)];
+}
+
+function buildQuestionDeck(strings, totalRounds, mode){
+  const deck = {};
+  const pool = D_NOTES.filter(n=>strings.includes(n.string));
+  // Süre modunda yeterli soru önceden üretilir (her 2sn'de 1 soru max ~60/2=30)
+  const count = totalRounds > 0 ? totalRounds : 60;
+  let prevId = null;
+  for(let i=1;i<=count;i++){
+    const note = pickNextDuelPos(pool, prevId);
+    prevId = note.id;
+    const choices = (mode === 'klavyeden-notaya')
+      ? pickAdjacentDuelBlock(note.id, pool).map(n=>n.name)
+      : null;
+    deck[i] = {
+      posId:note.id, name:note.name, freq:note.freq,
+      key:note.key, string:note.string, fret:note.fret,
+      choices
+    };
+  }
+  return deck;
+}
+
+// ── MEYDAN OKUMA ──
+window.sendChallenge = async function(toSid, toName){
+  duelStrings = new Set([1,2,3,4]); // Düellolarda adil olsun diye her zaman tüm teller
+  if(onlineListener){ onlineListener(); onlineListener=null; }
+
+  myRole   = 'host';
+  oppSid   = toSid;
+  oppName  = toName;
+  roomCode = rndCode();
+
+  const questionDeck = buildQuestionDeck([...duelStrings], duelRounds || 60, duelMode);
+
+  await set(ref(db,`duel_rooms/${roomCode}`),{
+    host:   {sid:mySid, name:myName},
+    guest:  null,
+    status: 'waiting',
+    config: { totalRounds:duelRounds, totalSecs:duelSecs, strings:[...duelStrings], mode:duelMode, questions:questionDeck },
+    scores: {host:0, guest:0},
+    currentRoundNum: 1,
+    roundState: { hostDone:false, guestDone:false, winner:null }
+  });
+  onDisconnect(ref(db,`duel_rooms/${roomCode}`)).update({status:'abandoned'});
+
+  await set(ref(db,`duel_challenges/${toSid}`),{
+    fromSid:mySid, fromName:myName,
+    roomCode, status:'pending',
+    strings:[...duelStrings], totalRounds:duelRounds, totalSecs:duelSecs, mode:duelMode,
+    redirectTo: window.location.pathname
+  });
+
+  document.getElementById('waiting-opp-name').textContent = toName;
+  const _gl2 = duelSecs > 0 ? `⏱ ${duelSecs} Saniyelik Yarış` : `${duelRounds} Tur`;
+  const _ml2 = duelMode === 'klavyeden-notaya' ? 'Klavyeden Notaya' : 'Notadan Klavyeye';
+  const wlbl = document.getElementById('waiting-game-label');
+  if(wlbl) wlbl.textContent = `${_ml2} · ${_gl2}`;
+  showArea('duel-waiting-area');
+
+  const cRef = ref(db,`duel_challenges/${toSid}`);
+  const unsub = onValue(cRef, snap=>{
+    const c = snap.val(); if(!c) return;
+    if(c.status==='accepted'){
+      unsub(); clearTimeout(challengeExpiry); beginGame();
+    } else if(c.status==='declined'){
+      unsub(); clearTimeout(challengeExpiry);
+      remove(ref(db,`duel_rooms/${roomCode}`));
+      alert(`${toName} daveti reddetti.`);
+      showArea('duel-setup-area'); loadOnlinePlayers();
+    }
+  });
+
+  challengeExpiry = setTimeout(async()=>{
+    unsub();
+    await remove(ref(db,`duel_challenges/${toSid}`));
+    await remove(ref(db,`duel_rooms/${roomCode}`));
+    showArea('duel-setup-area');
+    alert('Süre doldu, davet iptal edildi.');
+    loadOnlinePlayers();
+  }, 30000);
+};
+
+window.cancelChallenge = async function(){
+  clearTimeout(challengeExpiry);
+  if(oppSid) await remove(ref(db,`duel_challenges/${oppSid}`));
+  if(roomCode) await remove(ref(db,`duel_rooms/${roomCode}`));
+  showArea('duel-setup-area'); loadOnlinePlayers();
+};
+
+// ── HANDOFF (guest yönlendirmesi) ──
+// async: Firebase'den oda config'ini okuyarak doğru duelMode'u garanti altına alır
+async function checkDuelHandoff(){
+  const raw = localStorage.getItem('gitar_duel_handoff');
+  if(!raw) return false;
+  localStorage.removeItem('gitar_duel_handoff');
+  try{
+    const h = JSON.parse(raw);
+    myRole   = 'guest';
+    roomCode = h.roomCode;
+    // live-bar.js alan adları farklı olabilir — her ikisini dene
+    oppSid   = h.oppSid  || h.fromSid  || '';
+    oppName  = h.oppName || h.fromName || '?';
+
+    // Firebase'den oda config'ini doğrudan oku (en güvenilir kaynak)
+    try {
+      const snap = await get(ref(db, `duel_rooms/${roomCode}`));
+      const room = snap.val();
+      if(room && room.config){
+        duelMode    = room.config.mode        || h.mode || 'notadan-klavyeye';
+        duelStrings = new Set(room.config.strings || h.strings || [1,2,3,4]);
+        duelRounds  = room.config.totalRounds != null ? room.config.totalRounds : (h.totalRounds || 0);
+        duelSecs    = room.config.totalSecs   != null ? room.config.totalSecs   : (h.totalSecs   || 0);
+        if(room.host && room.host.name) oppName = room.host.name;
+      } else {
+        duelMode    = h.mode || 'notadan-klavyeye';
+        duelStrings = new Set(h.strings || [1,2,3,4]);
+        duelRounds  = h.totalRounds || 0;
+        duelSecs    = h.totalSecs   || 0;
+      }
+    } catch(e){
+      duelMode    = h.mode || 'notadan-klavyeye';
+      duelStrings = new Set(h.strings || [1,2,3,4]);
+      duelRounds  = h.totalRounds || 0;
+      duelSecs    = h.totalSecs   || 0;
+    }
+
+    beginGame();
+    return true;
+  }catch(e){ return false; }
+}
+
+// ── OYUNU BAŞLAT ──
+function beginGame(){
+  if(window.trackEnd)window.trackEnd();
+  if(window.trackStart)window.trackStart('duel');
+  myScore_ = 0; oppScore_ = 0;
+  document.getElementById('dscore-me-name').textContent  = myName;
+  document.getElementById('dscore-opp-name').textContent = oppName;
+  document.getElementById('dscore-me').textContent  = '0';
+  document.getElementById('dscore-opp').textContent = '0';
+
+  showArea('duel-game-area');
+
+  // Moda göre görünümü ayarla — showArea'dan SONRA yapılmalı ki DOM görünür olsun
+  document.getElementById('duel-view-k2n').style.display = duelMode==='klavyeden-notaya' ? 'block' : 'none';
+  document.getElementById('duel-view-n2k').style.display = duelMode==='notadan-klavyeye' ? 'block' : 'none';
+
+  // Notadan-klavyeye modunda klavye tıklama düğmelerini oluştur
+  if(duelMode==='notadan-klavyeye') buildDuelGuitarInteraction();
+
+  // Süre bazlı modda her iki tarafta geri sayım başlar
+  if(duelSecs > 0) startDuelTimer();
+
+  // Guest ise odayı 'playing' yap — böylece listenRound'daki 'waiting' guard takılmaz
+  if(myRole==='guest'){
+    update(ref(db,`duel_rooms/${roomCode}`),{status:'playing'});
+  }
+
+  onValue(ref(db,`duel_rooms/${roomCode}/scores`), snap=>{
+    const s = snap.val(); if(!s) return;
+    myScore_  = myRole==='host' ? s.host  : s.guest;
+    oppScore_ = myRole==='host' ? s.guest : s.host;
+    document.getElementById('dscore-me').textContent  = myScore_;
+    document.getElementById('dscore-opp').textContent = oppScore_;
+  });
+
+  listenRound();
+}
+
+// ── TUR DİNLEYİCİ ──
+function listenRound(){
+  if(roundListener) roundListener();
+  onValue(ref(db,`duel_rooms/${roomCode}/status`), snap=>{
+    const s = snap.val();
+    if(s==='abandoned') handleAbandoned();
+    if(s==='finished')  endDuel();
+  });
+  roundListener = onValue(ref(db,`duel_rooms/${roomCode}`), snap=>{
+    const room = snap.val();
+    if(!room) return;
+    // Sadece waiting+host kombinasyonunda bekle (guest kabul edince playing yapıyor)
+    if(room.status==='waiting' && myRole==='host') return;
+    if(room.status==='abandoned' || room.status==='finished') return;
+    const rNum = room.currentRoundNum;
+    const rState = room.roundState;
+    const questions = room.config && room.config.questions;
+    if(!rNum || !questions || !questions[rNum]) return;
+
+    // Mod tutarsızlığı varsa (guest ilk bağlantıda) UI'yi düzelt
+    if(room.config && room.config.mode && room.config.mode !== duelMode){
+      duelMode = room.config.mode;
+      document.getElementById('duel-view-k2n').style.display = duelMode==='klavyeden-notaya'  ? 'block' : 'none';
+      document.getElementById('duel-view-n2k').style.display = duelMode==='notadan-klavyeye' ? 'block' : 'none';
+      if(duelMode==='notadan-klavyeye') buildDuelGuitarInteraction();
+    }
+
+    if(currentRoundNum !== rNum){
+      currentRoundNum = rNum;
+      currentQuestionData = questions[rNum];
+      showDuelQuestion(rNum, currentQuestionData);
+    }
+    if(rState && (rState.winner || (rState.hostDone && rState.guestDone))){
+      showRoundResult(rState, currentQuestionData);
+    }
+  });
+}
+
+// ── DÜELLO SES ÇALMA ──
+function duelPlayNote(freq){
+  try{
+    if(!duelAudioCtx) duelAudioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    const ctx = duelAudioCtx;
+    if(ctx.state==='suspended') ctx.resume();
+    const now = ctx.currentTime;
+    const master = ctx.createGain();
+    master.connect(ctx.destination);
+    const filter = ctx.createBiquadFilter();
+    filter.type='lowpass'; filter.frequency.value=freq*2.8; filter.Q.value=0.7;
+    filter.connect(master);
+    const osc=ctx.createOscillator(); osc.type='triangle'; osc.frequency.value=freq;
+    const og=ctx.createGain();
+    og.gain.setValueAtTime(0,now); og.gain.linearRampToValueAtTime(0.45,now+0.006); og.gain.exponentialRampToValueAtTime(0.001,now+2.2);
+    osc.connect(og); og.connect(filter); osc.start(now); osc.stop(now+2.2);
+    master.gain.setValueAtTime(0.75,now); master.gain.exponentialRampToValueAtTime(0.001,now+2.5);
+  }catch(e){}
+}
+
+// ── SÜRE BAZLI DÜELLO ZAMANLAYICI ──
+let duelTimerInterval = null;
+let duelTimeLeft = 0;
+
+function startDuelTimer(){
+  duelTimeLeft = duelSecs;
+  if(duelTimerInterval) clearInterval(duelTimerInterval);
+  updateDuelTimerBadge();
+  duelTimerInterval = setInterval(()=>{
+    duelTimeLeft--;
+    updateDuelTimerBadge();
+    if(duelTimeLeft <= 0){
+      clearInterval(duelTimerInterval);
+      // Host süre bitince oyunu bitir
+      if(myRole==='host'){
+        update(ref(db,`duel_rooms/${roomCode}`),{status:'finished'});
+      }
+    }
+  }, 1000);
+}
+
+function updateDuelTimerBadge(){
+  const badge = document.getElementById('duel-round-label');
+  if(badge) badge.textContent = `⏱ ${duelTimeLeft}sn`;
+}
+
+// ── SORU GÖSTER ──
+function showDuelQuestion(rNum, qData){
+  myAnswered = false;
+  if(duelSecs === 0){
+    document.getElementById('duel-round-label').textContent = `Tur ${rNum} / ${duelRounds}`;
+  }
+  // Süre modunda tur etiketi timer tarafından güncelleniyor, burada dokunmuyoruz
+  document.getElementById('duel-feedback').textContent = '';
+  document.getElementById('duel-feedback').className   = 'duel-feedback';
+  document.getElementById('duel-cd-wrap').style.display = 'none';
+
+  if(duelMode === 'klavyeden-notaya'){
+    // Klavyede pozisyon highlight + nota adı kartları
+    document.getElementById('duel-hint-text').innerHTML =
+      `💡 <span class="hint-string-badge">${qData.string}</span> . Tel – <span class="hint-fret-text">${D_ROMAN_FRETS[qData.fret]}</span>`;
+    duelMoveHighlight(qData.string, qData.fret);
+
+    const box = document.getElementById('duel-choices-k2n');
+    box.innerHTML = '';
+    (qData.choices || []).forEach(name=>{
+      const b = document.createElement('button');
+      b.className='dcbtn'; b.textContent=name;
+      b.onclick = ()=>duelAnswerK2N(name, b, rNum);
+      box.appendChild(b);
+    });
+  } else {
+    // Notadan-klavyeye: porte + tıklanabilir klavye
+    // DOM görünür olduktan sonra render et (VexFlow display:none'da çalışmaz)
+    requestAnimationFrame(()=>{
+      duelDrawQuestionStaff(qData);
+    });
+    document.querySelectorAll('#duel-fret-buttons-group g').forEach(g=>{
+      g.classList.remove('disabled');
+      const fc = g.querySelector('.duel-fret-feedback');
+      if(fc) fc.remove();
+      g.onclick = ()=>{
+        const s=parseInt(g.dataset.string), f=parseInt(g.dataset.fret);
+        duelAnswerN2K(g, s, f, rNum);
+      };
+    });
+    const dot=document.getElementById('duel-fret-highlight-n2k');
+    const qtxt=document.getElementById('duel-fret-highlight-q-n2k');
+    dot.style.display='none'; qtxt.style.display='none';
+  }
+
+  setTimeout(()=>duelPlayNote(qData.freq), 300);
+}
+
+// ── DÜELLO KLAVYE YARDIMCI FONKSİYONLARI ──
+function duelMoveHighlight(stringN, fretN){
+  const cx = D_FRET_CX[fretN], cy = D_STRING_CY_K2N[stringN];
+  const dot=document.getElementById('duel-fret-highlight');
+  const qtxt=document.getElementById('duel-fret-highlight-q');
+  dot.setAttribute('cx',cx); dot.setAttribute('cy',cy);
+  qtxt.setAttribute('x',cx); qtxt.setAttribute('y',cy);
+  dot.style.display=''; qtxt.style.display='';
+}
+
+function buildDuelGuitarInteraction(){
+  const group = document.getElementById('duel-fret-buttons-group');
+  group.innerHTML='';
+  D_ALL_FRETS_MAP.forEach(item=>{
+    const g = document.createElementNS("http://www.w3.org/2000/svg","g");
+    g.setAttribute("class","fret-btn");
+    g.setAttribute("data-string",item.string);
+    g.setAttribute("data-fret",item.fret);
+    if(item.fret===0){
+      const c=document.createElementNS("http://www.w3.org/2000/svg","circle");
+      c.setAttribute("cx",93); c.setAttribute("cy",D_STRING_CY_N2K[item.string]);
+      c.setAttribute("r",12); c.setAttribute("fill","#fff8ef");
+      c.setAttribute("stroke","#d4a373"); c.setAttribute("stroke-width","1.5");
+      const t=document.createElementNS("http://www.w3.org/2000/svg","text");
+      t.setAttribute("x",93); t.setAttribute("y",D_STRING_CY_N2K[item.string]+4);
+      t.setAttribute("text-anchor","middle"); t.setAttribute("fill","#5a3e2b");
+      t.setAttribute("font-size","11"); t.setAttribute("font-weight","700");
+      t.setAttribute("font-family","Lato,sans-serif"); t.textContent=item.string;
+      g.appendChild(c); g.appendChild(t);
+    } else {
+      const widths={1:82,2:87,3:85,4:80}, xs={1:116,2:198,3:285,4:370};
+      const r=document.createElementNS("http://www.w3.org/2000/svg","rect");
+      r.setAttribute("x",xs[item.fret]); r.setAttribute("y",D_STRING_CY_N2K[item.string]-14);
+      r.setAttribute("width",widths[item.fret]); r.setAttribute("height",28);
+      r.setAttribute("fill","transparent");
+      const cx2=xs[item.fret]+widths[item.fret]/2;
+      const dot2=document.createElementNS("http://www.w3.org/2000/svg","circle");
+      dot2.setAttribute("cx",cx2); dot2.setAttribute("cy",D_STRING_CY_N2K[item.string]);
+      dot2.setAttribute("r",4); dot2.setAttribute("fill","#b0b8b0"); dot2.setAttribute("opacity","0.35");
+      g.appendChild(r); g.appendChild(dot2);
+    }
+    g.onclick = ()=>{
+      const s=parseInt(g.dataset.string), f=parseInt(g.dataset.fret);
+      duelAnswerN2K(g, s, f, currentRoundNum);
+    };
+    group.appendChild(g);
+  });
+}
+
+function duelDrawQuestionStaff(qData){
+  const div = document.getElementById('duel-question-staff');
+  div.innerHTML='';
+  try{
+    const {Renderer,Stave,StaveNote,Voice,Formatter}=Vex.Flow;
+    const renderer=new Renderer(div,Renderer.Backends.SVG);
+    renderer.resize(300,120);
+    const ctx=renderer.getContext();
+    ctx.scale(1.6,1.6);
+    const stave=new Stave(10,-18,155);
+    stave.addClef('bass').setContext(ctx).draw();
+    const note=new StaveNote({keys:[qData.key],clef:'bass',duration:'w'});
+    const voice=new Voice({num_beats:4,beat_value:4});
+    voice.addTickables([note]);
+    new Formatter().joinVoices([voice]).format([voice],100);
+    voice.draw(ctx,stave);
+  }catch(e){}
+}
+
+// ── CEVAP: KLAVYEden NOTAYA ──
+function duelAnswerK2N(name, btn, rNum){
+  if(myAnswered) return;
+  myAnswered = true;
+  document.querySelectorAll('#duel-choices-k2n .dcbtn').forEach(b=>b.disabled=true);
+
+  const correct = name === currentQuestionData.name;
+  btn.classList.add(correct ? 'correct' : 'wrong');
+  if(!correct) duelMissCounts[currentQuestionData.posId] = (duelMissCounts[currentQuestionData.posId]||0)+1;
+
+  submitDuelAnswer(rNum, correct);
+}
+
+// ── CEVAP: NOTADAN KLAVYEye ──
+function duelAnswerN2K(element, stringNum, fretNum, rNum){
+  if(myAnswered) return;
+  myAnswered = true;
+  document.querySelectorAll('#duel-fret-buttons-group g').forEach(g=>{ g.classList.add('disabled'); g.onclick=null; });
+
+  let cx=0, cy=D_STRING_CY_N2K[stringNum];
+  if(fretNum===0){ cx=93; }
+  else{ const xs={1:116,2:198,3:285,4:370},ws={1:82,2:87,3:85,4:80}; cx=xs[fretNum]+ws[fretNum]/2; }
+
+  const clickedNote = D_NOTES.find(n=>n.string===stringNum && n.fret===fretNum);
+  const correct = !!(clickedNote && clickedNote.name===currentQuestionData.name);
+  if(!correct) duelMissCounts[currentQuestionData.posId]=(duelMissCounts[currentQuestionData.posId]||0)+1;
+
+  // Tıklanan yerde geri bildirim noktası
+  const fb=document.createElementNS("http://www.w3.org/2000/svg","circle");
+  fb.setAttribute("class","duel-fret-feedback");
+  fb.setAttribute("cx",cx); fb.setAttribute("cy",cy); fb.setAttribute("r",14);
+  fb.setAttribute("fill", correct ? '#6b8c42' : '#c75b39');
+  fb.setAttribute("opacity","0.85"); fb.setAttribute("pointer-events","none");
+  element.appendChild(fb);
+
+  if(!correct){
+    // Doğru konumu göster
+    let ccx=0, ccy=D_STRING_CY_N2K[currentQuestionData.string];
+    if(currentQuestionData.fret===0){ ccx=93; }
+    else{ const xs={1:116,2:198,3:285,4:370},ws={1:82,2:87,3:85,4:80}; ccx=xs[currentQuestionData.fret]+ws[currentQuestionData.fret]/2; }
+    const dot=document.getElementById('duel-fret-highlight-n2k');
+    const qtxt=document.getElementById('duel-fret-highlight-q-n2k');
+    dot.setAttribute('cx',ccx); dot.setAttribute('cy',ccy);
+    qtxt.setAttribute('x',ccx); qtxt.setAttribute('y',ccy);
+    dot.style.display=''; qtxt.style.display='';
+  }
+
+  duelPlayNote(currentQuestionData.freq);
+  submitDuelAnswer(rNum, correct);
+}
+
+// ── FIREBASE'E CEVAP KAYDET ──
+function submitDuelAnswer(rNum, correct){
+  if(window.trackLog)window.trackLog(correct, currentQuestionData.posId, currentQuestionData.name+' ('+currentQuestionData.string+'. tel)');
+  runTransaction(ref(db,`duel_rooms/${roomCode}`), room=>{
+    if(!room) return room;
+    if(room.currentRoundNum !== rNum) return room;
+    if(!room.roundState) room.roundState={hostDone:false,guestDone:false,winner:null};
+    room.roundState[myRole+'Done'] = true;
+    if(correct && !room.roundState.winner){
+      room.roundState.winner = myRole;
+      room.roundState.winnerName = myName;
+      if(!room.scores) room.scores={host:0,guest:0};
+      room.scores[myRole] = (room.scores[myRole]||0)+1;
+    }
+    return room;
+  });
+}
+
+// ── TUR SONUCU ──
+function showRoundResult(rState, qData){
+  // K2N: doğru karta renk ver
+  if(duelMode==='klavyeden-notaya'){
+    document.querySelectorAll('#duel-choices-k2n .dcbtn').forEach(b=>{
+      b.disabled=true; b.onclick=null;
+      if(b.textContent===qData.name) b.classList.add('correct');
+    });
+  }
+
+  const fb=document.getElementById('duel-feedback');
+  if(rState.winner===myRole){ fb.textContent='🏅 Sen kazandın!'; fb.className='duel-feedback iwin'; }
+  else if(rState.winner){ fb.textContent=`😤 ${rState.winnerName} daha hızlıydı!`; fb.className='duel-feedback opwin'; }
+  else{ fb.textContent='😅 İkisi de yanlış! Puan yok.'; fb.className='duel-feedback nobody'; }
+
+  if(document.getElementById('duel-cd-wrap').style.display==='flex') return;
+
+  startCountdown(()=>{
+    if(myRole==='host'){
+      const nextNum = currentRoundNum+1;
+      runTransaction(ref(db,`duel_rooms/${roomCode}`), room=>{
+        if(!room) return room;
+        if(room.currentRoundNum !== currentRoundNum) return room;
+        // Tur bazlı modda tur sayısına göre bitir; süre bazlı modda timer bitirir
+        const maxRounds = room.config.totalSecs > 0 ? 9999 : (room.config.totalRounds || 9999);
+        if(nextNum > maxRounds){ room.status='finished'; }
+        else{ room.currentRoundNum=nextNum; room.roundState={hostDone:false,guestDone:false,winner:null}; }
+        return room;
+      });
+    }
+  });
+}
+
+function startCountdown(onDone){
+  if(cdTimer) clearInterval(cdTimer);
+  let n=3;
+  const wrap=document.getElementById('duel-cd-wrap'), el=document.getElementById('duel-cd-num');
+  wrap.style.display='flex'; setCd(el,n);
+  cdTimer=setInterval(()=>{
+    n--;
+    if(n<=0){ clearInterval(cdTimer); wrap.style.display='none'; if(onDone) onDone(); }
+    else setCd(el,n);
+  },1000);
+}
+function setCd(el,n){ el.textContent=n; el.classList.remove('duel-cd'); void el.offsetWidth; el.classList.add('duel-cd'); }
+
+// ── DÜELLO BİTİŞ ──
+function endDuel(){
+  if(window.trackEnd)window.trackEnd();
+  if(cdTimer) clearInterval(cdTimer);
+  if(duelTimerInterval) clearInterval(duelTimerInterval);
+  if(roundListener){ roundListener(); roundListener=null; }
+
+  const myF=myScore_, oppF=oppScore_;
+  let winBadge, comment;
+  if(myF>oppF){ winBadge=`🏆 Kazanan: ${myName}`; comment=`${myName} klavyeyi daha hızlı okudu! ${oppF} daha çok çalışmalı 💪`; }
+  else if(oppF>myF){ winBadge=`🏆 Kazanan: ${oppName}`; comment=`${oppName} bu sefer daha hızlıydı! Bir dahaki sefere ${myName} 🎸`; }
+  else{ winBadge='🤝 Beraberlik!'; comment='İkisi de aynı seviyede! Yunus Hoca ikinizden de memnun 🎵'; }
+
+  const mc=myF>=oppF?'win':'lose', oc=oppF>=myF?'win':'lose';
+  const modeLabel = duelMode==='notadan-klavyeye' ? '🎼➡️🎸 Notadan Klavyeye' : '🎸➡️🎼 Klavyeden Notaya';
+  const gameLabel = duelSecs > 0 ? `⏱ ${duelSecs} Saniyelik Yarış` : `${duelRounds} Tur`;
+
+  document.getElementById('app-wrap').innerHTML=`
+    <div class="duel-result">
+      <h2>⚔️ Düello Bitti!</h2>
+      <div class="duel-mode-badge">${modeLabel} · ${gameLabel}</div>
+      <div class="winner-badge">${winBadge}</div>
+      <div class="final-scores">
+        <div class="fsc-player"><div class="fsc-name">${myName}</div><div class="fsc-num ${mc}">${myF}</div></div>
+        <div class="fsc-vs">VS</div>
+        <div class="fsc-player"><div class="fsc-name">${oppName}</div><div class="fsc-num ${oc}">${oppF}</div></div>
+      </div>
+      <p class="duel-comment">"${comment}"</p>
+      <div class="result-btns">
+        <button class="app-btn btn-duel" onclick="location.reload()">🔄 Tekrar Oyna</button>
+        <button class="app-btn" onclick="location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
+      </div>
+    </div>`;
+}
+
+function handleAbandoned(){
+  if(window.trackEnd)window.trackEnd();
+  if(cdTimer) clearInterval(cdTimer);
+  alert('Rakibiniz oyundan ayrıldı.');
+  showArea('setup-area');
+}
+
+window.leaveGame = async function(){
+  if(window.trackEnd)window.trackEnd();
+  if(cdTimer) clearInterval(cdTimer);
+  if(duelTimerInterval) clearInterval(duelTimerInterval);
+  if(roundListener && roomCode){ roundListener(); roundListener=null; }
+  if(roomCode) await update(ref(db,`duel_rooms/${roomCode}`),{status:'abandoned'});
+  showArea('setup-area');
+};
+
+// ════════════════════════════════════════════════════════
+// IN-PAGE DAVET POPUP — live-bar.js bildiriminden bağımsız
+// duel_challenges/${mySid} dinleyerek kendi popup'ımızı gösteririz
+// ════════════════════════════════════════════════════════
+
+// live-bar.js kendi popup/bildirimini gösteriyorsa onu DOM'dan gizle
+function hideLiveBarDuelNotif(){
+  // live-bar genellikle .duel-invite, .challenge-notif gibi class kullanır
+  const selectors = ['.duel-invite','.challenge-notif','.duel-notification',
+                     '[data-duel-invite]','#duel-invite','#challenge-notif'];
+  selectors.forEach(s=>{ document.querySelectorAll(s).forEach(el=>el.remove()); });
+}
+
+// Gelen daveti dinle
+(function listenIncomingChallenge(){
+  if(!mySid) return;  // const olduğu için her zaman hazır
+
+  const cRef = ref(db, `duel_challenges/${mySid}`);
+  onValue(cRef, snap => {
+    const c = snap.val();
+    hideLiveBarDuelNotif();
+    if(!c || c.status !== 'pending'){
+      const p = document.getElementById('ix-challenge-popup');
+      if(p) p.remove();
+      return;
+    }
+    showIxChallengePopup(c);
+  });
+})();
+
+function showIxChallengePopup(c){
+  document.getElementById('ix-challenge-popup')?.remove();
+  const gl = c.totalSecs > 0
+    ? `⏱ ${c.totalSecs} Saniyelik Yarış`
+    : `${c.totalRounds} Tur`;
+  const ml = c.mode === 'klavyeden-notaya' ? 'Klavyeden Notaya' : 'Notadan Klavyeye';
+
+  const popup = document.createElement('div');
+  popup.id = 'ix-challenge-popup';
+  popup.style.cssText = [
+    'position:fixed','bottom:80px','left:50%','transform:translateX(-50%)',
+    'z-index:99999','background:#fff','border:2px solid #d4a373',
+    'border-radius:20px','padding:1rem 1.2rem',
+    'box-shadow:0 8px 32px rgba(90,62,43,.2)',
+    'max-width:320px','width:90%','text-align:center',
+    'font-family:Lato,sans-serif','color:#5a3e2b'
+  ].join(';');
+  popup.innerHTML = `
+    <div style="font-weight:700;font-size:1.05rem;margin-bottom:4px;">⚔️ Düello Daveti!</div>
+    <div style="color:#8b5a2b;font-size:.9rem;margin-bottom:6px;">
+      <b>${c.fromName||'Rakip'}</b> seni düelloya çağırıyor
+    </div>
+    <div style="font-size:.8rem;font-weight:700;color:#b37d4e;
+      background:#f5e6d3;padding:3px 12px;border-radius:8px;
+      display:inline-block;margin-bottom:.9rem;">${ml} · ${gl}</div>
+    <div style="display:flex;gap:10px;justify-content:center;">
+      <button id="ix-accept-btn" style="padding:8px 20px;border-radius:10px;
+        border:1.5px solid #6b8c42;background:#eaf3de;color:#3b6d11;
+        font-weight:700;cursor:pointer;font-family:inherit;font-size:.9rem;">✓ Kabul</button>
+      <button id="ix-decline-btn" style="padding:8px 20px;border-radius:10px;
+        border:1.5px solid #c75b39;background:#fdf0f0;color:#a32d2d;
+        font-weight:700;cursor:pointer;font-family:inherit;font-size:.9rem;">✕ Reddet</button>
+    </div>`;
+  document.body.appendChild(popup);
+
+  document.getElementById('ix-accept-btn').onclick  = () => ixAccept(c);
+  document.getElementById('ix-decline-btn').onclick = () => ixDecline(c);
+}
+
+async function ixAccept(c){
+  document.getElementById('ix-challenge-popup')?.remove();
+  // handoff localStorage'a yaz
+  localStorage.setItem('gitar_duel_handoff', JSON.stringify({
+    roomCode:c.roomCode, fromSid:c.fromSid, fromName:c.fromName,
+    mode:c.mode, strings:c.strings,
+    totalRounds:c.totalRounds, totalSecs:c.totalSecs
+  }));
+  await update(ref(db,`duel_challenges/${mySid}`),{status:'accepted'});
+  const handled = await checkDuelHandoff();
+  if(!handled) window.location.reload();
+}
+
+async function ixDecline(c){
+  document.getElementById('ix-challenge-popup')?.remove();
+  await update(ref(db,`duel_challenges/${mySid}`),{status:'declined'});
+}
+
+// live-bar.js'in window.acceptChallenge / declineChallenge çağırması durumunda
+// onları da kendi fonksiyonlarımıza yönlendir
+window.acceptChallenge = async function(roomCode_, fromSid_, fromName_){
+  const snap = await get(ref(db,`duel_challenges/${mySid}`));
+  const c = snap.val();
+  if(c) await ixAccept(c);
+};
+window.declineChallenge = async function(){
+  const snap = await get(ref(db,`duel_challenges/${mySid}`));
+  const c = snap.val();
+  if(c) await ixDecline(c);
+};
+
+checkDuelHandoff();
+</script>
+
+<script type="module" src="/live-bar.js"></script>
+</body>
+</html>
+
