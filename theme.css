@@ -502,3 +502,146 @@ html body {
   background: #fdf0f0 !important;
   border-color: #c75b39 !important;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   EK DÜZELTMELERv3  –  Öğretmen Paneli rozeti, haber akışı, chat
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── 26. Öğretmen Paneli rozeti (.w-badge-grade) ────────────
+   Açık modda koyu kahve zemin + beyaz yazı → okunabilir.
+   Koyu modda da aynı mantıkla: altın çerçeve + koyu zemin. */
+[data-theme="dark"] .w-badge-grade {
+  background: #1a1408 !important;
+  color: var(--gold) !important;
+  border: 1px solid #4a3a18 !important;
+}
+
+/* ── 27. Haber akışı (#news-ticker-row ve içindeki öğeler) ──
+   live-bar.js bu div'e .news-item / .ticker-item gibi sınıflı
+   ya da doğrudan <span>/<div> ekleyebilir; hepsini kapsıyoruz. */
+[data-theme="dark"] #news-ticker-row {
+  background: #0e0b08 !important;
+  border-color: #252015 !important;
+  color: #c4a070 !important;
+}
+[data-theme="dark"] #news-ticker-row * {
+  color: #c4a070 !important;
+  border-color: #252015 !important;
+}
+/* Arka plan beyaz kalan olası iç kapsayıcılar */
+[data-theme="dark"] #news-ticker-row div,
+[data-theme="dark"] #news-ticker-row span,
+[data-theme="dark"] #news-ticker-row p,
+[data-theme="dark"] #news-ticker-row a {
+  background: transparent !important;
+}
+
+/* ── 28. Chat baloncukları ───────────────────────────────────
+   Sorun: kendi mesajın (mine) zaten koyu gradient → OK.
+         Karşı tarafın (theirs) açık krem → koyu modda okunamaz.
+         Öğretmen mesajı (teacher-msg) altın gradient → OK.
+
+   Çözüm: theirs baloncuğuna koyu zemin + açık yazı; çerçeve ile
+   ayrıştıralım ki içerik ile dış alan karışmasın.              */
+[data-theme="dark"] .chat-msg.theirs .chat-bubble {
+  background: #1c160e !important;
+  color: #e8ddd0 !important;
+  border: 1px solid #352a1e !important;
+}
+/* Kendi mesajı (mine) zaten koyu gradient ama yazı rengini pekiştir */
+[data-theme="dark"] .chat-msg.mine .chat-bubble {
+  background: linear-gradient(135deg, #3a2810, #5a4030) !important;
+  color: #fff !important;
+  border: 1px solid #5a3e20 !important;
+}
+/* Öğretmen mesajı gradient korunuyor, sadece okunabilirlik için border */
+[data-theme="dark"] .chat-msg.teacher-msg .chat-bubble {
+  border: 1px solid #8a6a20 !important;
+}
+
+/* Yazar adı ve meta bilgisi */
+[data-theme="dark"] .chat-msg-meta .msg-author {
+  color: #c4a070 !important;
+}
+[data-theme="dark"] .chat-msg-meta {
+  color: #7a6a55 !important;
+}
+
+/* ── 29. Chat input alanı ──────────────────────────────────
+   Sorun: input beyaz zemin + açık border → yazılanlar görünmüyor.
+   Çözüm: koyu zemin, açık yazı, belirgin dış çerçeve.           */
+[data-theme="dark"] .chat-input-area {
+  background: #0a0805 !important;
+  border-color: #2a2015 !important;
+}
+[data-theme="dark"] .chat-input {
+  background: #141008 !important;
+  border: 1.5px solid #3a2e1e !important;
+  color: #e8ddd0 !important;
+  caret-color: var(--gold) !important;
+}
+[data-theme="dark"] .chat-input:focus {
+  border-color: var(--gold) !important;
+  box-shadow: 0 0 0 2px rgba(212,168,67,.15) !important;
+}
+[data-theme="dark"] .chat-input::placeholder {
+  color: #5a4a38 !important;
+}
+
+/* ── 30. Chat sekme arka planı (#faf8f5 → koyu) ─────────── */
+[data-theme="dark"] .chat-tabs {
+  background: #0e0b08 !important;
+  border-color: #252015 !important;
+}
+[data-theme="dark"] .chat-tab {
+  color: #7a6a55 !important;
+}
+[data-theme="dark"] .chat-tab.active {
+  color: var(--gold) !important;
+  border-bottom-color: var(--gold) !important;
+}
+
+/* ── 31. Chat mesaj listesi arka planı ───────────────────── */
+[data-theme="dark"] .chat-messages {
+  background: #080605 !important;
+}
+
+/* ── 32. Diğer badge'ler ve yardımcı öğeler ─────────────── */
+[data-theme="dark"] .w-badge-score {
+  background: #1a1405 !important;
+  color: var(--gold) !important;
+  border-color: #3a3010 !important;
+}
+[data-theme="dark"] .w-badge-rank {
+  background: #081404 !important;
+  color: #5aab28 !important;
+  border-color: #1a3a0a !important;
+}
+/* student-all-card dark */
+[data-theme="dark"] .student-all-card {
+  background: #0e0b08 !important;
+  border-color: #252015 !important;
+  color: #e8ddd0 !important;
+}
+/* activity-card / lesson-card */
+[data-theme="dark"] .activity-card,
+[data-theme="dark"] .lesson-card {
+  background: #0e0b08 !important;
+  border-color: #252015 !important;
+}
+/* Ana sayfa .card (oyun kartları) */
+[data-theme="dark"] .card {
+  background: #0e0b08 !important;
+  border-color: #252015 !important;
+}
+[data-theme="dark"] .card-title  { color: #e8ddd0 !important; }
+[data-theme="dark"] .card-desc   { color: #7a6a55 !important; }
+[data-theme="dark"] .card-footer { border-color: #252015 !important; }
+[data-theme="dark"] .card::before { background: var(--gold) !important; }
+/* panel-subnav-btn açık arka plan */
+[data-theme="dark"] .panel-subnav-btn {
+  background: #0e0b08 !important;
+  border-color: #252015 !important;
+  color: #907e6e !important;
+}
+
