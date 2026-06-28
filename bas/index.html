@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="tr">
 <head>
   <!-- ── TEMA SİSTEMİ ── -->
@@ -126,7 +126,7 @@
     /* ── MOD SEÇİM KARTLARI ── */
     .mode-select-row {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
       gap: 10px;
       margin-bottom: 0.85rem;
     }
@@ -209,6 +209,20 @@
       align-items: center;
     }
     #question-staff svg { width: 100%; height: 100%; overflow: visible; }
+
+    .mic-panel {
+      display: none;
+      background: #fdfaf4;
+      border: 1.5px dashed #d4c4b0;
+      border-radius: 16px;
+      padding: 12px;
+      margin-bottom: 0.85rem;
+      text-align: center;
+    }
+    .mic-status { font-size: 0.9rem; font-weight: 700; color: #5a3e2b; margin-bottom: 8px; }
+    .mic-meter { height: 8px; background: #ede6d8; border-radius: 10px; overflow: hidden; border: 1px solid #e0d8c8; }
+    .mic-meter-fill { height: 100%; width: 0%; background: #c75b39; border-radius: 10px; transition: width 0.12s linear, background 0.12s linear; }
+    .mic-readout { font-size: 0.78rem; color: #8b6b4e; margin-top: 7px; min-height: 18px; }
 
     .message { text-align: center; font-size: 0.9rem; font-weight: 700; color: #8b6b4e; margin-bottom: 0.65rem; min-height: 22px; padding: 0 5px; }
 
@@ -347,6 +361,10 @@
         <div class="mode-card" id="mode-card-k2n" onclick="selectQuizMode('klavyeden-notaya')">
           <span class="mode-icon">🎸 ➜ 🎼</span>
           <span class="mode-label">Klavye'den Nota'ya</span>
+        </div>
+        <div class="mode-card" id="mode-card-mic" onclick="selectQuizMode('notadan-klavyeye-mic')">
+          <span class="mode-icon">🎼 ➜ 🎸</span>
+          <span class="mode-label">Gitar ile Çal</span>
         </div>
       </div>
     </div>
@@ -626,6 +644,12 @@
         <div id="question-staff"></div>
       </div>
 
+      <div class="mic-panel" id="mic-panel">
+        <div class="mic-status" id="mic-status">Mikrofon hazırlanıyor...</div>
+        <div class="mic-meter"><div class="mic-meter-fill" id="mic-meter-fill"></div></div>
+        <div class="mic-readout" id="mic-readout"></div>
+      </div>
+
       <div class="card">
         <div class="guitar-wrap">
           <svg id="guitar-svg-n2k" viewBox="60 0 400 160" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
@@ -777,7 +801,8 @@ let correctCount=0, wrongCount=0, startTime=null, timerInterval=null;
 let selectedStrings = new Set([1, 2, 3, 4]);
 let filteredNotes = [];
 let currentMode = 'practice';      // 'practice' | 'race'
-let quizType = 'notadan-klavyeye'; // 'notadan-klavyeye' | 'klavyeden-notaya'
+let quizType = 'notadan-klavyeye'; // 'notadan-klavyeye' | 'klavyeden-notaya' | 'notadan-klavyeye-mic'
+let micStream = null, micAudioCtx = null, micAnalyser = null, micData = null, micRaf = null, micDetectStreak = 0;
 let gameTimer = null;
 let timeLeft = 40;
 let currentIndex = 0;
@@ -843,6 +868,7 @@ function selectQuizMode(mode) {
   quizType = mode;
   document.getElementById('mode-card-n2k').classList.toggle('active', mode === 'notadan-klavyeye');
   document.getElementById('mode-card-k2n').classList.toggle('active', mode === 'klavyeden-notaya');
+  document.getElementById('mode-card-mic').classList.toggle('active', mode === 'notadan-klavyeye-mic');
 }
 
 function toggleAllStrings() {
@@ -898,9 +924,10 @@ function startExercise(mode) {
   document.getElementById('result-zone').style.display = 'none';
 
   document.getElementById('view-k2n').style.display = quizType === 'klavyeden-notaya' ? 'block' : 'none';
-  document.getElementById('view-n2k').style.display = quizType === 'notadan-klavyeye' ? 'block' : 'none';
+  document.getElementById('view-n2k').style.display = (quizType === 'notadan-klavyeye' || quizType === 'notadan-klavyeye-mic') ? 'block' : 'none';
+  document.getElementById('mic-panel').style.display = quizType === 'notadan-klavyeye-mic' ? 'block' : 'none';
 
-  if (quizType === 'notadan-klavyeye') buildGuitarInteraction();
+  if (quizType === 'notadan-klavyeye' || quizType === 'notadan-klavyeye-mic') buildGuitarInteraction();
 
   correctCount = 0;
   wrongCount = 0;
@@ -931,6 +958,7 @@ function goBackToMenu() {
   if (timerInterval) clearInterval(timerInterval);
   if (gameTimer) clearInterval(gameTimer);
   clearAutoTimer();
+  stopMicInput();
   document.getElementById('exercise-area').style.display = 'none';
   document.getElementById('exercise-controls').style.display = 'none';
   document.getElementById('result-zone').style.display = 'none';
@@ -986,7 +1014,7 @@ function playGuitar(freq) {
     });
 
     master.gain.setValueAtTime(0.75, now); master.gain.exponentialRampToValueAtTime(0.001, now + 2.5);
-    const btn = document.getElementById(quizType === 'notadan-klavyeye' ? 'listen-btn-n2k' : 'listen-btn');
+    const btn = document.getElementById((quizType === 'notadan-klavyeye' || quizType === 'notadan-klavyeye-mic') ? 'listen-btn-n2k' : 'listen-btn');
     if (btn) { btn.classList.add('playing'); setTimeout(() => btn.classList.remove('playing'), 700); }
   } catch(e) {}
 }
@@ -1135,7 +1163,116 @@ function createFeedbackCircle(parentG, cx, cy, color) {
   parentG.appendChild(circle);
 }
 
+function updateMicUi(status, cents, freq) {
+  const statusEl = document.getElementById('mic-status');
+  const readoutEl = document.getElementById('mic-readout');
+  const fillEl = document.getElementById('mic-meter-fill');
+  if (!statusEl || !readoutEl || !fillEl) return;
+  statusEl.textContent = status;
+  if (typeof cents === 'number' && typeof freq === 'number') {
+    const closeness = Math.max(0, 100 - Math.min(100, Math.abs(cents) * 2));
+    fillEl.style.width = closeness + '%';
+    fillEl.style.background = Math.abs(cents) <= 35 ? '#6b8c42' : '#c75b39';
+    const side = cents > 8 ? 'biraz tiz' : cents < -8 ? 'biraz pes' : 'çok yakın';
+    readoutEl.textContent = Math.round(freq) + ' Hz duyuldu, hedef ' + Math.round(current.freq) + ' Hz - ' + side;
+  } else {
+    fillEl.style.width = '0%';
+    fillEl.style.background = '#c75b39';
+    readoutEl.textContent = '';
+  }
+}
+
+function stopMicLoop() {
+  if (micRaf) { cancelAnimationFrame(micRaf); micRaf = null; }
+  micDetectStreak = 0;
+}
+
+function stopMicInput() {
+  stopMicLoop();
+  if (micStream) { micStream.getTracks().forEach(track => track.stop()); micStream = null; }
+  if (micAudioCtx) { micAudioCtx.close().catch(() => {}); micAudioCtx = null; }
+  micAnalyser = null; micData = null;
+}
+
+async function ensureMicInput() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error('Bu tarayıcı mikrofon erişimini desteklemiyor.');
+  if (micAnalyser) return;
+  micStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+  micAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const source = micAudioCtx.createMediaStreamSource(micStream);
+  micAnalyser = micAudioCtx.createAnalyser();
+  micAnalyser.fftSize = 8192;
+  micData = new Float32Array(micAnalyser.fftSize);
+  source.connect(micAnalyser);
+}
+
+function detectPitch(buffer, sampleRate) {
+  let rms = 0;
+  for (let i = 0; i < buffer.length; i++) rms += buffer[i] * buffer[i];
+  rms = Math.sqrt(rms / buffer.length);
+  if (rms < 0.012) return null;
+
+  let bestOffset = -1, bestCorrelation = 0;
+  const minOffset = Math.floor(sampleRate / 180);
+  const maxOffset = Math.floor(sampleRate / 35);
+  for (let offset = minOffset; offset <= maxOffset; offset++) {
+    let correlation = 0;
+    for (let i = 0; i < buffer.length - offset; i++) {
+      correlation += 1 - Math.abs(buffer[i] - buffer[i + offset]);
+    }
+    correlation /= buffer.length - offset;
+    if (correlation > bestCorrelation) { bestCorrelation = correlation; bestOffset = offset; }
+  }
+  if (bestCorrelation < 0.86 || bestOffset <= 0) return null;
+  return sampleRate / bestOffset;
+}
+
+function startMicQuestion() {
+  stopMicLoop();
+  micDetectStreak = 0;
+  updateMicUi('Mikrofon hazırlanıyor...', null, null);
+  ensureMicInput().then(() => {
+    updateMicUi('Bas gitarını çal, seni dinliyorum.', null, null);
+    const tick = () => {
+      if (answered || quizType !== 'notadan-klavyeye-mic') { stopMicLoop(); return; }
+      micAnalyser.getFloatTimeDomainData(micData);
+      const freq = detectPitch(micData, micAudioCtx.sampleRate);
+      if (freq) {
+        const cents = 1200 * Math.log2(freq / current.freq);
+        updateMicUi(Math.abs(cents) <= 35 ? 'Çok yakın, sesi sabit tut!' : 'Duyuyorum, hedefe yaklaş.', cents, freq);
+        if (Math.abs(cents) <= 45) micDetectStreak++; else micDetectStreak = 0;
+        if (micDetectStreak >= 4) selectPlayedPitch(freq);
+      } else {
+        micDetectStreak = 0;
+        updateMicUi('Net bir bas sesi bekliyorum...', null, null);
+      }
+      micRaf = requestAnimationFrame(tick);
+    };
+    tick();
+  }).catch(err => {
+    updateMicUi('Mikrofon izni alınamadı.', null, null);
+    document.getElementById('message').textContent = err.message || 'Mikrofon açılamadı.';
+    document.getElementById('message').style.color = '#c75b39';
+  });
+}
+
+function selectPlayedPitch(freq) {
+  if (answered || quizType !== 'notadan-klavyeye-mic') return;
+  answered = true; interacted = true;
+  stopMicLoop();
+  showCorrectTarget();
+  updateMicUi('Doğru ses yakalandı!', 0, freq);
+  const msg = document.getElementById('message');
+  msg.textContent = '✓ Doğru! Bas gitarından gelen ses notayla eşleşti.'; msg.style.color = '#6b8c42';
+  correctCount++;
+  if (window.trackLog) window.trackLog(true);
+  document.getElementById('next-btn').disabled = false;
+  startAutoAdvance();
+  if (currentMode === 'practice') currentIndex++;
+}
+
 function handleFretClick(element, stringNum, fretNum) {
+  if (quizType === 'notadan-klavyeye-mic') return;
   if (answered) return;
   if (currentMode === 'race' && timeLeft <= 0) return;
 
@@ -1246,6 +1383,7 @@ function showFinalResults() {
   if (timerInterval) clearInterval(timerInterval);
   if (gameTimer) clearInterval(gameTimer);
   clearAutoTimer();
+  stopMicLoop();
 
   document.getElementById('exercise-area').style.display = 'none';
   document.getElementById('exercise-controls').style.display = 'none';
@@ -1299,15 +1437,19 @@ function nextQuestion() {
 
   clearAutoTimer(); answered = false;
   if (document.activeElement) document.activeElement.blur();
-  document.getElementById('message').textContent = quizType === 'notadan-klavyeye'
-    ? '🎵 Notayı incele ve klavye üzerinde doğru perdeye bas!'
-    : '🎵 Doğru cevabı seç ve öğrenmeye devam et!';
+  document.getElementById('message').textContent = quizType === 'notadan-klavyeye-mic'
+    ? '🎵 Notayı incele ve bas gitarınla bu sesi çal!'
+    : quizType === 'notadan-klavyeye'
+      ? '🎵 Notayı incele ve klavye üzerinde doğru perdeye bas!'
+      : '🎵 Doğru cevabı seç ve öğrenmeye devam et!';
   document.getElementById('message').style.color = '#8b6b4e';
   document.getElementById('next-btn').disabled = true;
 
-  if (quizType === 'notadan-klavyeye') {
+  if (quizType === 'notadan-klavyeye' || quizType === 'notadan-klavyeye-mic') {
+    stopMicLoop();
+    document.getElementById('mic-panel').style.display = quizType === 'notadan-klavyeye-mic' ? 'block' : 'none';
     document.querySelectorAll('#view-n2k .fret-btn').forEach(g => {
-      g.classList.remove('disabled');
+      g.classList.toggle('disabled', quizType === 'notadan-klavyeye-mic');
       const feedback = g.querySelector('.fret-feedback');
       if (feedback) feedback.remove();
     });
@@ -1339,6 +1481,7 @@ function nextQuestion() {
     });
   } else {
     drawQuestionStaff(current);
+    if (quizType === 'notadan-klavyeye-mic') startMicQuestion();
   }
 
   if (currentMode === 'practice') {
