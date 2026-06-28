@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <!-- ── TEMA SİSTEMİ ── -->
   <link rel="stylesheet" href="/theme.css">
   <script src="/theme.js"></script>
   <meta charset="UTF-8" />
@@ -595,12 +594,10 @@
     <div id="online-badges-row"></div>
   </header>
   <div id="app-wrap">
-    <!-- Setup Area Navigasyon Satırı (Çerçevenin Dışında) -->
-	<div id="setup-nav" class="nav-row">
+    <div id="setup-nav" class="nav-row">
 		<button class="back-to-menu-btn" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
 	</div>
 
-    <!-- Setup Area -->
     <div id="setup-area" class="filter-card">
       <div class="action-buttons-wrap">
         <button class="start-exercise-btn" id="startBtn" onclick="startExercise('practice')">Egzersize Başla (Zamansız) 🎯</button>
@@ -609,13 +606,11 @@
       </div>
     </div>
 
-    <!-- Düello Setup Area Navigasyon Satırı (Çerçevenin Dışında) -->
     <div id="duel-setup-nav" class="nav-row between" style="display:none;">
       <button class="back-to-menu-btn" onclick="backToMenu()">← Menüye Dön</button>
       <button class="back-to-menu-btn" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
     </div>
 
-    <!-- Düello Setup Area -->
     <div id="duel-setup-area" class="filter-card">
       <div class="top-bar" style="margin-bottom:.8rem;">
         <h2 style="font-family:'Playfair Display',serif;font-size:1.1rem;">⚔️ Online Düello</h2>
@@ -638,7 +633,6 @@
       <div class="string-buttons" id="duel-note-buttons" style="margin-top:8px; display:none;"></div>
     </div>
 
-    <!-- Düello Waiting Area -->
     <div id="duel-waiting-area" class="filter-card">
       <div class="top-bar" style="margin-bottom:.8rem;">
         <h2 style="font-family:'Playfair Display',serif;font-size:1.1rem;">⚔️ Davet Gönderildi</h2>
@@ -652,7 +646,6 @@
       <p style="font-size:.8rem;color:#b09070;text-align:center;">Rakibiniz daveti reddederse veya 30 saniye içinde cevap vermezse otomatik iptal olur.</p>
     </div>
 
-    <!-- Düello Game Area -->
     <div id="duel-game-area">
       <div class="nav-row between">
         <button class="back-to-menu-btn" onclick="leaveGame()">← Çık</button>
@@ -710,7 +703,6 @@
       </div>
     </div>
 
-    <!-- Exercise Area -->
     <div id="exercise-area">
       <div class="nav-row between">
         <button class="back-to-menu-btn" onclick="backToMenu()">← Menüye Dön</button>
@@ -779,7 +771,6 @@
       </div>
     </div>
 
-    <!-- Result Screen -->
     <div class="result-screen" id="result-screen">
       <h2 class="result-title">🎉 Test Tamamlandı!</h2>
       <div class="result-stats" id="result-stats"></div>
@@ -1315,7 +1306,7 @@
   let duelAudioCtx    = null;
   let duelMissCounts  = {};
 
-  function rndCode()){ return Math.floor(100000+Math.random()*900000).toString(); }
+  function rndCode(){ return Math.floor(100000+Math.random()*900000).toString(); }
   function shuf(a){ return [...a].sort(()=>Math.random()-.5); }
 
   function showArea(id){
