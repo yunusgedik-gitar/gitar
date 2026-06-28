@@ -494,7 +494,8 @@ window.sendChallenge = async function(toSid, toName){
   roomCode = rndCode();
 
   // Host tüm turların sorularını hazırlar
-  const questionDeck = buildQuestionDeck([...duelStrings], duelRounds);
+const totalQuestionsToBuild = duelSecs > 0 ? 50 : duelRounds;
+const questionDeck = buildQuestionDeck([...duelStrings], totalQuestionsToBuild);
 
   await set(ref(db,`duel_rooms/${roomCode}`),{
     host:   {sid:mySid, name:myName},
@@ -699,7 +700,7 @@ function showRoundResult(rState, qData){
       runTransaction(ref(db,`duel_rooms/${roomCode}`), room => {
         if(!room) return room;
         if(room.currentRoundNum !== currentRoundNum) return room; // Zaten güncellenmişse dokunma
-        const maxRounds = duelSecs > 0 ? 9999 : duelRounds;
+        const maxRounds = duelSecs > 0 ? 50 : duelRounds;
         if(nextNum > maxRounds){
           room.status = 'finished';
         } else {
