@@ -86,6 +86,28 @@
       flex-direction: column;
       gap: 10px;
     }
+    .mode-select-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 0.85rem;
+    }
+    .mode-card {
+      background: #fff;
+      border: 2px solid #e8e0d5;
+      border-radius: 16px;
+      padding: 14px 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: center;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .mode-card .mode-icon { font-size: 1.6rem; margin-bottom: 6px; display: block; }
+    .mode-card .mode-label { font-size: 0.82rem; font-weight: 700; color: #5a3e2b; line-height: 1.3; }
+    .mode-card.active { border-color: #d4a373; background: #fdf6ec; box-shadow: 0 4px 14px rgba(212,163,115,0.25); }
+    @media (hover: hover) {
+      .mode-card:hover:not(.active) { border-color: #d4c4b0; transform: translateY(-2px); }
+    }
     .start-exercise-btn {
       width: 100%;
       padding: 10px;
@@ -152,6 +174,13 @@
 
     .guitar-wrap { width: 100%; display: flex; justify-content: center; align-items: center; margin: 0 auto 0.5rem; }
     .guitar-wrap svg { display: block; width: 100%; max-width: 440px; height: auto; }
+    .fret-btn { cursor: pointer; transition: opacity 0.15s, transform 0.15s; -webkit-tap-highlight-color: transparent; }
+    .fret-btn.disabled { cursor: default; pointer-events: none; opacity: 0.2; }
+    .fret-btn .tap-zone { fill: transparent; stroke: transparent; }
+    .fret-btn .tap-ring { fill: #fff8ef; stroke: #d4a373; stroke-width: 1.8; opacity: 0; transition: opacity 0.15s; }
+    @media (hover: hover) {
+      .fret-btn:hover .tap-ring { opacity: 0.85; }
+    }
 
     .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1rem; }
     .choice-card { background: #fff; border: 2px solid #e8e0d5; border-radius: 16px; padding: 8px 10px 6px; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; position: relative; box-shadow: 0 2px 8px rgba(90,62,43,0.03); overflow: visible; -webkit-tap-highlight-color: transparent; outline: none; }
@@ -164,6 +193,27 @@
     .choice-card.correct { background: #eaf3de; border-color: #6b8c42; }
     .choice-card.wrong { background: #fdf0f0; border-color: #c75b39; }
     .choice-card.disabled { cursor: default; opacity: 0.92; }
+
+    .question-staff-card {
+      background: #fff;
+      border: 1.5px solid #e8e0d5;
+      border-radius: 20px;
+      padding: 1.35rem 1rem;
+      margin-bottom: 0.85rem;
+      box-shadow: 0 4px 20px rgba(90,62,43,0.04);
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    #question-staff {
+      width: 300px;
+      height: 110px;
+      overflow: visible;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    #question-staff svg { width: 100%; height: 100%; overflow: visible; }
 
     .message { text-align: center; font-size: 0.9rem; font-weight: 700; color: #8b6b4e; margin-bottom: 0.65rem; min-height: 22px; }
 
@@ -269,6 +319,16 @@
     <button class="back-to-menu-btn" onclick="window.location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
   </div>
   <div id="setup-area" class="filter-card">
+    <div class="mode-select-row">
+      <div class="mode-card active" id="mode-card-n2k" onclick="selectQuizMode('notadan-klavyeye')">
+        <span class="mode-icon">🎼 ➜ 🎸</span>
+        <span class="mode-label">Notadan Klavye'ye</span>
+      </div>
+      <div class="mode-card" id="mode-card-k2n" onclick="selectQuizMode('klavyeden-notaya')">
+        <span class="mode-icon">🎸 ➜ 🎼</span>
+        <span class="mode-label">Klavye'den Nota'ya</span>
+      </div>
+    </div>
     <div class="action-buttons-wrap">
       <button id="start-btn" class="start-exercise-btn" onclick="startExercise('practice')">Egzersize Başla (Zamansız) 🎯</button>
       <button id="race-btn" class="start-exercise-btn start-race-btn" onclick="startExercise('race')">Yarışmaya Başla (40 Saniye) 🏆</button>
@@ -404,6 +464,10 @@
         <button id="listen-btn" onclick="replay()">🔊 Dinle</button>
         <div class="timer-badge" id="timer-display" style="display:none;">Kalan Süre: 40</div>
       </div>
+
+      <div class="question-staff-card" id="question-staff-card">
+        <div id="question-staff"></div>
+      </div>
       
       <div class="hint-box" id="hint-text">
         💡 <span class="hint-string-badge">1</span> . Tel – <span class="hint-fret-text">I. Perde</span>
@@ -459,6 +523,24 @@
           <text   x="93" y="150" text-anchor="middle" fill="#5a3e2b" font-size="10" font-weight="700" font-family="Lato,sans-serif">5</text>
           <circle cx="93" cy="170" r="10" fill="#fff8ef" stroke="#d4a373" stroke-width="1.2"/>
           <text   x="93" y="174" text-anchor="middle" fill="#5a3e2b" font-size="10" font-weight="700" font-family="Lato,sans-serif">6</text>
+
+          <g class="fret-btn" data-string="1" data-fret="0" onclick="selectFretPosition(1,0)"><circle class="tap-zone" cx="116" cy="50" r="17"/><circle class="tap-ring" cx="116" cy="50" r="12"/></g>
+          <g class="fret-btn" data-string="1" data-fret="1" onclick="selectFretPosition(1,1)"><circle class="tap-zone" cx="155" cy="50" r="17"/><circle class="tap-ring" cx="155" cy="50" r="12"/></g>
+          <g class="fret-btn" data-string="1" data-fret="3" onclick="selectFretPosition(1,3)"><circle class="tap-zone" cx="328" cy="50" r="17"/><circle class="tap-ring" cx="328" cy="50" r="12"/></g>
+          <g class="fret-btn" data-string="2" data-fret="0" onclick="selectFretPosition(2,0)"><circle class="tap-zone" cx="116" cy="74" r="17"/><circle class="tap-ring" cx="116" cy="74" r="12"/></g>
+          <g class="fret-btn" data-string="2" data-fret="1" onclick="selectFretPosition(2,1)"><circle class="tap-zone" cx="155" cy="74" r="17"/><circle class="tap-ring" cx="155" cy="74" r="12"/></g>
+          <g class="fret-btn" data-string="2" data-fret="3" onclick="selectFretPosition(2,3)"><circle class="tap-zone" cx="328" cy="74" r="17"/><circle class="tap-ring" cx="328" cy="74" r="12"/></g>
+          <g class="fret-btn" data-string="3" data-fret="0" onclick="selectFretPosition(3,0)"><circle class="tap-zone" cx="116" cy="98" r="17"/><circle class="tap-ring" cx="116" cy="98" r="12"/></g>
+          <g class="fret-btn" data-string="3" data-fret="2" onclick="selectFretPosition(3,2)"><circle class="tap-zone" cx="243" cy="98" r="17"/><circle class="tap-ring" cx="243" cy="98" r="12"/></g>
+          <g class="fret-btn" data-string="4" data-fret="0" onclick="selectFretPosition(4,0)"><circle class="tap-zone" cx="116" cy="122" r="17"/><circle class="tap-ring" cx="116" cy="122" r="12"/></g>
+          <g class="fret-btn" data-string="4" data-fret="2" onclick="selectFretPosition(4,2)"><circle class="tap-zone" cx="243" cy="122" r="17"/><circle class="tap-ring" cx="243" cy="122" r="12"/></g>
+          <g class="fret-btn" data-string="4" data-fret="3" onclick="selectFretPosition(4,3)"><circle class="tap-zone" cx="328" cy="122" r="17"/><circle class="tap-ring" cx="328" cy="122" r="12"/></g>
+          <g class="fret-btn" data-string="5" data-fret="0" onclick="selectFretPosition(5,0)"><circle class="tap-zone" cx="116" cy="146" r="17"/><circle class="tap-ring" cx="116" cy="146" r="12"/></g>
+          <g class="fret-btn" data-string="5" data-fret="2" onclick="selectFretPosition(5,2)"><circle class="tap-zone" cx="243" cy="146" r="17"/><circle class="tap-ring" cx="243" cy="146" r="12"/></g>
+          <g class="fret-btn" data-string="5" data-fret="3" onclick="selectFretPosition(5,3)"><circle class="tap-zone" cx="328" cy="146" r="17"/><circle class="tap-ring" cx="328" cy="146" r="12"/></g>
+          <g class="fret-btn" data-string="6" data-fret="0" onclick="selectFretPosition(6,0)"><circle class="tap-zone" cx="116" cy="170" r="17"/><circle class="tap-ring" cx="116" cy="170" r="12"/></g>
+          <g class="fret-btn" data-string="6" data-fret="1" onclick="selectFretPosition(6,1)"><circle class="tap-zone" cx="155" cy="170" r="17"/><circle class="tap-ring" cx="155" cy="170" r="12"/></g>
+          <g class="fret-btn" data-string="6" data-fret="3" onclick="selectFretPosition(6,3)"><circle class="tap-zone" cx="328" cy="170" r="17"/><circle class="tap-ring" cx="328" cy="170" r="12"/></g>
 
           <circle id="fret-highlight" cx="0" cy="0" r="14" fill="#f4d03f" stroke="#d4ac0d" stroke-width="2.5" filter="url(#dotGlow)" opacity="0.95" style="display:none;pointer-events:none;"/>
           <text id="fret-highlight-q" x="0" y="0" text-anchor="middle" dominant-baseline="central" fill="#5a3000" font-size="11" font-weight="700" font-family="Lato,sans-serif" style="display:none;pointer-events:none;">?</text>
@@ -563,11 +645,18 @@ const TOTAL_QUESTIONS_COUNT = 12;
 let selectedStrings = new Set([1, 2, 3, 4, 5, 6]);
 let filteredNotes = [...NOTES];
 let currentMode = 'practice';
+let quizDirection = 'notadan-klavyeye';
 let gameTimer = null;
 let timeLeft = 40;
 
 let audioCtx=null, questions=[], currentIndex=0, current=null, answered=false, interacted=false, autoTimer=null;
 let correctCount=0, wrongCount=0, startTime=null, timerInterval=null;
+
+function selectQuizMode(direction) {
+  quizDirection = direction;
+  document.getElementById('mode-card-n2k').classList.toggle('active', direction === 'notadan-klavyeye');
+  document.getElementById('mode-card-k2n').classList.toggle('active', direction === 'klavyeden-notaya');
+}
 
 function toggleAllStrings() {
   const allBtn = document.getElementById('btn-all');
@@ -704,6 +793,15 @@ function playGuitar(freq) {
 
 function replay() { interacted = true; if (current) playGuitar(current.freq); }
 
+function setFretButtonsEnabled(enabled) {
+  document.querySelectorAll('#guitar-svg .fret-btn').forEach(btn => btn.classList.toggle('disabled', !enabled));
+}
+
+function hideHighlight() {
+  document.getElementById('fret-highlight').style.display = 'none';
+  document.getElementById('fret-highlight-q').style.display = 'none';
+}
+
 function moveHighlight(stringN, fretN) {
   const cx = FRET_CX[fretN], cy = STRING_CY[stringN];
   const dot = document.getElementById('fret-highlight');
@@ -711,6 +809,28 @@ function moveHighlight(stringN, fretN) {
   dot.setAttribute('cx', cx); dot.setAttribute('cy', cy);
   qtxt.setAttribute('x', cx); qtxt.setAttribute('y', cy);
   dot.style.display = ''; qtxt.style.display = '';
+}
+
+function drawQuestionStaff(noteObj) {
+  const div = document.getElementById('question-staff');
+  div.innerHTML = '';
+  try {
+    const { Renderer, Stave, StaveNote, Voice, Formatter } = Vex.Flow;
+    const renderer = new Renderer(div, Renderer.Backends.SVG);
+    renderer.resize(300, 110);
+    const ctx = renderer.getContext();
+    const stave = new Stave(30, -10, 240);
+    stave.addClef('treble').setContext(ctx).draw();
+    const note = new StaveNote({ keys: [noteObj.key], duration: 'w' });
+    if (note.keyProps && note.keyProps[0]) {
+      note.keyProps[0].line = noteObj.line;
+      note.keyProps[0].clef = 'treble';
+    }
+    const voice = new Voice({ num_beats: 4, beat_value: 4 });
+    voice.addTickables([note]);
+    new Formatter().joinVoices([voice]).format([voice], 170);
+    voice.draw(ctx, stave);
+  } catch(e) { console.log(e); }
 }
 
 function drawMiniStaff(div, noteObj) {
@@ -800,25 +920,36 @@ function nextQuestion() {
     current = pool[Math.floor(Math.random() * pool.length)];
   }
 
-  moveHighlight(current.string, current.fret);
-  document.getElementById('hint-text').innerHTML = `💡 <span class="hint-string-badge">${current.string}</span> . Tel – <span class="hint-fret-text">${ROMAN_FRETS[current.fret]}</span>`;
-
-  const allNames = ['Mi','Fa','Sol','La','Si','Do','Re'];
-  const wrongs = shuffle(allNames.filter(n => n !== current.name)).slice(0, 3);
-  const wrongNotes = wrongs.map(n => NOTES.find(note => note.name === n) || NOTES.find(note => note.name !== current.name));
-  const choices = shuffle([current, ...wrongNotes]);
   const box = document.getElementById('choices');
   box.innerHTML = '';
 
-  choices.forEach(noteObj => {
-    const card = document.createElement('div');
-    card.className = 'choice-card'; card.dataset.choice = noteObj.name;
-    card.onclick = () => selectChoice(card, noteObj.name);
-    const staffDiv = document.createElement('div'); staffDiv.className = 'choice-staff';
-    card.appendChild(staffDiv);
-    box.appendChild(card);
-    drawMiniStaff(staffDiv, noteObj);
-  });
+  if (quizDirection === 'notadan-klavyeye') {
+    hideHighlight();
+    setFretButtonsEnabled(true);
+    document.getElementById('question-staff-card').style.display = 'flex';
+    document.getElementById('hint-text').innerHTML = '🎵 Notayı incele ve klavye üzerinde doğru perdeye bas!';
+    drawQuestionStaff(current);
+  } else {
+    setFretButtonsEnabled(false);
+    document.getElementById('question-staff-card').style.display = 'none';
+    moveHighlight(current.string, current.fret);
+    document.getElementById('hint-text').innerHTML = `💡 <span class="hint-string-badge">${current.string}</span> . Tel – <span class="hint-fret-text">${ROMAN_FRETS[current.fret]}</span>`;
+
+    const allNames = ['Mi','Fa','Sol','La','Si','Do','Re'];
+    const wrongs = shuffle(allNames.filter(n => n !== current.name)).slice(0, 3);
+    const wrongNotes = wrongs.map(n => NOTES.find(note => note.name === n) || NOTES.find(note => note.name !== current.name));
+    const choices = shuffle([current, ...wrongNotes]);
+
+    choices.forEach(noteObj => {
+      const card = document.createElement('div');
+      card.className = 'choice-card'; card.dataset.choice = noteObj.name;
+      card.onclick = () => selectChoice(card, noteObj.name);
+      const staffDiv = document.createElement('div'); staffDiv.className = 'choice-staff';
+      card.appendChild(staffDiv);
+      box.appendChild(card);
+      drawMiniStaff(staffDiv, noteObj);
+    });
+  }
 
   if (currentMode !== 'race') {
     document.getElementById('progress-fill').style.width = (currentIndex / TOTAL_QUESTIONS_COUNT * 100) + '%';
@@ -853,6 +984,31 @@ function selectChoice(card, name) {
   if (currentMode !== 'race') currentIndex++;
 }
 
+function selectFretPosition(stringN, fretN) {
+  if (answered || quizDirection !== 'notadan-klavyeye') return;
+  answered = true; interacted = true;
+  setFretButtonsEnabled(false);
+  const msg = document.getElementById('message');
+  const isCorrect = stringN === current.string && fretN === current.fret;
+  moveHighlight(current.string, current.fret);
+
+  if (isCorrect) {
+    msg.textContent = '✓ Doğru! İyi iş çıkardın, devam et!'; msg.style.color = '#6b8c42';
+    playGuitar(current.freq);
+    correctCount++;
+    if (window.trackLog) window.trackLog(true);
+    document.getElementById('next-btn').disabled = false;
+    startAutoAdvance();
+  } else {
+    msg.textContent = '✗ ' + ERR[Math.floor(Math.random() * ERR.length)] + ' — Doğrusu: ' + current.string + '. tel, ' + ROMAN_FRETS[current.fret];
+    msg.style.color = '#c75b39';
+    wrongCount++;
+    if (window.trackLog) window.trackLog(false, current.string+'-'+current.fret, current.name+' ('+current.string+'. tel)');
+    document.getElementById('next-btn').disabled = false;
+  }
+  if (currentMode !== 'race') currentIndex++;
+}
+
 function resetQuiz(showSetup = true) {
   clearAutoTimer();
   if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
@@ -872,7 +1028,7 @@ function resetQuiz(showSetup = true) {
   correctCount = 0; wrongCount = 0; currentIndex = 0; answered = false; interacted = false;
   const pool = filteredNotes.length > 0 ? filteredNotes : NOTES;
   questions = generateRandomQuizSet(pool, TOTAL_QUESTIONS_COUNT);
-  document.getElementById('hint-text').innerHTML = '💡 Soruyu incele ve doğru notayı seç';
+  document.getElementById('hint-text').innerHTML = quizDirection === 'notadan-klavyeye' ? '🎵 Notayı incele ve klavye üzerinde doğru perdeye bas!' : '💡 Soruyu incele ve doğru notayı seç';
   if (currentMode === 'race') {
     timeLeft = 40;
     const timerEl = document.getElementById('timer-display');
