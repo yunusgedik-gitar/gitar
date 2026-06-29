@@ -382,7 +382,7 @@
     .lb-pct { font-size: .9rem; font-weight: 700; color: var(--gold); }
 
 
-    /* ── Kıskanma sistemi ── */
+    /* ── Kıskanma & Acıma sistemi ── */
     .envy-btn {
       display: inline-flex; align-items: center; gap: 4px;
       padding: 3px 10px; font-size: .72rem; font-weight: 700;
@@ -411,39 +411,55 @@
       color: var(--red) !important;
       border-color: #f5c0c0 !important;
     }
+    .pity-btn {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 10px; font-size: .72rem; font-weight: 700;
+      border-radius: 20px; border: 1.5px solid #7a5c2e;
+      background: #fdf6e8; color: #7a5c2e;
+      cursor: pointer; font-family: inherit;
+      transition: all .12s; white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .pity-btn:hover { background: #f5e8c8; }
+    .pity-btn-undone {
+      background: #e8f3fb !important;
+      color: #1a5fa8 !important;
+      border-color: #9ac4e8 !important;
+      font-weight: 700;
+    }
+    .pity-btn-undone:hover {
+      background: #fdf6e8 !important;
+      color: #7a5c2e !important;
+      border-color: #c8a86a !important;
+    }
     .envy-lb-count {
       display: inline-flex; align-items: center;
       font-size: .68rem; font-weight: 700; color: #a32d2d;
       background: #fdf0f0; border: 1px solid #f5c0c0;
-      border-radius: 10px; padding: 1px 7px; margin-left: 6px;
+      border-radius: 10px; padding: 1px 7px; margin-left: 4px;
       vertical-align: middle;
     }
-
-    .envy-count-badge {
+    .pity-lb-count {
+      display: inline-flex; align-items: center;
+      font-size: .68rem; font-weight: 700; color: #7a5c2e;
+      background: #fdf6e8; border: 1px solid #e0c890;
+      border-radius: 10px; padding: 1px 7px; margin-left: 4px;
+      vertical-align: middle;
+    }
+    .social-score-bar {
+      display: none; gap: 8px; flex-wrap: wrap; margin-top: 4px; align-items: center;
+    }
+    .social-score-pill {
       display: inline-flex; align-items: center; gap: 4px;
-      font-size: .72rem; font-weight: 700; color: #a32d2d;
-      background: #fdf0f0; border: 1px solid #f5c0c0;
-      border-radius: 20px; padding: 3px 10px; margin-top: 0;
+      font-size: .72rem; font-weight: 700;
+      border-radius: 20px; padding: 3px 11px;
     }
-
-    #envy-notification {
-      display: none;
-      align-items: center; gap: 6px;
-      background: #fdf0f0;
-      border: 1px solid #f5c0c0;
-      border-radius: 20px;
-      padding: 4px 11px;
-      font-size: .75rem; font-weight: 600; color: #a32d2d;
-      white-space: nowrap;
-      animation: envyPop .3s ease;
-    }
+    .social-score-pill.envy-pill { background: #fdf0f0; color: #a32d2d; border: 1px solid #f5c0c0; }
+    .social-score-pill.pity-pill  { background: #fdf6e8; color: #7a5c2e; border: 1px solid #e0c890; }
     @keyframes envyPop {
       from { opacity:0; transform:translateY(-6px); }
       to   { opacity:1; transform:translateY(0); }
     }
-    .envy-notif-icon { font-size: .85rem; }
-    .envy-notif-title { display: none; }
-    .envy-notif-names { font-size: .75rem; font-weight: 600; color: #a32d2d; }
 
     .save-toast {
       position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px);
@@ -498,7 +514,9 @@
         <div class="welcome-info">
           <span class="welcome-name" id="welcome-name">Gitar Akademisi</span>
           <div class="welcome-badges" id="welcome-badges"></div>
-          <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:4px;">
+          <div class="social-score-bar" id="social-score-bar">
+            <span class="social-score-pill envy-pill" id="social-envy-pill">🙄 Kıskanma: 0</span>
+            <span class="social-score-pill pity-pill"  id="social-pity-pill">😢 Zavallı: 0</span>
           </div>
         </div>
         <span id="_gs_active_count" style="display:none;">🟢</span>
@@ -520,7 +538,6 @@
         <button class="panel-go-btn" id="grade-listesi-btn" onclick="openRepertoire(event)"><span id="grade-listesi-icon">📜</span> Grade Listesi</button>
         <button class="panel-go-btn" onclick="openStats(event)">📊 İstatistiklerim</button>
       </div>
-      <div id="envy-notification-bar" style="display:none;align-items:center;gap:8px;background:#fff3f3;border:1px solid #f5c6c6;border-radius:12px;padding:7px 16px;font-size:.82rem;color:#a33;font-weight:600;"></div>
       <div id="grade-lock-tooltip" class="lock-tooltip"></div>
     </div>
 
@@ -2193,37 +2210,53 @@ async function renderLeaderboard() {
     return { sid, score, maxGrade };
   }).sort((a,b) => b.score - a.score);
 
-  // Firebase'den kıskanılma sayılarını çek
+  // Firebase'den kıskanılma ve acıma sayılarını çek
   let envyCounts = {};
+  let pityCounts = {};
   try {
     const envySnap = await get(ref(db, 'envy'));
     const envyData = envySnap.val() || {};
-    Object.entries(envyData).forEach(([sid, val]) => {
-      envyCounts[sid] = val.total || 0;
-    });
+    Object.entries(envyData).forEach(([sid, val]) => { envyCounts[sid] = val.total || 0; });
+  } catch(e) {}
+  try {
+    const pitySnap = await get(ref(db, 'pity'));
+    const pityData = pitySnap.val() || {};
+    Object.entries(pityData).forEach(([sid, val]) => { pityCounts[sid] = val.total || 0; });
   } catch(e) {}
 
   const myRank = meObj ? rows.findIndex(r => r.sid === meObj.id) : -1;
   const _today  = new Date().toISOString().slice(0,10);
   const _daily  = meObj ? JSON.parse(localStorage.getItem(`envy_daily_${meObj.id}`) || '{"date":"","targets":[]}') : {date:'',targets:[]};
   const _envied = (_daily.date === _today) ? _daily.targets : [];
+  const _pdaily = meObj ? JSON.parse(localStorage.getItem(`pity_daily_${meObj.id}`) || '{"date":"","targets":[]}') : {date:'',targets:[]};
+  const _pitied = (_pdaily.date === _today) ? _pdaily.targets : [];
 
   lb.innerHTML = rows.map((r, i) => {
     const isMe = meObj && r.sid === meObj.id;
+    const tName = studentName(r.sid).replace(/'/g, "\'");
     const canEnvy = meObj && !isMe && meObj.id !== TEACHER_ID && i < myRank && myRank > 0;
-    const already = _envied.includes(r.sid);
+    const alreadyEnvied = _envied.includes(r.sid);
     const envyBtn = canEnvy
-      ? already
-        ? `<button class="envy-btn envy-btn-undone" onclick="sendEnvy('${r.sid}','${studentName(r.sid).replace(/'/g,"\\'")}','general')">✓ Geri Al</button>`
-        : `<button class="envy-btn" onclick="sendEnvy('${r.sid}','${studentName(r.sid).replace(/'/g,"\\'")}','general')">😤 Kıskan</button>`
+      ? alreadyEnvied
+        ? `<button class="envy-btn envy-btn-undone" onclick="sendEnvy('${r.sid}','${tName}','general')">✓ Geri Al</button>`
+        : `<button class="envy-btn" onclick="sendEnvy('${r.sid}','${tName}','general')">😤 Kıskan</button>`
+      : '';
+    const canPity = meObj && !isMe && meObj.id !== TEACHER_ID && myRank >= 0 && i > myRank;
+    const alreadyPitied = _pitied.includes(r.sid);
+    const pityBtn = canPity
+      ? alreadyPitied
+        ? `<button class="pity-btn pity-btn-undone" onclick="sendPity('${r.sid}','${tName}','general')">✓ Geri Al</button>`
+        : `<button class="pity-btn" onclick="sendPity('${r.sid}','${tName}','general')">😢 Acı</button>`
       : '';
     const eCount = envyCounts[r.sid] || 0;
+    const pCount = pityCounts[r.sid] || 0;
     const envyBadge = eCount > 0 ? `<span class="envy-lb-count" title="${eCount} kişi kıskandı">🙄 ${eCount}</span>` : '';
+    const pityBadge = pCount > 0 ? `<span class="pity-lb-count" title="${pCount} kişi acıdı">😢 ${pCount}</span>` : '';
     return `<div class="lb-row ${isMe ? 'me' : ''}" id="${isMe ? 'lb-me-row' : ''}">
       <div class="lb-rank">${i+1}</div>
-      <div class="lb-name">${studentName(r.sid)}<span class="lb-grade">Grade ${r.maxGrade}</span>${envyBadge}</div>
+      <div class="lb-name">${studentName(r.sid)}<span class="lb-grade">Grade ${r.maxGrade}</span>${envyBadge}${pityBadge}</div>
       <div class="lb-pct">${(r.score*100).toFixed(1)} puan</div>
-      ${envyBtn}
+      ${envyBtn}${pityBtn}
     </div>`;
   }).join('');
 
@@ -2464,32 +2497,50 @@ async function renderCategoryLeaderboard(catId) {
   const _today2  = new Date().toISOString().slice(0,10);
   const _daily2  = meObj ? JSON.parse(localStorage.getItem(`envy_daily_${meObj.id}`) || '{"date":"","targets":[]}') : {date:'',targets:[]};
   const _envied2 = (_daily2.date === _today2) ? _daily2.targets : [];
+  const _pdaily2 = meObj ? JSON.parse(localStorage.getItem(`pity_daily_${meObj.id}`) || '{"date":"","targets":[]}') : {date:'',targets:[]};
+  const _pitied2 = (_pdaily2.date === _today2) ? _pdaily2.targets : [];
 
-  // Firebase'den kıskanılma sayıları
+  // Firebase'den kıskanılma ve acıma sayıları
   let envyCounts2 = {};
+  let pityCounts2 = {};
   try {
     const envySnap2 = await get(ref(db, 'envy'));
     const envyData2 = envySnap2.val() || {};
     Object.entries(envyData2).forEach(([sid, val]) => { envyCounts2[sid] = val.total || 0; });
   } catch(e) {}
+  try {
+    const pitySnap2 = await get(ref(db, 'pity'));
+    const pityData2 = pitySnap2.val() || {};
+    Object.entries(pityData2).forEach(([sid, val]) => { pityCounts2[sid] = val.total || 0; });
+  } catch(e) {}
 
   lb.innerHTML = rows.map((r, i) => {
     const isMe  = meObj && r.sid === meObj.id;
     const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}`;
+    const tName2 = studentName(r.sid).replace(/'/g, "\'");
     const canEnvy = meObj && !isMe && meObj.id !== TEACHER_ID && i < myCatRank && myCatRank > 0;
     const already2 = _envied2.includes(r.sid);
     const envyBtn = canEnvy
       ? already2
-        ? `<button class="envy-btn envy-btn-undone" onclick="sendEnvy('${r.sid}','${studentName(r.sid).replace(/'/g,"\\'")}','${catId}')">✓ Geri Al</button>`
-        : `<button class="envy-btn" onclick="sendEnvy('${r.sid}','${studentName(r.sid).replace(/'/g,"\\'")}','${catId}')">😤 Kıskan</button>`
+        ? `<button class="envy-btn envy-btn-undone" onclick="sendEnvy('${r.sid}','${tName2}','${catId}')">✓ Geri Al</button>`
+        : `<button class="envy-btn" onclick="sendEnvy('${r.sid}','${tName2}','${catId}')">😤 Kıskan</button>`
+      : '';
+    const canPity = meObj && !isMe && meObj.id !== TEACHER_ID && myCatRank >= 0 && i > myCatRank;
+    const alreadyPitied2 = _pitied2.includes(r.sid);
+    const pityBtn2 = canPity
+      ? alreadyPitied2
+        ? `<button class="pity-btn pity-btn-undone" onclick="sendPity('${r.sid}','${tName2}','${catId}')">✓ Geri Al</button>`
+        : `<button class="pity-btn" onclick="sendPity('${r.sid}','${tName2}','${catId}')">😢 Acı</button>`
       : '';
     const eCount2 = envyCounts2[r.sid] || 0;
+    const pCount2 = pityCounts2[r.sid] || 0;
     const envyBadge2 = eCount2 > 0 ? `<span class="envy-lb-count" title="${eCount2} kişi kıskandı">🙄 ${eCount2}</span>` : '';
+    const pityBadge2 = pCount2 > 0 ? `<span class="pity-lb-count" title="${pCount2} kişi acıdı">😢 ${pCount2}</span>` : '';
     return `<div class="lb-row ${isMe ? 'me' : ''}" id="${isMe ? 'lb-me-cat-row' : ''}">
       <div class="lb-rank">${medal}</div>
-      <div class="lb-name">${studentName(r.sid)}<span class="lb-grade" style="color:${cat.color};">${cat.emoji} ${cat.label}</span>${envyBadge2}</div>
+      <div class="lb-name">${studentName(r.sid)}<span class="lb-grade" style="color:${cat.color};">${cat.emoji} ${cat.label}</span>${envyBadge2}${pityBadge2}</div>
       <div class="lb-pct">${(r.score * 100).toFixed(1)} puan</div>
-      ${envyBtn}
+      ${envyBtn}${pityBtn2}
     </div>`;
   }).join('');
 
@@ -2534,6 +2585,7 @@ window.sendEnvy = async function(targetSid, targetName, boardId) {
       // Butonu eski haline döndür
       document.querySelectorAll('.envy-btn').forEach(btn => {
         if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(`'${targetSid}'`)) {
+          btn.classList.remove('envy-btn-undone');
           btn.disabled = false;
           btn.textContent = '😤 Kıskan';
         }
@@ -2573,36 +2625,110 @@ window.sendEnvy = async function(targetSid, targetName, boardId) {
     });
 
     showSaveToast && showSaveToast();
-    pushNews(`😤 ${meObj.name}, ${targetName} kişisini kıskandı!`);
+    // İsim vermeden, sadece toplam ile bildirim
+    const envyTotalRef2 = ref(db, `envy/${targetSid}/total`);
+    const envyTotalSnap2 = await get(envyTotalRef2);
+    const envyNewTotal = envyTotalSnap2.val() || 0;
+    pushNews(`😤 Biri ${targetName} kişisini kıskandı! Şu ana kadar ${targetName} kişisini ${envyNewTotal} kişi kıskandı.`);
   } catch(e) { console.error('Kıskanma hatası:', e); }
 };
 
-// loadEnvyData → module script'in SONUNDA db hazır olduktan sonra tanımlanıyor (aşağıya bak)
+// ══════════════════════════════════════════════════════════
+// ACIMA SİSTEMİ
+// Firebase path: pity/{targetSid}/from/{mySid} = {ts}
+//                pity/{targetSid}/total = sayı
+// Günlük limit: localStorage'da tarih+targets tutulur
+// ══════════════════════════════════════════════════════════
+
+window.sendPity = async function(targetSid, targetName, boardId) {
+  const meObj = getMe();
+  if (!meObj || meObj.id === TEACHER_ID) return;
+
+  const today  = new Date().toISOString().slice(0, 10);
+  const lkKey  = `pity_daily_${meObj.id}`;
+  let daily    = JSON.parse(localStorage.getItem(lkKey) || '{"date":"","count":0,"targets":[]}');
+  if (daily.date !== today) { daily = { date: today, count: 0, targets: [] }; }
+
+  const alreadyPitied = daily.targets.includes(targetSid);
+
+  // Geri alma
+  if (alreadyPitied) {
+    try {
+      await remove(ref(db, `pity/${targetSid}/from/${meObj.id}`));
+      const totalRef = ref(db, `pity/${targetSid}/total`);
+      const snap = await get(totalRef);
+      const cur  = snap.val() || 0;
+      if (cur > 0) await set(totalRef, cur - 1);
+
+      daily.count = Math.max(0, daily.count - 1);
+      daily.targets = daily.targets.filter(t => t !== targetSid);
+      localStorage.setItem(lkKey, JSON.stringify(daily));
+
+      document.querySelectorAll('.pity-btn').forEach(btn => {
+        if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(`'${targetSid}'`)) {
+          btn.classList.remove('pity-btn-undone');
+          btn.disabled = false;
+          btn.textContent = '😢 Acı';
+        }
+      });
+    } catch(e) { console.error('Acıma geri alma hatası:', e); }
+    return;
+  }
+
+  // Günlük limit
+  if (daily.count >= 3) {
+    alert('Günde en fazla 3 kişiye acıyabilirsin! 😅 Yarın tekrar dene.');
+    return;
+  }
+
+  // Firebase'e yaz
+  try {
+    await set(ref(db, `pity/${targetSid}/from/${meObj.id}`), { ts: Date.now() });
+    const totalRef = ref(db, `pity/${targetSid}/total`);
+    const snap = await get(totalRef);
+    const newTotal = (snap.val() || 0) + 1;
+    await set(totalRef, newTotal);
+
+    daily.count++;
+    daily.targets.push(targetSid);
+    localStorage.setItem(lkKey, JSON.stringify(daily));
+
+    document.querySelectorAll('.pity-btn').forEach(btn => {
+      if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(`'${targetSid}'`)) {
+        btn.classList.add('pity-btn-undone');
+        btn.disabled = false;
+        btn.textContent = '✓ Geri Al';
+      }
+    });
+
+    showSaveToast && showSaveToast();
+    pushNews(`😢 Biri ${targetName} kişisine acıdı! Şu ana kadar ${targetName} kişisine ${newTotal} kişi acımıştır.`);
+  } catch(e) { console.error('Acıma hatası:', e); }
+};
 
 // ✅ db hazır olduktan sonra window'a bağla (module scope sorununu çözer)
 window.loadEnvyData = function(sid) {
   if (!sid || sid === TEACHER_ID) return;
+  // Kıskanma skoru
   try {
-    onValue(ref(db, `envy/${sid}`), (snap) => {
-      const data = snap.val();
-
-      // Son 24 saatte kıskanılanlar
-      const fromEntries = (data && data.from) ? Object.values(data.from) : [];
-      const now24 = Date.now() - 24 * 60 * 60 * 1000;
-      const recentEnvies = fromEntries.filter(e => e.ts > now24);
-
-      const barEl = document.getElementById('envy-notification-bar');
-      if (barEl) {
-        if (recentEnvies.length > 0) {
-          const names = recentEnvies.map(e => `<strong>${e.name}</strong>`).join(', ');
-          barEl.innerHTML = `🙄 ${names} seni kıskanıyor!`;
-          barEl.style.display = 'flex';
-        } else {
-          barEl.style.display = 'none';
-        }
-      }
+    onValue(ref(db, `envy/${sid}/total`), (snap) => {
+      const total = snap.val() || 0;
+      const bar   = document.getElementById('social-score-bar');
+      const pill  = document.getElementById('social-envy-pill');
+      if (pill) pill.textContent = `🙄 Kıskanma: ${total}`;
+      if (bar && total > 0) bar.style.display = 'flex';
     });
-  } catch(e) { console.error('Kıskanma verisi yüklenemedi:', e); }
+  } catch(e) { console.error('Kıskanma skoru yüklenemedi:', e); }
+  // Acıma skoru
+  try {
+    onValue(ref(db, `pity/${sid}/total`), (snap) => {
+      const total = snap.val() || 0;
+      const bar   = document.getElementById('social-score-bar');
+      const pill  = document.getElementById('social-pity-pill');
+      if (pill) pill.textContent = `😢 Zavallı: ${total}`;
+      if (bar && total > 0) bar.style.display = 'flex';
+    });
+  } catch(e) { console.error('Acıma skoru yüklenemedi:', e); }
 };
 
 // Eğer openDashboard zaten çağrıldıysa (sayfa yüklenirken me hazır) hemen çalıştır
