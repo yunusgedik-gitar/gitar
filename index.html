@@ -217,7 +217,9 @@
     
     .logout-btn { font-size: .78rem; color: var(--muted); background: none; border: 1px solid var(--border); padding: 6px 14px; border-radius: 20px; cursor: pointer; font-family: inherit; transition: all .15s; }
     .logout-btn:hover { background: var(--red-bg); color: var(--red); border-color: #e8b8b8; }
-    #theme-toggle { font-size: .78rem !important; padding: 6px 14px !important; border-radius: 20px !important; line-height: 1 !important; }
+    /* Theme toggle – logout-btn ile aynı boyut */
+    #theme-toggle { padding: 3px 10px !important; border-radius: 20px !important; gap: 2px !important; font-size: inherit !important; box-shadow: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; border: 1px solid var(--border) !important; background: none !important; }
+    #theme-toggle .th-icon { width: 20px !important; height: 20px !important; font-size: .85rem !important; border-radius: 50% !important; }
 
     .section-title { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 700; margin: 1rem 0 1.2rem 0; letter-spacing: 0.02em; color: var(--brown); }
 
@@ -461,6 +463,19 @@
       from { opacity:0; transform:translateY(-6px); }
       to   { opacity:1; transform:translateY(0); }
     }
+    /* Grade ilerleme halkaları */
+    .grade-rings-row {
+      display: none; gap: 8px; flex-wrap: wrap; margin-top: 6px; align-items: center;
+    }
+    .grade-ring-wrap {
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      cursor: default;
+    }
+    .grade-ring-svg { display: block; }
+    .grade-ring-label {
+      font-size: .58rem; font-weight: 700; color: var(--muted);
+      text-align: center; letter-spacing: .02em; line-height: 1;
+    }
 
     .save-toast {
       position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px);
@@ -515,6 +530,7 @@
         <div class="welcome-info">
           <span class="welcome-name" id="welcome-name">Gitar Akademisi</span>
           <div class="welcome-badges" id="welcome-badges"></div>
+          <div class="grade-rings-row" id="grade-rings-row"></div>
           <div class="social-score-bar" id="social-score-bar">
             <span class="social-score-pill envy-pill" id="social-envy-pill">🙄 Kıskanma: 0</span>
             <span class="social-score-pill pity-pill"  id="social-pity-pill">😢 Zavallı: 0</span>
@@ -2345,7 +2361,39 @@ window.updateWelcomeCard = async function(sid) {
   checkTelAccess(sid);
   checkDeneyselAccess(sid);
   loadEnvyData(sid);
+  renderGradeRings(sid);
 };
+
+// Grade ilerleme halkalarını welcome bar'da göster
+function renderGradeRings(sid) {
+  const row = document.getElementById('grade-rings-row');
+  if (!row) return;
+  const grades = Object.keys(repProgress[sid] || {}).sort((a,b) => +a - +b);
+  if (!grades.length) { row.style.display = 'none'; return; }
+
+  const R = 18, STROKE = 3.5, CX = 22, CY = 22, SIZE = 44;
+  const circ = 2 * Math.PI * R;
+
+  row.innerHTML = grades.map(g => {
+    const pct = calcPct(sid, g);
+    const filled = circ * pct;
+    const color = pct >= 1 ? '#3b6d11' : pct > 0 ? '#b8892a' : '#d0c8be';
+    const pctLabel = Math.round(pct * 100);
+    return `<div class="grade-ring-wrap" title="Grade ${g}: %${pctLabel}">
+      <svg class="grade-ring-svg" width="${SIZE}" height="${SIZE}" viewBox="0 0 ${SIZE} ${SIZE}">
+        <circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="#e2d9cc" stroke-width="${STROKE}"/>
+        <circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="${color}" stroke-width="${STROKE}"
+          stroke-dasharray="${filled} ${circ}" stroke-dashoffset="0"
+          stroke-linecap="round"
+          transform="rotate(-90 ${CX} ${CY})"/>
+        <text x="${CX}" y="${CY+1}" text-anchor="middle" dominant-baseline="middle"
+          font-size="8" font-weight="700" fill="${color}" font-family="DM Sans,sans-serif">%${pctLabel}</text>
+      </svg>
+      <div class="grade-ring-label">G${g}</div>
+    </div>`;
+  }).join('');
+  row.style.display = 'flex';
+}
 
 // Modül yüklenirken bekleyen avatar güncellemesini tetikle
 if (window._pendingAvatarUpdate) {
