@@ -2803,8 +2803,35 @@ if (window.me && window.me.id) {
 (function initChat() {
 
   // ── Yardımcılar ──
-  const WORD_LIMIT = 100;
+  const CHAR_PER_PIECE = 5;   // Her tamamlanan eser başına karakter hakkı
+  const BASE_CHAR_LIMIT = 50; // Grade'i olmayan ama yazma hakkı olan öğrenciler için taban
   const CHAT_KEEP_MS = 24 * 60 * 60 * 1000; // 24 saat
+
+  // Öğrencinin tüm grade'lerindeki tamamlanmış eser sayısını say
+  function getCompletedPieceCount(sid) {
+    const prog = (typeof repProgress !== 'undefined' ? repProgress : {});
+    const entry = prog[sid] || {};
+    let total = 0;
+    Object.keys(entry).forEach(g => {
+      const grade = entry[g];
+      if (!grade) return;
+      // Standart eserler
+      const pieces = (typeof GRADE_PIECES !== 'undefined' ? (GRADE_PIECES[g] || []) : []);
+      const removed = grade.removedIndices || [];
+      (grade.completed || []).forEach((v, i) => {
+        if (!removed.includes(i) && v) total++;
+      });
+      // Custom eserler
+      (grade.customPieces || []).forEach(p => { if (p && (p.done || p.status === 1)) total++; });
+    });
+    return total;
+  }
+
+  function getCharLimit(sid) {
+    if (!sid || sid === TEACHER_ID || isModerator(sid)) return Infinity;
+    const pieces = getCompletedPieceCount(sid);
+    return BASE_CHAR_LIMIT + pieces * CHAR_PER_PIECE;
+  }
 
   function getMyGrade() {
     const meObj = getMe();
@@ -2827,24 +2854,24 @@ if (window.me && window.me.id) {
     return getMyGrade() >= 1;
   }
 
-  function getWordCount(text) {
-    return text.trim().split(/\s+/).filter(Boolean).length;
+  function getCharCount(text) {
+    return text.trim().length;
   }
 
   function getTodayKey() { return new Date().toISOString().slice(0, 10); }
 
-  function getUsedWords(sid) {
-    const key = `chat_words_${sid}_${getTodayKey()}`;
+  function getUsedChars(sid) {
+    const key = `chat_chars_${sid}_${getTodayKey()}`;
     return parseInt(localStorage.getItem(key) || '0');
   }
 
-  function addUsedWords(sid, count) {
-    const key = `chat_words_${sid}_${getTodayKey()}`;
-    const cur = getUsedWords(sid);
+  function addUsedChars(sid, count) {
+    const key = `chat_chars_${sid}_${getTodayKey()}`;
+    const cur = getUsedChars(sid);
     localStorage.setItem(key, cur + count);
   }
 
-  function getRemainingWords(sid) { return Math.max(0, WORD_LIMIT - getUsedWords(sid)); }
+  function getRemainingChars(sid) { return Math.max(0, getCharLimit(sid) - getUsedChars(sid)); }
 
   function formatTime(ts) {
     const d = new Date(ts);
@@ -3001,12 +3028,14 @@ if (window.me && window.me.id) {
       }
     }, 100);
 
-    // Kelime limiti göster
+    // Karakter limiti göster
     function updateWordLimit() {
       if (!meObj || meObj.id === TEACHER_ID || isModerator(meObj.id)) return;
-      const rem = getRemainingWords(meObj.id);
-      wlText.textContent = `${rem} / ${WORD_LIMIT} kelime kaldı`;
-      wlDiv.className = 'chat-word-limit' + (rem < 50 ? ' danger' : rem < 150 ? ' warn' : '');
+      const limit = getCharLimit(meObj.id);
+      const rem   = getRemainingChars(meObj.id);
+      const pieces = getCompletedPieceCount(meObj.id);
+      wlText.textContent = `${rem} / ${limit} karakter kaldı · ${pieces} eser × ${CHAR_PER_PIECE}`;
+      wlDiv.className = 'chat-word-limit' + (rem < 20 ? ' danger' : rem < 60 ? ' warn' : '');
       sendBtn.disabled = rem <= 0;
     }
 
@@ -3020,15 +3049,15 @@ if (window.me && window.me.id) {
     async function sendGeneral() {
       const text = input.value.trim();
       if (!text || !meObj) return;
-      const wc = getWordCount(text);
+      const cc = getCharCount(text);
       if (meObj.id !== TEACHER_ID && !isModerator(meObj.id)) {
-        const rem = getRemainingWords(meObj.id);
-        if (wc > rem) {
+        const rem = getRemainingChars(meObj.id);
+        if (cc > rem) {
           input.style.borderColor = '#e24b4a';
           setTimeout(() => { input.style.borderColor = ''; }, 1200);
           return;
         }
-        addUsedWords(meObj.id, wc);
+        addUsedChars(meObj.id, cc);
       }
       sendBtn.disabled = true;
       try {
@@ -3967,7 +3996,7 @@ async function initLeaderboard() {
       🔒 Genel sohbete yazabilmek için en az <b>Grade 1</b>'e ulaşman gerekiyor.
     </div>
     <div id="general-word-limit" class="chat-word-limit" style="display:none;">
-      <span>Günlük kelime hakkı</span>
+      <span>Günlük karakter hakkı</span>
       <span id="word-limit-text">500 / 500</span>
     </div>
     <div class="chat-input-area" id="general-input-area" style="display:none;">
