@@ -499,8 +499,6 @@
           <span class="welcome-name" id="welcome-name">Gitar Akademisi</span>
           <div class="welcome-badges" id="welcome-badges"></div>
           <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:4px;">
-            <div id="envy-notification"></div>
-            <div id="envy-total-badge" style="display:none;" class="envy-count-badge">🥰 Bugüne kadar <span id="envy-total-count">0</span> kişi kıskandı</div>
           </div>
         </div>
         <span id="_gs_active_count" style="display:none;">🟢</span>
@@ -517,9 +515,12 @@
       </div>
     </div>
 
-    <div style="display:flex;justify-content:center;gap:10px;margin:4px 0 10px;flex-wrap:wrap;position:relative;">
-      <button class="panel-go-btn" id="grade-listesi-btn" onclick="openRepertoire(event)"><span id="grade-listesi-icon">📜</span> Grade Listesi</button>
-      <button class="panel-go-btn" onclick="openStats(event)">📊 İstatistiklerim</button>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px;margin:4px 0 10px;position:relative;">
+      <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;">
+        <button class="panel-go-btn" id="grade-listesi-btn" onclick="openRepertoire(event)"><span id="grade-listesi-icon">📜</span> Grade Listesi</button>
+        <button class="panel-go-btn" onclick="openStats(event)">📊 İstatistiklerim</button>
+      </div>
+      <div id="envy-notification-bar" style="display:none;align-items:center;gap:8px;background:#fff3f3;border:1px solid #f5c6c6;border-radius:12px;padding:7px 16px;font-size:.82rem;color:#a33;font-weight:600;"></div>
       <div id="grade-lock-tooltip" class="lock-tooltip"></div>
     </div>
 
@@ -1100,8 +1101,9 @@ async function pushNews(text, meta) {
 // sırası yükseldiyse haber bandına satır ekler.
 async function checkGenelRankChange(sid) {
   try {
+    const passive2 = window._passiveStudents || {};
     const rows = Object.keys(repProgress)
-      .filter(s => s !== TEACHER_ID && window.STUDENTS.find(st => st.id === s))
+      .filter(s => s !== TEACHER_ID && !passive2[s] && window.STUDENTS.find(st => st.id === s))
       .map(s => ({ sid: s, score: calcWeightedScore(s) }))
       .sort((a, b) => b.score - a.score);
 
@@ -1136,8 +1138,10 @@ function debouncedCheckGenelRankChange(sid) {
 
 // Tüm öğrencilerden, belirli bir grade'de kaydı olanları döndürür (sadece tanınan öğrenciler)
 function studentsInGrade(grade) {
+  const passive = window._passiveStudents || {};
   return Object.keys(repProgress).filter(sid =>
     sid !== TEACHER_ID &&
+    !passive[sid] &&
     window.STUDENTS.find(s => s.id === sid) &&
     repProgress[sid][grade]
   );
@@ -1483,13 +1487,27 @@ window.closeAddStudentForm = function() {
 window.openAllStudentsView = async function() {
   showOnly('all-students-view');
   await loadCategories();
+  await loadPassiveStudents();
+  renderAllStudentsGrid();
+};
+
+window.loadPassiveStudents = async function loadPassiveStudents() {
+  try {
+    const snap = await get(ref(db, 'passive_students'));
+    window._passiveStudents = snap.exists() ? snap.val() : {};
+  } catch(e) { window._passiveStudents = {}; }
+};
+
+function renderAllStudentsGrid() {
   const grid = document.getElementById('all-students-grid');
+  const passive = window._passiveStudents || {};
   const allStudents = window.STUDENTS.filter(s => s.id !== TEACHER_ID);
   if (!allStudents.length) {
     grid.innerHTML = '<p style="color:var(--muted);font-size:.85rem;">Henüz öğrenci yok.</p>';
     return;
   }
   grid.innerHTML = allStudents.map(s => {
+    const isPassive = !!passive[s.id];
     const grades   = Object.keys(repProgress[s.id] || {});
     const hasGrades = grades.length > 0;
     const maxGrade  = hasGrades ? Math.max(...grades.map(Number)) : null;
@@ -1507,19 +1525,83 @@ window.openAllStudentsView = async function() {
       ? 'background:linear-gradient(135deg,#6e3bd1,#b8892a);color:#fff;border-color:transparent;'
       : 'background:transparent;border-color:#6e3bd1;color:#6e3bd1;';
     const modChip = `<button class="cat-chip" style="${modStyle}" onclick="event.stopPropagation();toggleModerator('${s.id}',this)">👑 ${modOn ? 'Moderatör' : 'Moderatör Yap'}</button>`;
-    return `<div class="student-all-card">
+
+    const passiveBtn = isPassive
+      ? `<button class="panel-go-btn" style="font-size:.72rem;padding:4px 10px;background:var(--green-bg);color:var(--green);border-color:#b0d890;" onclick="event.stopPropagation();togglePassiveStudent('${s.id}',false)">✅ Aktifleştir</button>`
+      : `<button class="panel-go-btn" style="font-size:.72rem;padding:4px 10px;background:#fff7e8;color:#b87d0d;border-color:#e8c97a;" onclick="event.stopPropagation();togglePassiveStudent('${s.id}',true)">⏸ Pasife Al</button>`;
+
+    const isExtra = s.id.startsWith('s_new_') || s.id.startsWith('s_extra_');
+    const deleteBtn = isExtra
+      ? `<button class="panel-go-btn" style="font-size:.72rem;padding:4px 10px;background:var(--red-bg);color:var(--red);border-color:#e8b8b8;" onclick="event.stopPropagation();deleteStudentFromGrid('${s.id}')">🗑️ Sil</button>`
+      : '';
+
+    const passiveOverlay = isPassive ? `<div style="font-size:.7rem;color:#b87d0d;font-weight:700;margin-bottom:3px;">⏸ Pasif</div>` : '';
+
+    return `<div class="student-all-card" style="${isPassive ? 'opacity:.6;' : ''}">
+      ${passiveOverlay}
       <div class="student-all-header" onclick="openStudentDetailFromAll('${s.id}')">
         <span>${hasGrades ? '' : '🔑 '}<strong>${s.name}</strong></span>
         <span class="ssc-pct">${hasGrades ? `Grade ${maxGrade} · ${score} puan` : 'Eser listesine eklenmemiş'}</span>
       </div>
       <div class="cat-chips-row">${chipsHtml}${modChip}</div>
+      <div style="display:flex;gap:6px;margin-top:4px;">${passiveBtn}${deleteBtn}</div>
     </div>`;
   }).join('');
-};
+}
 
 window.closeAllStudentsView = function() {
   showOnly('teacher-grade-ranking');
   renderGradeRanking();
+};
+
+window.togglePassiveStudent = async function(sid, makePassive) {
+  const name = studentName(sid);
+  window._passiveStudents = window._passiveStudents || {};
+  try {
+    if (makePassive) {
+      await set(ref(db, `passive_students/${sid}`), true);
+      window._passiveStudents[sid] = true;
+    } else {
+      await remove(ref(db, `passive_students/${sid}`));
+      delete window._passiveStudents[sid];
+    }
+    showSaveToast();
+    renderAllStudentsGrid();
+  } catch(e) { console.error('Pasif durumu kaydedilemedi:', e); }
+};
+
+window.deleteStudentFromGrid = async function(sid) {
+  const name = studentName(sid);
+  const isExtra = sid.startsWith('s_new_') || sid.startsWith('s_extra_');
+  if (!isExtra) {
+    alert('Bu öğrenci ana listede tanımlı, buradan silinemez.');
+    return;
+  }
+  if (!confirm(`"${name}" adlı öğrenciyi TAMAMEN silmek istiyor musunuz?\n\nTüm grade kayıtları, kıskanma verileri ve giriş bilgisi kalıcı olarak silinecek. Bu işlem GERİ ALINAMAZ.`)) return;
+
+  try {
+    await remove(ref(db, `extra_students/${sid}`));
+    await remove(ref(db, `repertoire/${sid}`));
+    await remove(ref(db, `envy/${sid}`));
+    await remove(ref(db, `passive_students/${sid}`));
+    await remove(ref(db, `game_sessions/${sid}`));
+  } catch(e) {
+    console.error('Öğrenci silinemedi:', e);
+    alert('Silinemedi, internet bağlantınızı kontrol edin.');
+    return;
+  }
+
+  const idx = window.STUDENTS.findIndex(s => s.id === sid);
+  if (idx !== -1) window.STUDENTS.splice(idx, 1);
+  if (extraStudentsCache) {
+    const eidx = extraStudentsCache.findIndex(s => s.id === sid);
+    if (eidx !== -1) extraStudentsCache.splice(eidx, 1);
+  }
+  delete repProgress[sid];
+  if (window._passiveStudents) delete window._passiveStudents[sid];
+
+  showSaveToast();
+  renderAllStudentsGrid();
 };
 
 // ============================================================
@@ -2100,8 +2182,9 @@ function showSaveToast() {
 async function renderLeaderboard() {
   const lb = document.getElementById('leaderboard');
   const meObj = getMe();
+  const passive = window._passiveStudents || {};
   const rows = Object.keys(repProgress)
-    .filter(sid => sid !== TEACHER_ID && window.STUDENTS.find(s => s.id === sid))
+    .filter(sid => sid !== TEACHER_ID && !passive[sid] && window.STUDENTS.find(s => s.id === sid))
     .map(sid => {
     const grades = Object.keys(repProgress[sid]);
     let maxGrade = 0;
@@ -2156,6 +2239,7 @@ window.updateWelcomeCard = async function(sid) {
   await loadRepProgress();
   await loadCategories();
   await loadSectionAccessConfig();
+  if (!window._passiveStudents) await loadPassiveStudents();
 
   const rankEl   = document.getElementById('avatar-rank');
   const labelEl  = document.getElementById('avatar-label');
@@ -2213,11 +2297,8 @@ window.updateWelcomeCard = async function(sid) {
     .join('');
 
   badgesEl.innerHTML = `
-    <span class="w-badge w-badge-grade">Grade ${maxGrade}</span>
-    <span class="w-badge w-badge-score">⭐ ${scoreDisplay} puan</span>
     ${rank <= 3 ? '<span class="w-badge w-badge-rank">🏆 İlk 3</span>' : ''}
     ${isModerator(sid) ? '<span class="w-badge w-badge-mod">👑 Moderatör</span>' : ''}
-    ${myCatBadges}
   `;
 
   checkRepertoireAccess(sid);
@@ -2335,10 +2416,12 @@ window.selectCategoryTab = function(catId) {
 
 // Bir öğrencinin kategori içindeki sırasını döndürür (1-based), yoksa 0
 function calcCategoryRank(sid, catId) {
+  const passive4 = window._passiveStudents || {};
   const members = Object.keys(studentCategories)
     .filter(s =>
       !!studentCategories[s][catId] &&
       s !== TEACHER_ID &&
+      !passive4[s] &&
       window.STUDENTS.find(st => st.id === s) &&
       repProgress[s] && Object.keys(repProgress[s]).length > 0
     )
@@ -2354,10 +2437,12 @@ async function renderCategoryLeaderboard(catId) {
   const meObj = getMe();
   const cat   = CATEGORIES.find(c => c.id === catId);
 
+  const passive3 = window._passiveStudents || {};
   const rows = Object.keys(studentCategories)
     .filter(sid =>
       !!studentCategories[sid][catId] &&
       sid !== TEACHER_ID &&
+      !passive3[sid] &&
       window.STUDENTS.find(s => s.id === sid) &&
       repProgress[sid] &&
       Object.keys(repProgress[sid]).length > 0
@@ -2501,32 +2586,19 @@ window.loadEnvyData = function(sid) {
     onValue(ref(db, `envy/${sid}`), (snap) => {
       const data = snap.val();
 
-      // Toplam sayaç
-      const total = data ? (data.total || 0) : 0;
-      const badge   = document.getElementById('envy-total-badge');
-      const countEl = document.getElementById('envy-total-count');
-      if (badge) {
-        if (total > 0) {
-          countEl.textContent = total;
-          badge.style.display = 'inline-flex';
-        } else {
-          badge.style.display = 'none';
-        }
-      }
-
       // Son 24 saatte kıskanılanlar
       const fromEntries = (data && data.from) ? Object.values(data.from) : [];
       const now24 = Date.now() - 24 * 60 * 60 * 1000;
       const recentEnvies = fromEntries.filter(e => e.ts > now24);
 
-      const notifEl = document.getElementById('envy-notification');
-      if (notifEl) {
+      const barEl = document.getElementById('envy-notification-bar');
+      if (barEl) {
         if (recentEnvies.length > 0) {
           const names = recentEnvies.map(e => `<strong>${e.name}</strong>`).join(', ');
-          notifEl.innerHTML = `<span class="envy-notif-icon">🙄</span><div><div class="envy-notif-title">Son 24 saatte seni kıskananlar</div><div class="envy-notif-names">${names} seni kıskanıyor!</div></div>`;
-          notifEl.style.display = 'flex';
+          barEl.innerHTML = `🙄 ${names} seni kıskanıyor!`;
+          barEl.style.display = 'flex';
         } else {
-          notifEl.style.display = 'none';
+          barEl.style.display = 'none';
         }
       }
     });
