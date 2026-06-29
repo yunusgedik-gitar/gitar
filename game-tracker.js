@@ -200,13 +200,22 @@ export function createTracker({ db, ref, push, get, set }) {
     checkGameRankChanges(s.game, s.sid);
   }
 
-  // Sekme kapatılırken / sayfadan ayrılırken yarım kalan (özellikle
+  // Sayfa gerçekten kapanırken / yenilenirken yarım kalan (özellikle
   // zamansız 'practice' modundaki) oturumları kaybetmemek için.
+  //
+  // NOT: Daha önce burada 'visibilitychange' (sekme/uygulama değişimi)
+  // olayı da flush'ı tetikliyordu. Bu, öğrenci yarışma/düello SIRASINDA
+  // (örn. telefon kilitlendi, bildirim çekmecesi açıldı, başka app'e
+  // geçildi) sekmeyi kısa süreliğine arka plana aldığında oturumu
+  // ERKEN ve EKSİK bir skorla bitirip 'ended=true' yapıyordu. Yarışma
+  // asıl bittiğinde (endGame -> trackEnd) tracker zaten "ended" durumda
+  // olduğu için gerçek final skor hiç kaydedilmiyordu (bkz: Ceren'in
+  // 24 doğruluk yarışma skorunun sisteme yansımaması vakası).
+  // 'pagehide' tek başına sayfa gerçekten kapanırken/yenilenirken
+  // tetiklenir, bu yüzden kayıp oturum riskini visibilitychange'e
+  // ihtiyaç duymadan zaten karşılar.
   const flush = () => { if (session && !ended) end(); };
   window.addEventListener('pagehide', flush);
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'hidden') flush();
-  });
 
   return { start, log, end };
 }
