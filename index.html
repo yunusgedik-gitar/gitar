@@ -219,7 +219,7 @@
     .logout-btn:hover { background: var(--red-bg); color: var(--red); border-color: #e8b8b8; }
     /* Theme toggle – logout-btn ile aynı boyut */
     #theme-toggle { padding: 3px 10px !important; border-radius: 20px !important; gap: 2px !important; font-size: inherit !important; box-shadow: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; border: 1px solid var(--border) !important; background: none !important; }
-    #theme-toggle .th-icon { width: 20px !important; height: 20px !important; font-size: .85rem !important; border-radius: 50% !important; }
+    #theme-toggle .th-icon { width: 24px !important; height: 24px !important; font-size: .95rem !important; border-radius: 50% !important; }
 
     .section-title { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 700; margin: 1rem 0 1.2rem 0; letter-spacing: 0.02em; color: var(--brown); }
 
@@ -2338,8 +2338,8 @@ window.updateWelcomeCard = async function(sid) {
     return;
   }
 
-  rankEl.textContent  = `#${rank}`;
-  labelEl.textContent = 'sıra';
+  rankEl.textContent  = '🎸';
+  labelEl.textContent  = '';
 
   const myCatBadges = CATEGORIES
     .filter(cat => !!(studentCategories[sid] || {})[cat.id])
@@ -2371,7 +2371,7 @@ function renderGradeRings(sid) {
   const grades = Object.keys(repProgress[sid] || {}).sort((a,b) => +a - +b);
   if (!grades.length) { row.style.display = 'none'; return; }
 
-  const R = 18, STROKE = 3.5, CX = 22, CY = 22, SIZE = 44;
+  const R = 23, STROKE = 4, CX = 28, CY = 28, SIZE = 56;
   const circ = 2 * Math.PI * R;
 
   row.innerHTML = grades.map(g => {
