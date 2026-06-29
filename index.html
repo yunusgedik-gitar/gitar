@@ -523,17 +523,13 @@
 
     <div class="welcome-bar">
       <div class="welcome-left">
-        <div class="avatar" id="avatar-init">
-          <span class="avatar-rank" id="avatar-rank">🎸</span>
-          <span class="avatar-label" id="avatar-label"></span>
-        </div>
         <div class="welcome-info">
           <span class="welcome-name" id="welcome-name">Gitar Akademisi</span>
           <div class="welcome-badges" id="welcome-badges"></div>
           <div class="grade-rings-row" id="grade-rings-row"></div>
           <div class="social-score-bar" id="social-score-bar">
-            <span class="social-score-pill envy-pill" id="social-envy-pill">🙄 Kıskanma: 0</span>
-            <span class="social-score-pill pity-pill"  id="social-pity-pill">😢 Zavallı: 0</span>
+            <span class="social-score-pill envy-pill" id="social-envy-pill">🙄 Kıskanıldı: 0</span>
+            <span class="social-score-pill pity-pill"  id="social-pity-pill">😢 Acındı: 0</span>
           </div>
         </div>
         <span id="_gs_active_count" style="display:none;">🟢</span>
@@ -2291,8 +2287,8 @@ window.updateWelcomeCard = async function(sid) {
   await loadSectionAccessConfig();
   if (!window._passiveStudents) await loadPassiveStudents();
 
-  const rankEl   = document.getElementById('avatar-rank');
-  const labelEl  = document.getElementById('avatar-label');
+  const rankEl   = document.getElementById('avatar-rank') || {};
+  const labelEl  = document.getElementById('avatar-label') || {};
   const badgesEl = document.getElementById('welcome-badges');
 
   if (sid === TEACHER_ID) {
@@ -2371,23 +2367,41 @@ function renderGradeRings(sid) {
   const grades = Object.keys(repProgress[sid] || {}).sort((a,b) => +a - +b);
   if (!grades.length) { row.style.display = 'none'; return; }
 
-  const R = 23, STROKE = 4, CX = 28, CY = 28, SIZE = 56;
+  // Her grade için ayrı dolgu rengi (8 grade için palet)
+  const GRADE_COLORS = [
+    '#e05c5c', // G1 kırmızı
+    '#e0874a', // G2 turuncu
+    '#c8a82a', // G3 sarı
+    '#5aab28', // G4 yeşil
+    '#28a87c', // G5 teal
+    '#2878c8', // G6 mavi
+    '#7a44c8', // G7 mor
+    '#b8892a', // G8 altın
+  ];
+
+  // Halka tam oturması için: stroke kalın, R = SIZE/2 - STROKE/2
+  const SIZE = 58, STROKE = 8;
+  const CX = SIZE / 2, CY = SIZE / 2;
+  const R = CX - STROKE / 2;
   const circ = 2 * Math.PI * R;
 
   row.innerHTML = grades.map(g => {
     const pct = calcPct(sid, g);
     const filled = circ * pct;
-    const color = pct >= 1 ? '#3b6d11' : pct > 0 ? '#b8892a' : '#d0c8be';
+    const colorIdx = Math.min(+g - 1, GRADE_COLORS.length - 1);
+    const color = GRADE_COLORS[colorIdx];
+    const trackColor = color + '28'; // %16 opaklık arka plan halkası
     const pctLabel = Math.round(pct * 100);
+    const textColor = pct > 0 ? color : '#aaa';
     return `<div class="grade-ring-wrap" title="Grade ${g}: %${pctLabel}">
       <svg class="grade-ring-svg" width="${SIZE}" height="${SIZE}" viewBox="0 0 ${SIZE} ${SIZE}">
-        <circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="#e2d9cc" stroke-width="${STROKE}"/>
+        <circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="${trackColor}" stroke-width="${STROKE}"/>
         <circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="${color}" stroke-width="${STROKE}"
-          stroke-dasharray="${filled} ${circ}" stroke-dashoffset="0"
-          stroke-linecap="round"
+          stroke-dasharray="${filled.toFixed(2)} ${circ.toFixed(2)}"
+          stroke-linecap="butt"
           transform="rotate(-90 ${CX} ${CY})"/>
         <text x="${CX}" y="${CY+1}" text-anchor="middle" dominant-baseline="middle"
-          font-size="8" font-weight="700" fill="${color}" font-family="DM Sans,sans-serif">%${pctLabel}</text>
+          font-size="11" font-weight="800" fill="${textColor}" font-family="DM Sans,sans-serif">${pctLabel}%</text>
       </svg>
       <div class="grade-ring-label">G${g}</div>
     </div>`;
@@ -2764,7 +2778,7 @@ window.loadEnvyData = function(sid) {
       const total = snap.val() || 0;
       const bar   = document.getElementById('social-score-bar');
       const pill  = document.getElementById('social-envy-pill');
-      if (pill) pill.textContent = `🙄 Kıskanma: ${total}`;
+      if (pill) pill.textContent = `🙄 Kıskanıldı: ${total}`;
       if (bar && total > 0) bar.style.display = 'flex';
     });
   } catch(e) { console.error('Kıskanma skoru yüklenemedi:', e); }
@@ -2774,7 +2788,7 @@ window.loadEnvyData = function(sid) {
       const total = snap.val() || 0;
       const bar   = document.getElementById('social-score-bar');
       const pill  = document.getElementById('social-pity-pill');
-      if (pill) pill.textContent = `😢 Zavallı: ${total}`;
+      if (pill) pill.textContent = `😢 Acındı: ${total}`;
       if (bar && total > 0) bar.style.display = 'flex';
     });
   } catch(e) { console.error('Acıma skoru yüklenemedi:', e); }
