@@ -1184,29 +1184,51 @@ window.tournamentReady = async function(path){
   });
 };
 
+// Aynı maç için createTournamentRoom'un birden fazla kez tetiklenmesini
+// (Firebase listener art arda fired olduğunda oluşan race condition) önlemek
+// için yerel bir kilit seti tutuyoruz — host tarafı için path bazlı.
+const _roomCreationLocks = new Set();
+
 async function createTournamentRoom(path, m){
-  const code = rndCode();
-  // 15 turluk maç + berabere kalırsa "ani ölüm" için 10 tampon soru
-  const deck = buildQuestionDeck([1,2,3,4,5,6], 25);
-  await set(ref(db, `duel_rooms/${code}`), {
-    host:  { sid: m.p1, name: m.p1Name },
-    guest: { sid: m.p2, name: m.p2Name },
-    status: 'playing',
-    config: { totalRounds: 15, totalSecs: 0, strings: [1,2,3,4,5,6], questions: deck },
-    scores: { host: 0, guest: 0 },
-    currentRoundNum: 1,
-    roundState: { hostDone: false, guestDone: false, winner: null },
-    progress: { host: { currentRound: 1 }, guest: { currentRound: 1 } }
-  });
-  await runTransaction(ref(db, `tournaments/${TID}`), tour=>{
-    if(!tour) return tour;
-    const seg = path.split('.');
-    let node = tour;
-    for(let i=0;i<seg.length-1;i++) node = node[seg[i]];
-    const mm = node[seg[seg.length-1]];
-    if(mm && !mm.roomCode) mm.roomCode = code;
-    return tour;
-  });
+  // Yerel kilit: bu path için zaten oda kurma işlemi başladıysa tekrar başlama
+  if(_roomCreationLocks.has(path)) return;
+  _roomCreationLocks.add(path);
+
+  try{
+    // Önce Firebase üzerinde "oda kurma hakkı"nı transaction ile rezerve et.
+    // Bu sayede iki ayrı tetiklenme olsa bile sadece biri gerçekten geçer.
+    const code = rndCode();
+    let wonReservation = false;
+    await runTransaction(ref(db, `tournaments/${TID}`), tour=>{
+      if(!tour) return tour;
+      const seg = path.split('.');
+      let node = tour;
+      for(let i=0;i<seg.length-1;i++) node = node[seg[i]];
+      const mm = node[seg[seg.length-1]];
+      if(mm && !mm.roomCode){
+        mm.roomCode = code; // rezervasyon
+        wonReservation = true;
+      }
+      return tour;
+    });
+
+    if(!wonReservation) return; // başka bir tetiklenme zaten kazandı, biz çık
+
+    // Rezervasyonu kazandık → asıl oda verisini şimdi yaz
+    const deck = buildQuestionDeck([1,2,3,4,5,6], 25);
+    await set(ref(db, `duel_rooms/${code}`), {
+      host:  { sid: m.p1, name: m.p1Name },
+      guest: { sid: m.p2, name: m.p2Name },
+      status: 'playing',
+      config: { totalRounds: 15, totalSecs: 0, strings: [1,2,3,4,5,6], questions: deck },
+      scores: { host: 0, guest: 0 },
+      currentRoundNum: 1,
+      roundState: { hostDone: false, guestDone: false, winner: null },
+      progress: { host: { currentRound: 1 }, guest: { currentRound: 1 } }
+    });
+  } finally {
+    _roomCreationLocks.delete(path);
+  }
 }
 
 function enterTournamentMatch(path, m){
