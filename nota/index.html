@@ -89,13 +89,36 @@
     .tourn-lobby-list{display:flex;flex-direction:column;gap:6px;margin:10px 0;}
     .tourn-lobby-row{display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(0,0,0,.04);border-radius:10px;font-size:.9rem;}
     .tourn-dot{width:8px;height:8px;border-radius:50%;background:#3bb24a;display:inline-block;}
+    .tourn-mode-btn{
+      background:linear-gradient(135deg,#d4af5a,#b8892a) !important;
+      box-shadow:0 2px 8px rgba(184,137,42,.25);
+    }
+    .tourn-mode-btn:hover{ box-shadow:0 3px 12px rgba(184,137,42,.35); }
     .tourn-round-title{font-family:'Playfair Display',serif;font-size:1rem;margin:14px 0 8px;text-align:center;}
     .tourn-match{display:flex;align-items:center;justify-content:center;gap:10px;padding:10px;border-radius:12px;background:rgba(0,0,0,.04);margin-bottom:8px;font-size:.88rem;}
     .tourn-match .tm-side{flex:1;text-align:center;padding:4px 6px;border-radius:8px;}
-    .tourn-match .tm-side.tm-win{font-weight:700;color:#2e8b3a;}
+    .tourn-match .tm-side.tm-win{font-weight:700;color:#2e8b3a;background:rgba(46,139,58,.10);}
+    .tourn-match .tm-side.tm-lose{color:#a04040;background:rgba(160,64,64,.07);}
     .tourn-match .tm-side.tm-pending{color:#a08868;}
     .tourn-match .tm-vs{font-size:.7rem;color:#b09070;}
     .tourn-champion{text-align:center;font-family:'Playfair Display',serif;font-size:1.15rem;margin:16px 0;color:#caa23a;}
+    .tourn-champion-box{
+      text-align:center;margin:18px auto;padding:22px 18px;max-width:380px;
+      border-radius:18px;
+      background:linear-gradient(160deg,#fff8e6,#fdecbf);
+      border:1.5px solid #e0bb5a;
+      box-shadow:0 4px 18px rgba(202,162,58,.22);
+    }
+    .tourn-champion-trophy{font-size:2.4rem;line-height:1;margin-bottom:6px;}
+    .tourn-champion-quote{font-size:.84rem;color:#9c7a1f;font-style:italic;line-height:1.5;margin-bottom:10px;}
+    .tourn-champion-name{font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;color:#5a3e2b;}
+    /* Maç sonucu ekranı: kazanan yeşil çerçeve, kaybeden kırmızı */
+    .tr-result-player{
+      border-radius:16px;padding:14px 18px;
+      border:2px solid transparent;transition:all .2s;
+    }
+    .tr-result-player.win{ border-color:#4a9d4a; background:rgba(74,157,74,.07); }
+    .tr-result-player.lose{ border-color:#c0524a; background:rgba(192,82,74,.06); opacity:.85; }
     .online-players-list { margin-bottom: 1rem; }
     .online-player-row {
       display: flex; align-items: center; justify-content: space-between;
@@ -179,7 +202,7 @@
       <button id="start-btn" class="app-btn" onclick="startExercise('practice')">Egzersize Başla (Zamansız) 🎯</button>
       <button id="race-btn"  class="app-btn btn-race" onclick="startExercise('race')">Yarışmaya Başla (40 Saniye) 🏆</button>
       <button class="app-btn btn-duel" onclick="showDuelSetup()">⚔️ Online Düello</button>
-      <button class="app-btn btn-duel" style="background:linear-gradient(135deg,#caa23a,#9c7a1f);" onclick="showTournamentSetup()">🏆 Turnuva Modu (Beta · 4 Kişi)</button>
+      <button id="tournament-mode-btn" class="app-btn btn-duel tourn-mode-btn" onclick="showTournamentSetup()" style="display:none;">🏆 Turnuva Modu</button>
     </div>
   </div>
 
@@ -409,6 +432,17 @@ const db = getDatabase(fbApp);
 const mySid  = localStorage.getItem('gitar_session');
 const myName = localStorage.getItem('gitar_student_name') || 'Öğrenci';
 
+// ── Öğretmen / Moderatör yetkisi (turnuva başlatma için) ──
+const TEACHER_ID = 's01';
+let studentModerators = {};
+let isStaff = false; // öğretmen veya moderatör
+onValue(ref(db, 'moderators'), snap => {
+  studentModerators = snap.exists() ? snap.val() : {};
+  isStaff = (mySid === TEACHER_ID) || !!studentModerators[mySid];
+  const btn = document.getElementById('tournament-mode-btn');
+  if (btn) btn.style.display = isStaff ? '' : 'none';
+});
+
 const _tracker = createTracker({ db, ref, push, get, set });
 window.trackStart = (mode) => _tracker.start(mySid, 'nota', mode);
 window.trackLog   = (ok, key, label) => _tracker.log(ok, key, label);
@@ -437,7 +471,7 @@ const TID = 'nota_proto_4'; // Prototip için sabit/tekil turnuva odası — ayn
 let tournamentId = TID;
 let tournamentListener = null;
 let tournamentState = null;
-let tournamentMatchInfo = null;   // { path } -> aktif maçın bracket yolu, örn 'bracket.semi.0'
+let tournamentMatchInfo = null;   // { path } -> aktif maçın bracket yolu, örn 'bracket.rounds.0.2'
 let inTournamentMatchEntered = false;
 
 function rndCode(){ return Math.floor(100000+Math.random()*900000).toString(); }
@@ -962,11 +996,13 @@ function handleTournamentUpdate(tour){
   renderTournamentBracket(tour);
   if(tour.status === 'finished') return;
 
-  const matches = [
-    {path:'bracket.semi.0', m: tour.bracket.semi[0]},
-    {path:'bracket.semi.1', m: tour.bracket.semi[1]},
-    {path:'bracket.final.0', m: tour.bracket.final[0]},
-  ];
+  const matches = [];
+  (tour.bracket.rounds || []).forEach((round, rIdx) => {
+    round.forEach((m, mIdx) => {
+      matches.push({ path: `bracket.rounds.${rIdx}.${mIdx}`, m });
+    });
+  });
+
   for(const {path,m} of matches){
     if(!m || m.status === 'finished') continue;
     if(m.p1 !== mySid && m.p2 !== mySid) continue;
@@ -989,27 +1025,63 @@ function renderTournamentLobby(tour){
   const participants = (tour && tour.participants) || {};
   const ids = Object.keys(participants);
   const joined = ids.includes(mySid);
+  const noTour = !tour; // henüz hiç turnuva kurulmamış (lobi tamamen boş)
 
   let rows = ids.map(id => `
     <div class="tourn-lobby-row"><span class="tourn-dot"></span>${participants[id].name}${id===mySid?' (Sen)':''}</div>
   `).join('');
   if(!ids.length) rows = '<div class="no-players-msg">Henüz katılan yok. İlk sen katıl!</div>';
 
-  body.innerHTML = `
-    <p style="text-align:center;font-size:.85rem;color:#a08868;">Turnuvaya katılan: <b>${ids.length}/${size}</b></p>
-    <div class="tourn-lobby-list">${rows}</div>
-    <div class="action-buttons-wrap" style="margin-top:12px;">
-      ${joined
+  // Boyut seçici: sadece öğretmen/moderatör görür, ve sadece turnuva henüz kurulmamışken
+  const sizeOptions = [4, 8, 16, 32];
+  const sizePicker = (isStaff && noTour) ? `
+    <div style="text-align:center;margin-bottom:10px;">
+      <p style="font-size:.78rem;color:#a08868;margin-bottom:6px;">Turnuva boyutu seç:</p>
+      <div style="display:inline-flex;gap:6px;flex-wrap:wrap;justify-content:center;">
+        ${sizeOptions.map(s => `<button class="app-btn" style="padding:5px 14px;font-size:.82rem;width:auto;" onclick="createTournamentLobby(${s})">${s} Kişi</button>`).join('')}
+      </div>
+    </div>` : '';
+
+  const joinBtn = noTour
+    ? '' // boyut seçilmeden katılım olamaz
+    : (joined
         ? '<button class="app-btn" disabled>✅ Katıldın, diğerlerini bekle</button>'
-        : `<button class="app-btn btn-duel" ${ids.length>=size?'disabled':''} onclick="joinTournamentLobby()">🏆 Turnuvaya Katıl</button>`}
-      <button class="app-btn" ${ids.length<size?'disabled':''} onclick="startTournamentNow()">▶️ Turnuvayı Başlat (${size} kişi dolunca)</button>
-      <button class="app-btn" style="background:#a05050;" onclick="resetTournamentProto()">🔄 Turnuvayı Sıfırla (test için)</button>
+        : `<button class="app-btn btn-duel" ${ids.length>=size?'disabled':''} onclick="joinTournamentLobby()">🏆 Turnuvaya Katıl</button>`);
+
+  const startBtn = (!noTour && isStaff)
+    ? `<button class="app-btn" ${ids.length<size?'disabled':''} onclick="startTournamentNow()">▶️ Turnuvayı Başlat (${size} kişi dolunca)</button>`
+    : '';
+
+  const resetBtn = (!noTour && isStaff)
+    ? `<button class="app-btn" style="background:#a05050;" onclick="resetTournamentProto()">🔄 Turnuvayı Sıfırla</button>`
+    : '';
+
+  const statusLine = noTour
+    ? `<p style="text-align:center;font-size:.85rem;color:#a08868;">${isStaff ? 'Bir turnuva boyutu seçerek başlat.' : 'Henüz açılmış bir turnuva yok. Öğretmen/moderatör başlatınca burada görünecek.'}</p>`
+    : `<p style="text-align:center;font-size:.85rem;color:#a08868;">Turnuvaya katılan: <b>${ids.length}/${size}</b></p>`;
+
+  body.innerHTML = `
+    ${sizePicker}
+    ${statusLine}
+    ${!noTour ? `<div class="tourn-lobby-list">${rows}</div>` : ''}
+    <div class="action-buttons-wrap" style="margin-top:12px;">
+      ${joinBtn}
+      ${startBtn}
+      ${resetBtn}
     </div>`;
 }
 
+window.createTournamentLobby = async function(size){
+  if(!isStaff) return;
+  await runTransaction(ref(db, `tournaments/${TID}`), tour=>{
+    if(tour) return tour; // zaten kurulu, üzerine yazma
+    return { size, status:'lobby', participants:{}, bracket:null };
+  });
+};
+
 window.joinTournamentLobby = async function(){
   await runTransaction(ref(db, `tournaments/${TID}`), tour=>{
-    if(!tour) tour = { size:4, status:'lobby', participants:{}, bracket:null };
+    if(!tour) return tour; // henüz kurulmamış — staff boyut seçmeden katılım olamaz
     if(tour.status !== 'lobby') return tour; // turnuva başladıysa katılım kapanır
     if(!tour.participants) tour.participants = {};
     const n = Object.keys(tour.participants).length;
@@ -1020,26 +1092,49 @@ window.joinTournamentLobby = async function(){
   });
 };
 
+// Genel bracket kurucu: size = 4/8/16/32 → log2(size) tur (round)
+// tour.bracket.rounds = [ [maç,maç,...], [maç,...], ..., [final maçı] ]
+function mkEmptyMatch(){
+  return {p1:null,p2:null,p1Name:null,p2Name:null,winner:null,winnerName:null,status:'pending',roomCode:null,readyP1:false,readyP2:false};
+}
+
 window.startTournamentNow = async function(){
+  if(!isStaff) return;
   await runTransaction(ref(db, `tournaments/${TID}`), tour=>{
     if(!tour || tour.status !== 'lobby') return tour;
     const ids = Object.keys(tour.participants || {});
     if(ids.length < tour.size) return tour;
     const order = shuf(ids);
-    const mk = () => ({p1:null,p2:null,p1Name:null,p2Name:null,winner:null,winnerName:null,status:'pending',roomCode:null,readyP1:false,readyP2:false});
-    const semi0 = mk(), semi1 = mk();
-    semi0.p1=order[0]; semi0.p1Name=tour.participants[order[0]].name;
-    semi0.p2=order[1]; semi0.p2Name=tour.participants[order[1]].name;
-    semi1.p1=order[2]; semi1.p1Name=tour.participants[order[2]].name;
-    semi1.p2=order[3]; semi1.p2Name=tour.participants[order[3]].name;
-    tour.bracket = { semi: [semi0, semi1], final: [mk()] };
+    const numRounds = Math.log2(tour.size); // 4→2, 8→3, 16→4, 32→5
+
+    const rounds = [];
+    // İlk tur: tüm katılımcılar eşleştirilir
+    const firstRoundMatches = tour.size / 2;
+    const r0 = [];
+    for(let i=0;i<firstRoundMatches;i++){
+      const m = mkEmptyMatch();
+      const a = order[i*2], b = order[i*2+1];
+      m.p1 = a; m.p1Name = tour.participants[a].name;
+      m.p2 = b; m.p2Name = tour.participants[b].name;
+      r0.push(m);
+    }
+    rounds.push(r0);
+    // Sonraki turlar boş (kazananlar ilerledikçe doldurulacak)
+    for(let r=1;r<numRounds;r++){
+      const matchCount = tour.size / Math.pow(2, r+1);
+      const arr = [];
+      for(let i=0;i<matchCount;i++) arr.push(mkEmptyMatch());
+      rounds.push(arr);
+    }
+    tour.bracket = { rounds };
     tour.status = 'active';
     return tour;
   });
 };
 
 window.resetTournamentProto = async function(){
-  if(!confirm('Turnuvayı sıfırlamak istediğine emin misin? (test/prototip amaçlı)')) return;
+  if(!isStaff){ alert('Turnuvayı sadece öğretmen veya moderatör sıfırlayabilir.'); return; }
+  if(!confirm('Turnuvayı sıfırlamak istediğine emin misin?')) return;
   await remove(ref(db, `tournaments/${TID}`));
   inTournamentMatchEntered = false;
   tournamentMatchInfo = null;
@@ -1100,30 +1195,38 @@ function enterTournamentMatch(path, m){
 async function finishTournamentMatch(myFinal, oppFinal){
   const winnerSid  = myFinal > oppFinal ? mySid  : oppSid;
   const winnerName = myFinal > oppFinal ? myName : oppName;
-  const path = tournamentMatchInfo.path;
+  const path = tournamentMatchInfo.path; // örn 'bracket.rounds.0.2'
 
+  let becameChampion = false;
   await runTransaction(ref(db, `tournaments/${TID}`), tour=>{
     if(!tour) return tour;
-    const seg = path.split('.');
-    let node = tour;
-    for(let i=0;i<seg.length-1;i++) node = node[seg[i]];
-    const m = node[seg[seg.length-1]];
+    const seg = path.split('.'); // ['bracket','rounds', rIdx, mIdx]
+    const rIdx = +seg[2], mIdx = +seg[3];
+    const m = tour.bracket.rounds[rIdx][mIdx];
     if(!m || m.status === 'finished') return tour; // idempotent — iki taraf da çağırabilir
 
     m.winner = winnerSid; m.winnerName = winnerName; m.status = 'finished';
 
-    const semis = tour.bracket.semi;
-    if(semis[0].status === 'finished' && semis[1].status === 'finished' &&
-       tour.bracket.final[0].status === 'pending' && !tour.bracket.final[0].p1){
-      tour.bracket.final[0].p1 = semis[0].winner;
-      tour.bracket.final[0].p1Name = semis[0].winnerName;
-      tour.bracket.final[0].p2 = semis[1].winner;
-      tour.bracket.final[0].p2Name = semis[1].winnerName;
-    }
-    if(tour.bracket.final[0].status === 'finished' && tour.status !== 'finished'){
+    const rounds = tour.bracket.rounds;
+    const isLastRound = rIdx === rounds.length - 1;
+
+    if(isLastRound){
+      // Final maçı bitti → turnuva şampiyonu belli oldu
       tour.status = 'finished';
-      tour.champion = tour.bracket.final[0].winner;
-      tour.championName = tour.bracket.final[0].winnerName;
+      tour.champion = winnerSid;
+      tour.championName = winnerName;
+      if(winnerSid === mySid) becameChampion = true;
+    } else {
+      // Bir sonraki tura ilerlet: bu turun tüm maçları bitmiş mi kontrol et
+      const nextRound = rounds[rIdx + 1];
+      const nextMatchIdx = Math.floor(mIdx / 2);
+      const nextMatch = nextRound[nextMatchIdx];
+      const isFirstFeeder = (mIdx % 2 === 0);
+      if(isFirstFeeder){
+        nextMatch.p1 = winnerSid; nextMatch.p1Name = winnerName;
+      } else {
+        nextMatch.p2 = winnerSid; nextMatch.p2Name = winnerName;
+      }
     }
     return tour;
   });
@@ -1135,36 +1238,58 @@ async function finishTournamentMatch(myFinal, oppFinal){
     });
   }catch(e){}
 
+  // Turnuva şampiyonu olduysa ana sisteme bildir (welcome bar rozeti + istatistik arşivi)
+  if(becameChampion){
+    const tourSize = (tournamentState && tournamentState.size) || null;
+    try{
+      const ts = Date.now();
+      await set(ref(db, `championships/nota/${mySid}`), { name: myName, ts, gameLabel: 'Nota Okuma', participantCount: tourSize });
+      await push(ref(db, `championship_history/${mySid}`), { game: 'nota', gameLabel: 'Nota Okuma', ts, participantCount: tourSize });
+    }catch(e){ console.error('[Championship] yazılamadı:', e); }
+  }
+
   const mc = myFinal>=oppFinal ? 'win' : 'lose', oc = oppFinal>=myFinal ? 'win' : 'lose';
   document.getElementById('app').innerHTML = `
     <div class="duel-result">
       <h2>🏆 Turnuva Maçı Bitti!</h2>
-      <div class="winner-badge">🏆 Kazanan: ${winnerName}</div>
-      <div class="final-scores">
-        <div class="fsc-player"><div class="fsc-name">${myName}</div><div class="fsc-num ${mc}">${myFinal}</div></div>
+      <div class="final-scores" style="gap:14px;">
+        <div class="fsc-player tr-result-player ${mc}">
+          <div class="fsc-name">${myName}${mc==='win'?' 🏆':''}</div>
+          <div class="fsc-num ${mc}">${myFinal}</div>
+        </div>
         <div class="fsc-vs">VS</div>
-        <div class="fsc-player"><div class="fsc-name">${oppName}</div><div class="fsc-num ${oc}">${oppFinal}</div></div>
+        <div class="fsc-player tr-result-player ${oc}">
+          <div class="fsc-name">${oppName}${oc==='win'?' 🏆':''}</div>
+          <div class="fsc-num ${oc}">${oppFinal}</div>
+        </div>
       </div>
       <div class="result-btns">
-        <button class="app-btn btn-duel" onclick="location.reload()">🏆 Bracket'e Dön</button>
+        <button class="app-btn btn-duel" onclick="location.reload()">🏆 Lobiye Dön</button>
       </div>
     </div>`;
   localStorage.setItem('gitar_tournament_watch','1');
 }
 
-function renderMatchBlock(title, m){
+// Tur isimlerini boyuta göre üret: son tur Final, ondan önceki Yarı Final, vs.
+function roundTitle(roundIdx, totalRounds, matchIdx){
+  const fromEnd = totalRounds - 1 - roundIdx;
+  if(fromEnd === 0) return '🥇 Final';
+  if(fromEnd === 1) return `🥈 Yarı Final ${matchIdx+1}`;
+  if(fromEnd === 2) return `🥉 Çeyrek Final ${matchIdx+1}`;
+  return `Tur ${roundIdx+1} — Maç ${matchIdx+1}`;
+}
+
+function renderMatchBlock(title, m, path){
   if(!m || !m.p1) {
-    return `<div class="tourn-round-title">${title}</div><div class="tourn-match"><div class="tm-side tm-pending">Yarı final sonuçları bekleniyor...</div></div>`;
+    return `<div class="tourn-round-title">${title}</div><div class="tourn-match"><div class="tm-side tm-pending">Önceki tur sonuçları bekleniyor...</div></div>`;
   }
-  const p1cls = m.winner === m.p1 ? 'tm-win' : (m.status==='finished' ? '' : 'tm-pending');
-  const p2cls = m.winner === m.p2 ? 'tm-win' : (m.status==='finished' ? '' : 'tm-pending');
+  const p1cls = m.status==='finished' ? (m.winner === m.p1 ? 'tm-win' : 'tm-lose') : 'tm-pending';
+  const p2cls = m.status==='finished' ? (m.winner === m.p2 ? 'tm-win' : 'tm-lose') : 'tm-pending';
   let actionHtml = '';
   const isMine = (m.p1 === mySid || m.p2 === mySid) && m.status !== 'finished';
-  if(isMine){
-    const path = title === '🥇 Final' ? 'bracket.final.0' : (m === tournamentState.bracket.semi[0] ? 'bracket.semi.0' : 'bracket.semi.1');
+  if(isMine && m.p1 && m.p2){
     const amP1 = m.p1 === mySid;
     const iAmReady = amP1 ? m.readyP1 : m.readyP2;
-    const oppReady = amP1 ? m.readyP2 : m.readyP1;
     if(m.roomCode){
       actionHtml = `<div style="text-align:center;margin-top:6px;font-size:.8rem;color:#a08868;">Maç başlıyor…</div>`;
     } else if(iAmReady){
@@ -1185,14 +1310,24 @@ function renderMatchBlock(title, m){
 
 function renderTournamentBracket(tour){
   const body = document.getElementById('tourn-bracket-body');
-  if(!body || !tour || !tour.bracket) return;
+  if(!body || !tour || !tour.bracket || !tour.bracket.rounds) return;
+  const rounds = tour.bracket.rounds;
   let html = '';
-  html += renderMatchBlock('🥈 Yarı Final 1', tour.bracket.semi[0]);
-  html += renderMatchBlock('🥈 Yarı Final 2', tour.bracket.semi[1]);
-  html += renderMatchBlock('🥇 Final', tour.bracket.final[0]);
+  rounds.forEach((round, rIdx) => {
+    round.forEach((m, mIdx) => {
+      const title = roundTitle(rIdx, rounds.length, mIdx);
+      const path = `bracket.rounds.${rIdx}.${mIdx}`;
+      html += renderMatchBlock(title, m, path);
+    });
+  });
   if(tour.status === 'finished'){
-    html += `<div class="tourn-champion">🏆 Turnuva Şampiyonu: ${tour.championName}</div>
-      <div class="action-buttons-wrap"><button class="app-btn" style="background:#a05050;" onclick="resetTournamentProto()">🔄 Yeni Turnuva Başlat</button></div>`;
+    html += `
+      <div class="tourn-champion-box">
+        <div class="tourn-champion-trophy">🏆</div>
+        <div class="tourn-champion-quote">İşte cesaret, işte fazilet, işte feraset,<br>işte fedakarlık, işte adam gibi adamlık.</div>
+        <div class="tourn-champion-name">🏆 Turnuva Şampiyonu: ${tour.championName}</div>
+      </div>
+      ${isStaff ? '<div class="action-buttons-wrap"><button class="app-btn" style="background:#a05050;" onclick="resetTournamentProto()">🔄 Yeni Turnuva Başlat</button></div>' : ''}`;
   }
   body.innerHTML = html;
 }
