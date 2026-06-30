@@ -3072,6 +3072,77 @@ if (window.me && window.me.id) {
     return d.toLocaleDateString('tr-TR', {day:'2-digit',month:'2-digit'});
   }
 
+  // ── Mesaj reaksiyonları (👏 ❤️ 🔥 😂 👍 😮) ──
+  // Veri: {path}/{key}/reactions/{emoji}/{sid} = true
+  const REACTION_EMOJIS = ['👏', '❤️', '🔥', '😂', '👍', '😮'];
+
+  function toggleReaction(path, key, emoji) {
+    const meObj = getMe();
+    if (!meObj) return;
+    const rRef = ref(db, `${path}/${key}/reactions/${emoji}/${meObj.id}`);
+    get(rRef).then(snap => {
+      if (snap.exists()) return remove(rRef);
+      return set(rRef, true);
+    }).catch(e => console.error('[Reaksiyon] hata:', e));
+  }
+
+  function renderReactionsBar(m, key, path) {
+    const meObj = getMe();
+    const reactions = m.reactions || {};
+    const emojisUsed = Object.keys(reactions).filter(em => Object.keys(reactions[em] || {}).length > 0);
+    const pills = emojisUsed.map(emoji => {
+      const users = reactions[emoji] || {};
+      const count = Object.keys(users).length;
+      const mine = !!(meObj && users[meObj.id]);
+      return `<button class="reaction-pill${mine ? ' mine' : ''}" data-key="${key}" data-path="${path}" data-emoji="${emoji}">${emoji} ${count}</button>`;
+    }).join('');
+    return `<div class="chat-reactions">
+      ${pills}
+      <button class="reaction-add-btn" data-key="${key}" data-path="${path}" title="Reaksiyon ekle">😊+</button>
+    </div>`;
+  }
+
+  function bindReactionEvents(container) {
+    container.querySelectorAll('.reaction-pill').forEach(btn => {
+      btn.addEventListener('click', () => toggleReaction(btn.dataset.path, btn.dataset.key, btn.dataset.emoji));
+    });
+    container.querySelectorAll('.reaction-add-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => openReactionPicker(e, btn.dataset.path, btn.dataset.key));
+    });
+  }
+
+  let reactionPicker = null;
+  function closeReactionPicker() {
+    if (reactionPicker) { reactionPicker.remove(); reactionPicker = null; }
+    document.removeEventListener('click', closeReactionPicker, true);
+  }
+  function openReactionPicker(e, path, key) {
+    e.stopPropagation();
+    closeReactionPicker();
+    const btn = e.currentTarget;
+    const rect = btn.getBoundingClientRect();
+    reactionPicker = document.createElement('div');
+    reactionPicker.className = 'reaction-picker';
+    reactionPicker.innerHTML = REACTION_EMOJIS.map(em => `<button data-emoji="${em}">${em}</button>`).join('');
+    document.body.appendChild(reactionPicker);
+    const pRect = reactionPicker.getBoundingClientRect();
+    let left = rect.left;
+    if (left + pRect.width > window.innerWidth - 8) left = window.innerWidth - pRect.width - 8;
+    if (left < 8) left = 8;
+    let top = rect.top - pRect.height - 6;
+    if (top < 8) top = rect.bottom + 6;
+    reactionPicker.style.left = left + 'px';
+    reactionPicker.style.top = top + 'px';
+    reactionPicker.querySelectorAll('button').forEach(b => {
+      b.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        toggleReaction(path, key, b.dataset.emoji);
+        closeReactionPicker();
+      });
+    });
+    setTimeout(() => document.addEventListener('click', closeReactionPicker, true), 0);
+  }
+
   // ── DOM referanslar ──
   const fab        = document.getElementById('chat-fab');
   const panel      = document.getElementById('chat-panel');
@@ -3295,7 +3366,8 @@ if (window.me && window.me.id) {
             <span>${formatTime(m.ts)}</span>
             ${canDel ? `<button class="chat-msg-delete" data-key="${m.key}" title="Sil">🗑</button>` : ''}
           </div>
-          <div class="chat-bubble">${escHtml(m.text)}</div>`;
+          <div class="chat-bubble">${escHtml(m.text)}</div>
+          ${renderReactionsBar(m, m.key, 'chat/general')}`;
         msgBox.appendChild(div);
       });
 
@@ -3304,6 +3376,7 @@ if (window.me && window.me.id) {
           await remove(ref(db, `chat/general/${btn.dataset.key}`));
         });
       });
+      bindReactionEvents(msgBox);
 
       // Unread
       const newMsgs = msgs.filter(m => m.ts > lastReadGeneral && m.sid !== meObj.id);
@@ -3458,7 +3531,8 @@ if (window.me && window.me.id) {
             <span>${formatTime(m.ts)}</span>
             ${canDel ? `<button class="chat-msg-delete" data-key="${m.key}" title="Sil">🗑</button>` : ''}
           </div>
-          <div class="chat-bubble">${escHtml(m.text)}</div>`;
+          <div class="chat-bubble">${escHtml(m.text)}</div>
+          ${renderReactionsBar(m, m.key, `chat/dm/${roomId}`)}`;
         msgBox.appendChild(div);
       });
 
@@ -3467,6 +3541,7 @@ if (window.me && window.me.id) {
           await remove(ref(db, `chat/dm/${roomId}/${btn.dataset.key}`));
         });
       });
+      bindReactionEvents(msgBox);
 
       requestAnimationFrame(() => { msgBox.scrollTop = msgBox.scrollHeight; });
       markDmRead(contact.id);
@@ -4069,6 +4144,44 @@ async function initLeaderboard() {
   color: var(--brown);
   border-bottom-left-radius: 4px;
 }
+
+/* ── Mesaj reaksiyonları ── */
+.chat-reactions {
+  display: flex; flex-wrap: wrap; gap: 4px;
+  margin-top: 3px; align-items: center;
+}
+.reaction-pill {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: .72rem; padding: 1px 7px;
+  border-radius: 10px; border: 1px solid var(--border);
+  background: #fff; cursor: pointer; color: var(--brown);
+  transition: background .15s, border-color .15s;
+}
+.reaction-pill:hover { background: #f3ede4; }
+.reaction-pill.mine {
+  background: var(--gold); border-color: var(--gold); color: #fff;
+}
+.reaction-add-btn {
+  font-size: .72rem; padding: 1px 6px;
+  border-radius: 10px; border: 1px dashed var(--border);
+  background: transparent; cursor: pointer; color: var(--muted);
+  opacity: .55; transition: opacity .15s;
+}
+.chat-msg:hover .reaction-add-btn,
+.reaction-add-btn:active { opacity: 1; }
+.reaction-picker {
+  position: fixed; z-index: 99999;
+  display: flex; gap: 4px;
+  background: #fff; border: 1px solid var(--border);
+  border-radius: 14px; padding: 5px 7px;
+  box-shadow: 0 6px 18px rgba(0,0,0,.18);
+}
+.reaction-picker button {
+  background: none; border: none; cursor: pointer;
+  font-size: 1.15rem; padding: 2px 3px; border-radius: 8px;
+  transition: background .15s, transform .1s;
+}
+.reaction-picker button:hover { background: #f3ede4; transform: scale(1.15); }
 .chat-msg.teacher-msg .chat-bubble {
   background: linear-gradient(135deg, #b8892a, #d4a843);
   color: #fff;
