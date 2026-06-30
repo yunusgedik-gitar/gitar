@@ -436,11 +436,17 @@ const myName = localStorage.getItem('gitar_student_name') || 'Öğrenci';
 const TEACHER_ID = 's01';
 let studentModerators = {};
 let isStaff = false; // öğretmen veya moderatör
+let tournamentExists = false; // bir turnuva kuruluysa (lobi/aktif/bitmiş) tüm öğrencilere buton gösterilir
+
+function updateTournamentBtnVisibility(){
+  const btn = document.getElementById('tournament-mode-btn');
+  if (btn) btn.style.display = (isStaff || tournamentExists) ? '' : 'none';
+}
+
 onValue(ref(db, 'moderators'), snap => {
   studentModerators = snap.exists() ? snap.val() : {};
   isStaff = (mySid === TEACHER_ID) || !!studentModerators[mySid];
-  const btn = document.getElementById('tournament-mode-btn');
-  if (btn) btn.style.display = isStaff ? '' : 'none';
+  updateTournamentBtnVisibility();
 });
 
 const _tracker = createTracker({ db, ref, push, get, set });
@@ -473,6 +479,14 @@ let tournamentListener = null;
 let tournamentState = null;
 let tournamentMatchInfo = null;   // { path } -> aktif maçın bracket yolu, örn 'bracket.rounds.0.2'
 let inTournamentMatchEntered = false;
+
+// Bir turnuva kurulu mu (lobi/aktif/bitmiş) — herkes için sürekli dinlenir,
+// böylece bir turnuva kurulduğu anda "🏆 Turnuva Modu" butonu tüm
+// öğrencilerde otomatik belirir (sadece öğretmen/moderatör değil).
+onValue(ref(db, `tournaments/${TID}`), snap => {
+  tournamentExists = snap.exists();
+  updateTournamentBtnVisibility();
+});
 
 function rndCode(){ return Math.floor(100000+Math.random()*900000).toString(); }
 const ALL_NOTES = ['Do','Re','Mi','Fa','Sol','La','Si'];
@@ -1058,7 +1072,10 @@ function renderTournamentLobby(tour){
   const noTour = !tour; // henüz hiç turnuva kurulmamış (lobi tamamen boş)
 
   let rows = ids.map(id => `
-    <div class="tourn-lobby-row"><span class="tourn-dot"></span>${participants[id].name}${id===mySid?' (Sen)':''}</div>
+    <div class="tourn-lobby-row" style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+      <span><span class="tourn-dot"></span>${participants[id].name}${id===mySid?' (Sen)':''}</span>
+      ${isStaff ? `<button class="tourn-kick-btn" title="Turnuvadan çıkar" onclick="removeTournamentParticipant('${id}')" style="background:none;border:none;color:#a05050;font-weight:700;font-size:.95rem;cursor:pointer;line-height:1;padding:2px 6px;">✕</button>` : ''}
+    </div>
   `).join('');
   if(!ids.length) rows = '<div class="no-players-msg">Henüz katılan yok. İlk sen katıl!</div>';
 
@@ -1103,6 +1120,7 @@ function renderTournamentLobby(tour){
 
 window.createTournamentLobby = async function(size){
   if(!isStaff) return;
+  if(!confirm(`${size} kişilik bir turnuva kuracaksınız.\n\nBu işlem turnuva modunu TÜM öğrenciler için anında aktif hale getirir (herkes "🏆 Turnuva Modu" butonunu görmeye başlar). Devam edilsin mi?`)) return;
   await runTransaction(ref(db, `tournaments/${TID}`), tour=>{
     if(tour) return tour; // zaten kurulu, üzerine yazma
     return { size, status:'lobby', participants:{}, bracket:null };
@@ -1118,6 +1136,20 @@ window.joinTournamentLobby = async function(){
     if(!tour.participants[mySid] && n < tour.size){
       tour.participants[mySid] = { name: myName };
     }
+    return tour;
+  });
+};
+
+// Öğretmen/moderatör, lobide bekleyen bir katılımcıyı turnuvadan çıkarabilir
+// (örn. öğrenci kendisi çıkmak istediğini söylediyse). Sadece lobi açıkken
+// (turnuva henüz başlamamışken) mümkündür.
+window.removeTournamentParticipant = async function(sid){
+  if(!isStaff) return;
+  const name = (tournamentState && tournamentState.participants && tournamentState.participants[sid] && tournamentState.participants[sid].name) || sid;
+  if(!confirm(`"${name}" adlı katılımcıyı turnuva lobisinden çıkarmak istiyor musunuz?`)) return;
+  await runTransaction(ref(db, `tournaments/${TID}`), tour=>{
+    if(!tour || tour.status !== 'lobby') return tour; // turnuva başladıysa artık çıkarılamaz
+    if(tour.participants && tour.participants[sid]) delete tour.participants[sid];
     return tour;
   });
 };
