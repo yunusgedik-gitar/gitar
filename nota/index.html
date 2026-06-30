@@ -85,6 +85,17 @@
 
     /* DÜELLO STİLLERİ */
     #duel-setup-area, #duel-waiting-area, #duel-game-area { display: none; }
+    #tournament-setup-area, #tournament-bracket-area { display: none; }
+    .tourn-lobby-list{display:flex;flex-direction:column;gap:6px;margin:10px 0;}
+    .tourn-lobby-row{display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(0,0,0,.04);border-radius:10px;font-size:.9rem;}
+    .tourn-dot{width:8px;height:8px;border-radius:50%;background:#3bb24a;display:inline-block;}
+    .tourn-round-title{font-family:'Playfair Display',serif;font-size:1rem;margin:14px 0 8px;text-align:center;}
+    .tourn-match{display:flex;align-items:center;justify-content:center;gap:10px;padding:10px;border-radius:12px;background:rgba(0,0,0,.04);margin-bottom:8px;font-size:.88rem;}
+    .tourn-match .tm-side{flex:1;text-align:center;padding:4px 6px;border-radius:8px;}
+    .tourn-match .tm-side.tm-win{font-weight:700;color:#2e8b3a;}
+    .tourn-match .tm-side.tm-pending{color:#a08868;}
+    .tourn-match .tm-vs{font-size:.7rem;color:#b09070;}
+    .tourn-champion{text-align:center;font-family:'Playfair Display',serif;font-size:1.15rem;margin:16px 0;color:#caa23a;}
     .online-players-list { margin-bottom: 1rem; }
     .online-player-row {
       display: flex; align-items: center; justify-content: space-between;
@@ -168,7 +179,24 @@
       <button id="start-btn" class="app-btn" onclick="startExercise('practice')">Egzersize Başla (Zamansız) 🎯</button>
       <button id="race-btn"  class="app-btn btn-race" onclick="startExercise('race')">Yarışmaya Başla (40 Saniye) 🏆</button>
       <button class="app-btn btn-duel" onclick="showDuelSetup()">⚔️ Online Düello</button>
+      <button class="app-btn btn-duel" style="background:linear-gradient(135deg,#caa23a,#9c7a1f);" onclick="showTournamentSetup()">🏆 Turnuva Modu (Beta · 4 Kişi)</button>
     </div>
+  </div>
+
+  <div id="tournament-setup-area" class="filter-card">
+    <div class="top-bar" style="margin-bottom:.8rem;">
+      <h2 style="font-family:'Playfair Display',serif;font-size:1.1rem;">🏆 Turnuva Lobisi</h2>
+      <button class="back-btn" onclick="leaveTournamentLobby()">← Geri</button>
+    </div>
+    <div id="tourn-lobby-body"></div>
+  </div>
+
+  <div id="tournament-bracket-area" class="filter-card">
+    <div class="top-bar" style="margin-bottom:.8rem;">
+      <h2 style="font-family:'Playfair Display',serif;font-size:1.1rem;">🏆 Turnuva — Tablo</h2>
+      <button class="back-btn" onclick="leaveTournamentLobby()">← Geri</button>
+    </div>
+    <div id="tourn-bracket-body"></div>
   </div>
 
   <div id="duel-setup-area" class="filter-card">
@@ -293,7 +321,7 @@ const ALL_NOTES=['Do','Re','Mi','Fa','Sol','La','Si'];
 function getERR() { return window.ERR || ["Yanlış! Tekrar dene."]; }
 function shuffle(a){return[...a].sort(()=>Math.random()-0.5);}
 function showArea(id){
-  ['setup-area','duel-setup-area','duel-waiting-area','duel-game-area','exercise-wrap']
+  ['setup-area','duel-setup-area','duel-waiting-area','duel-game-area','exercise-wrap','tournament-setup-area','tournament-bracket-area']
     .forEach(x=>{const e=document.getElementById(x);if(e)e.style.display='none';});
   const t=document.getElementById(id);if(t){t.style.display='block';t.scrollIntoView({behavior:'smooth'});}
 }
@@ -403,6 +431,14 @@ let oppScore_       = 0;
 let cdTimer         = null;
 let currentRoundNum = 0;
 let currentQuestionData = null;
+
+// ── TURNUVA MODU (Beta · 4 kişilik tek eleme prototipi) ──
+const TID = 'nota_proto_4'; // Prototip için sabit/tekil turnuva odası — aynı anda tek turnuva
+let tournamentId = TID;
+let tournamentListener = null;
+let tournamentState = null;
+let tournamentMatchInfo = null;   // { path } -> aktif maçın bracket yolu, örn 'bracket.semi.0'
+let inTournamentMatchEntered = false;
 
 function rndCode(){ return Math.floor(100000+Math.random()*900000).toString(); }
 const ALL_NOTES = ['Do','Re','Mi','Fa','Sol','La','Si'];
@@ -767,9 +803,17 @@ function showRoundResult(rState, qData){
       const nextNum = currentRoundNum + 1;
       runTransaction(ref(db,`duel_rooms/${roomCode}`), room => {
         if(!room) return room;
-        if(room.currentRoundNum !== currentRoundNum) return room; 
+        if(room.currentRoundNum !== currentRoundNum) return room;
         const maxRounds = duelSecs > 0 ? 60 : duelRounds;
-        if(nextNum > maxRounds){
+        const tied = (room.scores.host||0) === (room.scores.guest||0);
+        const hasMoreQuestions = !!(room.config.questions && room.config.questions[nextNum]);
+        if(nextNum > maxRounds && tied && hasMoreQuestions){
+          // Ani ölüm: tur bazlı düellolarda berabere bitmesin diye,
+          // soru destesinde tampon olarak fazladan eklenmiş sorularla
+          // tek tek devam edilir, ilk öne geçen kazanır.
+          room.currentRoundNum = nextNum;
+          room.roundState = { hostDone: false, guestDone: false, winner: null };
+        } else if(nextNum > maxRounds){
           room.status = 'finished';
         } else {
           room.currentRoundNum = nextNum;
@@ -802,6 +846,12 @@ function endDuel(){
 
   const myFinal  = myScore_;
   const oppFinal = oppScore_;
+
+  if(tournamentMatchInfo){
+    finishTournamentMatch(myFinal, oppFinal);
+    return;
+  }
+
   let winBadge, comment;
   if(myFinal>oppFinal){ winBadge=`🏆 Kazanan: ${myName}`; comment=`${myName} notaları daha hızlı okudu! ${oppName} daha çok çalışmalı 💪`; }
   else if(oppFinal>myFinal){ winBadge=`🏆 Kazanan: ${oppName}`; comment=`${oppName} bu sefer daha hızlıydı! Bir dahaki sefere ${myName} 🎸`; }
@@ -868,7 +918,291 @@ function updateDuelTimerBadge(){
   if(badge) badge.textContent = `⏱ ${duelTimeLeft}sn`;
 }
 
+// ════════════════════════════════════════════════════════════
+// TURNUVA MODU (Beta) — 4 kişilik tek eleme (yarı final + final)
+// Mevcut "duel_rooms" motorunu (tur bazlı, senkronize) olduğu gibi
+// kullanır; sadece eşleştirme + bracket ilerleme katmanı eklenir.
+// ════════════════════════════════════════════════════════════
+
+window.showTournamentSetup = function(){
+  showArea('tournament-setup-area');
+  localStorage.setItem('gitar_tournament_watch','1');
+  listenTournament();
+};
+
+window.leaveTournamentLobby = function(){
+  if(tournamentListener){ tournamentListener(); tournamentListener=null; }
+  localStorage.removeItem('gitar_tournament_watch');
+  showArea('setup-area');
+};
+
+function listenTournament(){
+  if(tournamentListener){ tournamentListener(); tournamentListener=null; }
+  tournamentListener = onValue(ref(db, `tournaments/${TID}`), snap=>{
+    handleTournamentUpdate(snap.val());
+  });
+}
+
+function handleTournamentUpdate(tour){
+  tournamentState = tour;
+
+  if(!tour || tour.status === 'lobby'){
+    renderTournamentLobby(tour);
+    if(document.getElementById('tournament-bracket-area').style.display !== 'none' &&
+       document.getElementById('tournament-setup-area').style.display === 'none' &&
+       !inTournamentMatchEntered){
+      // Turnuva henüz lobideyse ve bracket ekranındaysak lobiye dön
+      showArea('tournament-setup-area');
+    }
+    return;
+  }
+
+  // status: 'active' veya 'finished'
+  if(!inTournamentMatchEntered) showArea('tournament-bracket-area');
+  renderTournamentBracket(tour);
+  if(tour.status === 'finished') return;
+
+  const matches = [
+    {path:'bracket.semi.0', m: tour.bracket.semi[0]},
+    {path:'bracket.semi.1', m: tour.bracket.semi[1]},
+    {path:'bracket.final.0', m: tour.bracket.final[0]},
+  ];
+  for(const {path,m} of matches){
+    if(!m || m.status === 'finished') continue;
+    if(m.p1 !== mySid && m.p2 !== mySid) continue;
+
+    // Host (p1), ikisi de "Hazır" deyip oda henüz kurulmadıysa odayı kurar.
+    if(m.p1 === mySid && m.readyP1 && m.readyP2 && !m.roomCode){
+      createTournamentRoom(path, m);
+    }
+    // Oda kurulduysa ve maça henüz girmediysek gir.
+    if(m.roomCode && !inTournamentMatchEntered){
+      enterTournamentMatch(path, m);
+    }
+  }
+}
+
+function renderTournamentLobby(tour){
+  const body = document.getElementById('tourn-lobby-body');
+  if(!body) return;
+  const size = (tour && tour.size) || 4;
+  const participants = (tour && tour.participants) || {};
+  const ids = Object.keys(participants);
+  const joined = ids.includes(mySid);
+
+  let rows = ids.map(id => `
+    <div class="tourn-lobby-row"><span class="tourn-dot"></span>${participants[id].name}${id===mySid?' (Sen)':''}</div>
+  `).join('');
+  if(!ids.length) rows = '<div class="no-players-msg">Henüz katılan yok. İlk sen katıl!</div>';
+
+  body.innerHTML = `
+    <p style="text-align:center;font-size:.85rem;color:#a08868;">Turnuvaya katılan: <b>${ids.length}/${size}</b></p>
+    <div class="tourn-lobby-list">${rows}</div>
+    <div class="action-buttons-wrap" style="margin-top:12px;">
+      ${joined
+        ? '<button class="app-btn" disabled>✅ Katıldın, diğerlerini bekle</button>'
+        : `<button class="app-btn btn-duel" ${ids.length>=size?'disabled':''} onclick="joinTournamentLobby()">🏆 Turnuvaya Katıl</button>`}
+      <button class="app-btn" ${ids.length<size?'disabled':''} onclick="startTournamentNow()">▶️ Turnuvayı Başlat (${size} kişi dolunca)</button>
+      <button class="app-btn" style="background:#a05050;" onclick="resetTournamentProto()">🔄 Turnuvayı Sıfırla (test için)</button>
+    </div>`;
+}
+
+window.joinTournamentLobby = async function(){
+  await runTransaction(ref(db, `tournaments/${TID}`), tour=>{
+    if(!tour) tour = { size:4, status:'lobby', participants:{}, bracket:null };
+    if(tour.status !== 'lobby') return tour; // turnuva başladıysa katılım kapanır
+    if(!tour.participants) tour.participants = {};
+    const n = Object.keys(tour.participants).length;
+    if(!tour.participants[mySid] && n < tour.size){
+      tour.participants[mySid] = { name: myName };
+    }
+    return tour;
+  });
+};
+
+window.startTournamentNow = async function(){
+  await runTransaction(ref(db, `tournaments/${TID}`), tour=>{
+    if(!tour || tour.status !== 'lobby') return tour;
+    const ids = Object.keys(tour.participants || {});
+    if(ids.length < tour.size) return tour;
+    const order = shuf(ids);
+    const mk = () => ({p1:null,p2:null,p1Name:null,p2Name:null,winner:null,winnerName:null,status:'pending',roomCode:null,readyP1:false,readyP2:false});
+    const semi0 = mk(), semi1 = mk();
+    semi0.p1=order[0]; semi0.p1Name=tour.participants[order[0]].name;
+    semi0.p2=order[1]; semi0.p2Name=tour.participants[order[1]].name;
+    semi1.p1=order[2]; semi1.p1Name=tour.participants[order[2]].name;
+    semi1.p2=order[3]; semi1.p2Name=tour.participants[order[3]].name;
+    tour.bracket = { semi: [semi0, semi1], final: [mk()] };
+    tour.status = 'active';
+    return tour;
+  });
+};
+
+window.resetTournamentProto = async function(){
+  if(!confirm('Turnuvayı sıfırlamak istediğine emin misin? (test/prototip amaçlı)')) return;
+  await remove(ref(db, `tournaments/${TID}`));
+  inTournamentMatchEntered = false;
+  tournamentMatchInfo = null;
+};
+
+window.tournamentReady = async function(path){
+  await runTransaction(ref(db, `tournaments/${TID}`), tour=>{
+    if(!tour) return tour;
+    const seg = path.split('.');
+    let node = tour;
+    for(let i=0;i<seg.length-1;i++) node = node[seg[i]];
+    const m = node[seg[seg.length-1]];
+    if(!m) return tour;
+    if(m.p1 === mySid) m.readyP1 = true;
+    if(m.p2 === mySid) m.readyP2 = true;
+    return tour;
+  });
+};
+
+async function createTournamentRoom(path, m){
+  const code = rndCode();
+  // 15 turluk maç + berabere kalırsa "ani ölüm" için 10 tampon soru
+  const deck = buildQuestionDeck([1,2,3,4,5,6], 25);
+  await set(ref(db, `duel_rooms/${code}`), {
+    host:  { sid: m.p1, name: m.p1Name },
+    guest: { sid: m.p2, name: m.p2Name },
+    status: 'playing',
+    config: { totalRounds: 15, totalSecs: 0, strings: [1,2,3,4,5,6], questions: deck },
+    scores: { host: 0, guest: 0 },
+    currentRoundNum: 1,
+    roundState: { hostDone: false, guestDone: false, winner: null },
+    progress: { host: { currentRound: 1 }, guest: { currentRound: 1 } }
+  });
+  await runTransaction(ref(db, `tournaments/${TID}`), tour=>{
+    if(!tour) return tour;
+    const seg = path.split('.');
+    let node = tour;
+    for(let i=0;i<seg.length-1;i++) node = node[seg[i]];
+    const mm = node[seg[seg.length-1]];
+    if(mm && !mm.roomCode) mm.roomCode = code;
+    return tour;
+  });
+}
+
+function enterTournamentMatch(path, m){
+  inTournamentMatchEntered = true;
+  tournamentMatchInfo = { path };
+  myRole   = (m.p1 === mySid) ? 'host' : 'guest';
+  oppSid   = (m.p1 === mySid) ? m.p2 : m.p1;
+  oppName  = (m.p1 === mySid) ? m.p2Name : m.p1Name;
+  roomCode = m.roomCode;
+  duelRounds  = 15;
+  duelSecs    = 0;
+  duelStrings = new Set([1,2,3,4,5,6]);
+  beginGame();
+}
+
+async function finishTournamentMatch(myFinal, oppFinal){
+  const winnerSid  = myFinal > oppFinal ? mySid  : oppSid;
+  const winnerName = myFinal > oppFinal ? myName : oppName;
+  const path = tournamentMatchInfo.path;
+
+  await runTransaction(ref(db, `tournaments/${TID}`), tour=>{
+    if(!tour) return tour;
+    const seg = path.split('.');
+    let node = tour;
+    for(let i=0;i<seg.length-1;i++) node = node[seg[i]];
+    const m = node[seg[seg.length-1]];
+    if(!m || m.status === 'finished') return tour; // idempotent — iki taraf da çağırabilir
+
+    m.winner = winnerSid; m.winnerName = winnerName; m.status = 'finished';
+
+    const semis = tour.bracket.semi;
+    if(semis[0].status === 'finished' && semis[1].status === 'finished' &&
+       tour.bracket.final[0].status === 'pending' && !tour.bracket.final[0].p1){
+      tour.bracket.final[0].p1 = semis[0].winner;
+      tour.bracket.final[0].p1Name = semis[0].winnerName;
+      tour.bracket.final[0].p2 = semis[1].winner;
+      tour.bracket.final[0].p2Name = semis[1].winnerName;
+    }
+    if(tour.bracket.final[0].status === 'finished' && tour.status !== 'finished'){
+      tour.status = 'finished';
+      tour.champion = tour.bracket.final[0].winner;
+      tour.championName = tour.bracket.final[0].winnerName;
+    }
+    return tour;
+  });
+
+  try{
+    await push(ref(db,'news_feed'), {
+      text: `⚔️ ${winnerName}, turnuva maçında ${myFinal>oppFinal?oppName:myName}'a karşı ${Math.max(myFinal,oppFinal)}-${Math.min(myFinal,oppFinal)} kazandı!`,
+      ts: Date.now()
+    });
+  }catch(e){}
+
+  const mc = myFinal>=oppFinal ? 'win' : 'lose', oc = oppFinal>=myFinal ? 'win' : 'lose';
+  document.getElementById('app').innerHTML = `
+    <div class="duel-result">
+      <h2>🏆 Turnuva Maçı Bitti!</h2>
+      <div class="winner-badge">🏆 Kazanan: ${winnerName}</div>
+      <div class="final-scores">
+        <div class="fsc-player"><div class="fsc-name">${myName}</div><div class="fsc-num ${mc}">${myFinal}</div></div>
+        <div class="fsc-vs">VS</div>
+        <div class="fsc-player"><div class="fsc-name">${oppName}</div><div class="fsc-num ${oc}">${oppFinal}</div></div>
+      </div>
+      <div class="result-btns">
+        <button class="app-btn btn-duel" onclick="location.reload()">🏆 Bracket'e Dön</button>
+      </div>
+    </div>`;
+  localStorage.setItem('gitar_tournament_watch','1');
+}
+
+function renderMatchBlock(title, m){
+  if(!m || !m.p1) {
+    return `<div class="tourn-round-title">${title}</div><div class="tourn-match"><div class="tm-side tm-pending">Yarı final sonuçları bekleniyor...</div></div>`;
+  }
+  const p1cls = m.winner === m.p1 ? 'tm-win' : (m.status==='finished' ? '' : 'tm-pending');
+  const p2cls = m.winner === m.p2 ? 'tm-win' : (m.status==='finished' ? '' : 'tm-pending');
+  let actionHtml = '';
+  const isMine = (m.p1 === mySid || m.p2 === mySid) && m.status !== 'finished';
+  if(isMine){
+    const path = title === '🥇 Final' ? 'bracket.final.0' : (m === tournamentState.bracket.semi[0] ? 'bracket.semi.0' : 'bracket.semi.1');
+    const amP1 = m.p1 === mySid;
+    const iAmReady = amP1 ? m.readyP1 : m.readyP2;
+    const oppReady = amP1 ? m.readyP2 : m.readyP1;
+    if(m.roomCode){
+      actionHtml = `<div style="text-align:center;margin-top:6px;font-size:.8rem;color:#a08868;">Maç başlıyor…</div>`;
+    } else if(iAmReady){
+      actionHtml = `<div style="text-align:center;margin-top:6px;font-size:.8rem;color:#a08868;">✅ Hazırsın, rakibin bekleniyor…</div>`;
+    } else {
+      actionHtml = `<div style="text-align:center;margin-top:6px;"><button class="app-btn btn-race" style="padding:6px 14px;font-size:.85rem;" onclick="tournamentReady('${path}')">⚔️ Hazırım, Maçı Başlat</button></div>`;
+    }
+  }
+  return `
+    <div class="tourn-round-title">${title}</div>
+    <div class="tourn-match">
+      <div class="tm-side ${p1cls}">${m.p1Name}${m.p1===mySid?' (Sen)':''}</div>
+      <div class="tm-vs">VS</div>
+      <div class="tm-side ${p2cls}">${m.p2Name}${m.p2===mySid?' (Sen)':''}</div>
+    </div>
+    ${actionHtml}`;
+}
+
+function renderTournamentBracket(tour){
+  const body = document.getElementById('tourn-bracket-body');
+  if(!body || !tour || !tour.bracket) return;
+  let html = '';
+  html += renderMatchBlock('🥈 Yarı Final 1', tour.bracket.semi[0]);
+  html += renderMatchBlock('🥈 Yarı Final 2', tour.bracket.semi[1]);
+  html += renderMatchBlock('🥇 Final', tour.bracket.final[0]);
+  if(tour.status === 'finished'){
+    html += `<div class="tourn-champion">🏆 Turnuva Şampiyonu: ${tour.championName}</div>
+      <div class="action-buttons-wrap"><button class="app-btn" style="background:#a05050;" onclick="resetTournamentProto()">🔄 Yeni Turnuva Başlat</button></div>`;
+  }
+  body.innerHTML = html;
+}
+
+if(localStorage.getItem('gitar_tournament_watch')){
+  showTournamentSetup();
+}
+
 checkDuelHandoff();
+
 </script>
 
 <script>
