@@ -3464,7 +3464,7 @@ const STUDENTS_DATA = [
   { id: 's64', name: 'Merve YALAP', pinHash: 'cb5611d87825a1dd6d0c724d68396193dc9d07a0db6a756d34b18bceea1aa46b' },
   { id: 's66', name: 'Derya KORKMAZ', pinHash: 'a0e33e6f4ebecc35fc6c3f3211e8183c792c480f901a34dc2407bf2af84765ef' },
   { id: 's67', name: 'Dr. Birsen Altaylı ÖZEMİR', pinHash: 'f5c34d912af814c33b8f5cf1420bcba1be9a3e5d83cebb146200cdbf2ec7a76e' },
-  { id: 's68', name: 'Doç. Dr. Cihangir ÖZEMİR', pinHash: '82837d50572c36ebc90559bc99e03a96a098a2a73d588dc3ea052379bbe5d6f4' },
+  { id: 's68', name: 'Dr. Cihangir ÖZEMİR', pinHash: '82837d50572c36ebc90559bc99e03a96a098a2a73d588dc3ea052379bbe5d6f4' },
   { id: 's69', name: 'Oktay Alp KARAATA', pinHash: '5a1130e36e3c304b73590da6322c725551a0c14d9e6d4db194789be6a9f5473b' },
   { id: 's70', name: 'Pars ODİN', pinHash: '9943324cb3f1a48a2963633905d35b97c3a24eb4b8ee84aafaef348ec3490799' },
   { id: 's71', name: 'Tunç KURTMAN', pinHash: '46ece05546fb2626da88a216af6aa066b5172e824ad9eae6742d8e12ef6fbcc8' },
