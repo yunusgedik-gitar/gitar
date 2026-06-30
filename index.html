@@ -689,6 +689,8 @@
       <div id="all-students-view" style="display:none;">
         <button class="back-btn" style="margin-bottom:1rem;" onclick="closeAllStudentsView()">← Sıralamaya Dön</button>
         <p style="font-size:.8rem; color:var(--muted); margin-bottom:1rem;">🔑 simgesi = eser listesine henüz eklenmemiş öğrenciler</p>
+        <button class="panel-go-btn" style="font-size:.78rem;padding:6px 12px;margin-bottom:1rem;" onclick="scanGhostStudents()">👻 Hayalet Hesapları Tara</button>
+        <div id="ghost-students-panel" style="display:none;margin-bottom:1.2rem;padding:.8rem;border:1px solid #e8b8b8;border-radius:10px;background:var(--red-bg);"></div>
         <div class="student-select-grid" id="all-students-grid"></div>
       </div>
 
@@ -1644,6 +1646,132 @@ window.deleteStudentFromGrid = async function(sid) {
   if (window._passiveStudents) delete window._passiveStudents[sid];
 
   showSaveToast();
+  renderAllStudentsGrid();
+};
+
+// ===== Hayalet hesap taraması =====
+// repertoire-data.js'ten (veya extra_students'tan) silinmiş ama Firebase'de
+// hâlâ verisi (repertoire/envy/passive/game_sessions/rank_snapshots) kalmış
+// "hayalet" sid'leri bulur ve tek tıkla temizler.
+async function purgeStudentData(sid) {
+  await remove(ref(db, `repertoire/${sid}`));
+  await remove(ref(db, `envy/${sid}`));
+  await remove(ref(db, `passive_students/${sid}`));
+  await remove(ref(db, `game_sessions/${sid}`));
+  await remove(ref(db, `extra_students/${sid}`));
+  await remove(ref(db, `rank_snapshots/genel/${sid}`));
+  try {
+    const rsSnap = await get(ref(db, 'rank_snapshots'));
+    if (rsSnap.exists()) {
+      const games = rsSnap.val();
+      for (const game of Object.keys(games)) {
+        if (game === 'genel') continue;
+        const metrics = games[game] || {};
+        for (const metric of Object.keys(metrics)) {
+          if (metrics[metric] && Object.prototype.hasOwnProperty.call(metrics[metric], sid)) {
+            await remove(ref(db, `rank_snapshots/${game}/${metric}/${sid}`));
+          }
+        }
+      }
+    }
+  } catch (e) { console.error('[Hayalet silme] rank_snapshots temizlenemedi:', sid, e); }
+
+  if (window.STUDENTS) {
+    const idx = window.STUDENTS.findIndex(s => s.id === sid);
+    if (idx !== -1) window.STUDENTS.splice(idx, 1);
+  }
+  if (extraStudentsCache) {
+    const eidx = extraStudentsCache.findIndex(s => s.id === sid);
+    if (eidx !== -1) extraStudentsCache.splice(eidx, 1);
+  }
+  delete repProgress[sid];
+  if (window._passiveStudents) delete window._passiveStudents[sid];
+}
+
+window.scanGhostStudents = async function() {
+  const panel = document.getElementById('ghost-students-panel');
+  if (!panel) return;
+  panel.style.display = 'block';
+  panel.innerHTML = '<p style="font-size:.85rem;">🔎 Taranıyor...</p>';
+
+  try {
+    const extra = await window.fetchExtraStudents();
+    const known = new Set(window.STUDENTS.map(s => s.id));
+    extra.forEach(s => known.add(s.id));
+    known.add(TEACHER_ID);
+
+    const ghostIds = new Set();
+
+    const flatPaths = ['repertoire', 'envy', 'passive_students', 'game_sessions'];
+    for (const path of flatPaths) {
+      const snap = await get(ref(db, path));
+      if (snap.exists()) {
+        Object.keys(snap.val()).forEach(sid => { if (!known.has(sid)) ghostIds.add(sid); });
+      }
+    }
+
+    const rsSnap = await get(ref(db, 'rank_snapshots'));
+    if (rsSnap.exists()) {
+      const games = rsSnap.val();
+      Object.keys(games).forEach(game => {
+        if (game === 'genel') {
+          Object.keys(games.genel || {}).forEach(sid => { if (!known.has(sid)) ghostIds.add(sid); });
+          return;
+        }
+        Object.values(games[game] || {}).forEach(sidMap => {
+          Object.keys(sidMap || {}).forEach(sid => { if (!known.has(sid)) ghostIds.add(sid); });
+        });
+      });
+    }
+
+    if (!ghostIds.size) {
+      panel.innerHTML = '<p style="font-size:.85rem;color:var(--green);">✅ Hayalet hesap bulunamadı, her şey temiz.</p>';
+      window._ghostStudentIds = [];
+      return;
+    }
+
+    const list = [...ghostIds].sort();
+    window._ghostStudentIds = list;
+    panel.innerHTML = `
+      <p style="font-size:.85rem;font-weight:700;margin-bottom:.5rem;">👻 ${list.length} hayalet hesap bulundu (kodda artık tanımlı değil ama Firebase'de izi var):</p>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:.6rem;">
+        ${list.map(sid => `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;background:#fff;border-radius:8px;padding:6px 10px;">
+          <code style="font-size:.78rem;">${sid}</code>
+          <button class="panel-go-btn" style="font-size:.7rem;padding:3px 8px;background:var(--red-bg);color:var(--red);border-color:#e8b8b8;" onclick="deleteGhostStudent('${sid}', this)">🗑️ Sil</button>
+        </div>`).join('')}
+      </div>
+      <button class="panel-go-btn" style="font-size:.78rem;padding:6px 12px;background:var(--red-bg);color:var(--red);border-color:#e8b8b8;" onclick="deleteAllGhostStudents()">🗑️ Tümünü Sil (${list.length})</button>
+    `;
+  } catch (e) {
+    console.error('[Hayalet tarama] hata:', e);
+    panel.innerHTML = '<p style="font-size:.85rem;color:var(--red);">Tarama başarısız oldu, internet bağlantınızı kontrol edin.</p>';
+  }
+};
+
+window.deleteGhostStudent = async function(sid, btn) {
+  if (!confirm(`"${sid}" hayalet hesabını ve tüm kalıntı verilerini (repertuvar, oyun geçmişi, kıskanma, sıralama kayıtları) kalıcı olarak silmek istiyor musunuz? Bu işlem GERİ ALINAMAZ.`)) return;
+  if (btn) { btn.disabled = true; btn.textContent = '...'; }
+  try {
+    await purgeStudentData(sid);
+    showSaveToast();
+    scanGhostStudents();
+    renderAllStudentsGrid();
+  } catch (e) {
+    console.error('[Hayalet silme] hata:', sid, e);
+    alert('Silinemedi, internet bağlantınızı kontrol edin.');
+    if (btn) { btn.disabled = false; btn.textContent = '🗑️ Sil'; }
+  }
+};
+
+window.deleteAllGhostStudents = async function() {
+  const ids = window._ghostStudentIds || [];
+  if (!ids.length) return;
+  if (!confirm(`${ids.length} hayalet hesabın TÜMÜNÜ kalıcı olarak silmek istiyor musunuz? Bu işlem GERİ ALINAMAZ.`)) return;
+  for (const sid of ids) {
+    try { await purgeStudentData(sid); } catch (e) { console.error('[Hayalet silme]', sid, e); }
+  }
+  showSaveToast();
+  scanGhostStudents();
   renderAllStudentsGrid();
 };
 
