@@ -436,11 +436,17 @@ const myName = localStorage.getItem('gitar_student_name') || 'Öğrenci';
 const TEACHER_ID = 's01';
 let studentModerators = {};
 let isStaff = false; // öğretmen veya moderatör
+let tournamentExists = false; // bir turnuva kuruluysa (lobi/aktif/bitmiş) tüm öğrencilere buton gösterilir
+
+function updateTournamentBtnVisibility(){
+  const btn = document.getElementById('tournament-mode-btn');
+  if (btn) btn.style.display = (isStaff || tournamentExists) ? '' : 'none';
+}
+
 onValue(ref(db, 'moderators'), snap => {
   studentModerators = snap.exists() ? snap.val() : {};
   isStaff = (mySid === TEACHER_ID) || !!studentModerators[mySid];
-  const btn = document.getElementById('tournament-mode-btn');
-  if (btn) btn.style.display = isStaff ? '' : 'none';
+  updateTournamentBtnVisibility();
 });
 
 const _tracker = createTracker({ db, ref, push, get, set });
@@ -473,6 +479,14 @@ let tournamentListener = null;
 let tournamentState = null;
 let tournamentMatchInfo = null;   // { path } -> aktif maçın bracket yolu, örn 'bracket.rounds.0.2'
 let inTournamentMatchEntered = false;
+
+// Bir turnuva kurulu mu (lobi/aktif/bitmiş) — herkes için sürekli dinlenir,
+// böylece bir turnuva kurulduğu anda "🏆 Turnuva Modu" butonu tüm
+// öğrencilerde otomatik belirir (sadece öğretmen/moderatör değil).
+onValue(ref(db, `tournaments/${TID}`), snap => {
+  tournamentExists = snap.exists();
+  updateTournamentBtnVisibility();
+});
 
 function rndCode(){ return Math.floor(100000+Math.random()*900000).toString(); }
 const ALL_NOTES = ['Do','Re','Mi','Fa','Sol','La','Si'];
@@ -1103,6 +1117,7 @@ function renderTournamentLobby(tour){
 
 window.createTournamentLobby = async function(size){
   if(!isStaff) return;
+  if(!confirm(`${size} kişilik bir turnuva kuracaksınız.\n\nBu işlem turnuva modunu TÜM öğrenciler için anında aktif hale getirir (herkes "🏆 Turnuva Modu" butonunu görmeye başlar). Devam edilsin mi?`)) return;
   await runTransaction(ref(db, `tournaments/${TID}`), tour=>{
     if(tour) return tour; // zaten kurulu, üzerine yazma
     return { size, status:'lobby', participants:{}, bracket:null };
