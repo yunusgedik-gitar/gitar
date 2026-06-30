@@ -973,11 +973,35 @@ window.leaveTournamentLobby = function(){
 function listenTournament(){
   if(tournamentListener){ tournamentListener(); tournamentListener=null; }
   tournamentListener = onValue(ref(db, `tournaments/${TID}`), snap=>{
-    handleTournamentUpdate(snap.val());
+    try{
+      handleTournamentUpdate(snap.val());
+    }catch(e){
+      console.error('[Turnuva] render hatası:', e);
+      const body = document.getElementById('tourn-lobby-body');
+      if(body) body.innerHTML = '<p style="text-align:center;font-size:.85rem;color:#a05050;">Turnuva verisi okunamadı, lütfen sayfayı yenileyin.</p>';
+      showArea('tournament-setup-area');
+    }
+  }, err=>{
+    console.error('[Turnuva] Firebase dinleme hatası:', err);
   });
 }
 
 function handleTournamentUpdate(tour){
+  // Eski/bozuk format temizliği: önceki sürümden kalma turnuva kaydı
+  // ya bracket.rounds yapısında değilse (eski semi/final formatı) ya da
+  // bracket var ama rounds dizisi boşsa — kullanıcıya boş ekran göstermek
+  // yerine otomatik temizleyip lobiye döneriz (sadece staff temizleyebilir,
+  // diğerleri sadece boş lobi görür).
+  if(tour && tour.bracket && !Array.isArray(tour.bracket.rounds)){
+    if(isStaff){
+      remove(ref(db, `tournaments/${TID}`)).catch(()=>{});
+    }
+    tournamentState = null;
+    renderTournamentLobby(null);
+    showArea('tournament-setup-area');
+    return;
+  }
+
   tournamentState = tour;
 
   if(!tour || tour.status === 'lobby'){
@@ -992,6 +1016,12 @@ function handleTournamentUpdate(tour){
   }
 
   // status: 'active' veya 'finished'
+  // Güvenlik kontrolü: bracket.rounds yoksa veya boşsa render etmeye çalışma
+  if(!tour.bracket || !Array.isArray(tour.bracket.rounds) || !tour.bracket.rounds.length){
+    if(!inTournamentMatchEntered) showArea('tournament-setup-area');
+    return;
+  }
+
   if(!inTournamentMatchEntered) showArea('tournament-bracket-area');
   renderTournamentBracket(tour);
   if(tour.status === 'finished') return;
