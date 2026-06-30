@@ -1072,7 +1072,10 @@ function renderTournamentLobby(tour){
   const noTour = !tour; // henüz hiç turnuva kurulmamış (lobi tamamen boş)
 
   let rows = ids.map(id => `
-    <div class="tourn-lobby-row"><span class="tourn-dot"></span>${participants[id].name}${id===mySid?' (Sen)':''}</div>
+    <div class="tourn-lobby-row" style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+      <span><span class="tourn-dot"></span>${participants[id].name}${id===mySid?' (Sen)':''}</span>
+      ${isStaff ? `<button class="tourn-kick-btn" title="Turnuvadan çıkar" onclick="removeTournamentParticipant('${id}')" style="background:none;border:none;color:#a05050;font-weight:700;font-size:.95rem;cursor:pointer;line-height:1;padding:2px 6px;">✕</button>` : ''}
+    </div>
   `).join('');
   if(!ids.length) rows = '<div class="no-players-msg">Henüz katılan yok. İlk sen katıl!</div>';
 
@@ -1133,6 +1136,20 @@ window.joinTournamentLobby = async function(){
     if(!tour.participants[mySid] && n < tour.size){
       tour.participants[mySid] = { name: myName };
     }
+    return tour;
+  });
+};
+
+// Öğretmen/moderatör, lobide bekleyen bir katılımcıyı turnuvadan çıkarabilir
+// (örn. öğrenci kendisi çıkmak istediğini söylediyse). Sadece lobi açıkken
+// (turnuva henüz başlamamışken) mümkündür.
+window.removeTournamentParticipant = async function(sid){
+  if(!isStaff) return;
+  const name = (tournamentState && tournamentState.participants && tournamentState.participants[sid] && tournamentState.participants[sid].name) || sid;
+  if(!confirm(`"${name}" adlı katılımcıyı turnuva lobisinden çıkarmak istiyor musunuz?`)) return;
+  await runTransaction(ref(db, `tournaments/${TID}`), tour=>{
+    if(!tour || tour.status !== 'lobby') return tour; // turnuva başladıysa artık çıkarılamaz
+    if(tour.participants && tour.participants[sid]) delete tour.participants[sid];
     return tour;
   });
 };
