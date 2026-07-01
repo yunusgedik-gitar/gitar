@@ -155,6 +155,43 @@
     .tourn-champion-trophy{font-size:2.4rem;line-height:1;margin-bottom:6px;}
     .tourn-champion-quote{font-size:.84rem;color:#9c7a1f;font-style:italic;line-height:1.5;margin-bottom:10px;}
     .tourn-champion-name{font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;color:#5a3e2b;}
+    /* ── SKOR GÖRÜNÜRLÜK DÜZELTMESİ ──
+       Paylaşılan /theme.css şablonu güncellendiğinde bazı genel selektörler
+       .tm-score öğesini görünmez kılabiliyordu. Bu kural şablon ne olursa
+       olsun skorun her zaman görünür kalmasını garanti eder. */
+    .tourn-match .tm-side .tm-score{
+      display:block !important; visibility:visible !important; opacity:1 !important;
+      color:#5a3e2b !important; font-size:1.15rem !important; font-weight:800 !important;
+      line-height:1.1 !important;
+    }
+    .tourn-match .tm-side.tm-win .tm-score{ color:#2e8b3a !important; }
+    .tourn-match .tm-side.tm-lose .tm-score{ color:#a04040 !important; }
+
+    /* ── Moderatör aksiyonları ── */
+    .tourn-mod-actions{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;padding:6px 10px 10px;border-top:1px dashed #e8e0d5;}
+    .tourn-mod-btn{font-size:.68rem;font-weight:700;padding:5px 10px;border-radius:8px;border:1.5px solid #d4a373;background:#fdf6ec;color:#8a5a1f;cursor:pointer;font-family:inherit;}
+    .tourn-mod-btn.danger{border-color:#c0392b;background:#fdf0f0;color:#a32d2d;}
+    .tourn-mod-btn.info{border-color:#4a7a9d;background:#eef6fb;color:#2e5a7a;}
+
+    /* ── Maç süre sınırı ── */
+    .tourn-match-timer{font-size:.72rem;font-weight:700;color:#a32d2d;text-align:center;padding:2px 0 6px;}
+    .tourn-match-timer.warn{color:#c0392b;animation:tournBlink 1s infinite;}
+    @keyframes tournBlink{50%{opacity:.35;}}
+
+    /* ── Özel maç sohbeti ── */
+    .tourn-chat-toggle{font-size:.72rem;font-weight:700;padding:5px 12px;border-radius:8px;border:1.5px solid #7b5ea7;background:#f3eeff;color:#4a2d8a;cursor:pointer;font-family:inherit;margin-top:4px;}
+    .tourn-chat-box{margin-top:8px;border:1.5px solid #e0d5f0;border-radius:12px;background:#fbf9ff;padding:8px;text-align:left;}
+    .tourn-chat-msgs{max-height:150px;overflow-y:auto;display:flex;flex-direction:column;gap:5px;margin-bottom:6px;}
+    .tourn-chat-msg{font-size:.78rem;background:#fff;border-radius:8px;padding:5px 9px;max-width:85%;}
+    .tourn-chat-msg.mine{align-self:flex-end;background:#e9defc;}
+    .tourn-chat-msg .tcm-author{font-size:.62rem;font-weight:700;color:#7b5ea7;display:block;margin-bottom:1px;}
+    .tourn-chat-msg.system{align-self:center;background:transparent;color:#b09070;font-style:italic;font-size:.72rem;}
+    .tourn-chat-input-row{display:flex;gap:6px;}
+    .tourn-chat-input-row input{flex:1;padding:6px 10px;border-radius:20px;border:1.5px solid #d4c4b0;font-size:.8rem;font-family:inherit;}
+    .tourn-chat-input-row button{padding:6px 14px;border-radius:20px;border:none;background:#7b5ea7;color:#fff;font-weight:700;font-size:.78rem;cursor:pointer;}
+    .tourn-sub-picker{margin-top:6px;border:1.5px solid #f0d5c0;border-radius:10px;padding:6px;background:#fffaf3;}
+    .tourn-sub-row{display:flex;justify-content:space-between;align-items:center;padding:4px 6px;font-size:.76rem;}
+    .tourn-sub-row button{font-size:.68rem;padding:3px 9px;border-radius:8px;border:1.5px solid #4a9d6a;background:#eafaf0;color:#1e6b3a;cursor:pointer;}
     /* Maç sonucu ekranı */
     .tr-result-player{border-radius:16px;padding:14px 18px;border:2px solid transparent;transition:all .2s;}
     .tr-result-player.win{ border-color:#4a9d4a; background:rgba(74,157,74,.07); }
@@ -1091,8 +1128,21 @@ function handleTournamentUpdate(tour){
 
   for(const {path,m,playable} of matches){
     if(!m || m.status === 'finished') continue;
-    if(m.p1 !== mySid && m.p2 !== mySid) continue;
     if(!playable) continue; // önceki tur henüz bitmedi, bu maç beklemede
+
+    // Her iki oyuncu da belli olduysa ve özel sohbet odası yoksa aç
+    // (p1 istemcisi host görevi görür, race'i transaction önler).
+    if(m.p1 && m.p2 && !m.chatRoomId && m.p1 === mySid){
+      ensureTournamentChatRoom(path, m);
+    }
+
+    if(m.p1 !== mySid && m.p2 !== mySid) continue;
+
+    // "Hazırım ve otomatik tur atlama": rakip 2 saat içinde hazır olmazsa,
+    // hazır olan taraf istemcisi bu kontrolü tetikler ve maçı oynamadan kazanır.
+    checkReadyTimeout(path, m);
+    // Maç için süre sınırı doldu mu kontrol et (oda kurulduysa).
+    checkMatchDeadline(path, m);
 
     // Host (p1), ikisi de "Hazır" deyip oda henüz kurulmadıysa odayı kurar.
     if(m.p1 === mySid && m.readyP1 && m.readyP2 && !m.roomCode){
@@ -1216,8 +1266,18 @@ window.joinTournamentLobby = async function(){
 
 // Genel bracket kurucu: size = 4/8/16/32 → log2(size) tur (round)
 // tour.bracket.rounds = [ [maç,maç,...], [maç,...], ..., [final maçı] ]
+const MATCH_READY_TIMEOUT_MS = 2 * 60 * 60 * 1000; // 2 saat: rakip hazır olmazsa otomatik tur atlama
+const MATCH_TIME_LIMIT_MS = 30 * 60 * 1000; // maç başına 30 dk süre sınırı (oda kurulunca başlar)
+
 function mkEmptyMatch(){
-  return {p1:null,p2:null,p1Name:null,p2Name:null,winner:null,winnerName:null,status:'pending',roomCode:null,readyP1:false,readyP2:false};
+  return {
+    p1:null,p2:null,p1Name:null,p2Name:null,winner:null,winnerName:null,status:'pending',
+    roomCode:null,readyP1:false,readyP2:false,
+    readyAtP1:null,readyAtP2:null,   // "Hazırım" basıldığı an (ms) — 2 saat kuralı için
+    chatRoomId:null,                  // eşleşme anında otomatik açılan özel sohbet odası
+    matchDeadline:null,               // oda kurulduğunda set edilen süre sınırı (ms epoch)
+    forfeit:false                     // otomatik/idmansız sonuçlanan maç mı
+  };
 }
 
 window.startTournamentNow = async function(){
@@ -1273,11 +1333,43 @@ window.tournamentReady = async function(path){
     for(let i=0;i<seg.length-1;i++) node = node[seg[i]];
     const m = node[seg[seg.length-1]];
     if(!m) return tour;
-    if(m.p1 === mySid) m.readyP1 = true;
-    if(m.p2 === mySid) m.readyP2 = true;
+    const now = Date.now();
+    if(m.p1 === mySid){ m.readyP1 = true; m.readyAtP1 = now; }
+    if(m.p2 === mySid){ m.readyP2 = true; m.readyAtP2 = now; }
     return tour;
   });
 };
+
+// ── Eşleşme anında otomatik özel sohbet odası açma ──
+// Bir maçın p1 ve p2'si belli olur olmaz (henüz sohbet odası yoksa) bir
+// chat_rooms kaydı oluşturur ve her iki oyuncuya bildirim mesajı bırakır.
+async function ensureTournamentChatRoom(path, m){
+  if(m.chatRoomId) return m.chatRoomId;
+  const chatId = 'tc_' + path.replace(/\./g,'_') + '_' + Date.now().toString(36);
+  await runTransaction(ref(db, `tournaments/${TID}`), tour=>{
+    if(!tour) return tour;
+    const seg = path.split('.');
+    let node = tour;
+    for(let i=0;i<seg.length-1;i++) node = node[seg[i]];
+    const mm = node[seg[seg.length-1]];
+    if(!mm || mm.chatRoomId) return tour; // zaten var, race condition'ı önle
+    mm.chatRoomId = chatId;
+    return tour;
+  });
+  try{
+    await set(ref(db, `chat_rooms/${chatId}/meta`), {
+      p1: m.p1, p1Name: m.p1Name, p2: m.p2, p2Name: m.p2Name, ts: Date.now(), tournamentPath: path
+    });
+    await push(ref(db, `chat_rooms/${chatId}/messages`), {
+      system: true, text: `🎾 Eşleşmeniz belli oldu: ${m.p1Name} vs ${m.p2Name}. Bu özel sohbet odasında rakibinizle iletişim kurabilirsiniz.`,
+      ts: Date.now()
+    });
+    // Bildirim: kullanıcının chat listesine/bildirim kutusuna düşer.
+    await push(ref(db, `chat_notifications/${m.p1}`), { chatRoomId: chatId, text: `${m.p2Name} ile eşleştiniz — sohbet açıldı.`, ts: Date.now(), read:false });
+    await push(ref(db, `chat_notifications/${m.p2}`), { chatRoomId: chatId, text: `${m.p1Name} ile eşleştiniz — sohbet açıldı.`, ts: Date.now(), read:false });
+  }catch(e){ console.error('[Turnuva Chat] oda kurulamadı:', e); }
+  return chatId;
+}
 
 // Aynı maç için createTournamentRoom'un birden fazla kez tetiklenmesini
 // (Firebase listener art arda fired olduğunda oluşan race condition) önlemek
@@ -1322,10 +1414,205 @@ async function createTournamentRoom(path, m){
       roundState: { hostDone: false, guestDone: false, winner: null },
       progress: { host: { currentRound: 1 }, guest: { currentRound: 1 } }
     });
+
+    // Maç süre sınırı: oda kurulduğu andan itibaren MATCH_TIME_LIMIT_MS
+    // içinde bitmezse checkMatchDeadline() maçı otomatik iptal eder.
+    await runTransaction(ref(db, `tournaments/${TID}`), tour=>{
+      if(!tour) return tour;
+      const seg = path.split('.');
+      let node = tour;
+      for(let i=0;i<seg.length-1;i++) node = node[seg[i]];
+      const mm = node[seg[seg.length-1]];
+      if(mm) mm.matchDeadline = Date.now() + MATCH_TIME_LIMIT_MS;
+      return tour;
+    });
   } finally {
     _roomCreationLocks.delete(path);
   }
 }
+
+// Aynı maç için forfeit/deadline işlemlerinin birden fazla istemci tarafından
+// aynı anda tetiklenmesini önlemek için yerel kilitler (transaction zaten
+// idempotent ama gereksiz yazmaları azaltır).
+const _forfeitLocks = new Set();
+const _deadlineLocks = new Set();
+
+// Ortak "kazananı bir sonraki tura ilerlet / turnuvayı bitir" mantığı.
+// finishTournamentMatch içindeki mantıkla aynı; forfeit senaryosunda da kullanılır.
+function _advanceWinnerInTour(tour, rIdx, mIdx, winnerSid, winnerName){
+  const rounds = tour.bracket.rounds;
+  const isLastRound = rIdx === rounds.length - 1;
+  let becameChampion = false;
+  if(isLastRound){
+    tour.status = 'finished';
+    tour.champion = winnerSid;
+    tour.championName = winnerName;
+    becameChampion = (winnerSid === mySid);
+  } else {
+    const nextRound = rounds[rIdx + 1];
+    const nextMatchIdx = Math.floor(mIdx / 2);
+    const nextMatch = nextRound[nextMatchIdx];
+    const isFirstFeeder = (mIdx % 2 === 0);
+    if(isFirstFeeder){ nextMatch.p1 = winnerSid; nextMatch.p1Name = winnerName; }
+    else { nextMatch.p2 = winnerSid; nextMatch.p2Name = winnerName; }
+  }
+  return becameChampion;
+}
+
+// "Hazırım ve otomatik tur atlama": bir oyuncu hazır olalı 2 saatten fazla
+// olduysa ve rakip hâlâ hazır değilse, hazır olan oyuncu oynamadan bir
+// sonraki tura geçer (forfeit). İki taraf da tetikleyebilir; transaction
+// idempotent olduğu için tek seferde işlenir.
+async function checkReadyTimeout(path, m){
+  if(m.status === 'finished' || m.roomCode) return;
+  const now = Date.now();
+  let readySid=null, readyName=null, readyAt=null, waitingReady=false;
+  if(m.readyP1 && !m.readyP2 && m.readyAtP1){ readySid=m.p1; readyName=m.p1Name; readyAt=m.readyAtP1; }
+  else if(m.readyP2 && !m.readyP1 && m.readyAtP2){ readySid=m.p2; readyName=m.p2Name; readyAt=m.readyAtP2; }
+  else return;
+  if(now - readyAt < MATCH_READY_TIMEOUT_MS) return;
+  if(_forfeitLocks.has(path)) return;
+  _forfeitLocks.add(path);
+  try{
+    await runTransaction(ref(db, `tournaments/${TID}`), tour=>{
+      if(!tour) return tour;
+      const seg = path.split('.'); const rIdx=+seg[2], mIdx=+seg[3];
+      const mm = tour.bracket.rounds[rIdx][mIdx];
+      if(!mm || mm.status==='finished' || mm.roomCode) return tour; // artık geçerli değil
+      // 2 saat kuralını yine sunucu tarafı verisiyle doğrula (stale read koruması)
+      const rAt = (mm.p1===readySid) ? mm.readyAtP1 : mm.readyAtP2;
+      const oppReady = (mm.p1===readySid) ? mm.readyP2 : mm.readyP1;
+      if(oppReady || !rAt || Date.now()-rAt < MATCH_READY_TIMEOUT_MS) return tour;
+      mm.status='finished'; mm.forfeit=true; mm.winner=readySid; mm.winnerName=readyName;
+      const amWinP1 = mm.p1===readySid;
+      mm.score_p1 = amWinP1 ? 1 : 0; mm.score_p2 = amWinP1 ? 0 : 1;
+      _advanceWinnerInTour(tour, rIdx, mIdx, readySid, readyName);
+      return tour;
+    });
+    try{ await push(ref(db,'news_feed'), { text: `⏱️ ${readyName}, rakibi 2 saat içinde hazır olmadığı için turu oynamadan geçti.`, ts: Date.now() }); }catch(e){}
+  } finally { _forfeitLocks.delete(path); }
+}
+
+// Süre sınırı: maç odası kurulduktan sonra tanımlı süre (varsayılan 30 dk)
+// içinde bitmezse maç iptal edilir (ready durumları sıfırlanır, oda kapanır)
+// ve istenirse yedek oyuncu atanabilir (bkz. substitutePlayer).
+async function checkMatchDeadline(path, m){
+  if(m.status === 'finished' || !m.roomCode || !m.matchDeadline) return;
+  if(Date.now() < m.matchDeadline) return;
+  if(_deadlineLocks.has(path)) return;
+  _deadlineLocks.add(path);
+  try{
+    const code = m.roomCode;
+    await runTransaction(ref(db, `tournaments/${TID}`), tour=>{
+      if(!tour) return tour;
+      const seg = path.split('.'); const rIdx=+seg[2], mIdx=+seg[3];
+      const mm = tour.bracket.rounds[rIdx][mIdx];
+      if(!mm || mm.status==='finished' || !mm.roomCode || !mm.matchDeadline) return tour;
+      if(Date.now() < mm.matchDeadline) return tour;
+      // Maç iptal: oda bağlantısını kaldır, hazır durumlarını sıfırla ki taraflar
+      // tekrar "Hazırım" diyerek yeni bir oda kurabilsin (ya da staff yedek atasın).
+      mm.roomCode = null; mm.readyP1=false; mm.readyP2=false;
+      mm.readyAtP1=null; mm.readyAtP2=null; mm.matchDeadline=null;
+      return tour;
+    });
+    try{ await update(ref(db, `duel_rooms/${code}`), { status:'cancelled' }); }catch(e){}
+    try{ await push(ref(db,'news_feed'), { text: `⏳ Bir turnuva maçı süre sınırını aştığı için iptal edildi.`, ts: Date.now() }); }catch(e){}
+    if(inTournamentMatchEntered && tournamentMatchInfo && tournamentMatchInfo.path===path){
+      inTournamentMatchEntered = false; tournamentMatchInfo = null;
+    }
+  } finally { _deadlineLocks.delete(path); }
+}
+
+// ── Moderatör: "Maçı Sıfırla" (onay ister) ──
+// Hazır durumları, oda bağlantısı ve sohbeti sıfırlar; p1/p2 atamaları
+// ve önceki tur sonucundan gelen eşleşme korunur. Bitmiş bir maçı sıfırlamaz
+// (o durumda staff bunun yerine "Yedek Oyuncu Ata" veya turnuvayı sıfırlamayı kullanmalı).
+window.resetTournamentMatch = async function(path){
+  if(!isStaff) return;
+  if(!confirm('Bu maçı sıfırlamak istediğine emin misin? İki oyuncu da tekrar "Hazırım" demesi gerekecek.')) return;
+  let oldRoomCode=null;
+  await runTransaction(ref(db, `tournaments/${TID}`), tour=>{
+    if(!tour) return tour;
+    const seg = path.split('.'); const rIdx=+seg[2], mIdx=+seg[3];
+    const mm = tour.bracket.rounds[rIdx][mIdx];
+    if(!mm || mm.status==='finished') return tour;
+    oldRoomCode = mm.roomCode;
+    mm.readyP1=false; mm.readyP2=false; mm.readyAtP1=null; mm.readyAtP2=null;
+    mm.roomCode=null; mm.matchDeadline=null; mm.forfeit=false;
+    return tour;
+  });
+  if(oldRoomCode){ try{ await update(ref(db, `duel_rooms/${oldRoomCode}`), { status:'cancelled' }); }catch(e){} }
+};
+
+// ── Moderatör: Dinamik rakip değişimi / yedek oyuncu atama ──
+// Rakip yanıt vermiyorsa, o an çevrimiçi olan bir oyuncu maça dahil edilir.
+window.substituteTournamentPlayer = async function(path, slot, newSid, newName){
+  if(!isStaff) return;
+  if(!confirm(`${newName} adlı oyuncuyu bu maça yedek olarak atamak istediğine emin misin?`)) return;
+  let oldRoomCode=null;
+  await runTransaction(ref(db, `tournaments/${TID}`), tour=>{
+    if(!tour) return tour;
+    const seg = path.split('.'); const rIdx=+seg[2], mIdx=+seg[3];
+    const mm = tour.bracket.rounds[rIdx][mIdx];
+    if(!mm || mm.status==='finished') return tour;
+    oldRoomCode = mm.roomCode;
+    if(slot==='p1'){ mm.p1=newSid; mm.p1Name=newName; }
+    else { mm.p2=newSid; mm.p2Name=newName; }
+    // Değişiklikten sonra maç yeniden başlar: hazır/oda/sohbet sıfırlanır.
+    mm.readyP1=false; mm.readyP2=false; mm.readyAtP1=null; mm.readyAtP2=null;
+    mm.roomCode=null; mm.matchDeadline=null; mm.chatRoomId=null;
+    return tour;
+  });
+  if(oldRoomCode){ try{ await update(ref(db, `duel_rooms/${oldRoomCode}`), { status:'cancelled' }); }catch(e){} }
+  try{ await push(ref(db,'news_feed'), { text: `🔁 Turnuva maçına yedek oyuncu atandı: ${newName}.`, ts: Date.now() }); }catch(e){}
+};
+
+let _onlineUsersCache = {};
+onValue(ref(db,'online_users'), snap=>{ _onlineUsersCache = snap.val() || {}; });
+
+window.toggleSubstitutePicker = function(path, slot){
+  const box = document.getElementById('sub-picker-'+path.replace(/\./g,'_')+'-'+slot);
+  if(!box) return;
+  if(box.style.display==='block'){ box.style.display='none'; return; }
+  const rows = Object.entries(_onlineUsersCache)
+    .filter(([sid])=>sid!==mySid)
+    .map(([sid,u])=>`<div class="tourn-sub-row"><span>${u.name}</span><button onclick="substituteTournamentPlayer('${path}','${slot}','${sid}','${(u.name||'').replace(/'/g,"\\'")}')">Ata</button></div>`)
+    .join('') || '<div class="tourn-sub-row" style="color:#b09070;">Şu an çevrimiçi başka oyuncu yok.</div>';
+  box.innerHTML = rows;
+  box.style.display='block';
+};
+
+// ── Özel maç sohbeti UI ──
+let _activeTournChatListener = null;
+window.toggleTournamentChat = function(chatRoomId, elId){
+  const box = document.getElementById(elId);
+  if(!box) return;
+  const opening = box.style.display !== 'block';
+  box.style.display = opening ? 'block' : 'none';
+  if(_activeTournChatListener){ _activeTournChatListener(); _activeTournChatListener=null; }
+  if(!opening) return;
+  _activeTournChatListener = onValue(ref(db, `chat_rooms/${chatRoomId}/messages`), snap=>{
+    const msgs = snap.val() || {};
+    const list = Object.values(msgs).sort((a,b)=>a.ts-b.ts);
+    const msgsEl = box.querySelector('.tourn-chat-msgs');
+    if(!msgsEl) return;
+    msgsEl.innerHTML = list.map(msg=>{
+      if(msg.system) return `<div class="tourn-chat-msg system">${msg.text}</div>`;
+      const mine = msg.sid===mySid;
+      return `<div class="tourn-chat-msg${mine?' mine':''}">${mine?'':`<span class="tcm-author">${msg.name}</span>`}${msg.text}</div>`;
+    }).join('');
+    msgsEl.scrollTop = msgsEl.scrollHeight;
+  });
+};
+window.sendTournamentChatMsg = async function(chatRoomId, inputId){
+  const input = document.getElementById(inputId);
+  if(!input || !input.value.trim()) return;
+  const text = input.value.trim().slice(0,300);
+  input.value='';
+  try{
+    await push(ref(db, `chat_rooms/${chatRoomId}/messages`), { sid:mySid, name:myName, text, ts:Date.now() });
+  }catch(e){ console.error('[Turnuva Chat] gönderilemedi:', e); }
+};
 
 function enterTournamentMatch(path, m){
   inTournamentMatchEntered = true;
@@ -1469,18 +1756,23 @@ function renderMatchBlock(m, path, roundIdx, totalRounds){
 
   // Aksiyon alanı (benim maçım ve bitmemiş)
   let actionHtml = '';
+  let readyWaitNote = '';
   if(isMine && !isFinished){
     const amP1 = p1Mine;
     const iAmReady = amP1 ? m.readyP1 : m.readyP2;
     const oppReady = amP1 ? m.readyP2 : m.readyP1;
+    const myReadyAt = amP1 ? m.readyAtP1 : m.readyAtP2;
     if(m.roomCode){
       actionHtml = `<div class="tourn-action">
         <div class="tourn-action-msg">⚡ Maç başlıyor — oyun ekranına yönlendiriliyorsunuz…</div>
       </div>`;
     } else if(iAmReady && !oppReady){
+      const remainMs = myReadyAt ? Math.max(0, MATCH_READY_TIMEOUT_MS - (Date.now()-myReadyAt)) : MATCH_READY_TIMEOUT_MS;
+      const remainH = Math.floor(remainMs/3600000), remainM = Math.floor((remainMs%3600000)/60000);
       actionHtml = `<div class="tourn-action">
         <div class="tourn-action-msg">✅ Hazırsın! Rakibinin hazır olması bekleniyor…<br>
         <span style="color:#7b5ea7;font-size:.7rem;">İkisi de hazır olunca maç otomatik başlar</span></div>
+        <div style="font-size:.68rem;color:#a05050;margin-top:4px;">⏳ Rakip ${remainH}sa ${remainM}dk içinde hazır olmazsa turu oynamadan geçersin</div>
       </div>`;
     } else if(iAmReady && oppReady){
       actionHtml = `<div class="tourn-action">
@@ -1497,6 +1789,46 @@ function renderMatchBlock(m, path, roundIdx, totalRounds){
     }
   }
 
+  // Maç süresi sınırı göstergesi (oda kurulduysa)
+  let timerHtml = '';
+  if(!isFinished && m.roomCode && m.matchDeadline){
+    const remain = m.matchDeadline - Date.now();
+    if(remain > 0){
+      const mm2 = Math.floor(remain/60000), ss = Math.floor((remain%60000)/1000);
+      timerHtml = `<div class="tourn-match-timer${remain<5*60000?' warn':''}">⏱️ Kalan süre: ${mm2}:${ss.toString().padStart(2,'0')}</div>`;
+    }
+  }
+
+  // Özel sohbet paneli (benim maçım, sohbet odası açılmışsa)
+  let chatHtml = '';
+  if(isMine && !isFinished && m.chatRoomId){
+    const safeId = path.replace(/\./g,'_');
+    const boxId = 'chat-box-'+safeId, inputId = 'chat-input-'+safeId;
+    chatHtml = `<div style="text-align:center;">
+      <button class="tourn-chat-toggle" onclick="toggleTournamentChat('${m.chatRoomId}','${boxId}')">💬 Rakiple Özel Sohbet</button>
+      <div id="${boxId}" class="tourn-chat-box" style="display:none;">
+        <div class="tourn-chat-msgs"></div>
+        <div class="tourn-chat-input-row">
+          <input id="${inputId}" type="text" placeholder="Mesaj yaz…" onkeydown="if(event.key==='Enter')sendTournamentChatMsg('${m.chatRoomId}','${inputId}')" />
+          <button onclick="sendTournamentChatMsg('${m.chatRoomId}','${inputId}')">Gönder</button>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  // Moderatör aksiyonları: yalnızca öğretmen/moderatör sayfasında görünür.
+  let modHtml = '';
+  if(isStaff && !isFinished && (m.p1 || m.p2)){
+    const safeId = path.replace(/\./g,'_');
+    modHtml = `<div class="tourn-mod-actions">
+      <button class="tourn-mod-btn danger" onclick="resetTournamentMatch('${path}')">🔄 Maçı Sıfırla</button>
+      ${m.p1?`<button class="tourn-mod-btn info" onclick="toggleSubstitutePicker('${path}','p1')">🔁 ${m.p1Name?.split(' ')[0]||'P1'} Yerine Yedek</button>`:''}
+      ${m.p2?`<button class="tourn-mod-btn info" onclick="toggleSubstitutePicker('${path}','p2')">🔁 ${m.p2Name?.split(' ')[0]||'P2'} Yerine Yedek</button>`:''}
+    </div>
+    ${m.p1?`<div id="sub-picker-${safeId}-p1" class="tourn-sub-picker" style="display:none;"></div>`:''}
+    ${m.p2?`<div id="sub-picker-${safeId}-p2" class="tourn-sub-picker" style="display:none;"></div>`:''}`;
+  }
+
   return `<div class="tourn-match-wrap">
     <div class="tourn-match${isMine?' mine':''}">
       <div class="tm-side ${p1cls}${p1Mine?' mine-side':''}">
@@ -1511,8 +1843,11 @@ function renderMatchBlock(m, path, roundIdx, totalRounds){
         ${p2Mine?'<div class="tm-you">SEN</div>':''}
       </div>
     </div>
+    ${timerHtml}
     ${resultLine}
     ${actionHtml}
+    ${chatHtml}
+    ${modHtml}
   </div>`;
 }
 
@@ -1558,6 +1893,16 @@ function renderTournamentBracket(tour){
 
   body.innerHTML = html;
 }
+
+// Firebase listener'ı yalnızca veri değiştiğinde tetiklenir; 2 saatlik
+// "hazır" kuralı ve maç süre sınırı ise saatle ilerler. Bu yüzden periyodik
+// olarak mevcut turnuva durumunu yeniden işleyip (deadline/timeout kontrolleri
+// + sayaç metni) tazeliyoruz.
+setInterval(()=>{
+  if(tournamentState && tournamentState.status === 'active'){
+    try{ handleTournamentUpdate(tournamentState); }catch(e){}
+  }
+}, 20000);
 
 if(localStorage.getItem('gitar_tournament_watch')){
   showTournamentSetup();
