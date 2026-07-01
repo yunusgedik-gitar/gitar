@@ -1493,7 +1493,30 @@ async function checkMatchDeadline(path, m){
   } finally { _deadlineLocks.delete(path); }
 }
 
-// ── Moderatör: "Maçı Sıfırla" (onay ister) ──
+// ── Moderatör: bitmiş ama skoru eksik kalmış eski/bozuk maç kaydını onar ──
+// Sadece score_p1/score_p2 alanlarını yazar; winner/status'a dokunmaz.
+window.fixTournamentMatchScore = async function(path, p1Name, p2Name){
+  if(!isStaff) return;
+  const s1raw = prompt(`${p1Name || 'Oyuncu 1'} skoru (doğru sayısı):`);
+  if(s1raw === null) return;
+  const s2raw = prompt(`${p2Name || 'Oyuncu 2'} skoru (doğru sayısı):`);
+  if(s2raw === null) return;
+  const s1 = Number(s1raw), s2 = Number(s2raw);
+  if(!Number.isFinite(s1) || !Number.isFinite(s2) || s1 < 0 || s2 < 0){
+    alert('Geçersiz sayı girdiniz. Lütfen 0 veya pozitif bir sayı girin.');
+    return;
+  }
+  await runTransaction(ref(db, `tournaments/${TID}`), tour=>{
+    if(!tour) return tour;
+    const seg = path.split('.'); const rIdx=+seg[2], mIdx=+seg[3];
+    const m = tour.bracket.rounds[rIdx][mIdx];
+    if(!m || m.status !== 'finished') return tour;
+    m.score_p1 = s1; m.score_p2 = s2;
+    return tour;
+  });
+};
+
+
 // Hazır durumları, oda bağlantısı ve sohbeti sıfırlar; p1/p2 atamaları
 // ve önceki tur sonucundan gelen eşleşme korunur. Bitmiş bir maçı sıfırlamaz
 // (o durumda staff bunun yerine "Yedek Oyuncu Ata" veya turnuvayı sıfırlamayı kullanmalı).
@@ -1814,6 +1837,13 @@ function renderMatchBlock(m, path, roundIdx, totalRounds){
     </div>
     ${m.p1?`<div id="sub-picker-${safeId}-p1" class="tourn-sub-picker" style="display:none;"></div>`:''}
     ${m.p2?`<div id="sub-picker-${safeId}-p2" class="tourn-sub-picker" style="display:none;"></div>`:''}`;
+  }
+  // Bitmiş ama skor verisi eksik kalmış (eski/bozuk kayıt) maçlar için:
+  // moderatör iki oyuncunun gerçek skorunu elle girip kaydı onarabilir.
+  if(isStaff && isFinished && (!p1HasScore || !p2HasScore)){
+    modHtml += `<div class="tourn-mod-actions">
+      <button class="tourn-mod-btn info" onclick="fixTournamentMatchScore('${path}','${(m.p1Name||'').replace(/'/g,"\\'")}','${(m.p2Name||'').replace(/'/g,"\\'")}')">✏️ Skoru Düzelt</button>
+    </div>`;
   }
 
   return `<div class="tourn-match-wrap">
