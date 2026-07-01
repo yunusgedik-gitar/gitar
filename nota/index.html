@@ -315,6 +315,17 @@
     </div>
     <button class="back-btn" onclick="location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
   </div>
+
+  <div id="staff-broadcast-card" class="filter-card" style="display:none;text-align:left;">
+    <div class="filter-title" style="text-align:center;">📢 Duyuru Bildirimi Gönder</div>
+    <p style="font-size:.72rem;color:#9a8070;margin:-4px 0 8px;text-align:center;">Bildirimlerini açmış tüm öğrencilere anında gider.</p>
+    <textarea id="broadcast-msg-input" rows="2" maxlength="200" placeholder="Örn: Yarın saat 17:00'de yeni turnuva başlıyor, hazır olun!"
+      style="width:100%;padding:10px 12px;border-radius:12px;border:1.5px solid #d4c4b0;font-family:inherit;font-size:.85rem;resize:vertical;box-sizing:border-box;"></textarea>
+    <div style="text-align:center;margin-top:8px;">
+      <button class="app-btn" style="width:auto;padding:8px 22px;" onclick="sendBroadcastNotification(event)">🚀 Gönder</button>
+    </div>
+  </div>
+
   <div id="setup-area" class="filter-card">
     <div class="action-buttons-wrap">
       <button id="start-btn" class="app-btn" onclick="startExercise('practice')">Egzersize Başla (Zamansız) 🎯</button>
@@ -328,6 +339,9 @@
     <div class="top-bar" style="margin-bottom:.8rem;">
       <h2 style="font-family:'Playfair Display',serif;font-size:1.1rem;">🏆 Turnuva Lobisi</h2>
       <button class="back-btn" onclick="leaveTournamentLobby()">← Geri</button>
+    </div>
+    <div style="text-align:center;margin-bottom:10px;">
+      <button id="notif-toggle-btn" class="tourn-mod-btn info" style="font-size:.78rem;padding:7px 14px;" onclick="enableTournamentNotifications()">🔔 Bildirimleri Aç</button>
     </div>
     <div id="tourn-lobby-body"></div>
   </div>
@@ -530,6 +544,9 @@ import {
   getDatabase, ref, set, get, update, remove,
   onValue, onDisconnect, runTransaction, push
 } from 'https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js';
+import {
+  getMessaging, getToken, onMessage, isSupported as fcmIsSupported
+} from 'https://www.gstatic.com/firebasejs/12.14.0/firebase-messaging.js';
 import { createTracker } from '/game-tracker.js';
 import { ERRORS as _SHARED_ERRORS } from '/shared-errors.js';
 window.ERR = _SHARED_ERRORS;
@@ -543,6 +560,12 @@ const FIREBASE_CONFIG = {
   messagingSenderId: "184803778782",
   appId: "1:184803778782:web:8f9fbeb4fe625eb386e24f"
 };
+
+// ── Web Push (VAPID) anahtarı ──
+// Firebase Console → Proje Ayarları → Cloud Messaging sekmesi →
+// "Web Push sertifikaları" → "Anahtar çifti oluştur" ile alınır.
+// Aşağıdaki değeri KENDİ VAPID anahtarınızla değiştirmeden bildirimler çalışmaz.
+const FCM_VAPID_KEY = "BURAYA_KENDI_VAPID_ANAHTARINIZI_YAPISTIRIN";
 
 const fbApp = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
 const db = getDatabase(fbApp);
@@ -559,12 +582,114 @@ onValue(ref(db, 'moderators'), snap => {
   isStaff = (mySid === TEACHER_ID) || !!studentModerators[mySid];
   const btn = document.getElementById('tournament-mode-btn');
   if (btn) btn.style.display = isStaff ? '' : 'none';
+  const bcast = document.getElementById('staff-broadcast-card');
+  if (bcast) bcast.style.display = isStaff ? '' : 'none';
 });
 
 const _tracker = createTracker({ db, ref, push, get, set });
 window.trackStart = (mode) => _tracker.start(mySid, 'nota', mode);
 window.trackLog   = (ok, key, label) => _tracker.log(ok, key, label);
 window.trackEnd   = () => _tracker.end();
+
+// ── Push Bildirimleri (turnuva eşleşmesi / sıra geldi / şampiyon) ──
+// Token'lar `fcm_tokens/{sid}/{token}` altında saklanır; asıl gönderim
+// Cloud Functions tarafında yapılır (bkz. functions/index.js).
+let _fcmSupported = false;
+let _fcmMessaging = null;
+
+function _notifBtnEl(){ return document.getElementById('notif-toggle-btn'); }
+
+function updateNotifButtonUI(state){
+  // state: 'unsupported' | 'default' | 'denied' | 'on' | 'loading'
+  const btn = _notifBtnEl();
+  if(!btn) return;
+  const map = {
+    unsupported: { text:'🔕 Bu cihazda desteklenmiyor', disabled:true },
+    default:     { text:'🔔 Bildirimleri Aç', disabled:false },
+    denied:      { text:'🚫 Bildirimler engellenmiş (tarayıcı ayarından açın)', disabled:true },
+    on:          { text:'✅ Bildirimler Açık', disabled:true },
+    loading:     { text:'⏳ Açılıyor…', disabled:true }
+  };
+  const s = map[state] || map.default;
+  btn.textContent = s.text;
+  btn.disabled = s.disabled;
+}
+
+async function initNotifState(){
+  if(!mySid) return;
+  try{
+    _fcmSupported = await fcmIsSupported();
+  }catch(e){ _fcmSupported = false; }
+  if(!_fcmSupported || !('Notification' in window)){
+    updateNotifButtonUI('unsupported');
+    return;
+  }
+  if(Notification.permission === 'granted'){
+    // İzin zaten verilmiş olabilir (önceki oturumdan) — token'ı sessizce yenile.
+    updateNotifButtonUI('on');
+    registerFcmToken().catch(()=>{});
+  } else if(Notification.permission === 'denied'){
+    updateNotifButtonUI('denied');
+  } else {
+    updateNotifButtonUI('default');
+  }
+}
+
+async function registerFcmToken(){
+  if(!_fcmMessaging) _fcmMessaging = getMessaging(fbApp);
+  const reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+  const token = await getToken(_fcmMessaging, { vapidKey: FCM_VAPID_KEY, serviceWorkerRegistration: reg });
+  if(!token) throw new Error('Token alınamadı');
+  await set(ref(db, `fcm_tokens/${mySid}/${token}`), { name: myName, ts: Date.now(), ua: navigator.userAgent.slice(0,120) });
+  // Site açıkken gelen (foreground) bildirimleri de kullanıcıya göster.
+  onMessage(_fcmMessaging, payload => {
+    const title = (payload.notification && payload.notification.title) || 'Turnuva';
+    const body  = (payload.notification && payload.notification.body)  || '';
+    try{ new Notification(title, { body, icon:'/favicon.ico' }); }catch(e){}
+  });
+  return token;
+}
+
+window.enableTournamentNotifications = async function(){
+  if(!_fcmSupported){ updateNotifButtonUI('unsupported'); return; }
+  updateNotifButtonUI('loading');
+  try{
+    const perm = await Notification.requestPermission();
+    if(perm !== 'granted'){ updateNotifButtonUI(perm === 'denied' ? 'denied' : 'default'); return; }
+    await registerFcmToken();
+    updateNotifButtonUI('on');
+  }catch(e){
+    console.error('[Bildirim] açılamadı:', e);
+    updateNotifButtonUI('default');
+    alert('Bildirimler açılamadı. VAPID anahtarının doğru girildiğinden emin olun.');
+  }
+};
+
+initNotifState();
+
+// ── Öğretmen: serbest metinli duyuru bildirimi gönder ──
+// Cloud Function tarafı (onBroadcastCreate) bu kaydı görüp bildirimlerini
+// açmış TÜM öğrencilere push atar.
+window.sendBroadcastNotification = async function(evt){
+  if(!isStaff) return;
+  const input = document.getElementById('broadcast-msg-input');
+  const text = (input.value || '').trim();
+  if(!text){ alert('Önce bir mesaj yazın.'); return; }
+  const btn = evt && evt.target;
+  if(btn){ btn.disabled = true; btn.textContent = '⏳ Gönderiliyor…'; }
+  try{
+    await push(ref(db, 'broadcast_notifications'), {
+      text, sentBy: mySid, sentByName: myName, ts: Date.now()
+    });
+    input.value = '';
+    alert('📢 Duyuru gönderildi!');
+  }catch(e){
+    console.error('[Duyuru] gönderilemedi:', e);
+    alert('Duyuru gönderilemedi, tekrar deneyin.');
+  }finally{
+    if(btn){ btn.disabled = false; btn.textContent = '🚀 Gönder'; }
+  }
+};
 
 
 let duelStrings     = new Set([1,2,3,4,5,6]);

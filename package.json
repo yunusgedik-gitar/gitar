@@ -1,0 +1,11 @@
+{
+  "name": "functions",
+  "description": "Turnuva push bildirimleri (eşleşme, sıra geldi, şampiyon)",
+  "engines": { "node": "20" },
+  "main": "index.js",
+  "dependencies": {
+    "firebase-admin": "^12.6.0",
+    "firebase-functions": "^4.9.0"
+  },
+  "private": true
+}
