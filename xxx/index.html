@@ -1,0 +1,1808 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <link rel="stylesheet" href="/theme.css">
+  <script src="/theme.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+  <title>Nota Okuma Egzersizi – Klasik Gitar</title>
+  <script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.2/build/cjs/vexflow.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;1,400&family=Lato:wght@300;400;700&display=swap');
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Lato', sans-serif; background: #faf6ed; min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 1.4rem 1rem 2.5rem; color: #5a3e2b; overflow-x: hidden;
+    }
+    header { text-align: center; margin-bottom: 1.2rem; }
+    header h1 { font-family: 'Playfair Display', serif; font-size: 1.45rem; font-weight: 600; color: #5a3e2b; }
+    header p  { font-size: 0.8rem; color: #b09070; margin-top: 0.3rem; font-style: italic; }
+    #app { width: 100%; max-width: 550px; }
+
+    .filter-card {
+      background: #fff; border: 1.5px solid #e8e0d5; border-radius: 20px;
+      padding: 1rem; margin-bottom: 1rem; box-shadow: 0 4px 20px rgba(90,62,43,0.04); text-align: center;
+    }
+    .filter-title { font-size: 0.85rem; font-weight: 700; color: #b09070; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem; }
+    .string-buttons { display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 0.85rem; }
+    .string-btn { width: 42px; height: 42px; border-radius: 50%; border: 1.5px solid #d4c4b0; background: #fff; color: #5a3e2b; font-size: 1.1rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s ease; position: relative; }
+    .string-btn.all-btn { width: auto; padding: 0 16px; border-radius: 20px; font-size: 0.9rem; }
+    .string-btn.active { background: #5a3e2b; border-color: #5a3e2b; color: #fff; box-shadow: 0 4px 10px rgba(90,62,43,0.2); }
+    .string-num-btn:not(.active) { opacity: .45; }
+    .string-num-btn:not(.active)::after {
+      content: '✕'; position: absolute; top: -4px; right: -4px;
+      width: 16px; height: 16px; background: #c0392b; color: #fff;
+      border-radius: 50%; font-size: .62rem; font-weight: 900;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,.3);
+    }
+    .action-buttons-wrap { display: flex; flex-direction: column; gap: 10px; }
+    .app-btn { width: 100%; padding: 10px; font-size: 0.95rem; font-weight: 700; border-radius: 12px; border: 1.5px solid #d4a373; background: #f5e6d3; color: #5a3e2b; cursor: pointer; transition: all 0.12s; font-family: inherit; }
+    .btn-race { border-color: #e24b4a; background: #fdf0f0; color: #a32d2d; }
+    .btn-duel { border-color: #7b5ea7; background: #f3eeff; color: #4a2d8a; }
+    .app-btn:disabled { background: #f5f5f5; border-color: #ddd; color: #aaa; cursor: not-allowed; }
+    @media (hover:hover) {
+      .app-btn:hover:not(:disabled) { filter: brightness(0.95); }
+      .back-btn:hover { background: #f5e6d3; }
+      .ctrl-btn:hover:not(:disabled) { background: #f5e6d3; }
+      .ctrl-btn.primary:hover:not(:disabled) { background: #ebd3b8; }
+    }
+    .back-btn { font-size: 0.85rem; font-weight: 700; color: #b09070; background: #fff; border: 1.5px solid #e8e0d5; padding: 6px 14px; border-radius: 30px; cursor: pointer; font-family: inherit; transition: all 0.12s; }
+    .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem; min-height: 38px; }
+
+    /* Egzersiz */
+    #exercise-area { display: none; text-align: center; }
+    #timer-display { font-size: 1rem; font-weight: 700; color: #e24b4a; background: #fdf0f0; border: 1.5px solid #f9d5d5; padding: 6px 16px; border-radius: 30px; display: none; }
+    .card { background: #fff; border: 1.5px solid #e8e0d5; border-radius: 20px; padding: 1.25rem 1.25rem 0.5rem; margin-bottom: 0.85rem; display: flex; flex-direction: column; align-items: center; box-shadow: 0 4px 20px rgba(90,62,43,0.04); }
+    .card-top { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 0.25rem; }
+    .card-label { font-size: 0.8rem; color: #b09070; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+    #listen-btn { display: flex; align-items: center; gap: 5px; font-size: 0.8rem; padding: 6px 14px; border-radius: 10px; border: 1.5px solid #d4c4b0; background: #fff; color: #5a3e2b; font-weight: 700; cursor: pointer; font-family: inherit; transition: all 0.12s; }
+    #listen-btn.playing { border-color: #6b8c42; color: #3b6d11; background: #eaf3de; }
+    #notation { width: 100%; display: flex; justify-content: center; overflow: hidden; }
+    #notation svg { max-width: 100%; }
+    #hint { font-size: 0.78rem; color: #b09070; text-align: center; margin-bottom: 1rem; font-style: italic; }
+    .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 0.75rem; }
+    .cbtn { padding: 14px 10px; font-size: 1.8rem; font-weight: 700; border-radius: 14px; border: 1.5px solid #d4c4b0; background: #fff; color: #5a3e2b; cursor: pointer; font-family: inherit; transition: all 0.12s; -webkit-tap-highlight-color: transparent; outline: none; }
+    .cbtn:active:not(:disabled) { transform: scale(0.97); }
+    .cbtn.correct { background: #eaf3de; border-color: #6b8c42; color: #3b6d11; }
+    .cbtn.wrong   { background: #fdf0f0; border-color: #e24b4a; color: #a32d2d; }
+    .cbtn:disabled { cursor: default; transform: none; }
+    #feedback { text-align: center; font-size: 0.92rem; font-weight: 700; min-height: 22px; margin-bottom: 0.6rem; }
+    #feedback.ok { color: #3b6d11; } #feedback.no { color: #a32d2d; }
+    #progress-bar-wrap { height: 5px; background: #ede6d8; border-radius: 3px; margin-bottom: 0.8rem; overflow: hidden; display: none; }
+    #progress-bar { height: 100%; width: 100%; background: linear-gradient(90deg,#8cb85f,#52a050); border-radius: 3px; transition: width 0.5s linear; }
+    .controls { display: flex; gap: 10px; margin-top: 0.85rem; }
+    .controls-btn { flex: 1; padding: 12px; font-size: 0.9rem; font-weight: 700; border-radius: 12px; border: 1.5px solid #d4c4b0; background: #fff; color: #5a3e2b; cursor: pointer; font-family: inherit; transition: all 0.12s; }
+    .controls-btn.primary { background: #f5e6d3; border-color: #d4a373; }
+    .controls-btn:disabled { background: #f5f5f5; border-color: #e0e0e0; color: #b0b0b0; cursor: not-allowed; }
+    .result-card { background: #fff; border: 2px solid #d4a373; border-radius: 20px; padding: 2.2rem 1.5rem; text-align: center; }
+    .result-card h2 { font-family:'Playfair Display',serif; font-size: 1.6rem; color: #5a3e2b; margin-bottom: 0.5rem; }
+    .result-rank { font-size: 1.25rem; font-weight: 700; color: #d4a373; background: #faf6ed; display: inline-block; padding: 6px 18px; border-radius: 30px; margin-top: 0.5rem; }
+    .result-score { font-size: 3.5rem; font-weight: 700; color: #6b8c42; margin: 0.8rem 0; }
+    .result-text { font-size: 0.95rem; color: #5a3e2b; margin-bottom: 1.5rem; font-style: italic; line-height: 1.4rem; padding: 0 10px; }
+
+    /* DÜELLO STİLLERİ */
+    #duel-setup-area, #duel-waiting-area, #duel-game-area { display: none; }
+    #tournament-setup-area, #tournament-bracket-area { display: none; }
+    .tourn-lobby-list{display:flex;flex-direction:column;gap:6px;margin:10px 0;}
+    .tourn-lobby-row{display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(0,0,0,.04);border-radius:10px;font-size:.9rem;}
+    .tourn-dot{width:8px;height:8px;border-radius:50%;background:#3bb24a;display:inline-block;}
+    .tourn-mode-btn{
+      background:linear-gradient(135deg,#d4af5a,#b8892a) !important;
+      box-shadow:0 2px 8px rgba(184,137,42,.25);
+    }
+    .tourn-mode-btn:hover{ box-shadow:0 3px 12px rgba(184,137,42,.35); }
+    /* ── Turnuva Tablo CSS ── */
+    .tourn-rules{background:#fffdf7;border:1px solid #e0d5c0;border-radius:12px;padding:10px 14px;margin-bottom:14px;font-size:.78rem;color:#7a6048;line-height:1.6;}
+    .tourn-rules strong{color:#5a3e2b;}
+    .tourn-round-section{margin-bottom:16px;}
+    .tourn-round-header{
+      display:flex;align-items:center;gap:8px;
+      font-family:'Playfair Display',serif;font-size:.88rem;font-weight:700;
+      color:#fff;padding:6px 14px;border-radius:20px;margin-bottom:8px;
+      background:linear-gradient(135deg,#7b5ea7,#5a3e80);
+    }
+    .tourn-round-header.r-final{background:linear-gradient(135deg,#c8a82a,#9c7a10);}
+    .tourn-round-header.r-semi{background:linear-gradient(135deg,#4a7a9d,#2e5a7a);}
+    .tourn-round-header.r-quarter{background:linear-gradient(135deg,#4a9d6a,#2e7a4a);}
+    .tourn-match{
+      display:flex;align-items:stretch;gap:0;
+      border-radius:12px;border:1.5px solid #e8e0d5;
+      background:#fff;margin-bottom:8px;overflow:hidden;
+      transition:box-shadow .15s;
+    }
+    .tourn-match.mine{
+      border-color:#7b5ea7;
+      box-shadow:0 2px 12px rgba(123,94,167,.18);
+      transform:scale(1.012);
+    }
+    .tourn-match .tm-side{
+      flex:1;text-align:center;padding:10px 8px;
+      font-size:.85rem;display:flex;flex-direction:column;
+      align-items:center;justify-content:center;gap:3px;
+    }
+    .tourn-match .tm-side.tm-win{font-weight:700;color:#2e8b3a;background:rgba(46,139,58,.07);}
+    .tourn-match .tm-side.tm-lose{color:#a04040;background:rgba(160,64,64,.05);opacity:.8;}
+    .tourn-match .tm-side.tm-pending{color:#8a6848;}
+    .tourn-match .tm-side.mine-side{background:rgba(123,94,167,.06);}
+    .tm-name{font-size:.82rem;font-weight:700;line-height:1.2;}
+    .tm-score{font-size:1.1rem;font-weight:800;line-height:1;}
+    .tm-you{font-size:.62rem;color:#7b5ea7;font-weight:700;letter-spacing:.03em;}
+    .tourn-match .tm-vs{
+      display:flex;align-items:center;justify-content:center;
+      width:30px;flex-shrink:0;
+      font-size:.7rem;color:#b09070;font-weight:700;
+      border-left:1px solid #f0e8e0;border-right:1px solid #f0e8e0;
+      background:#faf8f5;
+    }
+    .tourn-match-result{
+      font-size:.72rem;color:#7a6048;text-align:center;
+      padding:3px 10px 6px;
+      background:#faf8f5;border-top:1px dashed #e8e0d5;
+    }
+    .tourn-match-wrap{margin-bottom:10px;}
+    .tourn-action{padding:6px 10px 10px;text-align:center;}
+    .tourn-action-msg{font-size:.78rem;color:#7a6048;font-style:italic;line-height:1.5;}
+    .tourn-champion-box{
+      text-align:center;margin:18px auto;padding:22px 18px;max-width:380px;
+      border-radius:18px;
+      background:linear-gradient(160deg,#fff8e6,#fdecbf);
+      border:1.5px solid #e0bb5a;
+      box-shadow:0 4px 18px rgba(202,162,58,.22);
+    }
+    .tourn-champion-trophy{font-size:2.4rem;line-height:1;margin-bottom:6px;}
+    .tourn-champion-quote{font-size:.84rem;color:#9c7a1f;font-style:italic;line-height:1.5;margin-bottom:10px;}
+    .tourn-champion-name{font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;color:#5a3e2b;}
+    /* Maç sonucu ekranı */
+    .tr-result-player{border-radius:16px;padding:14px 18px;border:2px solid transparent;transition:all .2s;}
+    .tr-result-player.win{ border-color:#4a9d4a; background:rgba(74,157,74,.07); }
+    .tr-result-player.lose{ border-color:#c0524a; background:rgba(192,82,74,.06); opacity:.85; }
+    /* Lobi: mod seçici */
+    .tourn-mode-picker{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:8px 0 12px;}
+    .tourn-mode-card{
+      flex:1;min-width:130px;max-width:160px;
+      border:2px solid #d4c4b0;border-radius:14px;padding:12px 10px;
+      text-align:center;cursor:pointer;background:#fff;transition:all .15s;
+    }
+    .tourn-mode-card:hover{border-color:#7b5ea7;background:#f8f4ff;}
+    .tourn-mode-card.selected{border-color:#7b5ea7;background:#f3eeff;box-shadow:0 2px 8px rgba(123,94,167,.18);}
+    .tourn-mode-icon{font-size:1.5rem;margin-bottom:4px;}
+    .tourn-mode-label{font-size:.8rem;font-weight:700;color:#5a3e2b;}
+    .tourn-mode-desc{font-size:.68rem;color:#9a8070;margin-top:2px;line-height:1.4;}
+    .online-players-list { margin-bottom: 1rem; }
+    .online-player-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 12px; border-radius: 12px; border: 1.5px solid #e8e0d5;
+      background: #fff; margin-bottom: 8px; transition: border-color 0.12s;
+    }
+    .online-player-name { font-weight: 700; color: #5a3e2b; font-size: 0.95rem; }
+    .online-dot { width: 9px; height: 9px; border-radius: 50%; background: #52a050; display: inline-block; margin-right: 7px; }
+    .challenge-btn {
+      font-size: 0.8rem; font-weight: 700; padding: 6px 14px; border-radius: 20px;
+      border: 1.5px solid #7b5ea7; background: #f3eeff; color: #4a2d8a;
+      cursor: pointer; font-family: inherit; transition: all 0.12s; white-space: nowrap;
+    }
+    .challenge-btn:hover { background: #e8deff; }
+    .no-players-msg { color: #b09070; font-size: 0.9rem; font-style: italic; padding: 1rem 0; }
+    .round-row { display: flex; gap: 8px; justify-content: center; margin-bottom: 1rem; }
+    .round-btn { padding: 7px 18px; border-radius: 20px; border: 1.5px solid #d4c4b0; background: #fff; color: #5a3e2b; font-size: 0.88rem; font-weight: 700; cursor: pointer; font-family: inherit; }
+    .round-btn.active { background: #7b5ea7; border-color: #7b5ea7; color: #fff; }
+    .waiting-card { background: #fff; border: 2px solid #7b5ea7; border-radius: 20px; padding: 2rem 1.5rem; text-align: center; margin-bottom: 1rem; }
+    .waiting-name { font-family: 'Playfair Display', serif; font-size: 1.4rem; color: #5a3e2b; margin-bottom: 0.5rem; }
+    .waiting-sub { font-size: 0.9rem; color: #b09070; margin-bottom: 1.5rem; }
+    .spinner { width: 40px; height: 40px; border: 3px solid #e8e0d5; border-top-color: #7b5ea7; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 1rem; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .duel-top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; }
+    .duel-round-badge { font-size: 0.85rem; font-weight: 700; color: #7b5ea7; background: #f3eeff; border: 1.5px solid #c8b4f0; padding: 5px 14px; border-radius: 30px; }
+    .duel-scores { display: flex; gap: 10px; margin-bottom: 0.6rem; }
+    .duel-score-box { flex: 1; background: #fff; border: 1.5px solid #e8e0d5; border-radius: 14px; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; }
+    .duel-score-box.me  { border-color: #f0c88e; background: #fffaf3; }
+    .duel-score-box.opp { border-color: #c8b4f0; background: #f9f5ff; }
+    .dscore-name { font-size: 0.82rem; font-weight: 700; color: #5a3e2b; max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .dscore-num  { font-size: 1.4rem; font-weight: 700; color: #5a3e2b; }
+    .duel-note-card { margin-bottom: 0.6rem; padding: 1rem 1rem 0.4rem; }
+    #duel-notation { width: 100%; display: flex; justify-content: center; overflow: hidden; }
+    #duel-notation svg { max-width: 100%; }
+    .duel-choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 0.5rem; }
+    .dcbtn { padding: 14px 8px; font-size: 1.7rem; font-weight: 700; border-radius: 14px; border: 1.5px solid #d4c4b0; background: #fff; color: #5a3e2b; cursor: pointer; font-family: inherit; transition: all 0.1s; -webkit-tap-highlight-color: transparent; outline: none; }
+    .dcbtn:active:not(:disabled) { transform: scale(0.96); }
+    .dcbtn.correct { background: #eaf3de; border-color: #6b8c42; color: #3b6d11; }
+    .dcbtn.wrong   { background: #fdf0f0; border-color: #e24b4a; color: #a32d2d; }
+    .dcbtn:disabled { cursor: default; opacity: 0.7; transform: none; }
+    .duel-feedback { text-align: center; min-height: 28px; font-size: 0.95rem; font-weight: 700; color: #5a3e2b; margin-bottom: 0.3rem; }
+    .duel-feedback.iwin  { color: #3b6d11; } .duel-feedback.opwin { color: #a32d2d; } .duel-feedback.nobody { color: #888; }
+    .duel-countdown-wrap { display: none; justify-content: center; padding: 0.4rem 0; }
+    .duel-cd { width: 52px; height: 52px; border-radius: 50%; border: 3px solid #7b5ea7; background: #f3eeff; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: 700; color: #7b5ea7; animation: cdPop 0.3s ease; }
+    @keyframes cdPop { 0%{transform:scale(1.4);opacity:0.5} 100%{transform:scale(1);opacity:1} }
+    .duel-result { background: #fff; border: 2px solid #7b5ea7; border-radius: 20px; padding: 2rem 1.5rem; text-align: center; box-shadow: 0 8px 30px rgba(123,94,167,0.12); }
+    .duel-result h2 { font-family:'Playfair Display',serif; font-size: 1.5rem; color: #5a3e2b; margin-bottom: 0.6rem; }
+    .winner-badge { font-size: 1.1rem; font-weight: 700; color: #fff; background: linear-gradient(135deg,#7b5ea7,#5a3e8a); display: inline-block; padding: 8px 24px; border-radius: 30px; margin-bottom: 1rem; }
+    .final-scores { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 1rem; }
+    .fsc-player { text-align: center; }
+    .fsc-name  { font-size: 0.85rem; font-weight: 700; color: #b09070; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
+    .fsc-num   { font-size: 3.2rem; font-weight: 700; }
+    .fsc-num.win { color: #6b8c42; } .fsc-num.lose { color: #ccc; }
+    .fsc-vs    { font-size: 1rem; font-weight: 700; color: #d4c4b0; }
+    .duel-comment { font-size: 0.9rem; color: #5a3e2b; font-style: italic; margin-bottom: 1.5rem; line-height: 1.5; padding: 0 8px; }
+    .result-btns { display: flex; gap: 10px; }
+    @media (max-width:400px) { .cbtn{font-size:1.6rem;padding:12px 6px;} .controls{flex-direction:column;gap:8px;} }
+    .site-footer { display:flex; justify-content:center; gap:22px; margin-top:2.5rem; }
+    .site-footer a { color:#b0a392; font-size:2.2rem; transition:all .2s ease; }
+    .site-footer a:hover { transform:translateY(-2px); }
+    #online-badges-row { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 10px; }
+    .online-name-badge { font-size: .72rem; font-weight: 600; background: #eaf4e0; color: #3b6d11; padding: 4px 11px; border-radius: 20px; display: inline-flex; align-items: center; gap: 5px; border: 1px solid #b0d890; white-space: nowrap; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🎸 Nota Okuma Egzersizi</h1>
+  <div id="online-badges-row"></div>
+</header>
+
+<div id="app">
+  <div class="nav-row between">
+    <div></div>
+    <div id="theme-toggle-wrap">
+    </div>
+    <button class="back-btn" onclick="location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
+  </div>
+  <div id="setup-area" class="filter-card">
+    <div class="action-buttons-wrap">
+      <button id="start-btn" class="app-btn" onclick="startExercise('practice')">Egzersize Başla (Zamansız) 🎯</button>
+      <button id="race-btn"  class="app-btn btn-race" onclick="startExercise('race')">Yarışmaya Başla (40 Saniye) 🏆</button>
+      <button class="app-btn btn-duel" onclick="showDuelSetup()">⚔️ Online Düello</button>
+      <button id="tournament-mode-btn" class="app-btn btn-duel tourn-mode-btn" onclick="showTournamentSetup()" style="display:none;">🏆 Turnuva Modu</button>
+    </div>
+  </div>
+
+  <div id="tournament-setup-area" class="filter-card">
+    <div class="top-bar" style="margin-bottom:.8rem;">
+      <h2 style="font-family:'Playfair Display',serif;font-size:1.1rem;">🏆 Turnuva Lobisi</h2>
+      <button class="back-btn" onclick="leaveTournamentLobby()">← Geri</button>
+    </div>
+    <div id="tourn-lobby-body"></div>
+  </div>
+
+  <div id="tournament-bracket-area" class="filter-card">
+    <div class="top-bar" style="margin-bottom:.8rem;">
+      <h2 style="font-family:'Playfair Display',serif;font-size:1.1rem;">🏆 Turnuva — Tablo</h2>
+      <button class="back-btn" onclick="leaveTournamentLobby()">← Geri</button>
+    </div>
+    <div id="tourn-bracket-body"></div>
+  </div>
+
+  <div id="duel-setup-area" class="filter-card">
+    <div class="top-bar" style="margin-bottom:.8rem;">
+      <h2 style="font-family:'Playfair Display',serif;font-size:1.1rem;">⚔️ Online Düello</h2>
+      <button class="back-btn" onclick="showArea('setup-area')">← Geri</button>
+    </div>
+        <div id="online-players-list" class="online-players-list">
+          </div>
+        <div class="filter-title">Oyun Modu</div>
+        <div class="round-row" style="flex-wrap:wrap;">
+      <button class="round-btn active" data-rounds="5"  data-secs="0"  onclick="selectRounds(5,0)">5 Tur</button>
+      <button class="round-btn"        data-rounds="10" data-secs="0"  onclick="selectRounds(10,0)">10 Tur</button>
+      <button class="round-btn"        data-rounds="15" data-secs="0"  onclick="selectRounds(15,0)">15 Tur</button>
+    </div>
+    <div class="round-row" style="flex-wrap:wrap; margin-top:-4px;">
+      <button class="round-btn"        data-rounds="0"  data-secs="40" onclick="selectRounds(0,40)">⏱ 40sn</button>
+      <button class="round-btn"        data-rounds="0"  data-secs="50" onclick="selectRounds(0,50)">⏱ 50sn</button>
+      <button class="round-btn"        data-rounds="0"  data-secs="60" onclick="selectRounds(0,60)">⏱ 60sn</button>
+    </div>
+        <div class="string-buttons" style="margin-bottom:0;">
+      <p style="width:100%;text-align:center;font-size:.8rem;color:#8a7860;margin:0;">🎸 Düellolarda adil olması için tüm teller kullanılır.</p>
+    </div>
+  </div>
+
+  <div id="duel-waiting-area" class="filter-card">
+    <div class="top-bar" style="margin-bottom:.8rem;">
+      <h2 style="font-family:'Playfair Display',serif;font-size:1.1rem;">⚔️ Davet Gönderildi</h2>
+      <button class="back-btn" onclick="cancelChallenge()">✕ İptal</button>
+    </div>
+    <div class="waiting-card">
+      <div class="spinner"></div>
+      <div class="waiting-name" id="waiting-opp-name">Rakip</div>
+      <div class="waiting-sub">daveti kabul etmesi bekleniyor...</div>
+    </div>
+    <p style="font-size:.8rem;color:#b09070;text-align:center;">Rakibiniz daveti reddederse veya 30 saniye içinde cevap vermezse otomatik iptal olur.</p>
+  </div>
+
+  <div id="duel-game-area">
+    <div class="duel-top-bar">
+      <button class="back-btn" onclick="leaveGame()">← Çık</button>
+      <div class="duel-round-badge" id="duel-round-label">Tur 1 / 5</div>
+    </div>
+    <div class="duel-scores">
+      <div class="duel-score-box me">
+        <span class="dscore-name" id="dscore-me-name">Sen</span>
+        <span class="dscore-num"  id="dscore-me">0</span>
+      </div>
+      <div class="duel-score-box opp">
+        <span class="dscore-name" id="dscore-opp-name">Rakip</span>
+        <span class="dscore-num"  id="dscore-opp">0</span>
+      </div>
+    </div>
+    <div class="card duel-note-card vf-card">
+      <div class="card-top">
+        <span class="card-label" id="duel-string-label">Bu Hangi Nota?</span>
+      </div>
+      <div id="duel-notation"></div>
+    </div>
+    <div class="duel-choices" id="duel-choices"></div>
+    <div class="duel-feedback" id="duel-feedback"></div>
+    <div class="duel-countdown-wrap" id="duel-cd-wrap">
+      <div class="duel-cd" id="duel-cd-num">3</div>
+    </div>
+  </div>
+</div>
+
+<div id="exercise-wrap" style="width:100%;max-width:550px;display:none;">
+  <div id="exercise-area" style="display:block;">
+    <div class="nav-row between">
+      <button class="back-btn" onclick="goBackToMenu()">← Menüye Dön</button>
+      <button class="back-btn" onclick="location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
+    </div>
+    <div id="live-string-filter" class="string-buttons" style="margin-bottom:.8rem;">
+      <button id="btn-all" class="string-btn all-btn active" onclick="toggleAllStrings()">Hepsi</button>
+      <button class="string-btn active string-num-btn" data-string="1" onclick="toggleString(1)">①</button>
+      <button class="string-btn active string-num-btn" data-string="2" onclick="toggleString(2)">②</button>
+      <button class="string-btn active string-num-btn" data-string="3" onclick="toggleString(3)">③</button>
+      <button class="string-btn active string-num-btn" data-string="4" onclick="toggleString(4)">④</button>
+      <button class="string-btn active string-num-btn" data-string="5" onclick="toggleString(5)">⑤</button>
+      <button class="string-btn active string-num-btn" data-string="6" onclick="toggleString(6)">⑥</button>
+    </div>
+    <div class="card vf-card">
+      <div class="card-top">
+        <span id="current-string-label" class="card-label">Bu Hangi Nota?</span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div id="timer-display" style="display:none;">Kalan Süre: 40</div>
+          <button id="listen-btn" onclick="replay()">🔊 Dinle</button>
+        </div>
+      </div>
+      <div id="notation"></div>
+    </div>
+    <p id="hint">🔊 Notayı duymak için "Dinle" tuşuna basın</p>
+    <div class="choices" id="choices"></div>
+    <div id="feedback"></div>
+    <div id="progress-bar-wrap"><div id="progress-bar"></div></div>
+    <div class="controls">
+      <button class="controls-btn" id="prev-btn" onclick="manualPrev()" disabled>← Önceki</button>
+      <button class="controls-btn primary" id="next-btn" onclick="manualNext()" disabled>Sonraki Soru →</button>
+      <button class="controls-btn" onclick="location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <a href="https://www.instagram.com/yunusgedik_/" target="_blank"><i class="fa-brands fa-instagram"></i></a>
+  <a href="https://x.com/yunusgedik_" target="_blank"><i class="fa-brands fa-x-twitter"></i></a>
+  <a href="https://www.youtube.com/yunusgedik" target="_blank"><i class="fa-brands fa-youtube"></i></a>
+</footer>
+
+<script>
+const NOTES=[
+  {key:'e/3',freq:164.81,nota:'Mi', string:6},{key:'f/3',freq:174.61,nota:'Fa', string:6},{key:'g/3',freq:196.00,nota:'Sol',string:6},
+  {key:'a/3',freq:220.00,nota:'La', string:5},{key:'b/3',freq:246.94,nota:'Si', string:5},{key:'c/4',freq:261.63,nota:'Do', string:5},
+  {key:'d/4',freq:293.66,nota:'Re', string:4},{key:'e/4',freq:329.63,nota:'Mi', string:4},{key:'f/4',freq:349.23,nota:'Fa', string:4},
+  {key:'g/4',freq:392.00,nota:'Sol',string:3},{key:'a/4',freq:440.00,nota:'La', string:3},
+  {key:'b/4',freq:493.88,nota:'Si', string:2},{key:'c/5',freq:523.25,nota:'Do', string:2},{key:'d/5',freq:587.33,nota:'Re', string:2},
+  {key:'e/5',freq:659.25,nota:'Mi', string:1},{key:'f/5',freq:698.46,nota:'Fa', string:1},{key:'g/5',freq:783.99,nota:'Sol',string:1},
+  {key:'a/5',freq:880.00,nota:'La', string:1},{key:'b/5',freq:987.77,nota:'Si', string:1},
+];
+const ALL_NOTES=['Do','Re','Mi','Fa','Sol','La','Si'];
+function getERR() { return window.ERR || ["Yanlış! Tekrar dene."]; }
+function shuffle(a){return[...a].sort(()=>Math.random()-0.5);}
+function showArea(id){
+  ['setup-area','duel-setup-area','duel-waiting-area','duel-game-area','exercise-wrap','tournament-setup-area','tournament-bracket-area']
+    .forEach(x=>{const e=document.getElementById(x);if(e)e.style.display='none';});
+  const t=document.getElementById(id);if(t){t.style.display='block';t.scrollIntoView({behavior:'smooth'});}
+}
+let selectedStrings=new Set([1,2,3,4,5,6]),filteredNotes=[];
+let current=null,answered=false,interacted=false,autoTimer=null,currentMode='practice',gameTimer=null,timeLeft=40,correctCount=0;
+let missCounts={}; // notaKey'e göre yanlış sayısı — ağırlıklı rastgele seçim için
+let audioCtx=null;
+function getAudio(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();return audioCtx;}
+function playNote(freq){
+  try{const ctx=getAudio();if(ctx.state==='suspended')ctx.resume();
+  const m=ctx.createGain(),now=ctx.currentTime;
+  m.gain.setValueAtTime(0,now);m.gain.linearRampToValueAtTime(0.55,now+0.006);m.gain.exponentialRampToValueAtTime(0.001,now+2.2);m.connect(ctx.destination);
+  [[1,.5],[2,.28],[3,.12],[4,.06]].forEach(([k,v])=>{const o=ctx.createOscillator(),g=ctx.createGain();o.type='sine';o.frequency.value=freq*k;g.gain.value=v;o.connect(g);g.connect(m);o.start(now);o.stop(now+2.2);});
+  const b=document.getElementById('listen-btn');if(b){b.classList.add('playing');setTimeout(()=>b.classList.remove('playing'),600);}}catch(e){}
+}
+function drawNote(noteKey,cid='notation'){
+  const {Renderer,Stave,StaveNote,Voice,Formatter}=Vex.Flow;
+  const c=document.getElementById(cid);c.innerHTML='';
+  const cw=c.offsetWidth||500,H=160;
+  const r=new Renderer(c,Renderer.Backends.SVG);r.resize(cw,H);
+  const ctx=r.getContext();ctx.scale(1.45,1.45);
+  const sw=cw/1.45,stW=Math.min(180,sw-40),stX=(sw-stW)/2;
+  const st=new Stave(stX,-10,stW);st.addClef('treble');st.setContext(ctx).draw();
+  const sn=new StaveNote({keys:[noteKey],duration:'w'});sn.setXShift(30);
+  const v=new Voice({num_beats:4,beat_value:4});v.addTickables([sn]);
+  new Formatter().joinVoices([v]).format([v],stW-45);v.draw(ctx,st);
+}
+function toggleAllStrings(){const a=document.getElementById('btn-all'),n=document.querySelectorAll('.string-num-btn');selectedStrings=new Set([1,2,3,4,5,6]);a.classList.add('active');n.forEach(b=>b.classList.add('active'));if(typeof checkStartBtn==='function')checkStartBtn();if(currentMode==='practice')filteredNotes=NOTES.filter(n=>selectedStrings.has(n.string));}
+function toggleString(num){const b=document.querySelector(`.string-num-btn[data-string="${num}"]`),a=document.getElementById('btn-all');if(selectedStrings.has(num)){if(selectedStrings.size===1)return;selectedStrings.delete(num);b.classList.remove('active');}else{selectedStrings.add(num);b.classList.add('active');}selectedStrings.size===6?a.classList.add('active'):a.classList.remove('active');if(typeof checkStartBtn==='function')checkStartBtn();if(currentMode==='practice')filteredNotes=NOTES.filter(n=>selectedStrings.has(n.string));}
+function checkStartBtn(){const z=selectedStrings.size===0;document.getElementById('start-btn').disabled=z;document.getElementById('race-btn').disabled=z;}
+function startExercise(mode){filteredNotes=mode==='race'?NOTES.slice():NOTES.filter(n=>selectedStrings.has(n.string));if(!filteredNotes.length)return;if(window.trackEnd)window.trackEnd();currentMode=mode;if(window.trackStart)window.trackStart(mode);showArea('exercise-wrap');document.getElementById('live-string-filter').style.display=mode==='practice'?'flex':'none';if(mode==='race'){timeLeft=40;correctCount=0;document.getElementById('timer-display').style.display='inline-block';document.getElementById('timer-display').textContent='Kalan Süre: '+timeLeft;startGameTimer();}else document.getElementById('timer-display').style.display='none';nextCard();}
+function goBackToMenu(){if(window.trackEnd)window.trackEnd();if(gameTimer){clearInterval(gameTimer);gameTimer=null;}clearAutoTimer();showArea('setup-area');}
+function resetQuiz(){if(gameTimer){clearInterval(gameTimer);gameTimer=null;}clearAutoTimer();startExercise(currentMode);}
+function startGameTimer(){if(gameTimer)clearInterval(gameTimer);gameTimer=setInterval(()=>{timeLeft--;if(timeLeft<=0){document.getElementById('timer-display').textContent='Süre Bitti!';clearInterval(gameTimer);endGame();}else document.getElementById('timer-display').textContent='Kalan Süre: '+timeLeft;},1000);}
+function endGame(){if(window.trackEnd)window.trackEnd();clearAutoTimer();const app=document.getElementById('exercise-area');let r='',c='';if(correctCount>=20){r='🏆 Master Gitarist 1 Numara!';c='İnanılmaz! Yunus Hoca gözyaşları içinde seni ayakta alkışlıyor! 🎸';}else if(correctCount>=15){r='🔥 Sahne Sanatçısı';c='Notalar tıkır tıkır çözülüyor!';}else if(correctCount>=10){r='⚡ Ritim Gitarist';c='Solo atamıyorsun ama notaları fena okumuyorsun hani.';}else if(correctCount>=5){r='🎸 Akustikçi Popçu';c='Sahilde "Akdeniz Akşamları" çalmaktan öteye geçemedin ama bir umut var!';}else{r='🐢 Kaplumbağa Gitarist';c='Gitarı yavaşça yere bırak ve notalara bir daha dokunma kanka...';}app.innerHTML=`<div class="result-card"><h2>Yarışma Tamamlandı! 🏁</h2><div class="result-rank">${r}</div><div class="result-score">${correctCount} Doğru</div><p class="result-text">"${c}"</p><button class="app-btn" onclick="location.reload()">Yeniden Dene 🔄</button></div>`;}
+function clearAutoTimer(){if(autoTimer){clearTimeout(autoTimer);autoTimer=null;}document.getElementById('progress-bar-wrap').style.display='none';}
+function startAutoAdvance(){const w=document.getElementById('progress-bar-wrap'),b=document.getElementById('progress-bar');w.style.display='block';b.style.width='100%';b.style.transition='none';requestAnimationFrame(()=>requestAnimationFrame(()=>{b.style.transition='width 1s linear';b.style.width='0%';}));autoTimer=setTimeout(()=>{clearAutoTimer();nextCard();},1000);}
+function manualNext(){if(currentMode==='race'&&timeLeft<=0)return;clearAutoTimer();nextCard();}
+function manualPrev(){}
+
+function pickNextNote(){
+  let pool=filteredNotes;
+  if(current && pool.length>1){
+    pool=pool.filter(n=>n.key!==current.key);
+  }
+  if(pool.length===0) pool=filteredNotes;
+  const weights=pool.map(n=>1+2*(missCounts[n.key]||0));
+  const total=weights.reduce((a,b)=>a+b,0);
+  let r=Math.random()*total;
+  for(let i=0;i<pool.length;i++){
+    r-=weights[i];
+    if(r<=0) return pool[i];
+  }
+  return pool[pool.length-1];
+}
+
+function nextCard(){if(currentMode==='race'&&timeLeft<=0)return;if(currentMode==='practice')filteredNotes=NOTES.filter(n=>selectedStrings.has(n.string));answered=false;if(document.activeElement)document.activeElement.blur();document.getElementById('feedback').textContent='';document.getElementById('feedback').className='';document.getElementById('next-btn').disabled=true;clearAutoTimer();current=pickNextNote();document.getElementById('current-string-label').textContent=`Bu Nota Hangi Telde? (${current.string}. Tel Egzersizi)`;const w=shuffle(ALL_NOTES.filter(n=>n!==current.nota)).slice(0,3),ch=shuffle([current.nota,...w]);drawNote(current.key,'notation');if(interacted)setTimeout(()=>playNote(current.freq),280);const box=document.getElementById('choices');box.innerHTML='';ch.forEach(n=>{const b=document.createElement('button');b.className='cbtn';b.textContent=n;b.onclick=()=>answer(n,b);box.appendChild(b);});}
+function replay(){interacted=true;document.getElementById('hint').style.display='none';if(current)playNote(current.freq);}
+function answer(n,btn){if(answered)return;if(currentMode==='race'&&timeLeft<=0)return;answered=true;interacted=true;document.getElementById('hint').style.display='none';document.querySelectorAll('.cbtn').forEach(b=>b.disabled=true);const fb=document.getElementById('feedback');document.getElementById('next-btn').disabled=false;if(n===current.nota){if(currentMode==='race')correctCount++;if(window.trackLog)window.trackLog(true);btn.className='cbtn correct';btn.blur();fb.textContent='✓ Doğru!';fb.className='ok';playNote(current.freq);startAutoAdvance();}else{missCounts[current.key]=(missCounts[current.key]||0)+1;if(window.trackLog)window.trackLog(false,current.key,current.nota+' ('+current.string+'. tel)');btn.className='cbtn wrong';fb.textContent='✗ '+getERR()[Math.floor(Math.random()*getERR().length)]+' — Doğrusu: '+current.nota;fb.className='no';document.querySelectorAll('.cbtn').forEach(b=>{if(b.textContent===current.nota)b.className='cbtn correct';});}}
+</script>
+
+<script type="module">
+import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js';
+import {
+  getDatabase, ref, set, get, update, remove,
+  onValue, onDisconnect, runTransaction, push
+} from 'https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js';
+import { createTracker } from '/game-tracker.js';
+import { ERRORS as _SHARED_ERRORS } from '/shared-errors.js';
+window.ERR = _SHARED_ERRORS;
+
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBkEd729B65y-NZIQ-sxScCgaEvlX-q7yA",
+  authDomain: "gitar-yunus.firebaseapp.com",
+  databaseURL: "https://gitar-yunus-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "gitar-yunus",
+  storageBucket: "gitar-yunus.firebasestorage.app",
+  messagingSenderId: "184803778782",
+  appId: "1:184803778782:web:8f9fbeb4fe625eb386e24f"
+};
+
+const fbApp = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
+const db = getDatabase(fbApp);
+
+const mySid  = localStorage.getItem('gitar_session');
+const myName = localStorage.getItem('gitar_student_name') || 'Öğrenci';
+
+// ── Öğretmen / Moderatör yetkisi (turnuva başlatma için) ──
+const TEACHER_ID = 's01';
+let studentModerators = {};
+let isStaff = false; // öğretmen veya moderatör
+onValue(ref(db, 'moderators'), snap => {
+  studentModerators = snap.exists() ? snap.val() : {};
+  isStaff = (mySid === TEACHER_ID) || !!studentModerators[mySid];
+  const btn = document.getElementById('tournament-mode-btn');
+  if (btn) btn.style.display = isStaff ? '' : 'none';
+});
+
+const _tracker = createTracker({ db, ref, push, get, set });
+window.trackStart = (mode) => _tracker.start(mySid, 'nota', mode);
+window.trackLog   = (ok, key, label) => _tracker.log(ok, key, label);
+window.trackEnd   = () => _tracker.end();
+
+
+let duelStrings     = new Set([1,2,3,4,5,6]);
+let duelRounds      = 5;
+let duelSecs        = 0; 
+let myRole          = '';   
+let oppSid          = '';
+let oppName         = '';
+let roomCode        = '';
+let onlineListener  = null;
+let roundListener   = null;
+let challengeExpiry = null;
+let myAnswered      = false;
+let myScore_        = 0;
+let oppScore_       = 0;
+let cdTimer         = null;
+let currentRoundNum = 0;
+let currentQuestionData = null;
+
+// ── TURNUVA MODU (Beta · 4 kişilik tek eleme prototipi) ──
+const TID = 'nota_proto_4'; // Prototip için sabit/tekil turnuva odası — aynı anda tek turnuva
+let tournamentId = TID;
+let tournamentListener = null;
+let tournamentState = null;
+let tournamentMatchInfo = null;   // { path } -> aktif maçın bracket yolu, örn 'bracket.rounds.0.2'
+let inTournamentMatchEntered = false;
+
+function rndCode(){ return Math.floor(100000+Math.random()*900000).toString(); }
+const ALL_NOTES = ['Do','Re','Mi','Fa','Sol','La','Si'];
+const NOTES = [
+  {key:'e/3',freq:164.81,nota:'Mi', string:6},{key:'f/3',freq:174.61,nota:'Fa', string:6},{key:'g/3',freq:196.00,nota:'Sol',string:6},
+  {key:'a/3',freq:220.00,nota:'La', string:5},{key:'b/3',freq:246.94,nota:'Si', string:5},{key:'c/4',freq:261.63,nota:'Do', string:5},
+  {key:'d/4',freq:293.66,nota:'Re', string:4},{key:'e/4',freq:329.63,nota:'Mi', string:4},{key:'f/4',freq:349.23,nota:'Fa', string:4},
+  {key:'g/4',freq:392.00,nota:'Sol',string:3},{key:'a/4',freq:440.00,nota:'La', string:3},
+  {key:'b/4',freq:493.88,nota:'Si', string:2},{key:'c/5',freq:523.25,nota:'Do', string:2},{key:'d/5',freq:587.33,nota:'Re', string:2},
+  {key:'e/5',freq:659.25,nota:'Mi', string:1},{key:'f/5',freq:698.46,nota:'Fa', string:1},{key:'g/5',freq:783.99,nota:'Sol',string:1},
+  {key:'a/5',freq:880.00,nota:'La', string:1},{key:'b/5',freq:987.77,nota:'Si', string:1},
+];
+
+function shuf(a){return[...a].sort(()=>Math.random()-.5);}
+
+function buildQuestionDeck(strings, totalRounds) {
+  const deck = {};
+  const pool = NOTES.filter(n => strings.includes(n.string));
+  for (let i = 1; i <= totalRounds; i++) {
+    const note = pool[Math.floor(Math.random() * pool.length)];
+    const wrong = shuf(ALL_NOTES.filter(n => n !== note.nota)).slice(0, 3);
+    deck[i] = {
+      noteKey: note.key,
+      notaAdi: note.nota,
+      freq: note.freq,
+      string: note.string,
+      choices: shuf([note.nota, ...wrong])
+    };
+  }
+  return deck;
+}
+
+window.dToggleAll = function(){
+  const a=document.getElementById('d-btn-all'),n=document.querySelectorAll('.d-str-btn');
+  if(duelStrings.size===6){duelStrings.clear();a.classList.remove('active');n.forEach(b=>b.classList.remove('active'));}
+  else{duelStrings=new Set([1,2,3,4,5,6]);a.classList.add('active');n.forEach(b=>b.classList.add('active'));}
+};
+window.dToggleStr = function(num){
+  const b=document.querySelector(`.d-str-btn[data-string="${num}"]`),a=document.getElementById('d-btn-all');
+  if(duelStrings.has(num)){duelStrings.delete(num);b.classList.remove('active');}
+  else{duelStrings.add(num);b.classList.add('active');}
+  duelStrings.size===6?a.classList.add('active'):a.classList.remove('active');
+};
+window.selectRounds = function(n, secs){
+  duelRounds=n;
+  duelSecs = secs || 0;
+  document.querySelectorAll('.round-btn').forEach(b=>b.classList.toggle('active', parseInt(b.dataset.rounds)===n && parseInt(b.dataset.secs||0)===duelSecs));
+};
+
+window.showDuelSetup = function(){
+  showArea('duel-setup-area');
+  loadOnlinePlayers();
+};
+
+function loadOnlinePlayers(){
+  const listEl = document.getElementById('online-players-list');
+  if(onlineListener){ onlineListener(); onlineListener=null; }
+  onlineListener = onValue(ref(db,'online_users'), snap=>{
+    const users = snap.val() || {};
+    const others = Object.entries(users).filter(([sid])=>sid!==mySid);
+    if(!others.length){
+      listEl.innerHTML='<div class="no-players-msg">Şu an başka online oyuncu yok. Birinin giriş yapmasını bekleyin.</div>';
+      return;
+    }
+    listEl.innerHTML = others.map(([sid,u])=>`
+      <div class="online-player-row">
+        <span><span class="online-dot"></span><span class="online-player-name">${u.name}</span></span>
+        <button class="challenge-btn" onclick="window.sendChallenge('${sid}','${u.name.replace(/'/g,"\\'")}')">⚔️ Meydan Oku</button>
+      </div>`).join('');
+  });
+}
+
+window.sendChallenge = async function(toSid, toName){
+  duelStrings = new Set([1,2,3,4,5,6]);
+  if(onlineListener){ onlineListener(); onlineListener=null; }
+
+  myRole   = 'host';
+  oppSid   = toSid;
+  oppName  = toName;
+  roomCode = rndCode();
+
+  // Süre modunda iki oyuncunun asenkron çözebileceği bol miktarda (60 adet) soru hazırlanır.
+  const totalQuestionsToBuild = duelSecs > 0 ? 60 : duelRounds;
+  const questionDeck = buildQuestionDeck([...duelStrings], totalQuestionsToBuild);
+
+  await set(ref(db,`duel_rooms/${roomCode}`),{
+    host:   {sid:mySid, name:myName},
+    guest:  null,
+    status: 'waiting',
+    config: {totalRounds: duelRounds, totalSecs: duelSecs, strings: [...duelStrings], questions: questionDeck},
+    scores: {host:0, guest:0},
+    currentRoundNum: 1,
+    roundState: { hostDone: false, guestDone: false, winner: null },
+    // Her oyuncunun kendi soru ilerlemesini kaydetmek için progress alanı eklendi
+    progress: {
+      host: { currentRound: 1 },
+      guest: { currentRound: 1 }
+    }
+  });
+  onDisconnect(ref(db,`duel_rooms/${roomCode}`)).update({status:'abandoned'});
+
+  await set(ref(db,`duel_challenges/${toSid}`),{
+    fromSid: mySid, fromName: myName,
+    roomCode, status:'pending',
+    strings: [...duelStrings], totalRounds: duelRounds, totalSecs: duelSecs,
+    redirectTo: '/nota/'
+  });
+
+  document.getElementById('waiting-opp-name').textContent = toName;
+  showArea('duel-waiting-area');
+
+  const challengeRef = ref(db,`duel_challenges/${toSid}`);
+  const unsub = onValue(challengeRef, snap=>{
+    const c = snap.val();
+    if(!c) return;
+    if(c.status==='accepted'){
+      unsub();
+      clearTimeout(challengeExpiry);
+      oppName = toName;
+      beginGame();
+    } else if(c.status==='declined'){
+      unsub();
+      clearTimeout(challengeExpiry);
+      remove(ref(db,`duel_rooms/${roomCode}`));
+      alert(`${toName} daveti reddetti.`);
+      showArea('duel-setup-area');
+      loadOnlinePlayers();
+    }
+  });
+
+  challengeExpiry = setTimeout(async ()=>{
+    unsub();
+    await remove(ref(db,`duel_challenges/${toSid}`));
+    await remove(ref(db,`duel_rooms/${roomCode}`));
+    showArea('duel-setup-area');
+    alert('Süre doldu, davet iptal edildi.');
+    loadOnlinePlayers();
+  }, 30000);
+};
+
+window.cancelChallenge = async function(){
+  clearTimeout(challengeExpiry);
+  if(oppSid) await remove(ref(db,`duel_challenges/${oppSid}`));
+  if(roomCode) await remove(ref(db,`duel_rooms/${roomCode}`));
+  showArea('setup-area');
+  loadOnlinePlayers();
+};
+
+function checkDuelHandoff(){
+  const raw = localStorage.getItem('gitar_duel_handoff');
+  if(!raw) return false;
+  localStorage.removeItem('gitar_duel_handoff');
+  try{
+    const h = JSON.parse(raw);
+    myRole      = 'guest';
+    roomCode    = h.roomCode;
+    oppSid      = h.oppSid;
+    oppName     = h.oppName;
+    duelStrings = new Set(h.strings);
+    duelRounds  = h.totalRounds;
+    duelSecs    = h.totalSecs || 0;
+    beginGame();
+    return true;
+  }catch(e){ return false; }
+}
+
+function beginGame(){
+  if(window.trackEnd)window.trackEnd();
+  if(window.trackStart)window.trackStart('duel');
+  myScore_ = 0; oppScore_ = 0;
+  document.getElementById('dscore-me-name').textContent  = myName;
+  document.getElementById('dscore-opp-name').textContent = oppName;
+  document.getElementById('dscore-me').textContent  = '0';
+  document.getElementById('dscore-opp').textContent = '0';
+  showArea('duel-game-area');
+
+  onValue(ref(db,`duel_rooms/${roomCode}/scores`), snap=>{
+    const s = snap.val(); if(!s) return;
+    myScore_  = myRole==='host' ? s.host  : s.guest;
+    oppScore_ = myRole==='host' ? s.guest : s.host;
+    document.getElementById('dscore-me').textContent  = myScore_;
+    document.getElementById('dscore-opp').textContent = oppScore_;
+  });
+
+  if(duelSecs > 0) startDuelTimer();
+  listenRound();
+}
+
+function listenRound(){
+  if(roundListener){ roundListener(); }
+
+  onValue(ref(db,`duel_rooms/${roomCode}/status`), snap=>{
+    const s = snap.val();
+    if(s==='abandoned'){ handleAbandoned(); }
+    if(s==='finished') { endDuel(); }
+  });
+
+  // ── SÜRE BAZLI OYUN (ASENKRON YARIŞ) DİNLEYİCİSİ ──
+  if (duelSecs > 0) {
+    roundListener = onValue(ref(db,`duel_rooms/${roomCode}`), snap=>{
+      const room = snap.val();
+      if(!room || room.status === 'waiting') return;
+
+      const questions = room.config.questions;
+      // Her oyuncu veritabanındaki kendi progress (soru numarası) alanını takip eder.
+      const myProgress = (room.progress && room.progress[myRole]) ? room.progress[myRole].currentRound : 1;
+
+      if (!questions || !questions[myProgress]) return;
+
+      // Lokal soru numarası ile eşleşmiyorsa yeni soruyu ekrana bas
+      if(currentRoundNum !== myProgress){
+        currentRoundNum = myProgress;
+        currentQuestionData = questions[myProgress];
+        showQuestion(myProgress, currentQuestionData);
+      }
+    });
+  } 
+  // ── TUR BAZLI OYUN (SENKRONİZE) DİNLEYİCİSİ ──
+  else {
+    roundListener = onValue(ref(db,`duel_rooms/${roomCode}`), snap=>{
+      const room = snap.val();
+      if(!room || room.status === 'waiting') return;
+
+      const rNum = room.currentRoundNum;
+      const rState = room.roundState;
+      const questions = room.config.questions;
+
+      if (!questions || !questions[rNum]) return;
+
+      if(currentRoundNum !== rNum){
+        currentRoundNum = rNum;
+        currentQuestionData = questions[rNum];
+        showQuestion(rNum, currentQuestionData);
+      }
+
+      if(rState && (rState.winner || (rState.hostDone && rState.guestDone))){
+        showRoundResult(rState, currentQuestionData);
+      }
+    });
+  }
+}
+
+function showQuestion(rNum, qData){
+  myAnswered = false;
+  if(duelSecs === 0){
+    document.getElementById('duel-round-label').textContent = `Tur ${rNum} / ${duelRounds}`;
+  } else {
+    document.getElementById('duel-round-label').textContent = `⏱ Soru ${rNum}`;
+  }
+  document.getElementById('duel-string-label').textContent = `Bu Nota Hangi Telde? (${qData.string}. Tel)`;
+  document.getElementById('duel-feedback').textContent = '';
+  document.getElementById('duel-feedback').className   = 'duel-feedback';
+  document.getElementById('duel-cd-wrap').style.display = 'none';
+
+  if(window.drawNote) window.drawNote(qData.noteKey,'duel-notation');
+
+  const box=document.getElementById('duel-choices');
+  box.innerHTML='';
+  qData.choices.forEach(nota=>{
+    const b=document.createElement('button');
+    b.className='dcbtn'; b.textContent=nota;
+    b.onclick=()=>duelAnswer(nota,b, rNum);
+    box.appendChild(b);
+  });
+}
+
+function duelAnswer(nota, btn, rNum){
+  if(myAnswered) return;
+  myAnswered=true;
+  document.querySelectorAll('.dcbtn').forEach(b=>b.disabled=true);
+
+  const correct = nota === currentQuestionData.notaAdi;
+  btn.classList.add(correct?'correct':'wrong');
+  if(window.trackLog)window.trackLog(correct, currentQuestionData.string, currentQuestionData.notaAdi+' ('+currentQuestionData.string+'. tel)');
+
+  // ── SÜRE BAZLI (ASENKRON) CEVAPLAMA MANTIĞI ──
+  if (duelSecs > 0) {
+    if (correct) {
+      document.getElementById('duel-feedback').textContent = '🏅 Doğru!';
+      document.getElementById('duel-feedback').className = 'duel-feedback iwin';
+      
+      // Doğru ise 0.5 saniye sonra kendi ilerlemesini ve skorunu bağımsız olarak günceller.
+      setTimeout(() => {
+        runTransaction(ref(db, `duel_rooms/${roomCode}`), room => {
+          if (!room) return room;
+          if (!room.scores) room.scores = { host: 0, guest: 0 };
+          if (!room.progress) room.progress = { host: { currentRound: 1 }, guest: { currentRound: 1 } };
+          
+          room.scores[myRole] = (room.scores[myRole] || 0) + 1;
+          room.progress[myRole].currentRound = (room.progress[myRole].currentRound || 1) + 1;
+          
+          return room;
+        });
+      }, 500);
+
+    } else {
+      // Yanlış cevapta yeşil renkle doğru olanı gösterir.
+      document.getElementById('duel-feedback').textContent = `✕ Yanlış! Doğrusu: ${currentQuestionData.notaAdi}`;
+      document.getElementById('duel-feedback').className = 'duel-feedback opwin';
+      
+      document.querySelectorAll('.dcbtn').forEach(b => {
+        if(b.textContent === currentQuestionData.notaAdi) b.classList.add('correct');
+      });
+
+      // Şıkların altına bir sonraki soruya manuel geçebilmesi için "Sonraki Soru" butonu eklenir.
+      const box = document.getElementById('duel-choices');
+      const nextBtn = document.createElement('button');
+      nextBtn.className = 'app-btn primary';
+      nextBtn.style.gridColumn = 'span 2';
+      nextBtn.style.marginTop = '10px';
+      nextBtn.textContent = 'Sonraki Soru →';
+      nextBtn.onclick = () => {
+        nextBtn.disabled = true;
+        runTransaction(ref(db, `duel_rooms/${roomCode}`), room => {
+          if (!room) return room;
+          if (!room.progress) room.progress = { host: { currentRound: 1 }, guest: { currentRound: 1 } };
+          
+          // Yanlışta skor artmaz, sadece kendi soru numarası 1 ilerletilir.
+          room.progress[myRole].currentRound = (room.progress[myRole].currentRound || 1) + 1;
+          return room;
+        });
+      };
+      box.appendChild(nextBtn);
+    }
+  } 
+  // ── TUR BAZLI (SENKRONİZE) CEVAPLAMA MANTIĞI ──
+  else {
+    runTransaction(ref(db,`duel_rooms/${roomCode}`), room => {
+      if(!room) return room;
+      if(room.currentRoundNum !== rNum) return room;
+      
+      if(!room.roundState) room.roundState = { hostDone: false, guestDone: false, winner: null };
+
+      room.roundState[myRole + 'Done'] = true;
+
+      if(correct && !room.roundState.winner){
+        room.roundState.winner = myRole;
+        room.roundState.winnerName = myName;
+        if(!room.scores) room.scores = {host:0, guest:0};
+        room.scores[myRole] = (room.scores[myRole] || 0) + 1;
+      }
+      return room;
+    });
+  }
+}
+
+function showRoundResult(rState, qData){
+  document.querySelectorAll('.dcbtn').forEach(b=>{
+    b.disabled=true; b.onclick=null;
+    if(b.textContent===qData.notaAdi) b.classList.add('correct');
+  });
+  
+  const fb=document.getElementById('duel-feedback');
+  if(rState.winner===myRole){ fb.textContent='🏅 Sen kazandın!'; fb.className='duel-feedback iwin'; }
+  else if(rState.winner)    { fb.textContent=`😤 ${rState.winnerName} daha hızlıydı!`; fb.className='duel-feedback opwin'; }
+  else                     { fb.textContent='😅 İkisi de yanlış! Puan yok.'; fb.className='duel-feedback nobody'; }
+
+  if(document.getElementById('duel-cd-wrap').style.display==='flex') return; 
+  
+  startCountdown(()=>{
+    if(myRole === 'host'){
+      const nextNum = currentRoundNum + 1;
+      runTransaction(ref(db,`duel_rooms/${roomCode}`), room => {
+        if(!room) return room;
+        if(room.currentRoundNum !== currentRoundNum) return room;
+        const maxRounds = duelSecs > 0 ? 60 : duelRounds;
+        const tied = (room.scores.host||0) === (room.scores.guest||0);
+        const hasMoreQuestions = !!(room.config.questions && room.config.questions[nextNum]);
+        if(nextNum > maxRounds && tied && hasMoreQuestions){
+          // Ani ölüm: tur bazlı düellolarda berabere bitmesin diye,
+          // soru destesinde tampon olarak fazladan eklenmiş sorularla
+          // tek tek devam edilir, ilk öne geçen kazanır.
+          room.currentRoundNum = nextNum;
+          room.roundState = { hostDone: false, guestDone: false, winner: null };
+        } else if(nextNum > maxRounds){
+          room.status = 'finished';
+        } else {
+          room.currentRoundNum = nextNum;
+          room.roundState = { hostDone: false, guestDone: false, winner: null };
+        }
+        return room;
+      });
+    }
+  });
+}
+
+function startCountdown(onDone){
+  if(cdTimer) clearInterval(cdTimer);
+  let n=3;
+  const wrap=document.getElementById('duel-cd-wrap'),el=document.getElementById('duel-cd-num');
+  wrap.style.display='flex'; setCd(el,n);
+  cdTimer=setInterval(()=>{
+    n--;
+    if(n<=0){ clearInterval(cdTimer); wrap.style.display='none'; if(onDone)onDone(); }
+    else setCd(el,n);
+  },1000);
+}
+function setCd(el,n){el.textContent=n;el.classList.remove('duel-cd');void el.offsetWidth;el.classList.add('duel-cd');}
+
+function endDuel(){
+  if(window.trackEnd)window.trackEnd();
+  if(cdTimer) clearInterval(cdTimer);
+  if(duelTimerInterval) clearInterval(duelTimerInterval);
+  if(roundListener){ roundListener(); roundListener=null; }
+
+  const myFinal  = myScore_;
+  const oppFinal = oppScore_;
+
+  if(tournamentMatchInfo){
+    finishTournamentMatch(myFinal, oppFinal);
+    return;
+  }
+
+  let winBadge, comment;
+  if(myFinal>oppFinal){ winBadge=`🏆 Kazanan: ${myName}`; comment=`${myName} notaları daha hızlı okudu! ${oppName} daha çok çalışmalı 💪`; }
+  else if(oppFinal>myFinal){ winBadge=`🏆 Kazanan: ${oppName}`; comment=`${oppName} bu sefer daha hızlıydı! Bir dahaki sefere ${myName} 🎸`; }
+  else{ winBadge='🤝 Beraberlik!'; comment='İkisi de aynı seviyede! Yunus Hoca ikinizden de memnun 🎵'; }
+
+  const mc=myFinal>=oppFinal?'win':'lose', oc=oppFinal>=myFinal?'win':'lose';
+  const gameLabel = duelSecs > 0 ? `⏱ ${duelSecs} Saniyelik Yarış` : `${duelRounds} Tur`;
+  document.getElementById('app').innerHTML=`
+    <div class="duel-result">
+      <h2>⚔️ Düello Bitti!</h2>
+      <div class="duel-mode-badge">${gameLabel}</div>
+      <div class="winner-badge">${winBadge}</div>
+      <div class="final-scores">
+        <div class="fsc-player"><div class="fsc-name">${myName}</div><div class="fsc-num ${mc}">${myFinal}</div></div>
+        <div class="fsc-vs">VS</div>
+        <div class="fsc-player"><div class="fsc-name">${oppName}</div><div class="fsc-num ${oc}">${oppFinal}</div></div>
+      </div>
+      <p class="duel-comment">"${comment}"</p>
+      <div class="result-btns">
+        <button class="app-btn btn-duel" onclick="location.reload()">🔄 Tekrar Oyna</button>
+        <button class="app-btn" onclick="location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
+      </div>
+    </div>`;
+}
+
+function handleAbandoned(){
+  if(window.trackEnd)window.trackEnd();
+  if(cdTimer) clearInterval(cdTimer);
+  if(duelTimerInterval) clearInterval(duelTimerInterval);
+  if(inTournamentMatchEntered && tournamentMatchInfo){
+    // Turnuva maçı sırasında kopma: lobby'e dön, maç sıfırlanabilir
+    inTournamentMatchEntered = false;
+    alert('Rakibiniz oyundan ayrıldı. Turnuva lobisine dönüyorsunuz. Moderatör maçı sıfırlayabilir.');
+    showArea('tournament-bracket-area');
+  } else {
+    alert('Rakibiniz oyundan ayrıldı.');
+    showArea('setup-area');
+  }
+}
+
+window.leaveGame = async function(){
+  if(window.trackEnd)window.trackEnd();
+  if(cdTimer) clearInterval(cdTimer);
+  if(duelTimerInterval) clearInterval(duelTimerInterval);
+  if(roundListener&&roomCode){ roundListener(); roundListener=null; }
+  if(roomCode) await update(ref(db,`duel_rooms/${roomCode}`),{status:'abandoned'});
+  showArea('setup-area');
+};
+
+let duelTimerInterval = null;
+let duelTimeLeft = 0;
+
+function startDuelTimer(){
+  duelTimeLeft = duelSecs;
+  if(duelTimerInterval) clearInterval(duelTimerInterval);
+  updateDuelTimerBadge();
+  duelTimerInterval = setInterval(()=>{
+    duelTimeLeft--;
+    updateDuelTimerBadge();
+    if(duelTimeLeft <= 0){
+      clearInterval(duelTimerInterval);
+      if(myRole==='host'){
+        update(ref(db,`duel_rooms/${roomCode}`),{status:'finished'});
+      }
+    }
+  }, 1000);
+}
+
+function updateDuelTimerBadge(){
+  const badge = document.getElementById('duel-round-label');
+  if(badge) badge.textContent = `⏱ ${duelTimeLeft}sn`;
+}
+
+// ════════════════════════════════════════════════════════════
+// TURNUVA MODU (Beta) — 4 kişilik tek eleme (yarı final + final)
+// Mevcut "duel_rooms" motorunu (tur bazlı, senkronize) olduğu gibi
+// kullanır; sadece eşleştirme + bracket ilerleme katmanı eklenir.
+// ════════════════════════════════════════════════════════════
+
+window.showTournamentSetup = function(){
+  showArea('tournament-setup-area');
+  localStorage.setItem('gitar_tournament_watch','1');
+  listenTournament();
+};
+
+window.leaveTournamentLobby = function(){
+  if(tournamentListener){ tournamentListener(); tournamentListener=null; }
+  localStorage.removeItem('gitar_tournament_watch');
+  showArea('setup-area');
+};
+
+function listenTournament(){
+  if(tournamentListener){ tournamentListener(); tournamentListener=null; }
+  startTournamentTimeoutChecker();
+  tournamentListener = onValue(ref(db, `tournaments/${TID}`), snap=>{
+    try{
+      handleTournamentUpdate(snap.val());
+    }catch(e){
+      console.error('[Turnuva] render hatası:', e);
+      const body = document.getElementById('tourn-lobby-body');
+      if(body) body.innerHTML = '<p style="text-align:center;font-size:.85rem;color:#a05050;">Turnuva verisi okunamadı, lütfen sayfayı yenileyin.</p>';
+      showArea('tournament-setup-area');
+    }
+  }, err=>{
+    console.error('[Turnuva] Firebase dinleme hatası:', err);
+  });
+}
+
+function handleTournamentUpdate(tour){
+  // Eski/bozuk format temizliği: önceki sürümden kalma turnuva kaydı
+  // ya bracket.rounds yapısında değilse (eski semi/final formatı) ya da
+  // bracket var ama rounds dizisi boşsa — kullanıcıya boş ekran göstermek
+  // yerine otomatik temizleyip lobiye döneriz (sadece staff temizleyebilir,
+  // diğerleri sadece boş lobi görür).
+  if(tour && tour.bracket && !Array.isArray(tour.bracket.rounds)){
+    if(isStaff){
+      remove(ref(db, `tournaments/${TID}`)).catch(()=>{});
+    }
+    tournamentState = null;
+    renderTournamentLobby(null);
+    showArea('tournament-setup-area');
+    return;
+  }
+
+  tournamentState = tour;
+
+  if(!tour || tour.status === 'lobby'){
+    renderTournamentLobby(tour);
+    if(document.getElementById('tournament-bracket-area').style.display !== 'none' &&
+       document.getElementById('tournament-setup-area').style.display === 'none' &&
+       !inTournamentMatchEntered){
+      // Turnuva henüz lobideyse ve bracket ekranındaysak lobiye dön
+      showArea('tournament-setup-area');
+    }
+    return;
+  }
+
+  // status: 'active' veya 'finished'
+  // Güvenlik kontrolü: bracket.rounds yoksa veya boşsa render etmeye çalışma
+  if(!tour.bracket || !Array.isArray(tour.bracket.rounds) || !tour.bracket.rounds.length){
+    if(!inTournamentMatchEntered) showArea('tournament-setup-area');
+    return;
+  }
+
+  if(!inTournamentMatchEntered) showArea('tournament-bracket-area');
+  renderTournamentBracket(tour);
+  if(tour.status === 'finished') return;
+
+  const rounds = tour.bracket.rounds;
+  const matches = [];
+  rounds.forEach((round, rIdx) => {
+    // Bir tur ancak kendinden ÖNCEKİ tur tamamen bittiyse oynanabilir.
+    // 1. tur (rIdx === 0) için önceki tur yok, her zaman oynanabilir.
+    const prevRoundDone = rIdx === 0 || rounds[rIdx - 1].every(pm => pm.status === 'finished');
+    round.forEach((m, mIdx) => {
+      matches.push({ path: `bracket.rounds.${rIdx}.${mIdx}`, m, playable: prevRoundDone });
+    });
+  });
+
+  for(const {path,m,playable} of matches){
+    if(!m || m.status === 'finished') continue;
+    if(m.p1 !== mySid && m.p2 !== mySid) continue;
+    if(!playable) continue; // önceki tur henüz bitmedi, bu maç beklemede
+
+    // Host (p1), ikisi de "Hazır" deyip oda henüz kurulmadıysa odayı kurar.
+    if(m.p1 === mySid && m.readyP1 && m.readyP2 && !m.roomCode){
+      createTournamentRoom(path, m);
+    }
+    // Oda kurulduysa ve maça henüz girmediysek gir.
+    if(m.roomCode && !inTournamentMatchEntered){
+      enterTournamentMatch(path, m);
+    }
+  }
+}
+
+let _selectedTourSize = 4;
+let _selectedTourMode = 'sync';
+
+function renderTournamentLobby(tour){
+  const body = document.getElementById('tourn-lobby-body');
+  if(!body) return;
+  const size = (tour && tour.size) || _selectedTourSize;
+  const mode = (tour && tour.mode) || _selectedTourMode;
+  const participants = (tour && tour.participants) || {};
+  const ids = Object.keys(participants);
+  const joined = ids.includes(mySid);
+  const noTour = !tour;
+
+  let rows = ids.map(id => `
+    <div class="tourn-lobby-row">
+      <span class="tourn-dot"></span>
+      <span>${participants[id].name}${id===mySid?' <span style="color:#7b5ea7;font-size:.72rem;">(Sen)</span>':''}</span>
+    </div>
+  `).join('');
+  if(!ids.length) rows = '<div class="no-players-msg">Henüz katılan yok. İlk sen katıl!</div>';
+
+  // Staff kurulum arayüzü (sadece turnuva henüz kurulmamışken)
+  const staffSetup = (isStaff && noTour) ? `
+    <div style="margin-bottom:12px;">
+      <p style="font-size:.78rem;color:#7a6048;font-weight:700;margin-bottom:6px;text-align:center;">Turnuva Modu</p>
+      <div class="tourn-mode-picker">
+        <div class="tourn-mode-card ${_selectedTourMode==='sync'?'selected':''}" onclick="selectTourMode('sync')">
+          <div class="tourn-mode-icon">⚔️</div>
+          <div class="tourn-mode-label">Senkron</div>
+          <div class="tourn-mode-desc">Tur bazlı · Rakiple<br>aynı anda oynarsın</div>
+        </div>
+        <div class="tourn-mode-card ${_selectedTourMode==='async'?'selected':''}" onclick="selectTourMode('async')">
+          <div class="tourn-mode-icon">⏱️</div>
+          <div class="tourn-mode-label">Asenkron</div>
+          <div class="tourn-mode-desc">40 sn · İstediğin<br>zaman oynarsın</div>
+        </div>
+      </div>
+      <p style="font-size:.78rem;color:#7a6048;font-weight:700;margin:8px 0 6px;text-align:center;">Turnuva Boyutu</p>
+      <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;">
+        ${[4,8,16,32].map(s=>`<button class="app-btn" style="padding:5px 16px;font-size:.82rem;width:auto;${_selectedTourSize===s?'background:#7b5ea7;color:#fff;border-color:#7b5ea7;':''}" onclick="selectTourSize(${s})">${s} Kişi</button>`).join('')}
+      </div>
+      <div style="margin-top:10px;text-align:center;">
+        <button class="app-btn tourn-mode-btn" style="width:auto;padding:8px 24px;" onclick="createTournamentLobby(_selectedTourSize, _selectedTourMode)">
+          🏆 Lobi Kur
+        </button>
+      </div>
+    </div>` : '';
+
+  // Mevcut turnuva bilgisi (kurulduysa)
+  const modeLabel = mode === 'async' ? '⏱️ Asenkron (40 sn)' : '⚔️ Senkron (Tur bazlı)';
+  const tourInfo = !noTour ? `
+    <div style="text-align:center;margin-bottom:8px;">
+      <span style="font-size:.75rem;background:#f3eeff;color:#5a3e80;padding:3px 10px;border-radius:20px;border:1px solid #d0c0f0;">
+        ${modeLabel} · ${size} kişilik
+      </span>
+    </div>
+    <p style="text-align:center;font-size:.85rem;color:#7a6048;">Katılan: <b>${ids.length}/${size}</b></p>` : '';
+
+  const noTourMsg = noTour && !isStaff ? `
+    <p style="text-align:center;font-size:.85rem;color:#a08868;padding:1rem 0;">
+      Henüz açılmış bir turnuva yok.<br>Öğretmen/moderatör başlatınca buraya gelecek.
+    </p>` : '';
+
+  const joinBtn = (!noTour && !joined)
+    ? `<button class="app-btn btn-duel" ${ids.length>=size?'disabled':''} onclick="joinTournamentLobby()">🏆 Turnuvaya Katıl</button>`
+    : (!noTour && joined ? '<button class="app-btn" disabled>✅ Katıldın — diğerleri bekleniyor</button>' : '');
+
+  const startBtn = (!noTour && isStaff)
+    ? `<button class="app-btn" ${ids.length<size?'disabled':''} onclick="startTournamentNow()">▶️ Başlat (${ids.length}/${size})</button>`
+    : '';
+
+  const resetBtn = (!noTour && isStaff)
+    ? `<button class="app-btn" style="background:#a05050;color:#fff;border-color:#a05050;" onclick="resetTournamentProto()">🔄 Sıfırla</button>`
+    : '';
+
+  body.innerHTML = `
+    ${staffSetup}
+    ${noTourMsg}
+    ${tourInfo}
+    ${!noTour ? `<div class="tourn-lobby-list">${rows}</div>` : ''}
+    <div class="action-buttons-wrap" style="margin-top:10px;gap:8px;">
+      ${joinBtn}${startBtn}${resetBtn}
+    </div>`;
+}
+
+window.selectTourMode = function(m){ _selectedTourMode = m; renderTournamentLobby(tournamentState); };
+window.selectTourSize = function(s){ _selectedTourSize = s; renderTournamentLobby(tournamentState); };
+
+window.createTournamentLobby = async function(size, mode){
+  if(!isStaff) return;
+  await runTransaction(ref(db, `tournaments/${TID}`), tour=>{
+    if(tour) return tour; // zaten kurulu, üzerine yazma
+    return { size, mode: mode || 'sync', status:'lobby', participants:{}, bracket:null };
+  });
+};
+
+window.joinTournamentLobby = async function(){
+  await runTransaction(ref(db, `tournaments/${TID}`), tour=>{
+    if(!tour) return tour; // henüz kurulmamış — staff boyut seçmeden katılım olamaz
+    if(tour.status !== 'lobby') return tour; // turnuva başladıysa katılım kapanır
+    if(!tour.participants) tour.participants = {};
+    const n = Object.keys(tour.participants).length;
+    if(!tour.participants[mySid] && n < tour.size){
+      tour.participants[mySid] = { name: myName };
+    }
+    return tour;
+  });
+};
+
+// Genel bracket kurucu: size = 4/8/16/32 → log2(size) tur (round)
+// tour.bracket.rounds = [ [maç,maç,...], [maç,...], ..., [final maçı] ]
+function mkEmptyMatch(){
+  return {p1:null,p2:null,p1Name:null,p2Name:null,winner:null,winnerName:null,status:'pending',roomCode:null,readyP1:false,readyP2:false};
+}
+
+window.startTournamentNow = async function(){
+  if(!isStaff) return;
+  await runTransaction(ref(db, `tournaments/${TID}`), tour=>{
+    if(!tour || tour.status !== 'lobby') return tour;
+    const ids = Object.keys(tour.participants || {});
+    if(ids.length < tour.size) return tour;
+    const order = shuf(ids);
+    const numRounds = Math.log2(tour.size); // 4→2, 8→3, 16→4, 32→5
+
+    const rounds = [];
+    // İlk tur: tüm katılımcılar eşleştirilir
+    const firstRoundMatches = tour.size / 2;
+    const r0 = [];
+    for(let i=0;i<firstRoundMatches;i++){
+      const m = mkEmptyMatch();
+      const a = order[i*2], b = order[i*2+1];
+      m.p1 = a; m.p1Name = tour.participants[a].name;
+      m.p2 = b; m.p2Name = tour.participants[b].name;
+      r0.push(m);
+    }
+    rounds.push(r0);
+    // Sonraki turlar boş (kazananlar ilerledikçe doldurulacak)
+    for(let r=1;r<numRounds;r++){
+      const matchCount = tour.size / Math.pow(2, r+1);
+      const arr = [];
+      for(let i=0;i<matchCount;i++) arr.push(mkEmptyMatch());
+      rounds.push(arr);
+    }
+    tour.bracket = { rounds };
+    tour.status = 'active';
+    // mode: 'sync' (tur bazlı) veya 'async' (saniye bazlı)
+    // lobbyde seçildi, buraya kadar taşındı
+    // tour.mode zaten set edildi createTournamentLobby'de
+    return tour;
+  });
+};
+
+window.resetTournamentProto = async function(){
+  if(!isStaff){ alert('Turnuvayı sadece öğretmen veya moderatör sıfırlayabilir.'); return; }
+  if(!confirm('Turnuvayı sıfırlamak istediğine emin misin?')) return;
+  await remove(ref(db, `tournaments/${TID}`));
+  inTournamentMatchEntered = false;
+  tournamentMatchInfo = null;
+};
+
+window.tournamentReady = async function(path){
+  await runTransaction(ref(db, `tournaments/${TID}`), tour=>{
+    if(!tour) return tour;
+    const seg = path.split('.');
+    let node = tour;
+    for(let i=0;i<seg.length-1;i++) node = node[seg[i]];
+    const m = node[seg[seg.length-1]];
+    if(!m) return tour;
+    if(m.p1 === mySid) m.readyP1 = true;
+    if(m.p2 === mySid) m.readyP2 = true;
+    // İlk hazır olan kişi zamanı damgalar (2 saat timeout için)
+    if(!m.readyAt) m.readyAt = Date.now();
+    return tour;
+  });
+  // Rakibe özel chat bildirimi gönder
+  try {
+    const rIdx = path.split('.')[2], mIdx = path.split('.')[3];
+    const mSnap = await get(ref(db, `tournaments/${TID}/bracket/rounds/${rIdx}/${mIdx}`));
+    const mData = mSnap.val();
+    if(mData) {
+      const oppSidLocal = mData.p1 === mySid ? mData.p2 : mData.p1;
+      const oppNameLocal = mData.p1 === mySid ? mData.p2Name : mData.p1Name;
+      // Özel turnuva chat odası: iki oyuncunun id'sini sırala, birleştir
+      const chatKey = [mySid, oppSidLocal].sort().join('_');
+      await push(ref(db, `tournament_chats/${chatKey}`), {
+        from: mySid, fromName: myName,
+        text: `⚔️ Turnuva maçı için hazırım! Sen de hazır ol, maç başlayalım.`,
+        ts: Date.now(), system: false
+      });
+      // Genel chat'e de bildirim
+      await push(ref(db, 'chat/general'), {
+        sid: 'system_news', name: '🏆 Turnuva',
+        text: `⚔️ ${myName} turnuva maçı için hazır — rakibini bekliyor!`,
+        ts: Date.now(), isTeacher: false
+      });
+    }
+  } catch(e){ console.error('[Turnuva] chat bildirimi gönderilemedi:', e); }
+};
+
+// ── Moderatör: maçı sıfırla (readyP1/P2, roomCode temizle) ──
+window.staffResetMatch = async function(path){
+  if(!isStaff) return;
+  const seg = path.split('.');
+  const rIdx = +seg[2], mIdx = +seg[3];
+  const matchRef = ref(db, `tournaments/${TID}/bracket/rounds/${rIdx}/${mIdx}`);
+  // Eski oda varsa sil
+  try {
+    const snap = await get(matchRef);
+    const mData = snap.val();
+    if(mData && mData.roomCode) {
+      await remove(ref(db, `duel_rooms/${mData.roomCode}`)).catch(()=>{});
+    }
+  } catch(e){}
+  await update(matchRef, { readyP1: false, readyP2: false, roomCode: null, readyAt: null });
+  try { await push(ref(db,'chat/general'), {
+    sid:'system_news', name:'🏆 Turnuva',
+    text: `🔄 Moderatör bir turnuva maçını sıfırladı. İlgili oyuncular tekrar "Hazırım" basmalı.`,
+    ts: Date.now(), isTeacher: false
+  }); } catch(e){}
+};
+
+// ── Moderatör: rakip değiştir (çevrimiçi biri ile) ──
+window.staffReplacePlayer = async function(path, p1Sid, p2Sid){
+  if(!isStaff) return;
+  // Online oyuncuları al (bu maçta olmayan, o an bağlı olan)
+  try {
+    const onlineSnap = await get(ref(db, 'online_users'));
+    const onlineData = onlineSnap.val() || {};
+    const candidates = Object.entries(onlineData)
+      .filter(([sid]) => sid !== p1Sid && sid !== p2Sid && sid !== mySid)
+      .map(([sid, val]) => ({ sid, name: val.name || sid }));
+    if(!candidates.length){ alert('Şu an çevrimiçi uygun başka oyuncu yok.'); return; }
+    const list = candidates.map((c,i) => `${i+1}. ${c.name}`).join('
+');
+    const choice = prompt(`Hangi oyuncuyu eklemek istiyorsun?
+
+${list}
+
+Numara gir:`);
+    const idx = parseInt(choice) - 1;
+    if(isNaN(idx) || idx < 0 || idx >= candidates.length) return;
+    const newPlayer = candidates[idx];
+    const seg = path.split('.');
+    const rIdx = +seg[2], mIdx = +seg[3];
+    const matchRef = ref(db, `tournaments/${TID}/bracket/rounds/${rIdx}/${mIdx}`);
+    const snap = await get(matchRef);
+    const mData = snap.val();
+    if(!mData) return;
+    // p2'yi değiştir (p1 hazır durumdaysa p2'yi değiştirmek daha mantıklı)
+    const whichSlot = mData.readyP1 ? 'p2' : 'p1';
+    const updateObj = whichSlot === 'p2'
+      ? { p2: newPlayer.sid, p2Name: newPlayer.name, readyP2: false, readyAt: null }
+      : { p1: newPlayer.sid, p1Name: newPlayer.name, readyP1: false, readyAt: null };
+    if(mData.roomCode) { await remove(ref(db, `duel_rooms/${mData.roomCode}`)).catch(()=>{}); updateObj.roomCode = null; }
+    await update(matchRef, updateObj);
+    await push(ref(db,'chat/general'), {
+      sid:'system_news', name:'🏆 Turnuva',
+      text: `🔄 ${newPlayer.name} turnuva maçına dahil edildi!`,
+      ts: Date.now(), isTeacher: false
+    });
+  } catch(e){ console.error('[Turnuva] rakip değiştirme hatası:', e); alert('Hata oluştu.'); }
+};
+
+// ── Özel turnuva chat'ini aç (popup değil, genel chat'e yönlendir) ──
+window.openTournamentChat = async function(p1Sid, p1Name, p2Sid, p2Name){
+  // Rakibe mesaj: genel chat üzerinden at + bildirim
+  try {
+    const oppSidLocal = p1Sid === mySid ? p2Sid : p1Sid;
+    const oppNameLocal = p1Sid === mySid ? p2Name : p1Name;
+    await push(ref(db,'chat/general'), {
+      sid: mySid, name: myName,
+      text: `@${oppNameLocal} Turnuva maçına hazır olduğumda haber veririm, seninle eşleştim! ⚔️`,
+      ts: Date.now(), isTeacher: false
+    });
+    alert(`${oppNameLocal} adlı rakibine genel chat üzerinden mesaj gönderildi.`);
+  } catch(e){ alert('Mesaj gönderilemedi.'); }
+};
+
+// ── 2 saat timeout kontrolcüsü (sayfa açık kaldığı sürece çalışır) ──
+let _timeoutCheckInterval = null;
+function startTournamentTimeoutChecker(){
+  if(_timeoutCheckInterval) return;
+  _timeoutCheckInterval = setInterval(async () => {
+    if(!tournamentState || tournamentState.status !== 'active') return;
+    const rounds = tournamentState.bracket && tournamentState.bracket.rounds;
+    if(!rounds) return;
+    const now = Date.now();
+    for(let rIdx = 0; rIdx < rounds.length; rIdx++){
+      const prevDone = rIdx === 0 || rounds[rIdx-1].every(pm => pm.status === 'finished');
+      if(!prevDone) continue;
+      for(let mIdx = 0; mIdx < rounds[rIdx].length; mIdx++){
+        const m = rounds[rIdx][mIdx];
+        if(!m || m.status === 'finished' || !m.p1 || !m.p2) continue;
+        if(!m.readyAt) continue;
+        const elapsed = now - m.readyAt;
+        if(elapsed < READY_TIMEOUT_MS) continue;
+        // 2 saat doldu: hazır olan kazanır
+        const readyWinner = m.readyP1 ? m.p1 : (m.readyP2 ? m.p2 : null);
+        const readyWinnerName = m.readyP1 ? m.p1Name : (m.readyP2 ? m.p2Name : null);
+        if(!readyWinner) continue;
+        // Sadece host (p1) bu işlemi yapar, çift yazma engeli
+        if(m.p1 !== mySid) continue;
+        const path = `bracket.rounds.${rIdx}.${mIdx}`;
+        await runTransaction(ref(db, `tournaments/${TID}`), tour => {
+          if(!tour) return tour;
+          const mm = tour.bracket.rounds[rIdx][mIdx];
+          if(!mm || mm.status === 'finished') return tour;
+          mm.winner = readyWinner; mm.winnerName = readyWinnerName;
+          mm.status = 'finished'; mm.score_p1 = 0; mm.score_p2 = 0;
+          mm.walkedOver = true; // timeout ile geçiş bayrağı
+          const isLast = rIdx === tour.bracket.rounds.length - 1;
+          if(isLast){
+            tour.status = 'finished'; tour.champion = readyWinner; tour.championName = readyWinnerName;
+          } else {
+            const nextMatch = tour.bracket.rounds[rIdx+1][Math.floor(mIdx/2)];
+            if(mIdx%2===0){ nextMatch.p1 = readyWinner; nextMatch.p1Name = readyWinnerName; }
+            else { nextMatch.p2 = readyWinner; nextMatch.p2Name = readyWinnerName; }
+          }
+          return tour;
+        }).catch(()=>{});
+        try{ await push(ref(db,'chat/general'), {
+          sid:'system_news', name:'🏆 Turnuva',
+          text: `⏰ ${readyWinnerName} rakibi 2 saat içinde hazır olmadığı için otomatik olarak bir üst tura geçti!`,
+          ts: Date.now(), isTeacher: false
+        }); }catch(e){}
+      }
+    }
+  }, 60 * 1000); // Her dakika kontrol
+}
+
+// Aynı maç için createTournamentRoom'un birden fazla kez tetiklenmesini
+// (Firebase listener art arda fired olduğunda oluşan race condition) önlemek
+// için yerel bir kilit seti tutuyoruz — host tarafı için path bazlı.
+const _roomCreationLocks = new Set();
+
+async function createTournamentRoom(path, m){
+  // Yerel kilit: bu path için zaten oda kurma işlemi başladıysa tekrar başlama
+  if(_roomCreationLocks.has(path)) return;
+  _roomCreationLocks.add(path);
+
+  const tourMode = (tournamentState && tournamentState.mode) || 'sync';
+  try{
+    // Önce Firebase üzerinde "oda kurma hakkı"nı transaction ile rezerve et.
+    // Bu sayede iki ayrı tetiklenme olsa bile sadece biri gerçekten geçer.
+    const code = rndCode();
+    let wonReservation = false;
+    await runTransaction(ref(db, `tournaments/${TID}`), tour=>{
+      if(!tour) return tour;
+      const seg = path.split('.');
+      let node = tour;
+      for(let i=0;i<seg.length-1;i++) node = node[seg[i]];
+      const mm = node[seg[seg.length-1]];
+      if(mm && !mm.roomCode){
+        mm.roomCode = code; // rezervasyon
+        wonReservation = true;
+      }
+      return tour;
+    });
+
+    if(!wonReservation) return; // başka bir tetiklenme zaten kazandı, biz çık
+
+    // Rezervasyonu kazandık → asıl oda verisini şimdi yaz
+    const deck = buildQuestionDeck([1,2,3,4,5,6], 25);
+    await set(ref(db, `duel_rooms/${code}`), {
+      host:  { sid: m.p1, name: m.p1Name },
+      guest: { sid: m.p2, name: m.p2Name },
+      status: 'playing',
+      config: { totalRounds: tourMode==='async'?0:15, totalSecs: tourMode==='async'?40:0, strings: [1,2,3,4,5,6], questions: deck },
+      scores: { host: 0, guest: 0 },
+      currentRoundNum: 1,
+      roundState: { hostDone: false, guestDone: false, winner: null },
+      progress: { host: { currentRound: 1 }, guest: { currentRound: 1 } }
+    });
+  } finally {
+    _roomCreationLocks.delete(path);
+  }
+}
+
+function enterTournamentMatch(path, m){
+  inTournamentMatchEntered = true;
+  tournamentMatchInfo = { path };
+  myRole   = (m.p1 === mySid) ? 'host' : 'guest';
+  oppSid   = (m.p1 === mySid) ? m.p2 : m.p1;
+  oppName  = (m.p1 === mySid) ? m.p2Name : m.p1Name;
+  roomCode = m.roomCode;
+  // Senkron → tur bazlı 15 tur, Asenkron → 40 saniye
+  const mode = (tournamentState && tournamentState.mode) || 'sync';
+  if(mode === 'async'){
+    duelRounds = 0;
+    duelSecs   = 40;
+  } else {
+    duelRounds = 15;
+    duelSecs   = 0;
+  }
+  duelStrings = new Set([1,2,3,4,5,6]);
+  beginGame();
+}
+
+async function finishTournamentMatch(myFinal, oppFinal){
+  const winnerSid  = myFinal > oppFinal ? mySid  : oppSid;
+  const winnerName = myFinal > oppFinal ? myName : oppName;
+  const path = tournamentMatchInfo.path; // örn 'bracket.rounds.0.2'
+
+  let becameChampion = false;
+  await runTransaction(ref(db, `tournaments/${TID}`), tour=>{
+    if(!tour) return tour;
+    const seg = path.split('.'); // ['bracket','rounds', rIdx, mIdx]
+    const rIdx = +seg[2], mIdx = +seg[3];
+    const m = tour.bracket.rounds[rIdx][mIdx];
+    if(!m || m.status === 'finished') return tour; // idempotent — iki taraf da çağırabilir
+
+    m.winner = winnerSid; m.winnerName = winnerName; m.status = 'finished';
+    // Skoru transaction içinde yazmıyoruz (mySid retry'da güvensiz)
+    // Aşağıda ayrıca set() ile yazılacak
+
+    const rounds = tour.bracket.rounds;
+    const isLastRound = rIdx === rounds.length - 1;
+
+    if(isLastRound){
+      // Final maçı bitti → turnuva şampiyonu belli oldu
+      tour.status = 'finished';
+      tour.champion = winnerSid;
+      tour.championName = winnerName;
+      if(winnerSid === mySid) becameChampion = true;
+    } else {
+      // Bir sonraki tura ilerlet: bu turun tüm maçları bitmiş mi kontrol et
+      const nextRound = rounds[rIdx + 1];
+      const nextMatchIdx = Math.floor(mIdx / 2);
+      const nextMatch = nextRound[nextMatchIdx];
+      const isFirstFeeder = (mIdx % 2 === 0);
+      if(isFirstFeeder){
+        nextMatch.p1 = winnerSid; nextMatch.p1Name = winnerName;
+      } else {
+        nextMatch.p2 = winnerSid; nextMatch.p2Name = winnerName;
+      }
+    }
+    return tour;
+  });
+
+  // Skoru ayrıca, transaction dışında, güvenli yaz (p1/p2 artık Firebase'den okunur)
+  try {
+    const scoreSnap = await get(ref(db, `tournaments/${TID}/bracket/rounds/${path.split('.')[2]}/${path.split('.')[3]}`));
+    const mNode = scoreSnap.val();
+    if(mNode && mNode.status === 'finished' && mNode.score_p1 == null){
+      const amP1 = mNode.p1 === mySid;
+      await update(ref(db, `tournaments/${TID}/bracket/rounds/${path.split('.')[2]}/${path.split('.')[3]}`), {
+        score_p1: amP1 ? myFinal : oppFinal,
+        score_p2: amP1 ? oppFinal : myFinal,
+      });
+    }
+  } catch(e){ console.error('[Tournament] skor yazılamadı:', e); }
+
+  try{
+    await push(ref(db,'news_feed'), {
+      text: `⚔️ ${winnerName}, turnuva maçında ${myFinal>oppFinal?oppName:myName}'a karşı ${Math.max(myFinal,oppFinal)}-${Math.min(myFinal,oppFinal)} kazandı!`,
+      ts: Date.now()
+    });
+  }catch(e){}
+
+  // Turnuva şampiyonu olduysa ana sisteme bildir (welcome bar rozeti + istatistik arşivi)
+  if(becameChampion){
+    const tourSize = (tournamentState && tournamentState.size) || null;
+    try{
+      const ts = Date.now();
+      await set(ref(db, `championships/nota/${mySid}`), { name: myName, ts, gameLabel: 'Nota Okuma', participantCount: tourSize });
+      await push(ref(db, `championship_history/${mySid}`), { game: 'nota', gameLabel: 'Nota Okuma', ts, participantCount: tourSize });
+    }catch(e){ console.error('[Championship] yazılamadı:', e); }
+  }
+
+  const mc = myFinal>=oppFinal ? 'win' : 'lose', oc = oppFinal>=myFinal ? 'win' : 'lose';
+  document.getElementById('app').innerHTML = `
+    <div class="duel-result">
+      <h2>🏆 Turnuva Maçı Bitti!</h2>
+      <div class="final-scores" style="gap:14px;">
+        <div class="fsc-player tr-result-player ${mc}">
+          <div class="fsc-name">${myName}${mc==='win'?' 🏆':''}</div>
+          <div class="fsc-num ${mc}">${myFinal}</div>
+        </div>
+        <div class="fsc-vs">VS</div>
+        <div class="fsc-player tr-result-player ${oc}">
+          <div class="fsc-name">${oppName}${oc==='win'?' 🏆':''}</div>
+          <div class="fsc-num ${oc}">${oppFinal}</div>
+        </div>
+      </div>
+      <div class="result-btns">
+        <button class="app-btn btn-duel" onclick="location.reload()">🏆 Lobiye Dön</button>
+      </div>
+    </div>`;
+  localStorage.setItem('gitar_tournament_watch','1');
+}
+
+// Tur isimlerini boyuta göre üret: son tur Final, ondan önceki Yarı Final, vs.
+// Tur adı: toplam tur sayısına göre sondan geriye say
+function roundSectionLabel(roundIdx, totalRounds){
+  const fromEnd = totalRounds - 1 - roundIdx;
+  if(fromEnd === 0) return { label:'🥇 Final', cls:'r-final' };
+  if(fromEnd === 1) return { label:'🥈 Yarı Final', cls:'r-semi' };
+  if(fromEnd === 2) return { label:'🥉 Çeyrek Final', cls:'r-quarter' };
+  return { label:`${roundIdx+1}. Tur`, cls:'' };
+}
+
+// 2 saat timeout: readyAt'ten itibaren 2 saat geçmişse winner'ı hazır olan olarak ata
+const READY_TIMEOUT_MS = 2 * 60 * 60 * 1000;
+
+function renderMatchBlock(m, path, roundIdx, totalRounds){
+  const isMine = m.p1 === mySid || m.p2 === mySid;
+  const isPending = !m.p1 || !m.p2;
+  const isFinished = m.status === 'finished';
+
+  if(isPending){
+    return `<div class="tourn-match-wrap">
+      <div class="tourn-match">
+        <div class="tm-side tm-pending" style="flex:1;text-align:center;padding:10px 8px;font-size:.8rem;font-style:italic;color:#b09070;">
+          Önceki tur sonuçları bekleniyor…
+        </div>
+      </div>
+    </div>`;
+  }
+
+  const p1Mine = m.p1 === mySid;
+  const p2Mine = m.p2 === mySid;
+  const p1cls = isFinished ? (m.winner===m.p1?'tm-win':'tm-lose') : 'tm-pending';
+  const p2cls = isFinished ? (m.winner===m.p2?'tm-win':'tm-lose') : 'tm-pending';
+
+  // Skorlar
+  const p1Score = (m.score_p1 != null) ? `<div class="tm-score">${m.score_p1}</div>` : '';
+  const p2Score = (m.score_p2 != null) ? `<div class="tm-score">${m.score_p2}</div>` : '';
+  const resultLine = isFinished && m.score_p1 != null
+    ? `<div class="tourn-match-result">Sonuç: ${m.p1Name.split(' ')[0]} <b>${m.score_p1}</b> — <b>${m.score_p2}</b> ${m.p2Name.split(' ')[0]}</div>`
+    : isFinished
+    ? `<div class="tourn-match-result">🏆 Kazanan: ${m.winnerName}</div>`
+    : '';
+
+  // 2 saat timeout hesabı
+  let timeoutHtml = '';
+  const now = Date.now();
+  if(!isFinished && (m.readyP1 || m.readyP2) && m.readyAt){
+    const elapsed = now - m.readyAt;
+    const remaining = READY_TIMEOUT_MS - elapsed;
+    if(remaining > 0){
+      const hrs  = Math.floor(remaining/3600000);
+      const mins = Math.floor((remaining%3600000)/60000);
+      timeoutHtml = `<div style="font-size:.68rem;color:#9a7040;text-align:center;padding:2px 0;">
+        ⏳ Rakip bekleniyor: <b>${hrs > 0 ? hrs+'s ' : ''}${mins}dk</b> içinde hazır olmazsa oyuncu otomatik ilerler
+      </div>`;
+    }
+  }
+
+  // Moderatör sıfırlama butonu (sadece staff görür, bitmemiş maçlarda)
+  const staffResetBtn = (isStaff && !isFinished && (m.readyP1 || m.readyP2 || m.roomCode))
+    ? `<div style="text-align:right;padding:0 6px 4px;">
+        <button style="font-size:.65rem;padding:2px 8px;border-radius:10px;border:1px solid #c0524a;background:#fff0ee;color:#a04040;cursor:pointer;font-family:inherit;"
+          onclick="if(confirm('Bu maçı sıfırlamak istediğine emin misin?')) staffResetMatch('${path}')">
+          🔄 Maçı Sıfırla
+        </button>
+      </div>`
+    : '';
+
+  // Aksiyon alanı
+  let actionHtml = '';
+  if(isMine && !isFinished){
+    const amP1 = p1Mine;
+    const iAmReady = amP1 ? m.readyP1 : m.readyP2;
+    const oppReady = amP1 ? m.readyP2 : m.readyP1;
+
+    if(m.roomCode){
+      actionHtml = `<div class="tourn-action">
+        <div class="tourn-action-msg">⚡ Maç oluşturuluyor, lütfen bekleyin…</div>
+      </div>`;
+    } else if(iAmReady && !oppReady){
+      actionHtml = `<div class="tourn-action">
+        <div class="tourn-action-msg">✅ Hazırsın!<br>
+        <strong>${amP1 ? m.p2Name : m.p1Name}</strong> hazır olması bekleniyor.<br>
+        <span style="color:#7b5ea7;font-size:.7rem;">İkisi de hazır olunca maç otomatik başlar. Rakibine chat'ten haber verebilirsin!</span></div>
+      </div>`;
+    } else if(iAmReady && oppReady){
+      actionHtml = `<div class="tourn-action">
+        <div class="tourn-action-msg">⚡ Her ikiniz de hazırsınız! Oda oluşturuluyor…</div>
+      </div>`;
+    } else {
+      const oppName2 = amP1 ? m.p2Name : m.p1Name;
+      actionHtml = `<div class="tourn-action">
+        <div class="tourn-action-msg" style="margin-bottom:8px;">
+          🎯 Rakibinizle <strong>aynı anda</strong> oyunda olmalısınız.<br>
+          İkisi de "Hazırım" deyince maç otomatik başlar.<br>
+          <span style="font-size:.7rem;color:#7b5ea7;">Rakibiniz: <strong>${oppName2}</strong></span>
+        </div>
+        <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;">
+          <button class="app-btn btn-duel" style="padding:8px 20px;font-size:.88rem;width:auto;" onclick="tournamentReady('${path}')">⚔️ Hazırım</button>
+          <button class="app-btn" style="padding:8px 14px;font-size:.82rem;width:auto;background:#f3eeff;color:#5a3e80;border-color:#c0b0e8;"
+            onclick="openTournamentChat('${m.p1}','${m.p1Name}','${m.p2}','${m.p2Name}')">💬 Rakibe Mesaj</button>
+        </div>
+      </div>`;
+    }
+  }
+
+  // Staff: tüm aktif maçlarda sıfırlama + online değişim butonu
+  const staffOpts = (isStaff && !isFinished && m.p1 && m.p2)
+    ? `<div style="display:flex;gap:6px;padding:4px 8px 6px;flex-wrap:wrap;">
+        ${staffResetBtn ? '' : ''}
+        <button style="font-size:.65rem;padding:2px 8px;border-radius:10px;border:1px solid #c0524a;background:#fff0ee;color:#a04040;cursor:pointer;font-family:inherit;"
+          onclick="if(confirm('Bu maçı sıfırlamak istediğine emin misin? Hazır durumları ve oda sıfırlanır.')) staffResetMatch('${path}')">
+          🔄 Maçı Sıfırla
+        </button>
+        <button style="font-size:.65rem;padding:2px 8px;border-radius:10px;border:1px solid #4a7a9d;background:#f0f6ff;color:#2e5a7a;cursor:pointer;font-family:inherit;"
+          onclick="staffReplacePlayer('${path}','${m.p1}','${m.p2}')">
+          🔄 Rakip Değiştir
+        </button>
+      </div>`
+    : '';
+
+  return `<div class="tourn-match-wrap">
+    <div class="tourn-match${isMine?' mine':''}">
+      <div class="tm-side ${p1cls}${p1Mine?' mine-side':''}">
+        <div class="tm-name">${m.p1Name}</div>
+        ${p1Score}
+        ${p1Mine?'<div class="tm-you">SEN</div>':''}
+      </div>
+      <div class="tm-vs">VS</div>
+      <div class="tm-side ${p2cls}${p2Mine?' mine-side':''}">
+        <div class="tm-name">${m.p2Name}</div>
+        ${p2Score}
+        ${p2Mine?'<div class="tm-you">SEN</div>':''}
+      </div>
+    </div>
+    ${resultLine}
+    ${timeoutHtml}
+    ${actionHtml}
+    ${staffOpts}
+  </div>`;
+}
+
+function renderTournamentBracket(tour){
+  const body = document.getElementById('tourn-bracket-body');
+  if(!body || !tour || !tour.bracket || !tour.bracket.rounds) return;
+  const rounds = tour.bracket.rounds;
+  const modeLabel = tour.mode === 'async' ? '⏱️ Asenkron (40 sn)' : '⚔️ Senkron (Tur bazlı)';
+
+  const rulesHtml = `<div class="tourn-rules">
+    <strong>📋 Turnuva Kuralları</strong><br>
+    • <strong>Eşleşme:</strong> Her tur, tüm maçlar bitmeden bir sonraki tur başlamaz.<br>
+    • <strong>${tour.mode==='async'?'Asenkron mod':'Senkron mod'}:</strong> ${tour.mode==='async'
+      ? 'Rakibinle aynı anda olmak zorunda değilsin — 40 saniye içinde en çok doğruyu yapan kazanır.'
+      : 'Rakibinle <strong>aynı anda</strong> oynamalısınız. İkisi de "Hazırım" deyince maç başlar.'}<br>
+    • <strong>Eleme:</strong> Kaybeden elenin, kazanan bir sonraki tura geçer.
+  </div>`;
+
+  let html = rulesHtml;
+
+  rounds.forEach((round, rIdx) => {
+    const {label, cls} = roundSectionLabel(rIdx, rounds.length);
+    const prevDone = rIdx === 0 || rounds[rIdx-1].every(pm => pm.status==='finished');
+    const roundStatus = prevDone ? '' : ' <span style="font-size:.68rem;opacity:.7;">(önceki tur bekleniyor)</span>';
+
+    html += `<div class="tourn-round-section">
+      <div class="tourn-round-header ${cls}">${label}${roundStatus}</div>`;
+    round.forEach((m, mIdx) => {
+      const path = `bracket.rounds.${rIdx}.${mIdx}`;
+      html += renderMatchBlock(m, path, rIdx, rounds.length);
+    });
+    html += `</div>`;
+  });
+
+  if(tour.status === 'finished'){
+    html += `<div class="tourn-champion-box">
+      <div class="tourn-champion-trophy">🏆</div>
+      <div class="tourn-champion-quote">İşte cesaret, işte fazilet, işte feraset,<br>işte fedakarlık, işte adam gibi adamlık.</div>
+      <div class="tourn-champion-name">🏆 Turnuva Şampiyonu: ${tour.championName}</div>
+    </div>
+    ${isStaff ? '<div style="text-align:center;margin-top:10px;"><button class="app-btn" style="background:#a05050;color:#fff;border-color:#a05050;width:auto;padding:8px 20px;" onclick="resetTournamentProto()">🔄 Yeni Turnuva Başlat</button></div>' : ''}`;
+  }
+
+  body.innerHTML = html;
+}
+
+if(localStorage.getItem('gitar_tournament_watch')){
+  showTournamentSetup();
+}
+
+checkDuelHandoff();
+
+</script>
+
+<script>
+(function(){
+  const sid=localStorage.getItem('gitar_session');
+  if(!sid){ location.href='https://gitar.yunusgedik.com.tr/'; return; }
+  document.getElementById('exercise-wrap').style.display='none';
+})();
+</script>
+<script type="module" src="/live-bar.js"></script>
+</body>
+</html>
