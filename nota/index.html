@@ -163,11 +163,6 @@
       z-index:2;
     }
     .tourn-match .tm-side:first-child{border-right:1px solid #f2ebe1;}
-    .tourn-match-result{
-      font-size:.72rem;color:#8a7058;text-align:center;
-      padding:6px 10px;
-      background:#fbf9f5;border-top:1px solid #f0e8de;
-    }
     .tourn-match-wrap{margin-bottom:12px;}
     .tourn-action{padding:8px 10px 12px;text-align:center;background:#fbf9f5;border-top:1px solid #f0e8de;}
     .tourn-action-msg{font-size:.78rem;color:#7a6048;font-style:italic;line-height:1.5;}
@@ -1765,9 +1760,6 @@ function renderMatchBlock(m, path, roundIdx, totalRounds){
   }
   const p1Score = (p1HasScore) ? `<div class="tm-score">${m.score_p1}</div>` : (isFinished ? `<div class="tm-score">—</div>` : '');
   const p2Score = (p2HasScore) ? `<div class="tm-score">${m.score_p2}</div>` : (isFinished ? `<div class="tm-score">—</div>` : '');
-  const resultLine = isFinished
-    ? `<div class="tourn-match-result">Sonuç: ${m.p1Name.split(' ')[0]} <b>${p1HasScore?m.score_p1:'—'}</b> — <b>${p2HasScore?m.score_p2:'—'}</b> ${m.p2Name.split(' ')[0]}</div>`
-    : '';
 
   // Aksiyon alanı (benim maçım ve bitmemiş)
   let actionHtml = '';
@@ -1861,7 +1853,6 @@ function renderMatchBlock(m, path, roundIdx, totalRounds){
       </div>
     </div>
     ${timerHtml}
-    ${resultLine}
     ${actionHtml}
     ${chatHtml}
     ${modHtml}
