@@ -95,63 +95,12 @@
     }
     .tourn-mode-btn:hover{ box-shadow:0 3px 12px rgba(184,137,42,.35); }
     .tourn-round-title{font-family:'Playfair Display',serif;font-size:1rem;margin:14px 0 8px;text-align:center;}
-    .tourn-match{display:flex;align-items:center;justify-content:center;gap:10px;padding:10px 12px;border-radius:12px;background:rgba(0,0,0,.04);margin-bottom:8px;font-size:.88rem;transition:all .15s ease;}
+    .tourn-match{display:flex;align-items:center;justify-content:center;gap:10px;padding:10px;border-radius:12px;background:rgba(0,0,0,.04);margin-bottom:8px;font-size:.88rem;}
     .tourn-match .tm-side{flex:1;text-align:center;padding:4px 6px;border-radius:8px;}
     .tourn-match .tm-side.tm-win{font-weight:700;color:#2e8b3a;background:rgba(46,139,58,.10);}
     .tourn-match .tm-side.tm-lose{color:#a04040;background:rgba(160,64,64,.07);}
     .tourn-match .tm-side.tm-pending{color:#a08868;}
     .tourn-match .tm-vs{font-size:.7rem;color:#b09070;}
-    /* Skor gösterimi */
-    .tourn-match .tm-score{font-size:.82rem;font-weight:800;min-width:22px;}
-    .tourn-match .tm-score.sc-win{color:#2e8b3a;}
-    .tourn-match .tm-score.sc-lose{color:#a04040;}
-    /* Benim maçlarım vurgulu */
-    .tourn-match.my-match{
-      background:linear-gradient(135deg,rgba(212,175,90,.12),rgba(184,137,42,.08));
-      border:1.5px solid #d4af5a;
-      box-shadow:0 2px 10px rgba(184,137,42,.12);
-      padding:12px 14px;
-      font-size:.92rem;
-    }
-    .tourn-match.my-match .tm-side{padding:5px 8px;}
-    /* Tur grubu ayırıcıları */
-    .tourn-round-group{margin-bottom:18px;}
-    .tourn-round-header{
-      display:flex;align-items:center;gap:10px;
-      margin:16px 0 10px;padding:0 4px;
-    }
-    .tourn-round-header::before,.tourn-round-header::after{
-      content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,#d4c4b0,transparent);
-    }
-    .tourn-round-label{
-      font-family:'Playfair Display',serif;font-size:.92rem;font-weight:700;
-      color:#5a3e2b;white-space:nowrap;padding:4px 14px;
-      background:#fff;border:1px solid #e8e0d5;border-radius:20px;
-      box-shadow:0 1px 4px rgba(90,62,43,.06);
-    }
-    .tourn-round-label.round-final{background:linear-gradient(135deg,#fff8e6,#fdecbf);border-color:#e0bb5a;color:#8a5d0a;}
-    .tourn-round-label.round-semi{background:#f3eeff;border-color:#c8b4f0;color:#4a2d8a;}
-    .tourn-round-label.round-quarter{background:#e8f5e9;border-color:#81c784;color:#2e7d32;}
-    /* Kural kutusu */
-    .tourn-rules-box{
-      background:linear-gradient(135deg,#f8f4ec,#faf6ed);
-      border:1px solid #e8e0d5;border-radius:14px;
-      padding:12px 16px;margin-bottom:14px;
-      font-size:.78rem;color:#7a6050;line-height:1.55;
-    }
-    .tourn-rules-box b{color:#5a3e2b;}
-    .tourn-rules-title{font-size:.8rem;font-weight:700;color:#5a3e2b;margin-bottom:6px;display:flex;align-items:center;gap:5px;}
-    /* Mod seçici butonları */
-    .tourn-type-btn{
-      flex:1;padding:12px 10px;border-radius:14px;border:1.5px solid #d4c4b0;
-      background:#fff;color:#5a3e2b;font-size:.85rem;font-weight:700;
-      cursor:pointer;font-family:inherit;transition:all .15s;
-      display:flex;flex-direction:column;align-items:center;gap:4px;
-    }
-    .tourn-type-btn .tt-icon{font-size:1.4rem;}
-    .tourn-type-btn .tt-desc{font-size:.7rem;font-weight:400;color:#a08868;}
-    .tourn-type-btn.active{border-color:#7b5ea7;background:#f3eeff;color:#4a2d8a;box-shadow:0 2px 8px rgba(123,94,167,.15);}
-    .tourn-type-btn.active .tt-desc{color:#7b5ea7;}
     .tourn-champion{text-align:center;font-family:'Playfair Display',serif;font-size:1.15rem;margin:16px 0;color:#caa23a;}
     .tourn-champion-box{
       text-align:center;margin:18px auto;padding:22px 18px;max-width:380px;
@@ -262,12 +211,6 @@
       <h2 style="font-family:'Playfair Display',serif;font-size:1.1rem;">🏆 Turnuva Lobisi</h2>
       <button class="back-btn" onclick="leaveTournamentLobby()">← Geri</button>
     </div>
-    <div class="tourn-rules-box" id="tourn-lobby-rules">
-      <div class="tourn-rules-title">📋 Turnuva Kuralları</div>
-      <b>⚔️ Senkron Mod:</b> Rakibinizle aynı anda oyunda olmalısınız. İki oyuncu da "Hazırım" butonuna basınca maç başlar.<br>
-      <b>⏱️ Asenkron Mod:</b> İstediğiniz zaman maçınızı oynayabilirsiniz. Süre bitince skorunuz kaydedilir, iki taraf da oynadığında sonuç belli olur.<br>
-      <b>🚫 Tek Eleme:</b> Her turda kaybeden elenir. Beraberlikte uzatma turu oynanır.
-    </div>
     <div id="tourn-lobby-body"></div>
   </div>
 
@@ -276,7 +219,6 @@
       <h2 style="font-family:'Playfair Display',serif;font-size:1.1rem;">🏆 Turnuva — Tablo</h2>
       <button class="back-btn" onclick="leaveTournamentLobby()">← Geri</button>
     </div>
-    <div class="tourn-rules-box" id="tourn-bracket-rules" style="display:none;"></div>
     <div id="tourn-bracket-body"></div>
   </div>
 
@@ -349,7 +291,8 @@
   <div id="exercise-area" style="display:block;">
     <div class="nav-row between">
       <button class="back-btn" onclick="goBackToMenu()">← Menüye Dön</button>
-      </div>
+      <button class="back-btn" onclick="location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
+    </div>
     <div id="live-string-filter" class="string-buttons" style="margin-bottom:.8rem;">
       <button id="btn-all" class="string-btn all-btn active" onclick="toggleAllStrings()">Hepsi</button>
       <button class="string-btn active string-num-btn" data-string="1" onclick="toggleString(1)">①</button>
@@ -369,7 +312,8 @@
       </div>
       <div id="notation"></div>
     </div>
-        <div class="choices" id="choices"></div>
+    <p id="hint">🔊 Notayı duymak için "Dinle" tuşuna basın</p>
+    <div class="choices" id="choices"></div>
     <div id="feedback"></div>
     <div id="progress-bar-wrap"><div id="progress-bar"></div></div>
     <div class="controls">
@@ -535,8 +479,6 @@ let tournamentListener = null;
 let tournamentState = null;
 let tournamentMatchInfo = null;   // { path } -> aktif maçın bracket yolu, örn 'bracket.rounds.0.2'
 let inTournamentMatchEntered = false;
-let tournamentMode = 'sync';     // 'sync' (senkron/turlu) | 'async' (asenkron/saniyeli)
-let tournamentSecs = 40;         // asenkron modda varsayılan süre
 
 // Bir turnuva kurulu mu (lobi/aktif/bitmiş) — herkes için sürekli dinlenir,
 // böylece bir turnuva kurulduğu anda "🏆 Turnuva Modu" butonu tüm
@@ -794,6 +736,7 @@ function showQuestion(rNum, qData){
   } else {
     document.getElementById('duel-round-label').textContent = `⏱ Soru ${rNum}`;
   }
+  document.getElementById('duel-string-label').textContent = `Bu Nota Hangi Telde? (${qData.string}. Tel)`;
   document.getElementById('duel-feedback').textContent = '';
   document.getElementById('duel-feedback').className   = 'duel-feedback';
   document.getElementById('duel-cd-wrap').style.display = 'none';
@@ -1128,10 +1071,6 @@ function renderTournamentLobby(tour){
   const joined = ids.includes(mySid);
   const noTour = !tour; // henüz hiç turnuva kurulmamış (lobi tamamen boş)
 
-  // Eğer turnuva kurulmuşsa mod/secs bilgisini oku
-  if(tour && tour.mode) tournamentMode = tour.mode;
-  if(tour && tour.asyncSecs) tournamentSecs = tour.asyncSecs;
-
   let rows = ids.map(id => `
     <div class="tourn-lobby-row" style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
       <span><span class="tourn-dot"></span>${participants[id].name}${id===mySid?' (Sen)':''}</span>
@@ -1140,45 +1079,14 @@ function renderTournamentLobby(tour){
   `).join('');
   if(!ids.length) rows = '<div class="no-players-msg">Henüz katılan yok. İlk sen katıl!</div>';
 
-  // Boyut + mod seçici: sadece öğretmen/moderatör görür, ve sadece turnuva henüz kurulmamışken
+  // Boyut seçici: sadece öğretmen/moderatör görür, ve sadece turnuva henüz kurulmamışken
   const sizeOptions = [4, 8, 16, 32];
-  const secsOptions = [40, 50, 60];
-  const setupPicker = (isStaff && noTour) ? `
+  const sizePicker = (isStaff && noTour) ? `
     <div style="text-align:center;margin-bottom:10px;">
       <p style="font-size:.78rem;color:#a08868;margin-bottom:6px;">Turnuva boyutu seç:</p>
       <div style="display:inline-flex;gap:6px;flex-wrap:wrap;justify-content:center;">
-        ${sizeOptions.map(s => `<button class="app-btn tourn-size-pick ${s===4?'active':''}" data-size="${s}" style="padding:5px 14px;font-size:.82rem;width:auto;" onclick="pickTournamentSize(${s})">${s} Kişi</button>`).join('')}
+        ${sizeOptions.map(s => `<button class="app-btn" style="padding:5px 14px;font-size:.82rem;width:auto;" onclick="createTournamentLobby(${s})">${s} Kişi</button>`).join('')}
       </div>
-    </div>
-    <div style="margin-bottom:12px;">
-      <p style="font-size:.78rem;color:#a08868;margin-bottom:6px;text-align:center;">Turnuva tipi seç:</p>
-      <div style="display:flex;gap:8px;">
-        <button class="tourn-type-btn ${tournamentMode==='sync'?'active':''}" onclick="pickTournamentMode('sync')">
-          <span class="tt-icon">⚔️</span> Senkron
-          <span class="tt-desc">Aynı anda, tur tur oynanır</span>
-        </button>
-        <button class="tourn-type-btn ${tournamentMode==='async'?'active':''}" onclick="pickTournamentMode('async')">
-          <span class="tt-icon">⏱️</span> Asenkron
-          <span class="tt-desc">Bağımsız oynayın, süre bazlı</span>
-        </button>
-      </div>
-    </div>
-    <div id="tourn-async-secs-pick" style="display:${tournamentMode==='async'?'block':'none'};text-align:center;margin-bottom:10px;">
-      <p style="font-size:.78rem;color:#a08868;margin-bottom:6px;">Maç süresi:</p>
-      <div style="display:inline-flex;gap:6px;flex-wrap:wrap;justify-content:center;">
-        ${secsOptions.map(s => `<button class="round-btn ${s===tournamentSecs?'active':''}" onclick="pickTournamentSecs(${s})">⏱ ${s}sn</button>`).join('')}
-      </div>
-    </div>
-    <div style="text-align:center;margin-bottom:10px;">
-      <button class="app-btn tourn-mode-btn" onclick="createTournamentLobby()">🏆 Turnuvayı Kur</button>
-    </div>` : '';
-
-  // Eğer turnuva kurulmuşsa mod bilgisini göster
-  const modeInfo = (!noTour && tour) ? `
-    <div style="text-align:center;margin-bottom:8px;">
-      <span style="font-size:.78rem;font-weight:600;color:#5a3e2b;background:${tour.mode==='async'?'#fdf0e1':'#f3eeff'};border:1px solid ${tour.mode==='async'?'#f0c896':'#c8b4f0'};padding:4px 12px;border-radius:14px;">
-        ${tour.mode==='async' ? '⏱️ Asenkron Turnuva ('+tour.asyncSecs+'sn)' : '⚔️ Senkron Turnuva (Turlu)'}
-      </span>
     </div>` : '';
 
   const joinBtn = noTour
@@ -1196,12 +1104,11 @@ function renderTournamentLobby(tour){
     : '';
 
   const statusLine = noTour
-    ? ''
+    ? `<p style="text-align:center;font-size:.85rem;color:#a08868;">${isStaff ? 'Bir turnuva boyutu seçerek başlat.' : 'Henüz açılmış bir turnuva yok. Öğretmen/moderatör başlatınca burada görünecek.'}</p>`
     : `<p style="text-align:center;font-size:.85rem;color:#a08868;">Turnuvaya katılan: <b>${ids.length}/${size}</b></p>`;
 
   body.innerHTML = `
-    ${setupPicker}
-    ${modeInfo}
+    ${sizePicker}
     ${statusLine}
     ${!noTour ? `<div class="tourn-lobby-list">${rows}</div>` : ''}
     <div class="action-buttons-wrap" style="margin-top:12px;">
@@ -1211,34 +1118,12 @@ function renderTournamentLobby(tour){
     </div>`;
 }
 
-// Lobi kurulum yardımcı fonksiyonları
-let _pickSize = 4;
-window.pickTournamentSize = function(s){
-  _pickSize = s;
-  document.querySelectorAll('.tourn-size-pick').forEach(b => b.classList.toggle('active', +b.dataset.size === s));
-};
-window.pickTournamentMode = function(mode){
-  tournamentMode = mode;
-  document.querySelectorAll('.tourn-type-btn').forEach(b => {
-    b.classList.toggle('active', b.textContent.trim().toLowerCase().includes(mode === 'sync' ? 'senkron' : 'asenkron'));
-  });
-  const secsPick = document.getElementById('tourn-async-secs-pick');
-  if(secsPick) secsPick.style.display = mode === 'async' ? 'block' : 'none';
-};
-window.pickTournamentSecs = function(s){
-  tournamentSecs = s;
-  const wrap = document.getElementById('tourn-async-secs-pick');
-  if(wrap) wrap.querySelectorAll('.round-btn').forEach(b => b.classList.toggle('active', b.textContent.includes(s+'')));
-};
-
-window.createTournamentLobby = async function(){
+window.createTournamentLobby = async function(size){
   if(!isStaff) return;
-  const size = _pickSize;
-  const modeLabel = tournamentMode === 'async' ? `Asenkron (${tournamentSecs}sn)` : 'Senkron (Turlu)';
-  if(!confirm(`${size} kişilik ${modeLabel} turnuva kuracaksınız.\n\nBu işlem turnuva modunu TÜM öğrenciler için anında aktif hale getirir (herkes "🏆 Turnuva Modu" butonunu görmeye başlar). Devam edilsin mi?`)) return;
+  if(!confirm(`${size} kişilik bir turnuva kuracaksınız.\n\nBu işlem turnuva modunu TÜM öğrenciler için anında aktif hale getirir (herkes "🏆 Turnuva Modu" butonunu görmeye başlar). Devam edilsin mi?`)) return;
   await runTransaction(ref(db, `tournaments/${TID}`), tour=>{
     if(tour) return tour; // zaten kurulu, üzerine yazma
-    return { size, status:'lobby', participants:{}, bracket:null, mode: tournamentMode, asyncSecs: tournamentMode === 'async' ? tournamentSecs : null };
+    return { size, status:'lobby', participants:{}, bracket:null };
   });
 };
 
