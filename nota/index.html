@@ -94,81 +94,112 @@
       box-shadow:0 2px 8px rgba(184,137,42,.25);
     }
     .tourn-mode-btn:hover{ box-shadow:0 3px 12px rgba(184,137,42,.35); }
-    /* ── Turnuva Tablo CSS ──
-       Renk sistemi sadeleştirildi: yapısal/nötr ton = sıcak kahve-altın ailesi
-       (sitenin marka paleti), tek vurgu rengi = mor (uygulamada zaten "Düello"
-       kimliği için kullanılıyor — SEN/hazır/aksiyon anlamına geliyor),
+    /* ── Turnuva Tablo CSS (v2 — modern kart tasarımı) ──
+       Renk sistemi: yapısal/nötr ton = sıcak kahve-altın ailesi (marka paleti),
+       tek vurgu rengi = mor ("Düello" kimliği — SEN/hazır/aksiyon anlamına gelir),
        tek uyarı rengi = kırmızı (yalnızca yıkıcı aksiyonlarda). */
-    .tourn-rules{background:#fffdf7;border:1px solid #e0d5c0;border-radius:12px;padding:10px 14px;margin-bottom:14px;font-size:.78rem;color:#7a6048;line-height:1.6;}
+    .tourn-rules{background:#fffdf7;border:1px solid #e0d5c0;border-radius:14px;padding:12px 16px;margin-bottom:16px;font-size:.78rem;color:#7a6048;line-height:1.65;}
     .tourn-rules strong{color:#5a3e2b;}
-    .tourn-round-section{margin-bottom:16px;}
+    .tourn-round-section{margin-bottom:22px;}
     .tourn-round-header{
-      display:flex;align-items:center;gap:8px;
-      font-family:'Playfair Display',serif;font-size:.88rem;font-weight:700;
-      color:#fff;padding:6px 14px;border-radius:20px;margin-bottom:8px;
+      display:inline-flex;align-items:center;gap:7px;
+      font-family:'Playfair Display',serif;font-size:.86rem;font-weight:700;
+      color:#fff;padding:7px 16px;border-radius:20px;margin-bottom:12px;
       background:linear-gradient(135deg,#b8895a,#8a5a2f);
+      box-shadow:0 3px 10px rgba(90,62,43,.18);
+      letter-spacing:.01em;
     }
-    .tourn-round-header.r-quarter{background:linear-gradient(135deg,#c9a877,#a67c42);}
-    .tourn-round-header.r-semi{background:linear-gradient(135deg,#a67840,#7a5424);}
-    .tourn-round-header.r-final{background:linear-gradient(135deg,#d4af5a,#a97c1e);}
+    .tourn-round-header.r-quarter{background:linear-gradient(135deg,#c9a877,#a67c42);box-shadow:0 3px 10px rgba(166,124,66,.22);}
+    .tourn-round-header.r-semi{background:linear-gradient(135deg,#a67840,#7a5424);box-shadow:0 3px 10px rgba(122,84,36,.22);}
+    .tourn-round-header.r-final{background:linear-gradient(135deg,#e8c064,#b8892a);box-shadow:0 3px 12px rgba(184,137,42,.3);}
+
     .tourn-match{
+      position:relative;
       display:flex;align-items:stretch;gap:0;
-      border-radius:14px;border:1.5px solid #e8e0d5;
-      background:#fff;margin-bottom:10px;overflow:hidden;
-      box-shadow:0 2px 10px rgba(90,62,43,.05);
-      transition:box-shadow .15s, transform .15s;
+      border-radius:18px;border:1px solid #ece3d6;
+      background:#fff;margin-bottom:0;overflow:hidden;
+      box-shadow:0 3px 14px rgba(90,62,43,.06);
+      transition:box-shadow .18s ease, transform .18s ease;
     }
     .tourn-match.mine{
-      border-color:#7b5ea7;
-      box-shadow:0 3px 14px rgba(123,94,167,.16);
+      border-color:rgba(123,94,167,.35);
+      box-shadow:0 5px 20px rgba(123,94,167,.18);
+    }
+    .tourn-match.mine::before{
+      content:'';position:absolute;top:0;left:0;bottom:0;width:4px;
+      background:linear-gradient(180deg,#9b7bc7,#7b5ea7);
     }
     .tourn-match .tm-side{
-      flex:1;text-align:center;padding:12px 8px;
+      flex:1;text-align:center;padding:14px 8px 12px;
       font-size:.85rem;display:flex;flex-direction:column;
-      align-items:center;justify-content:center;gap:4px;
+      align-items:center;justify-content:center;gap:5px;
+      position:relative;transition:background .18s ease;
     }
-    .tourn-match .tm-side.tm-win{font-weight:700;color:#3b6d11;background:rgba(107,140,66,.08);}
-    .tourn-match .tm-side.tm-lose{color:#a04040;background:rgba(160,64,64,.05);opacity:.75;}
-    .tourn-match .tm-side.tm-pending{color:#8a6848;}
-    .tourn-match .tm-side.mine-side{background:rgba(123,94,167,.06);}
-    .tm-name{font-size:.82rem;font-weight:700;line-height:1.2;color:#5a3e2b;}
-    .tm-you{font-size:.62rem;color:#7b5ea7;font-weight:700;letter-spacing:.03em;margin-top:1px;}
+    .tourn-match .tm-side.tm-win{
+      color:#2e6b32;background:linear-gradient(180deg,rgba(107,140,66,.1),rgba(107,140,66,.03));
+    }
+    .tourn-match .tm-side.tm-win .tm-name::after{ content:' 🏅'; font-size:.72em; }
+    .tourn-match .tm-side.tm-lose{ color:#a08880; background:rgba(160,64,64,.03); opacity:.65; }
+    .tourn-match .tm-side.tm-pending{ color:#8a6848; }
+    .tourn-match .tm-side.mine-side{ background:linear-gradient(180deg,rgba(123,94,167,.09),rgba(123,94,167,.02)); }
+    .tourn-match .tm-side.tm-win.mine-side{ background:linear-gradient(180deg,rgba(107,140,66,.14),rgba(123,94,167,.04)); }
+    .tm-name{font-size:.83rem;font-weight:700;line-height:1.25;color:#5a3e2b;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .tm-you{
+      font-size:.6rem;color:#fff;font-weight:800;letter-spacing:.05em;
+      background:#7b5ea7;padding:1px 8px;border-radius:8px;margin-top:2px;
+    }
     .tourn-match .tm-vs{
       display:flex;align-items:center;justify-content:center;
-      width:30px;flex-shrink:0;
-      font-size:.7rem;color:#b09070;font-weight:700;
-      border-left:1px solid #f0e8e0;border-right:1px solid #f0e8e0;
-      background:#faf8f5;
+      width:0;flex-shrink:0;position:relative;
     }
+    .tourn-match .tm-vs::before{
+      content:'VS';
+      position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+      width:26px;height:26px;border-radius:50%;
+      display:flex;align-items:center;justify-content:center;
+      font-size:.6rem;font-weight:800;color:#b8895a;
+      background:#fff;border:1.5px solid #ecdfc9;
+      box-shadow:0 2px 6px rgba(90,62,43,.1);
+      z-index:2;
+    }
+    .tourn-match .tm-side:first-child{border-right:1px solid #f2ebe1;}
     .tourn-match-result{
-      font-size:.72rem;color:#7a6048;text-align:center;
-      padding:3px 10px 6px;
-      background:#faf8f5;border-top:1px dashed #e8e0d5;
+      font-size:.72rem;color:#8a7058;text-align:center;
+      padding:6px 10px;
+      background:#fbf9f5;border-top:1px solid #f0e8de;
     }
-    .tourn-match-wrap{margin-bottom:10px;}
-    .tourn-action{padding:6px 10px 10px;text-align:center;}
+    .tourn-match-wrap{margin-bottom:12px;}
+    .tourn-action{padding:8px 10px 12px;text-align:center;background:#fbf9f5;border-top:1px solid #f0e8de;}
     .tourn-action-msg{font-size:.78rem;color:#7a6048;font-style:italic;line-height:1.5;}
     .tourn-champion-box{
-      text-align:center;margin:18px auto;padding:22px 18px;max-width:380px;
-      border-radius:18px;
-      background:linear-gradient(160deg,#fff8e6,#fdecbf);
+      text-align:center;margin:20px auto;padding:26px 20px;max-width:380px;
+      border-radius:20px;position:relative;overflow:hidden;
+      background:linear-gradient(160deg,#fffaee,#fbe8b8);
       border:1.5px solid #e0bb5a;
-      box-shadow:0 4px 18px rgba(202,162,58,.22);
+      box-shadow:0 8px 28px rgba(202,162,58,.28);
     }
-    .tourn-champion-trophy{font-size:2.4rem;line-height:1;margin-bottom:6px;}
-    .tourn-champion-quote{font-size:.84rem;color:#9c7a1f;font-style:italic;line-height:1.5;margin-bottom:10px;}
-    .tourn-champion-name{font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;color:#5a3e2b;}
+    .tourn-champion-box::before{
+      content:'';position:absolute;inset:0;
+      background:radial-gradient(circle at 50% -10%,rgba(255,255,255,.6),transparent 60%);
+    }
+    .tourn-champion-trophy{font-size:2.6rem;line-height:1;margin-bottom:8px;position:relative;}
+    .tourn-champion-quote{font-size:.84rem;color:#9c7a1f;font-style:italic;line-height:1.6;margin-bottom:12px;position:relative;}
+    .tourn-champion-name{font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:700;color:#5a3e2b;position:relative;}
     /* ── SKOR GÖRÜNÜRLÜK DÜZELTMESİ ──
        Paylaşılan /theme.css şablonu güncellendiğinde bazı genel selektörler
        .tm-score öğesini görünmez kılabiliyordu. Bu kural şablon ne olursa
-       olsun skorun her zaman görünür kalmasını garanti eder. */
+       olsun skorun her zaman görünür kalmasını garanti eder. Skor artık
+       yuvarlak bir rozet içinde gösteriliyor (daha modern görünüm). */
     .tourn-match .tm-side .tm-score{
-      display:block !important; visibility:visible !important; opacity:1 !important;
-      color:#5a3e2b !important; font-size:1.15rem !important; font-weight:800 !important;
-      line-height:1.1 !important;
+      display:flex !important; visibility:visible !important; opacity:1 !important;
+      align-items:center; justify-content:center;
+      width:34px; height:34px; margin:1px auto 0;
+      border-radius:50%; background:#f5efe6;
+      color:#7a5a3a !important; font-size:1rem !important; font-weight:800 !important;
+      line-height:1 !important;
     }
-    .tourn-match .tm-side.tm-win .tm-score{ color:#2e8b3a !important; }
-    .tourn-match .tm-side.tm-lose .tm-score{ color:#a04040 !important; }
+    .tourn-match .tm-side.tm-win .tm-score{ color:#fff !important; background:linear-gradient(135deg,#7fb35a,#4d8f2f); box-shadow:0 3px 8px rgba(77,143,47,.35); }
+    .tourn-match .tm-side.tm-lose .tm-score{ color:#a04040 !important; background:rgba(160,64,64,.08); }
 
     /* ── Moderatör aksiyonları ── */
     .tourn-mod-actions{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;padding:6px 10px 10px;border-top:1px dashed #e8e0d5;}
@@ -1574,6 +1605,21 @@ function enterTournamentMatch(path, m){
 }
 
 async function finishTournamentMatch(myFinal, oppFinal){
+  // Yerel myScore_/oppScore_ önbelleği ağ gecikmesi yüzünden geride kalabilir
+  // — özellikle asenkron (40 sn) modda son doğru cevap Firebase'e 500ms
+  // gecikmeyle yazılıyor, ama süre dolar dolmaz host status:'finished' yazıp
+  // endDuel'i tetikliyor. Bu, maçın "eski"/geçmiş skorunun hiç yazılmaması ya
+  // da eksik yazılması sorununun kök nedeniydi. Çözüm: maçı bitirmeden hemen
+  // önce veritabanındaki GERÇEK, güncel skoru tekrar okuyup kullanıyoruz.
+  try{
+    const scoreSnap = await get(ref(db, `duel_rooms/${roomCode}/scores`));
+    const s = scoreSnap.exists() ? scoreSnap.val() : null;
+    if(s){
+      myFinal  = myRole==='host' ? (s.host  || 0) : (s.guest || 0);
+      oppFinal = myRole==='host' ? (s.guest || 0) : (s.host  || 0);
+    }
+  }catch(e){ console.error('[Turnuva] güncel skor okunamadı, önbellek skoru kullanılacak:', e); }
+
   const winnerSid  = myFinal > oppFinal ? mySid  : oppSid;
   const winnerName = myFinal > oppFinal ? myName : oppName;
   const path = tournamentMatchInfo.path; // örn 'bracket.rounds.0.2'
