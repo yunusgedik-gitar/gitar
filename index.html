@@ -740,7 +740,28 @@
           <button class="back-btn" onclick="openAddStudentForm()">+ Yeni Öğrenci Ekle</button>
           <button class="back-btn" onclick="openAllStudentsView()">👥 Tüm Öğrenciler</button>
           <button class="back-btn" onclick="openSectionsView()">📦 Bölümler</button>
+          <button class="back-btn" onclick="openBroadcastForm()">📢 Duyuru Gönder</button>
         </div>
+
+        <!-- Bildirim / Duyuru Gönderme Formu -->
+        <div id="broadcast-form" style="display:none; margin-bottom:1.2rem;">
+          <div class="progress-summary">
+            <div class="progress-summary-head">
+              <div class="progress-summary-title">📢 Tüm Öğrencilere Bildirim Gönder</div>
+            </div>
+            <p style="font-size:.82rem; color:var(--muted); margin-bottom:.8rem;">Bildirimlerini açmış tüm öğrencilere (tarayıcı kapalıyken bile) gider.</p>
+            <div style="display:flex; flex-direction:column; gap:10px; margin-top:.6rem;">
+              <input type="text" id="broadcast-title" placeholder="Başlık (örn: Turnuva Başladı!)" style="padding:10px 14px; border-radius:10px; border:1px solid var(--border); font-family:inherit; font-size:.9rem;">
+              <textarea id="broadcast-body" placeholder="Mesaj metni..." rows="3" style="padding:10px 14px; border-radius:10px; border:1px solid var(--border); font-family:inherit; font-size:.9rem; resize:vertical;"></textarea>
+              <div style="display:flex; gap:8px;">
+                <button class="back-btn" id="broadcast-send-btn" onclick="sendBroadcastNotification()" style="background:var(--gold); color:#fff; border-color:var(--gold);">Gönder</button>
+                <button class="back-btn" onclick="closeBroadcastForm()">Vazgeç</button>
+              </div>
+              <div id="broadcast-result" style="font-size:.82rem;"></div>
+            </div>
+          </div>
+        </div>
+
         <div class="leaderboard" id="grade-leaderboard"></div>
       </div>
 
@@ -1619,6 +1640,71 @@ window.openAddStudentForm = function() {
 window.closeAddStudentForm = function() {
   showOnly('teacher-grade-ranking');
   renderGradeRanking();
+};
+
+// ===== Öğretmen: bildirim / duyuru gönderme =====
+// NOT: BILDIRIM_API_URL ve BILDIRIM_SECRET değerlerini kendi
+// Vercel projenin bilgileriyle güncelledikten sonra kullan.
+const BILDIRIM_API_URL = 'https://bildirim-gonder.vercel.app/api/send';
+const BILDIRIM_SECRET = 'gitar2026-yunus-turnuva-guvenli-anahtar-x9k2';
+
+window.openBroadcastForm = function() {
+  document.getElementById('broadcast-title').value = '';
+  document.getElementById('broadcast-body').value = '';
+  document.getElementById('broadcast-result').textContent = '';
+  document.getElementById('broadcast-form').style.display = '';
+};
+
+window.closeBroadcastForm = function() {
+  document.getElementById('broadcast-form').style.display = 'none';
+};
+
+window.sendBroadcastNotification = async function() {
+  const title = document.getElementById('broadcast-title').value.trim();
+  const body = document.getElementById('broadcast-body').value.trim();
+  const resultDiv = document.getElementById('broadcast-result');
+  const btn = document.getElementById('broadcast-send-btn');
+
+  if (!title || !body) {
+    resultDiv.style.color = '#c0392b';
+    resultDiv.textContent = '⚠️ Başlık ve mesaj gerekli.';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Gönderiliyor...';
+  resultDiv.style.color = 'var(--muted)';
+  resultDiv.textContent = '';
+
+  try {
+    const res = await fetch(BILDIRIM_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-secret': BILDIRIM_SECRET
+      },
+      body: JSON.stringify({ title, body })
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      resultDiv.style.color = '#c0392b';
+      resultDiv.textContent = '❌ Hata: ' + (data.error || 'bilinmeyen hata');
+    } else {
+      resultDiv.style.color = 'var(--green)';
+      resultDiv.textContent = `✅ ${data.sent} kişiye gönderildi` +
+        (data.failed ? `, ${data.failed} başarısız` : '') +
+        (data.cleaned ? `, ${data.cleaned} geçersiz token temizlendi` : '');
+      document.getElementById('broadcast-title').value = '';
+      document.getElementById('broadcast-body').value = '';
+    }
+  } catch (err) {
+    resultDiv.style.color = '#c0392b';
+    resultDiv.textContent = '❌ Bağlantı hatası: ' + err.message;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Gönder';
+  }
 };
 
 // ===== Tüm Öğrenciler görünümü =====
