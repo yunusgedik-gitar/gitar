@@ -478,7 +478,12 @@ function shuffle(a){return[...a].sort(()=>Math.random()-0.5);}
 function showArea(id){
   ['setup-area','duel-setup-area','duel-waiting-area','duel-game-area','exercise-wrap','tournament-setup-area','tournament-bracket-area']
     .forEach(x=>{const e=document.getElementById(x);if(e)e.style.display='none';});
-  const t=document.getElementById(id);if(t){t.style.display='block';t.scrollIntoView({behavior:'smooth'});}
+  
+  const t = document.getElementById(id);
+  if(t){
+    t.style.display = 'block';
+    // t.scrollIntoView({behavior:'smooth'}); satırı kaldırıldı.
+  }
 }
 let selectedStrings=new Set([1,2,3,4,5,6]),filteredNotes=[];
 let current=null,answered=false,interacted=false,autoTimer=null,currentMode='practice',gameTimer=null,timeLeft=40,correctCount=0;
@@ -1532,15 +1537,19 @@ async function createTournamentRoom(path, m){
   const tourMode = (tournamentState && tournamentState.mode) || 'sync';
   try{
     // Önce Firebase üzerinde "oda kurma hakkı"nı transaction ile rezerve et.
-    // Bu sayede iki ayrı tetiklenme olsa bile sadece biri gerçekten geçer.
     const code = rndCode();
     let wonReservation = false;
+    
     await runTransaction(ref(db, `tournaments/${TID}`), tour=>{
+      // KRİTİK DÜZELTME: Firebase işlemi tekrarlarsa (retry), kilit durumunu sıfırla
+      wonReservation = false; 
+      
       if(!tour) return tour;
       const seg = path.split('.');
       let node = tour;
       for(let i=0;i<seg.length-1;i++) node = node[seg[i]];
       const mm = node[seg[seg.length-1]];
+      
       if(mm && !mm.roomCode){
         mm.roomCode = code; // rezervasyon
         wonReservation = true;
@@ -1564,7 +1573,6 @@ async function createTournamentRoom(path, m){
     });
 
     // Maç süre sınırı: oda kurulduğu andan itibaren MATCH_TIME_LIMIT_MS
-    // içinde bitmezse checkMatchDeadline() maçı otomatik iptal eder.
     await runTransaction(ref(db, `tournaments/${TID}`), tour=>{
       if(!tour) return tour;
       const seg = path.split('.');
@@ -1574,6 +1582,8 @@ async function createTournamentRoom(path, m){
       if(mm) mm.matchDeadline = Date.now() + MATCH_TIME_LIMIT_MS;
       return tour;
     });
+  } catch(e) {
+    console.error('[Turnuva] Oda oluşturulurken hata:', e);
   } finally {
     _roomCreationLocks.delete(path);
   }
