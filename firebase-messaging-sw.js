@@ -7,12 +7,11 @@
    altında, örn. https://gitar.yunusgedik.com.tr/firebase-messaging-sw.js)
    durmalı. Bir alt klasöre koyarsanız FCM bildirimleri çalışmaz.
 
-   NOT: Mesajlar "data" payload olarak gönderiliyor (notification
-   alanı DEĞİL). Bunun sebebi: eğer mesajda "notification" alanı
-   olursa, tarayıcı arka plandayken bildirimi HEM otomatik hem de
-   biz burada elle gösterdiğimiz için ÇİFT bildirim çıkıyordu.
-   "data" kullanınca otomatik gösterim devre dışı kalıyor, sadece
-   aşağıdaki kod bir kez gösteriyor.
+   NOT: Mesaj "notification" alanıyla gönderiliyor, bu yüzden
+   tarayıcı bildirimi ARKA PLANDA OTOMATİK gösteriyor — burada
+   elle showNotification() ÇAĞIRMIYORUZ, aksi halde bildirim
+   çift çıkar. Bu dosyada sadece bildirime TIKLANINCA ne
+   olacağını yönetiyoruz.
 ══════════════════════════════════════════════════════════ */
 
 importScripts('https://www.gstatic.com/firebasejs/12.14.0/firebase-app-compat.js');
@@ -28,24 +27,10 @@ firebase.initializeApp({
   appId: "1:184803778782:web:8f9fbeb4fe625eb386e24f"
 });
 
-const messaging = firebase.messaging();
-
-// Site kapalıyken / arka plandayken gelen mesajları bildirim olarak göster.
-// data payload kullanıldığı için payload.notification YOK, payload.data var.
-messaging.onBackgroundMessage((payload) => {
-  const data  = payload.data || {};
-  const title = data.title || '🎸 Nota Okuma Turnuvası';
-  const body  = data.body  || '';
-  const icon  = data.icon  || '/favicon.ico';
-  const link  = data.link  || 'https://gitar.yunusgedik.com.tr/';
-
-  self.registration.showNotification(title, {
-    body,
-    icon,
-    badge: '/favicon.ico',
-    data: { url: link }
-  });
-});
+// firebase.messaging() çağrısı, "notification" alanlı mesajları
+// arka planda OTOMATİK gösterecek şekilde SDK'yı devreye sokar.
+// Elle bir onBackgroundMessage / showNotification çağrısına gerek yok.
+firebase.messaging();
 
 // Bildirime tıklanınca siteyi aç / var olan sekmeye odaklan.
 self.addEventListener('notificationclick', (event) => {
@@ -62,3 +47,4 @@ self.addEventListener('notificationclick', (event) => {
     })
   );
 });
+
