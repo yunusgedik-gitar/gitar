@@ -331,7 +331,7 @@
       <button id="start-btn" class="app-btn" onclick="startExercise('practice')">Egzersize Başla (Zamansız) 🎯</button>
       <button id="race-btn"  class="app-btn btn-race" onclick="startExercise('race')">Yarışmaya Başla (40 Saniye) 🏆</button>
       <button class="app-btn btn-duel" onclick="showDuelSetup()">⚔️ Online Düello</button>
-      <button id="tournament-mode-btn" class="app-btn btn-duel tourn-mode-btn" onclick="showTournamentSetup()" style="display:none;">🏆 Turnuva Modu</button>
+      <button id="tournament-mode-btn" class="app-btn btn-duel tourn-mode-btn" onclick="showTournamentSetup()">🏆 Turnuva Modu</button>
     </div>
   </div>
 
@@ -581,7 +581,7 @@ onValue(ref(db, 'moderators'), snap => {
   studentModerators = snap.exists() ? snap.val() : {};
   isStaff = (mySid === TEACHER_ID) || !!studentModerators[mySid];
   const btn = document.getElementById('tournament-mode-btn');
-  if (btn) btn.style.display = isStaff ? '' : 'none';
+  if (btn) btn.style.display = ''; // Turnuva Modu artık tüm oyunculara açık
   const bcast = document.getElementById('staff-broadcast-card');
   if (bcast) bcast.style.display = isStaff ? '' : 'none';
 });
@@ -1955,14 +1955,6 @@ function renderMatchBlock(m, path, roundIdx, totalRounds){
     ${m.p1?`<div id="sub-picker-${safeId}-p1" class="tourn-sub-picker" style="display:none;"></div>`:''}
     ${m.p2?`<div id="sub-picker-${safeId}-p2" class="tourn-sub-picker" style="display:none;"></div>`:''}`;
   }
-  // Bitmiş ama skor verisi eksik kalmış (eski/bozuk kayıt) maçlar için:
-  // moderatör iki oyuncunun gerçek skorunu elle girip kaydı onarabilir.
-  if(isStaff && isFinished && (!p1HasScore || !p2HasScore)){
-    modHtml += `<div class="tourn-mod-actions">
-      <button class="tourn-mod-btn info" onclick="fixTournamentMatchScore('${path}','${(m.p1Name||'').replace(/'/g,"\\'")}','${(m.p2Name||'').replace(/'/g,"\\'")}')">✏️ Skoru Düzelt</button>
-    </div>`;
-  }
-
   return `<div class="tourn-match-wrap">
     <div class="tourn-match${isMine?' mine':''}">
       <div class="tm-side ${p1cls}${p1Mine?' mine-side':''}">
