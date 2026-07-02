@@ -270,24 +270,40 @@
     .att-student-check-list { display:grid; grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); gap:4px; max-height:180px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; padding:8px; }
     .att-student-check-list label { display:flex; align-items:center; gap:6px; font-weight:400; font-size:.8rem; color:var(--brown); }
     .att-table-wrap { overflow-x:auto; border:1px solid var(--border); border-radius:12px; background:#fff; }
-    table.att-table { border-collapse:collapse; width:100%; font-size:.78rem; }
-    table.att-table th, table.att-table td { border-bottom:1px solid var(--border); border-right:1px solid var(--border); padding:6px 8px; text-align:center; white-space:nowrap; }
+    table.att-table { border-collapse:collapse; font-size:.72rem; }
+    table.att-table th, table.att-table td { border-bottom:1px solid var(--border); border-right:1px solid var(--border); padding:4px 3px; text-align:center; }
     table.att-table th:first-child, table.att-table td:first-child {
-      position:sticky; left:0; background:#fff; text-align:left; z-index:2; min-width:140px; border-right:2px solid var(--border);
+      position:sticky; left:0; background:#fff; text-align:left; z-index:2; min-width:130px; max-width:130px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; border-right:2px solid var(--border); padding:4px 8px;
     }
-    table.att-table thead th { background:var(--cream); vertical-align:top; }
-    .att-date-head { display:flex; flex-direction:column; align-items:center; gap:3px; }
-    .att-date-head .att-date-str { font-weight:700; color:var(--brown); }
-    .att-date-head .att-lesson-no { font-size:.68rem; color:var(--muted); }
-    .att-cancel-toggle { font-size:.62rem; padding:2px 6px; border-radius:10px; border:1px solid var(--orange-border); background:#fff; color:var(--orange); cursor:pointer; font-family:inherit; }
+    table.att-table th:last-child, table.att-table td:last-child {
+      position:sticky; right:0; background:#fff; z-index:2; min-width:56px; border-left:2px solid var(--border); white-space:nowrap;
+    }
+    table.att-table thead th { background:var(--cream); vertical-align:bottom; }
+    table.att-table thead th:last-child { background:var(--cream); }
+    .att-date-head { display:flex; flex-direction:column; align-items:center; gap:2px; min-width:30px; padding-top:4px; }
+    .att-date-head .att-date-str {
+      writing-mode: vertical-rl; transform: rotate(180deg); font-weight:700; color:var(--brown); font-size:.66rem; letter-spacing:.02em; white-space:nowrap;
+    }
+    .att-date-head .att-lesson-no {
+      writing-mode: vertical-rl; transform: rotate(180deg); font-size:.58rem; color:var(--muted); white-space:nowrap; max-height:70px;
+    }
+    .att-cancel-toggle { font-size:.55rem; padding:2px 4px; border-radius:8px; border:1px solid var(--orange-border); background:#fff; color:var(--orange); cursor:pointer; font-family:inherit; writing-mode: horizontal-tb; }
     .att-cancel-toggle.active { background:var(--orange); color:#fff; border-color:var(--orange); }
     .att-col-cancelled { background: var(--orange-bg) !important; }
-    .att-count-row td { font-weight:700; color:var(--brown); background:var(--cream); }
-    .att-cell { cursor:pointer; user-select:none; font-size:1.05rem; }
+    .att-count-row td { font-weight:700; color:var(--brown); background:var(--cream); font-size:.68rem; }
+    .att-cell { cursor:pointer; user-select:none; display:flex; align-items:center; justify-content:center; }
     .att-cell.disabled { cursor:default; }
-    .att-dot { display:inline-block; width:20px; height:20px; border-radius:50%; border:2px solid var(--border); background:#fbf8f3; }
+    .att-dot { display:inline-block; width:16px; height:16px; border-radius:50%; border:2px solid var(--border); background:#fbf8f3; }
     .att-dot.on { background: var(--green); border-color: var(--green); }
     .att-dot.off { background: var(--red); border-color: var(--red); }
+    .att-pct-cell { font-weight:700; font-size:.72rem; }
+    .att-pct-cell.good { color: var(--green); }
+    .att-pct-cell.warn { color:#a3781a; }
+    .att-pct-cell.bad { color: var(--red); }
+    .att-class-avg-pill { font-size:.72rem; font-weight:700; padding:3px 10px; border-radius:12px; align-self:flex-start; margin-top:2px; }
+    .att-class-avg-pill.good { background: var(--green-bg); color: var(--green); }
+    .att-class-avg-pill.warn { background:#fdf6e1; color:#a3781a; }
+    .att-class-avg-pill.bad { background: var(--red-bg); color: var(--red); }
     .att-summary-row { display:flex; gap:8px; flex-wrap:wrap; margin:10px 0 1.2rem; }
     .att-pct-pill { font-size:.78rem; font-weight:700; padding:6px 14px; border-radius:16px; }
     .att-pct-pill.good { background: var(--green-bg); color: var(--green); border:1px solid #b0d890; }
@@ -4081,9 +4097,17 @@ async function initLeaderboard() {
 // ══════════════════════════════════════════════════════════
 
 let attClasses = {};       // classId -> classObj
-let attData = {};          // classId -> { dateStr -> {cancelled, students:{sid:1|0}} }
+let attData = {};          // classId -> { colKey -> {cancelled, students:{sid:1|0}} }
 let attActiveClassId = null;
 let attSelectedStudentIds = new Set();
+
+// Ders takviminden önce gelen sabit sütunlar (Excel'deki Mülakat/Tanışma mantığı).
+// Bunlar gerçek "ders" sayılmaz, devam yüzdesi hesabına katılmaz — sadece bilgi amaçlı yoklama tutulabilir.
+const ATT_SPECIAL_COLS = [
+  { key: 'interview1', label: 'Mülakat I' },
+  { key: 'interview2', label: 'Mülakat II' },
+  { key: 'intro',      label: 'Tanışma' }
+];
 
 function attFmtDate(d) {
   const yyyy = d.getFullYear();
@@ -4140,7 +4164,7 @@ window.openAttendance = async function(e) {
     document.getElementById('att-class-list-view').style.display = '';
     document.getElementById('att-class-detail-view').style.display = 'none';
     document.getElementById('att-new-class-form-wrap').style.display = 'none';
-    renderAttClassGrid();
+    await renderAttClassGrid();
   } else {
     await renderAttStudentView(meObj ? meObj.id : null);
   }
@@ -4151,24 +4175,42 @@ window.closeAttendance = function() {
   document.getElementById('screen-dash').classList.remove('hidden');
 };
 
-// ───────── Öğretmen: Sınıf listesi ─────────
-function renderAttClassGrid() {
+// ───────── Öğretmen: Sınıf listesi (ortalama devam yüzdesiyle) ─────────
+async function renderAttClassGrid() {
   const grid = document.getElementById('att-class-grid');
   const ids = Object.keys(attClasses);
   if (!ids.length) {
     grid.innerHTML = `<p style="font-size:.85rem;color:var(--muted);">Henüz sınıf oluşturulmadı.</p>`;
     return;
   }
-  grid.innerHTML = ids.map(cid => {
-    const c = attClasses[cid];
-    const studentCount = Object.keys(c.studentIds || {}).length;
-    return `
-      <div class="att-class-card" onclick="openAttClassDetail('${cid}')">
-        <strong>${escStatsHtml(c.name)}</strong>
-        <span>👥 ${studentCount} öğrenci</span>
-        <span>🗓️ ${attFmtDateShort(c.startDate)} — ${attFmtDateShort(c.endDate)}</span>
-      </div>`;
-  }).join('');
+  grid.innerHTML = ids.map(cid => `
+      <div class="att-class-card" onclick="openAttClassDetail('${cid}')" id="att-class-card-${cid}">
+        <strong>${escStatsHtml(attClasses[cid].name)}</strong>
+        <span>👥 ${Object.keys(attClasses[cid].studentIds || {}).length} öğrenci</span>
+        <span>🗓️ ${attFmtDateShort(attClasses[cid].startDate)} — ${attFmtDateShort(attClasses[cid].endDate)}</span>
+        <span class="att-class-avg-pill" id="att-class-avg-${cid}">Hesaplanıyor…</span>
+      </div>`).join('');
+
+  // Her sınıfın ortalama devam yüzdesini arka planda hesapla ve doldur.
+  await Promise.all(ids.map(async cid => {
+    await attLoadClassData(cid);
+    const studentIds = Object.keys(attClasses[cid].studentIds || {});
+    let totalHeld = 0, totalAttended = 0;
+    studentIds.forEach(sid => {
+      const { held, attended } = attCalcStudentStats(cid, sid);
+      totalHeld += held; totalAttended += attended;
+    });
+    const pillEl = document.getElementById(`att-class-avg-${cid}`);
+    if (!pillEl) return;
+    if (!totalHeld) {
+      pillEl.textContent = 'Henüz yoklama girilmedi';
+      pillEl.classList.add('warn');
+    } else {
+      const pct = (totalAttended / totalHeld) * 100;
+      pillEl.textContent = `Ortalama Devam: ${pct.toFixed(0)}%`;
+      pillEl.classList.add(pct >= 85 ? 'good' : pct >= 70 ? 'warn' : 'bad');
+    }
+  }));
 }
 
 window.toggleAttNewClassForm = function() {
@@ -4225,7 +4267,7 @@ window.saveAttNewClass = async function() {
     await set(ref(db, `att_classes/${classId}`), classObj);
     attClasses[classId] = classObj;
     document.getElementById('att-new-class-form-wrap').style.display = 'none';
-    renderAttClassGrid();
+    await renderAttClassGrid();
   } catch (e) { console.error('[Devam] sınıf kaydedilemedi:', e); alert('Sınıf kaydedilemedi.'); }
 };
 
@@ -4241,38 +4283,40 @@ window.openAttClassDetail = async function(classId) {
   renderAttTable(classId);
 };
 
-window.closeAttClassDetail = function() {
+window.closeAttClassDetail = async function() {
   attActiveClassId = null;
   document.getElementById('att-class-detail-view').style.display = 'none';
   document.getElementById('att-class-list-view').style.display = '';
-  renderAttClassGrid();
+  await renderAttClassGrid();
 };
 
-function renderAttTable(classId) {
+// Ortak tablo üretici: teacher=true ise düzenlenebilir tam tablo, false ise sadece tek öğrencinin
+// salt-okunur satırı üretilir (öğrenci paneli için).
+function attBuildTableHtml(classId, students, opts) {
+  const editable = !!opts.editable;
   const c = attClasses[classId];
   const dates = attGenerateWeeklyDates(c.startDate, c.endDate);
-  const studentIds = Object.keys(c.studentIds || {});
-  const students = studentIds
-    .map(sid => (window.STUDENTS || []).find(s => s.id === sid) || { id: sid, name: sid })
-    .sort((a, b) => a.name.localeCompare(b.name, 'tr'));
   const cData = attData[classId] || {};
 
-  const headerCells = dates.map((d, i) => {
-    const dayData = cData[d] || {};
+  const allCols = [...ATT_SPECIAL_COLS, ...dates.map((d, i) => ({ key: d, label: `${i + 1}. Ders`, isDate: true }))];
+
+  const headerCells = allCols.map(col => {
+    const dayData = cData[col.key] || {};
     const cancelled = !!dayData.cancelled;
+    const dateLabel = col.isDate ? attFmtDateShort(col.key) : '';
     return `
       <th class="${cancelled ? 'att-col-cancelled' : ''}">
         <div class="att-date-head">
-          <span class="att-lesson-no">${i + 1}. Ders</span>
-          <span class="att-date-str">${attFmtDateShort(d)}</span>
-          <button class="att-cancel-toggle ${cancelled ? 'active' : ''}" onclick="toggleAttCancel('${classId}','${d}')">${cancelled ? '🟧 Ders Yok' : 'Ders Yok'}</button>
+          <span class="att-lesson-no">${col.label}</span>
+          ${dateLabel ? `<span class="att-date-str">${dateLabel}</span>` : ''}
+          ${editable ? `<button class="att-cancel-toggle ${cancelled ? 'active' : ''}" onclick="toggleAttCancel('${classId}','${col.key}')">${cancelled ? '🟧' : 'Yok'}</button>` : ''}
         </div>
       </th>`;
   }).join('');
 
   const bodyRows = students.map(s => {
-    const cells = dates.map(d => {
-      const dayData = cData[d] || {};
+    const cells = allCols.map(col => {
+      const dayData = cData[col.key] || {};
       const cancelled = !!dayData.cancelled;
       const val = (dayData.students || {})[s.id];
       let dotCls = '';
@@ -4280,36 +4324,53 @@ function renderAttTable(classId) {
         if (val === 1) dotCls = 'on';
         else if (val === 0) dotCls = 'off';
       }
+      const clickAttr = (editable && !cancelled) ? `onclick="toggleAttCell('${classId}','${col.key}','${s.id}')"` : '';
       return `
         <td class="${cancelled ? 'att-col-cancelled' : ''}">
-          <span class="att-cell ${cancelled ? 'disabled' : ''}" ${cancelled ? '' : `onclick="toggleAttCell('${classId}','${d}','${s.id}')"`}>
+          <span class="att-cell ${(!editable || cancelled) ? 'disabled' : ''}" ${clickAttr}>
             <span class="att-dot ${dotCls}"></span>
           </span>
         </td>`;
     }).join('');
-    return `<tr><td>${escStatsHtml(s.name)}</td>${cells}</tr>`;
+    const { held, attended, pct } = attCalcStudentStats(classId, s.id);
+    const pctCls = pct === null ? '' : (pct >= 85 ? 'good' : pct >= 70 ? 'warn' : 'bad');
+    const pctTxt = pct === null ? '—' : `${pct.toFixed(0)}%`;
+    return `<tr><td>${escStatsHtml(s.name)}</td>${cells}<td class="att-pct-cell ${pctCls}">${pctTxt}<br><span style="font-weight:400;font-size:.6rem;color:var(--muted);">${attended}/${held}</span></td></tr>`;
   }).join('');
 
-  const countCells = dates.map(d => {
-    const dayData = cData[d] || {};
-    if (dayData.cancelled) return `<td class="att-col-cancelled">—</td>`;
-    const present = Object.values(dayData.students || {}).filter(v => v === 1).length;
-    return `<td>${present}/${students.length}</td>`;
-  }).join('');
+  let countRow = '';
+  if (editable) {
+    const countCells = allCols.map(col => {
+      const dayData = cData[col.key] || {};
+      if (dayData.cancelled) return `<td class="att-col-cancelled">—</td>`;
+      const present = Object.values(dayData.students || {}).filter(v => v === 1).length;
+      return `<td>${present}/${students.length}</td>`;
+    }).join('');
+    countRow = `<tr class="att-count-row"><td>Katılan Sayısı</td>${countCells}<td></td></tr>`;
+  }
 
-  document.getElementById('att-table-mount').innerHTML = `
+  return `
     <table class="att-table">
-      <thead><tr><th>Öğrenci</th>${headerCells}</tr></thead>
+      <thead><tr><th>Öğrenci</th>${headerCells}<th>Devam %</th></tr></thead>
       <tbody>
-        ${bodyRows || `<tr><td colspan="${dates.length + 1}">Öğrenci yok.</td></tr>`}
-        <tr class="att-count-row"><td>Katılan Sayısı</td>${countCells}</tr>
+        ${bodyRows || `<tr><td colspan="${allCols.length + 2}">Öğrenci yok.</td></tr>`}
+        ${countRow}
       </tbody>
     </table>`;
 }
 
-window.toggleAttCell = async function(classId, dateStr, sid) {
+function renderAttTable(classId) {
+  const c = attClasses[classId];
+  const studentIds = Object.keys(c.studentIds || {});
+  const students = studentIds
+    .map(sid => (window.STUDENTS || []).find(s => s.id === sid) || { id: sid, name: sid })
+    .sort((a, b) => a.name.localeCompare(b.name, 'tr'));
+  document.getElementById('att-table-mount').innerHTML = attBuildTableHtml(classId, students, { editable: true });
+}
+
+window.toggleAttCell = async function(classId, colKey, sid) {
   const cData = attData[classId] || (attData[classId] = {});
-  const dayData = cData[dateStr] || (cData[dateStr] = { cancelled: false, students: {} });
+  const dayData = cData[colKey] || (cData[colKey] = { cancelled: false, students: {} });
   if (dayData.cancelled) return;
   const cur = dayData.students[sid];
   // Döngü: boş → 🟢 Devam → 🔴 Devamsız → boş
@@ -4323,22 +4384,22 @@ window.toggleAttCell = async function(classId, dateStr, sid) {
 
   renderAttTable(classId);
   try {
-    if (next === undefined) await remove(ref(db, `att_data/${classId}/${dateStr}/students/${sid}`));
-    else await set(ref(db, `att_data/${classId}/${dateStr}/students/${sid}`), next);
+    if (next === undefined) await remove(ref(db, `att_data/${classId}/${colKey}/students/${sid}`));
+    else await set(ref(db, `att_data/${classId}/${colKey}/students/${sid}`), next);
   } catch (e) { console.error('[Devam] yoklama kaydedilemedi:', e); }
 };
 
-window.toggleAttCancel = async function(classId, dateStr) {
+window.toggleAttCancel = async function(classId, colKey) {
   const cData = attData[classId] || (attData[classId] = {});
-  const dayData = cData[dateStr] || (cData[dateStr] = { cancelled: false, students: {} });
+  const dayData = cData[colKey] || (cData[colKey] = { cancelled: false, students: {} });
   dayData.cancelled = !dayData.cancelled;
   renderAttTable(classId);
   try {
-    await set(ref(db, `att_data/${classId}/${dateStr}/cancelled`), dayData.cancelled);
+    await set(ref(db, `att_data/${classId}/${colKey}/cancelled`), dayData.cancelled);
   } catch (e) { console.error('[Devam] ders iptali kaydedilemedi:', e); }
 };
 
-// ───────── Öğrenci: kendi devam durumu ─────────
+// ───────── Devam yüzdesi hesabı (sadece gerçek ders tarihleri sayılır, Mülakat/Tanışma hariç) ─────────
 function attCalcStudentStats(classId, sid) {
   const c = attClasses[classId];
   const dates = attGenerateWeeklyDates(c.startDate, c.endDate);
@@ -4358,6 +4419,7 @@ function attCalcStudentStats(classId, sid) {
   return { held, attended, pct, dates };
 }
 
+// ───────── Öğrenci: kendi devam durumu — öğretmen panelindekiyle AYNI tablo, sadece kendi satırı ─────────
 async function renderAttStudentView(sid) {
   const wrap = document.getElementById('att-student-classes');
   if (!sid) { wrap.innerHTML = `<p style="font-size:.85rem;color:var(--muted);">Giriş yapmalısınız.</p>`; return; }
@@ -4370,16 +4432,14 @@ async function renderAttStudentView(sid) {
 
   for (const cid of myClassIds) await attLoadClassData(cid);
 
+  const meObj2 = (window.STUDENTS || []).find(s => s.id === sid) || { id: sid, name: sid };
+
   wrap.innerHTML = myClassIds.map(cid => {
     const c = attClasses[cid];
-    const { held, attended, pct } = attCalcStudentStats(cid, sid);
-    const pctCls = pct === null ? '' : (pct >= 85 ? 'good' : pct >= 70 ? 'warn' : 'bad');
-    const pctTxt = pct === null ? 'Henüz veri yok' : `${pct.toFixed(0)}% Devam`;
     return `
-      <div class="att-class-card" style="cursor:default;margin-bottom:10px;">
-        <strong>${escStatsHtml(c.name)}</strong>
-        <span>Katıldığı Ders: ${attended} / ${held}</span>
-        <div class="att-summary-row"><span class="att-pct-pill ${pctCls}">${pctTxt}</span></div>
+      <div style="margin-bottom:1.6rem;">
+        <div class="section-title" style="margin:0 0 .6rem;font-size:1rem;">${escStatsHtml(c.name)}</div>
+        <div class="att-table-wrap">${attBuildTableHtml(cid, [meObj2], { editable: false })}</div>
       </div>`;
   }).join('');
 }
@@ -4404,6 +4464,7 @@ window.renderAttendancePill = async function(sid) {
     row.innerHTML = `<span class="att-pct-pill ${cls}">🗓️ Devam: ${pct.toFixed(0)}%</span>`;
   } catch (e) { console.error('[Devam] rozet yüklenemedi:', e); }
 };
+
 
 </script>
 
