@@ -253,6 +253,47 @@
     #screen-repertoire.active { display: block; }
     #screen-stats { width: 100%; display: none; }
     #screen-stats.active { display: block; }
+    #screen-attendance { width: 100%; display: none; }
+    #screen-attendance.active { display: block; }
+
+    /* ══════ Devam/Devamsızlık Modülü ══════ */
+    .att-class-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap: 10px; margin-bottom: 1.4rem; }
+    .att-class-card { background:#fff; border:1px solid var(--border); border-radius:12px; padding:14px 16px; cursor:pointer; transition:all .15s; display:flex; flex-direction:column; gap:4px; }
+    .att-class-card:hover { border-color: var(--gold); transform: translateY(-1px); }
+    .att-class-card strong { font-size:.95rem; color:var(--brown); }
+    .att-class-card span { font-size:.75rem; color:var(--muted); }
+    .att-new-class-form { background:#fff; border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:1.4rem; display:flex; flex-direction:column; gap:10px; max-width:420px; }
+    .att-new-class-form label { font-size:.78rem; color:var(--muted); font-weight:600; }
+    .att-new-class-form input[type="text"], .att-new-class-form input[type="date"] {
+      font-family:inherit; font-size:.85rem; padding:8px 10px; border:1px solid var(--border); border-radius:8px; width:100%;
+    }
+    .att-student-check-list { display:grid; grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); gap:4px; max-height:180px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; padding:8px; }
+    .att-student-check-list label { display:flex; align-items:center; gap:6px; font-weight:400; font-size:.8rem; color:var(--brown); }
+    .att-table-wrap { overflow-x:auto; border:1px solid var(--border); border-radius:12px; background:#fff; }
+    table.att-table { border-collapse:collapse; width:100%; font-size:.78rem; }
+    table.att-table th, table.att-table td { border-bottom:1px solid var(--border); border-right:1px solid var(--border); padding:6px 8px; text-align:center; white-space:nowrap; }
+    table.att-table th:first-child, table.att-table td:first-child {
+      position:sticky; left:0; background:#fff; text-align:left; z-index:2; min-width:140px; border-right:2px solid var(--border);
+    }
+    table.att-table thead th { background:var(--cream); vertical-align:top; }
+    .att-date-head { display:flex; flex-direction:column; align-items:center; gap:3px; }
+    .att-date-head .att-date-str { font-weight:700; color:var(--brown); }
+    .att-date-head .att-lesson-no { font-size:.68rem; color:var(--muted); }
+    .att-cancel-toggle { font-size:.62rem; padding:2px 6px; border-radius:10px; border:1px solid var(--orange-border); background:#fff; color:var(--orange); cursor:pointer; font-family:inherit; }
+    .att-cancel-toggle.active { background:var(--orange); color:#fff; border-color:var(--orange); }
+    .att-col-cancelled { background: var(--orange-bg) !important; }
+    .att-count-row td { font-weight:700; color:var(--brown); background:var(--cream); }
+    .att-cell { cursor:pointer; user-select:none; font-size:1.05rem; }
+    .att-cell.disabled { cursor:default; }
+    .att-dot { display:inline-block; width:20px; height:20px; border-radius:50%; border:2px solid var(--border); background:#fbf8f3; }
+    .att-dot.on { background: var(--green); border-color: var(--green); }
+    .att-dot.off { background: var(--red); border-color: var(--red); }
+    .att-summary-row { display:flex; gap:8px; flex-wrap:wrap; margin:10px 0 1.2rem; }
+    .att-pct-pill { font-size:.78rem; font-weight:700; padding:6px 14px; border-radius:16px; }
+    .att-pct-pill.good { background: var(--green-bg); color: var(--green); border:1px solid #b0d890; }
+    .att-pct-pill.warn { background:#fdf6e1; color:#a3781a; border:1px solid #e8d68a; }
+    .att-pct-pill.bad { background: var(--red-bg); color: var(--red); border:1px solid #e8b8b8; }
+    .attendance-pill-row { display:flex; gap:6px; flex-wrap:wrap; margin-top:4px; }
     #screen-dash.hidden { display: none; }
 
     .rep-topbar {
@@ -542,6 +583,7 @@
           <div class="welcome-badges" id="welcome-badges"></div>
           <div id="champion-banner-row" style="display:none;margin-top:4px;"></div>
           <div class="grade-rings-row" id="grade-rings-row"></div>
+          <div class="attendance-pill-row" id="attendance-pill-row"></div>
           <div class="social-score-bar" id="social-score-bar">
             <span class="social-score-pill envy-pill" id="social-envy-pill">🙄 Kıskanıldı: 0</span>
             <span class="social-score-pill pity-pill"  id="social-pity-pill">😢 Acındı: 0</span>
@@ -565,6 +607,7 @@
       <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;">
         <button class="panel-go-btn" id="grade-listesi-btn" onclick="openRepertoire(event)"><span id="grade-listesi-icon">📜</span> Grade Listesi</button>
         <button class="panel-go-btn" onclick="openStats(event)">📊 İstatistiklerim</button>
+        <button class="panel-go-btn" onclick="openAttendance(event)">🗓️ Devam / Devamsızlıklarım</button>
       </div>
       <div id="grade-lock-tooltip" class="lock-tooltip"></div>
     </div>
@@ -773,6 +816,40 @@
 
     <div id="rep-category-view" style="display:none;">
       <div class="leaderboard" id="cat-leaderboard"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Devam / Devamsızlık Paneli ===== -->
+<div id="screen-attendance">
+  <div class="dash-inner">
+    <div class="rep-topbar">
+      <button class="back-btn" onclick="closeAttendance()">← Panele Dön</button>
+    </div>
+
+    <div class="section-title">🗓️ Devam / Devamsızlıklarım</div>
+
+    <!-- Öğretmen: sınıf listesi -->
+    <div id="att-teacher-panel" style="display:none;">
+      <div id="att-class-list-view">
+        <button class="panel-go-btn" style="font-size:.78rem;padding:6px 12px;margin-bottom:1rem;" onclick="toggleAttNewClassForm()">+ Yeni Sınıf Oluştur</button>
+        <div id="att-new-class-form-wrap" style="display:none;"></div>
+        <div class="att-class-grid" id="att-class-grid"></div>
+      </div>
+
+      <div id="att-class-detail-view" style="display:none;">
+        <button class="back-btn" style="margin-bottom:1rem;" onclick="closeAttClassDetail()">← Sınıf Listesine Dön</button>
+        <div class="section-title" id="att-class-detail-title" style="margin-top:0;"></div>
+        <div class="att-table-wrap"><div id="att-table-mount">
+          <p style="font-size:.85rem;color:var(--muted);">Yükleniyor…</p>
+        </div></div>
+      </div>
+    </div>
+
+    <!-- Öğrenci: kendi devam durumu (salt okunur) -->
+    <div id="att-student-panel" style="display:none;">
+      <p style="font-size:.82rem;color:var(--muted);margin-bottom:1rem;">Kayıtlı olduğun sınıflardaki yoklama durumun aşağıda listelenir.</p>
+      <div id="att-student-classes"></div>
     </div>
   </div>
 </div>
@@ -2444,6 +2521,7 @@ window.updateWelcomeCard = async function(sid) {
     checkNotaAccess(sid);
     checkTelAccess(sid);
     checkDeneyselAccess(sid);
+    if (window.renderAttendancePill) window.renderAttendancePill(sid);
     return;
   }
 
@@ -2472,6 +2550,7 @@ window.updateWelcomeCard = async function(sid) {
     checkNotaAccess(sid);
     checkTelAccess(sid);
     checkDeneyselAccess(sid);
+    if (window.renderAttendancePill) window.renderAttendancePill(sid);
     return;
   }
 
@@ -2500,6 +2579,7 @@ window.updateWelcomeCard = async function(sid) {
   loadEnvyData(sid);
   renderGradeRings(sid);
   renderChampionBanner(sid);
+  if (window.renderAttendancePill) window.renderAttendancePill(sid);
 };
 
 // ══════════════════════════════════════════════════════════
@@ -3991,6 +4071,339 @@ async function initLeaderboard() {
   renderLbList();
 }
 
+
+// ══════════════════════════════════════════════════════════
+// 🗓️ DEVAM / DEVAMSIZLIK MODÜLÜ
+// Firebase:
+//   att_classes/{classId} = { name, startDate:'YYYY-MM-DD', endDate:'YYYY-MM-DD', studentIds:{sid:true,...} }
+//   att_data/{classId}/{dateStr} = { cancelled:true/false, students:{ sid: 1|0 } }
+// Dersler haftada 1 kez, startDate'in haftagünüyle aynı gün her hafta tekrar eder.
+// ══════════════════════════════════════════════════════════
+
+let attClasses = {};       // classId -> classObj
+let attData = {};          // classId -> { dateStr -> {cancelled, students:{sid:1|0}} }
+let attActiveClassId = null;
+let attSelectedStudentIds = new Set();
+
+function attFmtDate(d) {
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+function attFmtDateShort(dateStr) {
+  const [y, m, d] = dateStr.split('-');
+  return `${d}.${m}.${y}`;
+}
+// Akademik takvim mantığı: startDate'ten başlayıp her 7 günde bir, endDate'i geçmeyecek şekilde tarih üretir.
+function attGenerateWeeklyDates(startDate, endDate) {
+  const dates = [];
+  if (!startDate || !endDate) return dates;
+  let cur = new Date(startDate + 'T00:00:00');
+  const end = new Date(endDate + 'T00:00:00');
+  if (isNaN(cur) || isNaN(end) || cur > end) return dates;
+  while (cur <= end) {
+    dates.push(attFmtDate(cur));
+    cur.setDate(cur.getDate() + 7);
+  }
+  return dates;
+}
+
+async function attLoadClasses() {
+  try {
+    const snap = await get(ref(db, 'att_classes'));
+    attClasses = snap.exists() ? snap.val() : {};
+  } catch (e) { console.error('[Devam] sınıflar yüklenemedi:', e); attClasses = {}; }
+}
+async function attLoadClassData(classId) {
+  try {
+    const snap = await get(ref(db, `att_data/${classId}`));
+    attData[classId] = snap.exists() ? snap.val() : {};
+  } catch (e) { console.error('[Devam] veri yüklenemedi:', e); attData[classId] = {}; }
+  return attData[classId];
+}
+
+window.openAttendance = async function(e) {
+  if (e) e.preventDefault();
+  document.getElementById('screen-dash').classList.add('hidden');
+  document.getElementById('screen-attendance').classList.add('active');
+
+  const meObj = getMe();
+  const isTeacher = !!(meObj && meObj.id === TEACHER_ID);
+
+  await attLoadClasses();
+
+  document.getElementById('att-teacher-panel').style.display = isTeacher ? '' : 'none';
+  document.getElementById('att-student-panel').style.display = isTeacher ? 'none' : '';
+
+  if (isTeacher) {
+    document.getElementById('att-class-list-view').style.display = '';
+    document.getElementById('att-class-detail-view').style.display = 'none';
+    document.getElementById('att-new-class-form-wrap').style.display = 'none';
+    renderAttClassGrid();
+  } else {
+    await renderAttStudentView(meObj ? meObj.id : null);
+  }
+};
+
+window.closeAttendance = function() {
+  document.getElementById('screen-attendance').classList.remove('active');
+  document.getElementById('screen-dash').classList.remove('hidden');
+};
+
+// ───────── Öğretmen: Sınıf listesi ─────────
+function renderAttClassGrid() {
+  const grid = document.getElementById('att-class-grid');
+  const ids = Object.keys(attClasses);
+  if (!ids.length) {
+    grid.innerHTML = `<p style="font-size:.85rem;color:var(--muted);">Henüz sınıf oluşturulmadı.</p>`;
+    return;
+  }
+  grid.innerHTML = ids.map(cid => {
+    const c = attClasses[cid];
+    const studentCount = Object.keys(c.studentIds || {}).length;
+    return `
+      <div class="att-class-card" onclick="openAttClassDetail('${cid}')">
+        <strong>${escStatsHtml(c.name)}</strong>
+        <span>👥 ${studentCount} öğrenci</span>
+        <span>🗓️ ${attFmtDateShort(c.startDate)} — ${attFmtDateShort(c.endDate)}</span>
+      </div>`;
+  }).join('');
+}
+
+window.toggleAttNewClassForm = function() {
+  const wrap = document.getElementById('att-new-class-form-wrap');
+  if (wrap.style.display === 'none') {
+    attSelectedStudentIds = new Set();
+    const students = (window.STUDENTS || []).filter(s => s.id !== TEACHER_ID);
+    wrap.innerHTML = `
+      <div class="att-new-class-form">
+        <div>
+          <label>Sınıf Adı</label>
+          <input type="text" id="att-new-name" placeholder="örn. Pzt A1-A2 Hız">
+        </div>
+        <div>
+          <label>Ders Başlangıç Tarihi</label>
+          <input type="date" id="att-new-start">
+        </div>
+        <div>
+          <label>Ders Bitiş Tarihi</label>
+          <input type="date" id="att-new-end">
+        </div>
+        <div>
+          <label>Öğrenciler</label>
+          <div class="att-student-check-list">
+            ${students.map(s => `<label><input type="checkbox" value="${s.id}" onchange="toggleAttStudentSel('${s.id}',this.checked)"> ${escStatsHtml(s.name)}</label>`).join('')}
+          </div>
+        </div>
+        <button class="panel-go-btn" onclick="saveAttNewClass()">✅ Sınıfı Kaydet</button>
+      </div>`;
+    wrap.style.display = '';
+  } else {
+    wrap.style.display = 'none';
+  }
+};
+
+window.toggleAttStudentSel = function(sid, checked) {
+  if (checked) attSelectedStudentIds.add(sid);
+  else attSelectedStudentIds.delete(sid);
+};
+
+window.saveAttNewClass = async function() {
+  const name = document.getElementById('att-new-name').value.trim();
+  const start = document.getElementById('att-new-start').value;
+  const end = document.getElementById('att-new-end').value;
+  if (!name || !start || !end) { alert('Lütfen sınıf adı, başlangıç ve bitiş tarihini girin.'); return; }
+  if (start > end) { alert('Başlangıç tarihi bitiş tarihinden sonra olamaz.'); return; }
+  if (!attSelectedStudentIds.size) { alert('En az bir öğrenci seçin.'); return; }
+
+  const studentIds = {};
+  attSelectedStudentIds.forEach(sid => studentIds[sid] = true);
+  const classId = 'c_' + Date.now();
+  const classObj = { name, startDate: start, endDate: end, studentIds };
+  try {
+    await set(ref(db, `att_classes/${classId}`), classObj);
+    attClasses[classId] = classObj;
+    document.getElementById('att-new-class-form-wrap').style.display = 'none';
+    renderAttClassGrid();
+  } catch (e) { console.error('[Devam] sınıf kaydedilemedi:', e); alert('Sınıf kaydedilemedi.'); }
+};
+
+// ───────── Öğretmen: Sınıf detay / yoklama tablosu ─────────
+window.openAttClassDetail = async function(classId) {
+  attActiveClassId = classId;
+  document.getElementById('att-class-list-view').style.display = 'none';
+  document.getElementById('att-class-detail-view').style.display = '';
+  const c = attClasses[classId];
+  document.getElementById('att-class-detail-title').textContent = `🗓️ ${c.name}`;
+  document.getElementById('att-table-mount').innerHTML = `<p style="font-size:.85rem;color:var(--muted);">Yükleniyor…</p>`;
+  await attLoadClassData(classId);
+  renderAttTable(classId);
+};
+
+window.closeAttClassDetail = function() {
+  attActiveClassId = null;
+  document.getElementById('att-class-detail-view').style.display = 'none';
+  document.getElementById('att-class-list-view').style.display = '';
+  renderAttClassGrid();
+};
+
+function renderAttTable(classId) {
+  const c = attClasses[classId];
+  const dates = attGenerateWeeklyDates(c.startDate, c.endDate);
+  const studentIds = Object.keys(c.studentIds || {});
+  const students = studentIds
+    .map(sid => (window.STUDENTS || []).find(s => s.id === sid) || { id: sid, name: sid })
+    .sort((a, b) => a.name.localeCompare(b.name, 'tr'));
+  const cData = attData[classId] || {};
+
+  const headerCells = dates.map((d, i) => {
+    const dayData = cData[d] || {};
+    const cancelled = !!dayData.cancelled;
+    return `
+      <th class="${cancelled ? 'att-col-cancelled' : ''}">
+        <div class="att-date-head">
+          <span class="att-lesson-no">${i + 1}. Ders</span>
+          <span class="att-date-str">${attFmtDateShort(d)}</span>
+          <button class="att-cancel-toggle ${cancelled ? 'active' : ''}" onclick="toggleAttCancel('${classId}','${d}')">${cancelled ? '🟧 Ders Yok' : 'Ders Yok'}</button>
+        </div>
+      </th>`;
+  }).join('');
+
+  const bodyRows = students.map(s => {
+    const cells = dates.map(d => {
+      const dayData = cData[d] || {};
+      const cancelled = !!dayData.cancelled;
+      const val = (dayData.students || {})[s.id];
+      let dotCls = '';
+      if (!cancelled) {
+        if (val === 1) dotCls = 'on';
+        else if (val === 0) dotCls = 'off';
+      }
+      return `
+        <td class="${cancelled ? 'att-col-cancelled' : ''}">
+          <span class="att-cell ${cancelled ? 'disabled' : ''}" ${cancelled ? '' : `onclick="toggleAttCell('${classId}','${d}','${s.id}')"`}>
+            <span class="att-dot ${dotCls}"></span>
+          </span>
+        </td>`;
+    }).join('');
+    return `<tr><td>${escStatsHtml(s.name)}</td>${cells}</tr>`;
+  }).join('');
+
+  const countCells = dates.map(d => {
+    const dayData = cData[d] || {};
+    if (dayData.cancelled) return `<td class="att-col-cancelled">—</td>`;
+    const present = Object.values(dayData.students || {}).filter(v => v === 1).length;
+    return `<td>${present}/${students.length}</td>`;
+  }).join('');
+
+  document.getElementById('att-table-mount').innerHTML = `
+    <table class="att-table">
+      <thead><tr><th>Öğrenci</th>${headerCells}</tr></thead>
+      <tbody>
+        ${bodyRows || `<tr><td colspan="${dates.length + 1}">Öğrenci yok.</td></tr>`}
+        <tr class="att-count-row"><td>Katılan Sayısı</td>${countCells}</tr>
+      </tbody>
+    </table>`;
+}
+
+window.toggleAttCell = async function(classId, dateStr, sid) {
+  const cData = attData[classId] || (attData[classId] = {});
+  const dayData = cData[dateStr] || (cData[dateStr] = { cancelled: false, students: {} });
+  if (dayData.cancelled) return;
+  const cur = dayData.students[sid];
+  // Döngü: boş → 🟢 Devam → 🔴 Devamsız → boş
+  let next;
+  if (cur === undefined) next = 1;
+  else if (cur === 1) next = 0;
+  else next = undefined;
+
+  if (next === undefined) delete dayData.students[sid];
+  else dayData.students[sid] = next;
+
+  renderAttTable(classId);
+  try {
+    if (next === undefined) await remove(ref(db, `att_data/${classId}/${dateStr}/students/${sid}`));
+    else await set(ref(db, `att_data/${classId}/${dateStr}/students/${sid}`), next);
+  } catch (e) { console.error('[Devam] yoklama kaydedilemedi:', e); }
+};
+
+window.toggleAttCancel = async function(classId, dateStr) {
+  const cData = attData[classId] || (attData[classId] = {});
+  const dayData = cData[dateStr] || (cData[dateStr] = { cancelled: false, students: {} });
+  dayData.cancelled = !dayData.cancelled;
+  renderAttTable(classId);
+  try {
+    await set(ref(db, `att_data/${classId}/${dateStr}/cancelled`), dayData.cancelled);
+  } catch (e) { console.error('[Devam] ders iptali kaydedilemedi:', e); }
+};
+
+// ───────── Öğrenci: kendi devam durumu ─────────
+function attCalcStudentStats(classId, sid) {
+  const c = attClasses[classId];
+  const dates = attGenerateWeeklyDates(c.startDate, c.endDate);
+  const cData = attData[classId] || {};
+  let held = 0, attended = 0;
+  const today = attFmtDate(new Date());
+  dates.forEach(d => {
+    if (d > today) return; // henüz yapılmamış dersler sayılmaz
+    const dayData = cData[d] || {};
+    if (dayData.cancelled) return;
+    const val = (dayData.students || {})[sid];
+    if (val === undefined) return; // henüz yoklama girilmemiş
+    held++;
+    if (val === 1) attended++;
+  });
+  const pct = held ? (attended / held) * 100 : null;
+  return { held, attended, pct, dates };
+}
+
+async function renderAttStudentView(sid) {
+  const wrap = document.getElementById('att-student-classes');
+  if (!sid) { wrap.innerHTML = `<p style="font-size:.85rem;color:var(--muted);">Giriş yapmalısınız.</p>`; return; }
+
+  const myClassIds = Object.keys(attClasses).filter(cid => (attClasses[cid].studentIds || {})[sid]);
+  if (!myClassIds.length) {
+    wrap.innerHTML = `<p style="font-size:.85rem;color:var(--muted);">Henüz bir sınıfa kayıtlı değilsiniz.</p>`;
+    return;
+  }
+
+  for (const cid of myClassIds) await attLoadClassData(cid);
+
+  wrap.innerHTML = myClassIds.map(cid => {
+    const c = attClasses[cid];
+    const { held, attended, pct } = attCalcStudentStats(cid, sid);
+    const pctCls = pct === null ? '' : (pct >= 85 ? 'good' : pct >= 70 ? 'warn' : 'bad');
+    const pctTxt = pct === null ? 'Henüz veri yok' : `${pct.toFixed(0)}% Devam`;
+    return `
+      <div class="att-class-card" style="cursor:default;margin-bottom:10px;">
+        <strong>${escStatsHtml(c.name)}</strong>
+        <span>Katıldığı Ders: ${attended} / ${held}</span>
+        <div class="att-summary-row"><span class="att-pct-pill ${pctCls}">${pctTxt}</span></div>
+      </div>`;
+  }).join('');
+}
+
+// Welcome panelde devamsızlık yüzdesi rozeti — updateWelcomeCard içinden çağrılır.
+window.renderAttendancePill = async function(sid) {
+  const row = document.getElementById('attendance-pill-row');
+  if (!row || !sid || sid === TEACHER_ID) { if (row) row.innerHTML = ''; return; }
+  try {
+    await attLoadClasses();
+    const myClassIds = Object.keys(attClasses).filter(cid => (attClasses[cid].studentIds || {})[sid]);
+    if (!myClassIds.length) { row.innerHTML = ''; return; }
+    let totalHeld = 0, totalAttended = 0;
+    for (const cid of myClassIds) {
+      await attLoadClassData(cid);
+      const { held, attended } = attCalcStudentStats(cid, sid);
+      totalHeld += held; totalAttended += attended;
+    }
+    if (!totalHeld) { row.innerHTML = ''; return; }
+    const pct = (totalAttended / totalHeld) * 100;
+    const cls = pct >= 85 ? 'good' : pct >= 70 ? 'warn' : 'bad';
+    row.innerHTML = `<span class="att-pct-pill ${cls}">🗓️ Devam: ${pct.toFixed(0)}%</span>`;
+  } catch (e) { console.error('[Devam] rozet yüklenemedi:', e); }
+};
 
 </script>
 
