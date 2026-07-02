@@ -6,6 +6,13 @@
    ÖNEMLİ: Bu dosya sitenin KÖK dizininde (domain'in hemen
    altında, örn. https://gitar.yunusgedik.com.tr/firebase-messaging-sw.js)
    durmalı. Bir alt klasöre koyarsanız FCM bildirimleri çalışmaz.
+
+   NOT: Mesajlar "data" payload olarak gönderiliyor (notification
+   alanı DEĞİL). Bunun sebebi: eğer mesajda "notification" alanı
+   olursa, tarayıcı arka plandayken bildirimi HEM otomatik hem de
+   biz burada elle gösterdiğimiz için ÇİFT bildirim çıkıyordu.
+   "data" kullanınca otomatik gösterim devre dışı kalıyor, sadece
+   aşağıdaki kod bir kez gösteriyor.
 ══════════════════════════════════════════════════════════ */
 
 importScripts('https://www.gstatic.com/firebasejs/12.14.0/firebase-app-compat.js');
@@ -24,14 +31,19 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 // Site kapalıyken / arka plandayken gelen mesajları bildirim olarak göster.
+// data payload kullanıldığı için payload.notification YOK, payload.data var.
 messaging.onBackgroundMessage((payload) => {
-  const title = (payload.notification && payload.notification.title) || '🎸 Nota Okuma Turnuvası';
-  const body  = (payload.notification && payload.notification.body)  || '';
+  const data  = payload.data || {};
+  const title = data.title || '🎸 Nota Okuma Turnuvası';
+  const body  = data.body  || '';
+  const icon  = data.icon  || '/favicon.ico';
+  const link  = data.link  || 'https://gitar.yunusgedik.com.tr/';
+
   self.registration.showNotification(title, {
     body,
-    icon: '/favicon.ico',
+    icon,
     badge: '/favicon.ico',
-    data: { url: (payload.fcmOptions && payload.fcmOptions.link) || 'https://gitar.yunusgedik.com.tr/' }
+    data: { url: link }
   });
 });
 
