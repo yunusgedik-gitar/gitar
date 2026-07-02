@@ -316,22 +316,12 @@
     <button class="back-btn" onclick="location.href='https://gitar.yunusgedik.com.tr/'">🏠 Ana Sayfa</button>
   </div>
 
-  <div id="staff-broadcast-card" class="filter-card" style="display:none;text-align:left;">
-    <div class="filter-title" style="text-align:center;">📢 Duyuru Bildirimi Gönder</div>
-    <p style="font-size:.72rem;color:#9a8070;margin:-4px 0 8px;text-align:center;">Bildirimlerini açmış tüm öğrencilere anında gider.</p>
-    <textarea id="broadcast-msg-input" rows="2" maxlength="200" placeholder="Örn: Yarın saat 17:00'de yeni turnuva başlıyor, hazır olun!"
-      style="width:100%;padding:10px 12px;border-radius:12px;border:1.5px solid #d4c4b0;font-family:inherit;font-size:.85rem;resize:vertical;box-sizing:border-box;"></textarea>
-    <div style="text-align:center;margin-top:8px;">
-      <button class="app-btn" style="width:auto;padding:8px 22px;" onclick="sendBroadcastNotification(event)">🚀 Gönder</button>
-    </div>
-  </div>
-
   <div id="setup-area" class="filter-card">
     <div class="action-buttons-wrap">
       <button id="start-btn" class="app-btn" onclick="startExercise('practice')">Egzersize Başla (Zamansız) 🎯</button>
       <button id="race-btn"  class="app-btn btn-race" onclick="startExercise('race')">Yarışmaya Başla (40 Saniye) 🏆</button>
       <button class="app-btn btn-duel" onclick="showDuelSetup()">⚔️ Online Düello</button>
-      <button id="tournament-mode-btn" class="app-btn btn-duel tourn-mode-btn" onclick="showTournamentSetup()" style="display:none;">🏆 Turnuva Modu</button>
+      <button id="tournament-mode-btn" class="app-btn btn-duel tourn-mode-btn" onclick="showTournamentSetup()">🏆 Turnuva Modu</button>
     </div>
   </div>
 
@@ -580,10 +570,8 @@ let isStaff = false; // öğretmen veya moderatör
 onValue(ref(db, 'moderators'), snap => {
   studentModerators = snap.exists() ? snap.val() : {};
   isStaff = (mySid === TEACHER_ID) || !!studentModerators[mySid];
-  const btn = document.getElementById('tournament-mode-btn');
-  if (btn) btn.style.display = isStaff ? '' : 'none';
-  const bcast = document.getElementById('staff-broadcast-card');
-  if (bcast) bcast.style.display = isStaff ? '' : 'none';
+  // Turnuva Modu butonu artık herkese açık — sadece turnuva kurma/başlatma/
+  // sıfırlama gibi işlemler renderTournamentLobby içinde isStaff ile korunuyor.
 });
 
 const _tracker = createTracker({ db, ref, push, get, set });
@@ -666,30 +654,6 @@ window.enableTournamentNotifications = async function(){
 };
 
 initNotifState();
-
-// ── Öğretmen: serbest metinli duyuru bildirimi gönder ──
-// Cloud Function tarafı (onBroadcastCreate) bu kaydı görüp bildirimlerini
-// açmış TÜM öğrencilere push atar.
-window.sendBroadcastNotification = async function(evt){
-  if(!isStaff) return;
-  const input = document.getElementById('broadcast-msg-input');
-  const text = (input.value || '').trim();
-  if(!text){ alert('Önce bir mesaj yazın.'); return; }
-  const btn = evt && evt.target;
-  if(btn){ btn.disabled = true; btn.textContent = '⏳ Gönderiliyor…'; }
-  try{
-    await push(ref(db, 'broadcast_notifications'), {
-      text, sentBy: mySid, sentByName: myName, ts: Date.now()
-    });
-    input.value = '';
-    alert('📢 Duyuru gönderildi!');
-  }catch(e){
-    console.error('[Duyuru] gönderilemedi:', e);
-    alert('Duyuru gönderilemedi, tekrar deneyin.');
-  }finally{
-    if(btn){ btn.disabled = false; btn.textContent = '🚀 Gönder'; }
-  }
-};
 
 
 let duelStrings     = new Set([1,2,3,4,5,6]);
@@ -1987,16 +1951,7 @@ function renderTournamentBracket(tour){
   const rounds = tour.bracket.rounds;
   const modeLabel = tour.mode === 'async' ? '⏱️ Asenkron (40 sn)' : '⚔️ Senkron (Tur bazlı)';
 
-  const rulesHtml = `<div class="tourn-rules">
-    <strong>📋 Turnuva Kuralları</strong><br>
-    • <strong>Eşleşme:</strong> Her tur, tüm maçlar bitmeden bir sonraki tur başlamaz.<br>
-    • <strong>${tour.mode==='async'?'Asenkron mod':'Senkron mod'}:</strong> ${tour.mode==='async'
-      ? 'Rakibinle aynı anda olmak zorunda değilsin — 40 saniye içinde en çok doğruyu yapan kazanır.'
-      : 'Rakibinle <strong>aynı anda</strong> oynamalısınız. İkisi de "Hazırım" deyince maç başlar.'}<br>
-    • <strong>Eleme:</strong> Kaybeden elenin, kazanan bir sonraki tura geçer.
-  </div>`;
-
-  let html = rulesHtml;
+  let html = '';
 
   rounds.forEach((round, rIdx) => {
     const {label, cls} = roundSectionLabel(rIdx, rounds.length);
