@@ -610,11 +610,14 @@
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
         <button class="logout-btn" onclick="doLogout()">Çıkış Yap</button>
-        <div id="theme-toggle-wrap">
-          <button id="theme-toggle" onclick="toggleTheme()" title="Koyu moda geç" aria-label="Koyu moda geç">
-            <span class="th-icon th-sun">☀️</span>
-            <span class="th-icon th-moon">🌙</span>
-          </button>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <button id="push-notif-btn" onclick="enablePushNotifications()" title="Bildirimleri aç" style="background:none;border:1px solid var(--border);border-radius:50%;width:34px;height:34px;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">🔔</button>
+          <div id="theme-toggle-wrap">
+            <button id="theme-toggle" onclick="toggleTheme()" title="Koyu moda geç" aria-label="Koyu moda geç">
+              <span class="th-icon th-sun">☀️</span>
+              <span class="th-icon th-moon">🌙</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -966,14 +969,17 @@ function openDashboard() {
     window._pendingAvatarUpdate = me.id;
   }
 
-  // Kıskanma verisi + Chat — module script'in yüklenmesini bekle (max 3sn, 100ms aralıkla dene)
+  // Kıskanma verisi + Chat + Bildirim token — module script'in yüklenmesini bekle (max 3sn, 100ms aralıkla dene)
   let _initRetry = 0;
+  let _pushTriggered = false;
   const _initInterval = setInterval(() => {
     const envyReady = !!window.loadEnvyData;
     const chatReady = !!window.initChat;
+    const pushReady = !!window.autoRefreshPushToken;
     if (envyReady) window.loadEnvyData(me.id);
     if (chatReady) window.initChat();
-    if ((envyReady && chatReady) || ++_initRetry > 30) clearInterval(_initInterval);
+    if (pushReady && !_pushTriggered) { _pushTriggered = true; window.autoRefreshPushToken(); }
+    if ((envyReady && chatReady && pushReady) || ++_initRetry > 30) clearInterval(_initInterval);
   }, 100);
 }
 
@@ -1029,6 +1035,7 @@ if (!window.checkDeneyselAccess) window.checkDeneyselAccess = function(sid) {};
 <script type="module">
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
 import { getDatabase, ref, get, set, remove, onValue, push, update } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js";
+import { getMessaging, getToken, isSupported } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-messaging.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBkEd729B65y-NZIQ-sxScCgaEvlX-q7yA",
@@ -1041,6 +1048,91 @@ const firebaseConfig = {
 };
 const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 const db = getDatabase(app);
+
+// ===== Push Bildirimleri (FCM) =====
+// VAPID_KEY: Firebase Console > Project Settings > Cloud Messaging >
+// "Web Push certificates" bölümünden alınır. Doldurulmadan bildirim
+// izni istenemez, buton "desteklenmiyor" hatası verir.
+const VAPID_KEY = 'BGzbS6B5-4KGsVF7gSTtcXffaP19NkSHCjrkS7vG9vzzliEUwFcbjvaiksNOZHPwQKcZGB7a8OVElLmA2hjBAVk';
+
+function updatePushButtonState(state) {
+  const btn = document.getElementById('push-notif-btn');
+  if (!btn) return;
+  if (state === 'on') {
+    btn.textContent = '🔔';
+    btn.title = 'Bildirimler açık';
+    btn.style.background = 'var(--gold)';
+    btn.style.color = '#fff';
+    btn.style.borderColor = 'var(--gold)';
+  } else if (state === 'denied') {
+    btn.textContent = '🔕';
+    btn.title = 'Bildirim izni engellendi. Tarayıcı site ayarlarından açabilirsin.';
+    btn.style.background = 'none';
+    btn.style.color = '';
+    btn.style.borderColor = 'var(--border)';
+  } else {
+    btn.textContent = '🔔';
+    btn.title = 'Bildirimleri aç';
+    btn.style.background = 'none';
+    btn.style.color = '';
+    btn.style.borderColor = 'var(--border)';
+  }
+}
+
+async function registerPushToken(sid) {
+  const supported = await isSupported().catch(() => false);
+  if (!supported) return null;
+  const reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+  const messaging = getMessaging(app);
+  const token = await getToken(messaging, { vapidKey: VAPID_KEY, serviceWorkerRegistration: reg });
+  if (token && sid) {
+    await set(ref(db, `fcm_tokens/${sid}/${token}`), true);
+  }
+  return token;
+}
+
+window.enablePushNotifications = async function() {
+  const sid = getMe() ? getMe().id : null;
+  if (!('Notification' in window)) {
+    alert('Tarayıcınız bildirimleri desteklemiyor.');
+    return;
+  }
+  if (VAPID_KEY === 'BURAYA_VAPID_KEY_YAZILACAK') {
+    alert('Bildirim sistemi henüz tam kurulmadı (VAPID anahtarı eksik). Yunus Hoca\'ya haber verin.');
+    return;
+  }
+  try {
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') {
+      updatePushButtonState('denied');
+      return;
+    }
+    const token = await registerPushToken(sid);
+    if (token) {
+      updatePushButtonState('on');
+    } else {
+      alert('Bu tarayıcı push bildirimlerini desteklemiyor.');
+    }
+  } catch (err) {
+    console.error('Bildirim izni hatası:', err);
+    alert('Bildirim açılırken bir hata oluştu: ' + err.message);
+  }
+};
+
+// Sayfa her açıldığında: izin zaten verilmişse token'ı sessizce tazele
+window.autoRefreshPushToken = async function() {
+  try {
+    if (!('Notification' in window)) return;
+    if (VAPID_KEY === 'BURAYA_VAPID_KEY_YAZILACAK') return;
+    if (Notification.permission === 'denied') { updatePushButtonState('denied'); return; }
+    if (Notification.permission !== 'granted') { updatePushButtonState('off'); return; }
+    const sid = getMe() ? getMe().id : null;
+    const token = await registerPushToken(sid);
+    if (token) updatePushButtonState('on');
+  } catch (err) {
+    console.warn('Push token yenileme hatası:', err);
+  }
+};
 
 const TEACHER_ID = 's01'; // Dr. Yunus GEDİK = öğretmen
 let repProgress = {};       // { studentId: { grade: { completed: [bool...] } } }
