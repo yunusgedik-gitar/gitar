@@ -1300,8 +1300,13 @@ function handleTournamentUpdate(tour){
     // Maç için süre sınırı doldu mu kontrol et (oda kurulduysa).
     checkMatchDeadline(path, m);
 
-    // Host (p1), ikisi de "Hazır" deyip oda henüz kurulmadıysa odayı kurar.
-    if(m.p1 === mySid && m.readyP1 && m.readyP2 && !m.roomCode){
+    // İkisi de "Hazır" deyip oda henüz kurulmadıysa odayı kurar.
+    // NOT: Eskiden bu işlemi yalnızca p1 (host) tetikliyordu; p1'in sekmesi
+    // arka plandaysa/bağlantısı gecikmişse maç hiç başlamıyordu (her iki
+    // oyuncu da "hazır" olduğu halde ekran donuk kalıyordu). Artık her iki
+    // taraf da denemeye çalışır; Firebase transaction'daki rezervasyon
+    // (mm.roomCode kontrolü) çakışmayı zaten önlüyor, yalnızca biri kazanır.
+    if((m.p1 === mySid || m.p2 === mySid) && m.readyP1 && m.readyP2 && !m.roomCode){
       createTournamentRoom(path, m);
     }
     // Oda kurulduysa ve maça henüz girmediysek gir.
