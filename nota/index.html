@@ -100,7 +100,14 @@
        tek uyarı rengi = kırmızı (yalnızca yıkıcı aksiyonlarda). */
     .tourn-rules{background:#fffdf7;border:1px solid #e0d5c0;border-radius:14px;padding:12px 16px;margin-bottom:16px;font-size:.78rem;color:#7a6048;line-height:1.65;}
     .tourn-rules strong{color:#5a3e2b;}
-    .tourn-round-section{margin-bottom:22px;}
+    .tourn-round-section{
+      margin-bottom:22px;
+      border:1.5px solid #e6dac6;
+      border-radius:18px;
+      padding:16px 14px 14px;
+      background:rgba(255,253,247,.6);
+      box-shadow:0 2px 8px rgba(90,62,43,.06);
+    }
     .tourn-round-header{
       display:inline-flex;align-items:center;gap:7px;
       font-family:'Playfair Display',serif;font-size:.86rem;font-weight:700;
@@ -112,6 +119,9 @@
     .tourn-round-header.r-quarter{background:linear-gradient(135deg,#c9a877,#a67c42);box-shadow:0 3px 10px rgba(166,124,66,.22);}
     .tourn-round-header.r-semi{background:linear-gradient(135deg,#a67840,#7a5424);box-shadow:0 3px 10px rgba(122,84,36,.22);}
     .tourn-round-header.r-final{background:linear-gradient(135deg,#e8c064,#b8892a);box-shadow:0 3px 12px rgba(184,137,42,.3);}
+    .tourn-round-section.r-quarter{border-color:#c9a877;}
+    .tourn-round-section.r-semi{border-color:#a67840;}
+    .tourn-round-section.r-final{border-color:#b8892a;background:rgba(255,249,232,.55);}
 
     .tourn-match{
       position:relative;
@@ -466,9 +476,17 @@ const ALL_NOTES=['Do','Re','Mi','Fa','Sol','La','Si'];
 function getERR() { return window.ERR || ["Yanlış! Tekrar dene."]; }
 function shuffle(a){return[...a].sort(()=>Math.random()-0.5);}
 function showArea(id){
+  const already = document.getElementById(id) && document.getElementById(id).style.display === 'block';
   ['setup-area','duel-setup-area','duel-waiting-area','duel-game-area','exercise-wrap','tournament-setup-area','tournament-bracket-area']
     .forEach(x=>{const e=document.getElementById(x);if(e)e.style.display='none';});
-  const t=document.getElementById(id);if(t){t.style.display='block';t.scrollIntoView({behavior:'smooth'});}
+  const t=document.getElementById(id);
+  if(t){
+    t.style.display='block';
+    // Zaten bu ekrandaysak (örn. turnuva verisi her güncellendiğinde
+    // showArea tekrar çağrılıyor) sayfayı başa kaydırma — sadece EKRAN
+    // DEĞİŞİRKEN (yeni bir alana geçerken) kaydır.
+    if(!already) t.scrollIntoView({behavior:'smooth'});
+  }
 }
 let selectedStrings=new Set([1,2,3,4,5,6]),filteredNotes=[];
 let current=null,answered=false,interacted=false,autoTimer=null,currentMode='practice',gameTimer=null,timeLeft=40,correctCount=0;
@@ -1945,6 +1963,8 @@ function renderMatchBlock(m, path, roundIdx, totalRounds){
   </div>`;
 }
 
+let _lastScrolledRoundKey = null; // tour.status + aktif tur index'i — sadece bu değişince kaydır
+
 function renderTournamentBracket(tour){
   const body = document.getElementById('tourn-bracket-body');
   if(!body || !tour || !tour.bracket || !tour.bracket.rounds) return;
@@ -1952,13 +1972,18 @@ function renderTournamentBracket(tour){
   const modeLabel = tour.mode === 'async' ? '⏱️ Asenkron (40 sn)' : '⚔️ Senkron (Tur bazlı)';
 
   let html = '';
+  let activeRoundIdx = 0; // henüz tamamlanmamış ilk tur — "şu an neredeyiz" göstergesi
 
   rounds.forEach((round, rIdx) => {
     const {label, cls} = roundSectionLabel(rIdx, rounds.length);
     const prevDone = rIdx === 0 || rounds[rIdx-1].every(pm => pm.status==='finished');
     const roundStatus = prevDone ? '' : ' <span style="font-size:.68rem;opacity:.7;">(önceki tur bekleniyor)</span>';
+    const roundFinished = round.every(pm => pm.status==='finished');
+    if(prevDone && !roundFinished && activeRoundIdx === 0 && rIdx > 0) activeRoundIdx = rIdx;
+    else if(rIdx === 0 && !roundFinished) activeRoundIdx = 0;
+    else if(roundFinished) activeRoundIdx = Math.min(rIdx + 1, rounds.length - 1);
 
-    html += `<div class="tourn-round-section">
+    html += `<div class="tourn-round-section ${cls}" id="tourn-round-${rIdx}">
       <div class="tourn-round-header ${cls}">${label}${roundStatus}</div>`;
     round.forEach((m, mIdx) => {
       const path = `bracket.rounds.${rIdx}.${mIdx}`;
@@ -1968,7 +1993,7 @@ function renderTournamentBracket(tour){
   });
 
   if(tour.status === 'finished'){
-    html += `<div class="tourn-champion-box">
+    html += `<div class="tourn-champion-box" id="tourn-round-champion">
       <div class="tourn-champion-trophy">🏆</div>
       <div class="tourn-champion-quote">İşte cesaret, işte fazilet, işte feraset,<br>işte fedakarlık, işte adam gibi adamlık.</div>
       <div class="tourn-champion-name">🏆 Turnuva Şampiyonu: ${tour.championName}</div>
@@ -1977,6 +2002,18 @@ function renderTournamentBracket(tour){
   }
 
   body.innerHTML = html;
+
+  // Otomatik kaydırma: sayfayı her güncellemede başa atmak yerine, SADECE
+  // "şu an oynanan tur" değiştiğinde (örn. çeyrek finalden yarı finale
+  // geçince) o bölüme yumuşakça kaydırıyoruz. Aynı turdayken skor/durum
+  // güncellemeleri tekrar tekrar kaydırma yapmaz.
+  const scrollKey = tour.status === 'finished' ? 'champion' : `round-${activeRoundIdx}`;
+  if(scrollKey !== _lastScrolledRoundKey){
+    _lastScrolledRoundKey = scrollKey;
+    const targetId = tour.status === 'finished' ? 'tourn-round-champion' : `tourn-round-${activeRoundIdx}`;
+    const targetEl = document.getElementById(targetId);
+    if(targetEl) setTimeout(()=>targetEl.scrollIntoView({behavior:'smooth', block:'start'}), 60);
+  }
 }
 
 // Firebase listener'ı yalnızca veri değiştiğinde tetiklenir; maç süre sınırı
